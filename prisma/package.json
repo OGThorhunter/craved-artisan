@@ -1,0 +1,20 @@
+{
+  "name": "craved-artisan-prisma",
+  "version": "1.0.0",
+  "description": "Database schema and migrations for Craved Artisan",
+  "scripts": {
+    "generate": "prisma generate",
+    "migrate": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
+    "studio": "prisma studio",
+    "reset": "prisma migrate reset",
+    "db:push": "prisma db push",
+    "db:pull": "prisma db pull"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.7.0"
+  },
+  "devDependencies": {
+    "prisma": "^5.7.0"
+  }
+} 

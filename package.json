@@ -1,0 +1,47 @@
+{
+  "name": "craved-artisan",
+  "version": "1.0.0",
+  "description": "A modern full-stack artisan marketplace",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "build": "npm run build:server && npm run build:client",
+    "build:server": "cd server && npm run build",
+    "build:client": "cd client && npm run build",
+    "start": "concurrently \"npm run start:server\" \"npm run start:client\"",
+    "start:server": "cd server && npm run start",
+    "start:client": "cd client && npm run start",
+    "install:all": "npm install && cd client && npm install && cd ../server && npm install",
+    "lint": "npm run lint:server && npm run lint:client",
+    "lint:server": "cd server && npm run lint",
+    "lint:client": "cd client && npm run lint",
+    "test": "npm run test:server && npm run test:client",
+    "test:server": "cd server && npm run test",
+    "test:client": "cd client && npm run test",
+    "db:generate": "cd prisma && npx prisma generate",
+    "db:migrate": "cd prisma && npx prisma migrate dev",
+    "db:studio": "cd prisma && npx prisma studio",
+    "db:reset": "cd prisma && npx prisma migrate reset"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": [
+    "artisan",
+    "marketplace",
+    "handcrafted",
+    "fullstack",
+    "nextjs",
+    "express",
+    "prisma"
+  ],
+  "author": "Craved Artisan Team",
+  "license": "MIT",
+  "main": "index.js"
+}
