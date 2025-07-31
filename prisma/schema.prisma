@@ -11,32 +11,82 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
+  id        String   @id @default(uuid())
   email     String   @unique
-  name      String?
   password  String
-  role      Role     @default(USER)
+  role      Role
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relations
-  products    Product[]
-  orders      Order[]
-  reviews     Review[]
-  favorites   Favorite[]
+  profile    Profile?
+  products   Product[]
+  orders     Order[]
+  reviews    Review[]
+  favorites  Favorite[]
+  addresses  Address[]
 
   @@map("users")
 }
 
+model Profile {
+  id          String   @id @default(uuid())
+  firstName   String
+  lastName    String
+  phone       String?
+  avatar      String?
+  bio         String?
+  website     String?
+  socialLinks Json?    // Store social media links as JSON
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+model Address {
+  id          String   @id @default(uuid())
+  type        AddressType
+  firstName   String
+  lastName    String
+  company     String?
+  address1    String
+  address2    String?
+  city        String
+  state       String
+  postalCode  String
+  country     String
+  phone       String?
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders Order[]
+
+  @@map("addresses")
+}
+
 model Product {
-  id          String   @id @default(cuid())
+  id          String   @id @default(uuid())
   name        String
   description String?
   price       Decimal
+  comparePrice Decimal?
   images      String[] // Array of image URLs
   category    String
   tags        String[] // Array of tags
   inStock     Boolean  @default(true)
+  stockQuantity Int    @default(0)
+  weight      Decimal?
+  dimensions  Json?    // Store dimensions as JSON
+  isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -51,24 +101,35 @@ model Product {
 }
 
 model Order {
-  id        String   @id @default(cuid())
-  status    OrderStatus @default(PENDING)
-  total     Decimal
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String      @id @default(uuid())
+  orderNumber   String      @unique
+  status        OrderStatus @default(PENDING)
+  subtotal      Decimal
+  tax           Decimal     @default(0)
+  shipping      Decimal     @default(0)
+  total         Decimal
+  notes         String?
+  trackingNumber String?
+  shippedAt     DateTime?
+  deliveredAt   DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
 
   // Relations
   userId      String
   user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shippingAddressId String
+  shippingAddress Address @relation(fields: [shippingAddressId], references: [id])
   orderItems  OrderItem[]
 
   @@map("orders")
 }
 
 model OrderItem {
-  id        String @id @default(cuid())
+  id        String @id @default(uuid())
   quantity  Int
   price     Decimal
+  total     Decimal
 
   // Relations
   orderId   String
@@ -80,9 +141,11 @@ model OrderItem {
 }
 
 model Review {
-  id        String   @id @default(cuid())
+  id        String   @id @default(uuid())
   rating    Int
+  title     String?
   comment   String?
+  isVerified Boolean @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -96,7 +159,7 @@ model Review {
 }
 
 model Favorite {
-  id        String   @id @default(cuid())
+  id        String   @id @default(uuid())
   createdAt DateTime @default(now())
 
   // Relations
@@ -110,14 +173,22 @@ model Favorite {
 }
 
 enum Role {
-  USER
+  CUSTOMER
+  VENDOR
   ADMIN
+}
+
+enum AddressType {
+  SHIPPING
+  BILLING
 }
 
 enum OrderStatus {
   PENDING
   CONFIRMED
+  PROCESSING
   SHIPPED
   DELIVERED
   CANCELLED
+  REFUNDED
 } 
