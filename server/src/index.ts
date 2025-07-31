@@ -39,6 +39,17 @@ const logger = createLogger({
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Validate environment variables
+try {
+  logger.info('Validating environment variables...');
+  logger.info(`Database URL: ${env.DATABASE_URL ? '✅ Set' : '❌ Missing'}`);
+  logger.info(`Node Environment: ${env.NODE_ENV}`);
+  logger.info(`Session Secret: ${env.SESSION_SECRET ? '✅ Set' : '❌ Missing'}`);
+} catch (error) {
+  logger.error('Environment validation failed:', error);
+  process.exit(1);
+}
+
 // Middleware
 app.use(helmet());
 app.use(cors({
@@ -65,6 +76,12 @@ app.get('/health', (req, res) => {
     timestamp: new Date().toISOString(),
     service: 'craved-artisan-server'
   });
+});
+
+// Test error route to verify Winston logging
+app.get('/test-error', (req, res) => {
+  logger.info('Test error route accessed');
+  throw new Error('This is a test error to verify Winston logging');
 });
 
 // API routes (to be implemented)
