@@ -1,70 +1,57 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Router, Route, Switch } from 'wouter';
+import { Layout } from './components/Layout';
+import { HomePage } from './pages/HomePage';
+import { JoinPage } from './pages/JoinPage';
+import { VendorPage } from './pages/VendorPage';
+import { DashboardPage } from './pages/DashboardPage';
+import { EventsPage } from './pages/EventsPage';
+import { EventDetailPage } from './pages/EventDetailPage';
 import { NotFound } from './components/NotFound';
 
 function App() {
   return (
     <Router>
-      <div className="App">
-        <Routes>
-          <Route path="/" element={
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-              <div className="text-center">
-                <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                  Craved Artisan
-                </h1>
-                <p className="text-lg text-gray-600 mb-8">
-                  Welcome to the artisan marketplace
-                </p>
-                <div className="space-x-4">
-                  <button className="btn-primary">
-                    Explore Products
-                  </button>
-                  <button className="btn-secondary">
-                    Meet Artisans
-                  </button>
-                </div>
-              </div>
-            </div>
-          } />
+      <Layout>
+        <Switch>
+          <Route path="/" component={HomePage} />
+          <Route path="/join" component={JoinPage} />
+          <Route path="/vendor/:id" component={VendorPage} />
+          <Route path="/dashboard" component={DashboardPage} />
+          <Route path="/events" component={EventsPage} />
+          <Route path="/events/:id" component={EventDetailPage} />
           
-          {/* Add more routes here as needed */}
-          <Route path="/products" element={
+          {/* Placeholder routes for future pages */}
+          <Route path="/products">
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
               <div className="text-center">
-                <h1 className="text-3xl font-bold text-gray-900 mb-4">
-                  Products
-                </h1>
+                <h1 className="text-3xl font-bold text-gray-900 mb-4">Products</h1>
                 <p className="text-gray-600">Product catalog coming soon...</p>
               </div>
             </div>
-          } />
+          </Route>
           
-          <Route path="/artisans" element={
+          <Route path="/artisans">
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
               <div className="text-center">
-                <h1 className="text-3xl font-bold text-gray-900 mb-4">
-                  Artisans
-                </h1>
+                <h1 className="text-3xl font-bold text-gray-900 mb-4">Artisans</h1>
                 <p className="text-gray-600">Artisan profiles coming soon...</p>
               </div>
             </div>
-          } />
+          </Route>
           
-          <Route path="/about" element={
+          <Route path="/about">
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
               <div className="text-center">
-                <h1 className="text-3xl font-bold text-gray-900 mb-4">
-                  About
-                </h1>
+                <h1 className="text-3xl font-bold text-gray-900 mb-4">About</h1>
                 <p className="text-gray-600">About page coming soon...</p>
               </div>
             </div>
-          } />
+          </Route>
           
           {/* Catch-all route for unhandled routes */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </div>
+          <Route component={NotFound} />
+        </Switch>
+      </Layout>
     </Router>
   );
 }
