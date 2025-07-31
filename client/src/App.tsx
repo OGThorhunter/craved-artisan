@@ -2,8 +2,16 @@ import { Router, Route, Switch } from 'wouter';
 import { Layout } from './components/Layout';
 import { HomePage } from './pages/HomePage';
 import { JoinPage } from './pages/JoinPage';
+import { JoinVendorPage } from './pages/JoinVendorPage';
+import { JoinCustomerPage } from './pages/JoinCustomerPage';
 import { VendorPage } from './pages/VendorPage';
+import { ProductPage } from './pages/ProductPage';
 import { DashboardPage } from './pages/DashboardPage';
+import { CustomerDashboardPage } from './pages/CustomerDashboardPage';
+import { VendorDashboardPage } from './pages/VendorDashboardPage';
+import { AdminDashboardPage } from './pages/AdminDashboardPage';
+import { EventCoordinatorDashboardPage } from './pages/EventCoordinatorDashboardPage';
+import { DropoffDashboardPage } from './pages/DropoffDashboardPage';
 import { EventsPage } from './pages/EventsPage';
 import { EventDetailPage } from './pages/EventDetailPage';
 import { NotFound } from './components/NotFound';
@@ -15,8 +23,16 @@ function App() {
         <Switch>
           <Route path="/" component={HomePage} />
           <Route path="/join" component={JoinPage} />
+          <Route path="/join/vendor" component={JoinVendorPage} />
+          <Route path="/join/customer" component={JoinCustomerPage} />
           <Route path="/vendor/:id" component={VendorPage} />
+          <Route path="/product/:id" component={ProductPage} />
           <Route path="/dashboard" component={DashboardPage} />
+          <Route path="/dashboard/customer" component={CustomerDashboardPage} />
+          <Route path="/dashboard/vendor" component={VendorDashboardPage} />
+          <Route path="/dashboard/admin" component={AdminDashboardPage} />
+          <Route path="/dashboard/event-coordinator" component={EventCoordinatorDashboardPage} />
+          <Route path="/dashboard/dropoff" component={DropoffDashboardPage} />
           <Route path="/events" component={EventsPage} />
           <Route path="/events/:id" component={EventDetailPage} />
           

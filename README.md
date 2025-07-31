@@ -5,6 +5,7 @@ A modern marketplace connecting local artisans with customers, built with React,
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Node.js 18+ 
 - npm
 - PostgreSQL (or Neon DB)
@@ -62,6 +63,7 @@ craved-artisan/
 ## 🛠 Tech Stack
 
 ### Frontend
+
 - **React 18** - UI framework
 - **TypeScript** - Type safety
 - **Vite** - Build tool and dev server
@@ -74,6 +76,7 @@ craved-artisan/
 - **Lucide React** - Icons
 
 ### Backend
+
 - **Node.js** - Runtime
 - **Express.js** - Web framework
 - **TypeScript** - Type safety
@@ -85,6 +88,7 @@ craved-artisan/
 - **CORS** - Cross-origin requests
 
 ### Development Tools
+
 - **ESLint** - Code linting
 - **Prettier** - Code formatting
 - **Concurrently** - Run multiple commands
