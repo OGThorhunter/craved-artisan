@@ -11,7 +11,7 @@ import { errorHandler } from './middleware/errorHandler';
 import { env } from './utils/validateEnv';
 import authRoutes from './routes/auth-test';
 import protectedRoutes from './routes/protected-demo';
-import vendorRoutes from './routes/vendor';
+import vendorRoutes from './routes/vendor-mock';
 
 // Load environment variables
 dotenv.config();
