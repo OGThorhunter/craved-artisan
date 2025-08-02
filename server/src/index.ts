@@ -12,6 +12,7 @@ import { env } from './utils/validateEnv';
 import authRoutes from './routes/auth-test';
 import protectedRoutes from './routes/protected-demo';
 import vendorRoutes from './routes/vendor-mock';
+import vendorProductsRoutes from './routes/vendor-products';
 
 // Load environment variables
 dotenv.config();
@@ -114,6 +115,7 @@ app.get('/test-error', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/protected', protectedRoutes);
 app.use('/api/vendor', vendorRoutes);
+app.use('/api/vendor/products', vendorProductsRoutes);
 
 app.use('/api/products', (req, res) => {
   res.json({ message: 'Product routes - to be implemented' });
