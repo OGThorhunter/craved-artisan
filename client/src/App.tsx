@@ -1,40 +1,81 @@
 import { Router, Route, Switch } from 'wouter';
+import { Toaster } from 'react-hot-toast';
+import { AuthProvider } from './contexts/AuthContext';
 import { Layout } from './components/Layout';
 import { HomePage } from './pages/HomePage';
+import LoginPage from './pages/LoginPage';
+import { SignupPage } from './pages/SignupPage';
 import { JoinPage } from './pages/JoinPage';
 import { JoinVendorPage } from './pages/JoinVendorPage';
 import { JoinCustomerPage } from './pages/JoinCustomerPage';
 import { VendorPage } from './pages/VendorPage';
 import { ProductPage } from './pages/ProductPage';
-import { DashboardPage } from './pages/DashboardPage';
+import DashboardPage from './pages/DashboardPage';
 import { CustomerDashboardPage } from './pages/CustomerDashboardPage';
 import { VendorDashboardPage } from './pages/VendorDashboardPage';
+import { VendorSettingsPage } from './pages/VendorSettingsPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { EventCoordinatorDashboardPage } from './pages/EventCoordinatorDashboardPage';
 import { DropoffDashboardPage } from './pages/DropoffDashboardPage';
 import { EventsPage } from './pages/EventsPage';
 import { EventDetailPage } from './pages/EventDetailPage';
 import { NotFound } from './components/NotFound';
+import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
-    <Router>
-      <Layout>
-        <Switch>
-          <Route path="/" component={HomePage} />
-          <Route path="/join" component={JoinPage} />
-          <Route path="/join/vendor" component={JoinVendorPage} />
-          <Route path="/join/customer" component={JoinCustomerPage} />
-          <Route path="/vendor/:id" component={VendorPage} />
-          <Route path="/product/:id" component={ProductPage} />
-          <Route path="/dashboard" component={DashboardPage} />
-          <Route path="/dashboard/customer" component={CustomerDashboardPage} />
-          <Route path="/dashboard/vendor" component={VendorDashboardPage} />
-          <Route path="/dashboard/admin" component={AdminDashboardPage} />
-          <Route path="/dashboard/event-coordinator" component={EventCoordinatorDashboardPage} />
-          <Route path="/dashboard/dropoff" component={DropoffDashboardPage} />
-          <Route path="/events" component={EventsPage} />
-          <Route path="/events/:id" component={EventDetailPage} />
+    <AuthProvider>
+      <Router>
+        <Layout>
+          <Switch>
+            <Route path="/" component={HomePage} />
+            <Route path="/login" component={LoginPage} />
+            <Route path="/signup" component={SignupPage} />
+            <Route path="/join" component={JoinPage} />
+            <Route path="/join/vendor" component={JoinVendorPage} />
+            <Route path="/join/customer" component={JoinCustomerPage} />
+            <Route path="/vendor/:id" component={VendorPage} />
+            <Route path="/product/:id" component={ProductPage} />
+            
+            {/* Protected Dashboard Routes */}
+            <Route path="/dashboard">
+              <ProtectedRoute>
+                <DashboardPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/dashboard/customer">
+              <ProtectedRoute role="CUSTOMER">
+                <CustomerDashboardPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/dashboard/vendor">
+              <ProtectedRoute role="VENDOR">
+                <VendorDashboardPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/dashboard/vendor/site-settings">
+              <ProtectedRoute role="VENDOR">
+                <VendorSettingsPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/dashboard/admin">
+              <ProtectedRoute role="ADMIN">
+                <AdminDashboardPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/dashboard/event-coordinator">
+              <ProtectedRoute role="EVENT_COORDINATOR">
+                <EventCoordinatorDashboardPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/dashboard/dropoff">
+              <ProtectedRoute role="DROPOFF">
+                <DropoffDashboardPage />
+              </ProtectedRoute>
+            </Route>
+            
+            <Route path="/events" component={EventsPage} />
+            <Route path="/events/:id" component={EventDetailPage} />
           
           {/* Placeholder routes for future pages */}
           <Route path="/products">
@@ -68,7 +109,9 @@ function App() {
           <Route component={NotFound} />
         </Switch>
       </Layout>
+      <Toaster position="top-right" />
     </Router>
+    </AuthProvider>
   );
 }
 

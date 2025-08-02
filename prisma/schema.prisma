@@ -14,17 +14,19 @@ model User {
   id        String   @id @default(uuid())
   email     String   @unique
   password  String
-  role      Role
+  name      String?  // Optional name field
+  role      Role     @default(CUSTOMER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relations
-  profile    Profile?
-  products   Product[]
-  orders     Order[]
-  reviews    Review[]
-  favorites  Favorite[]
-  addresses  Address[]
+  profile        Profile?
+  vendorProfile  VendorProfile?
+  products       Product[]
+  orders         Order[]
+  reviews        Review[]
+  favorites      Favorite[]
+  addresses      Address[]
 
   @@map("users")
 }
@@ -46,6 +48,20 @@ model Profile {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("profiles")
+}
+
+model VendorProfile {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  storeName String
+  slug      String   @unique
+  bio       String?
+  imageUrl  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("vendor_profiles")
 }
 
 model Address {
@@ -176,6 +192,9 @@ enum Role {
   CUSTOMER
   VENDOR
   ADMIN
+  SUPPLIER
+  EVENT_COORDINATOR
+  DROPOFF
 }
 
 enum AddressType {

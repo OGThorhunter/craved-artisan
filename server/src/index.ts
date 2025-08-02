@@ -4,9 +4,14 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
+import session from 'express-session';
+import pgSession from 'connect-pg-simple';
 import { createLogger, format, transports } from 'winston';
 import { errorHandler } from './middleware/errorHandler';
 import { env } from './utils/validateEnv';
+import authRoutes from './routes/auth-test';
+import protectedRoutes from './routes/protected-demo';
+import vendorRoutes from './routes/vendor';
 
 // Load environment variables
 dotenv.config();
@@ -50,14 +55,35 @@ try {
   process.exit(1);
 }
 
+// Session store
+const PostgresStore = pgSession(session);
+
 // Middleware
 app.use(helmet());
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
+  origin: process.env.CLIENT_URL || 'http://localhost:5174',
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// Session middleware
+app.use(session({
+  store: new PostgresStore({
+    conString: env.DATABASE_URL,
+    tableName: 'sessions',
+    createTableIfMissing: true,
+  }),
+  secret: env.SESSION_SECRET,
+  resave: true,
+  saveUninitialized: true,
+  cookie: {
+    secure: env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    sameSite: env.NODE_ENV === 'production' ? 'strict' : 'lax',
+  },
+}));
 
 // Morgan logging middleware
 app.use(morgan('combined', {
@@ -84,10 +110,10 @@ app.get('/test-error', (req, res) => {
   throw new Error('This is a test error to verify Winston logging');
 });
 
-// API routes (to be implemented)
-app.use('/api/auth', (req, res) => {
-  res.json({ message: 'Auth routes - to be implemented' });
-});
+// API routes
+app.use('/api/auth', authRoutes);
+app.use('/api/protected', protectedRoutes);
+app.use('/api/vendor', vendorRoutes);
 
 app.use('/api/products', (req, res) => {
   res.json({ message: 'Product routes - to be implemented' });

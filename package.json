@@ -43,5 +43,8 @@
   ],
   "author": "Craved Artisan Team",
   "license": "MIT",
-  "main": "index.js"
+  "main": "index.js",
+  "dependencies": {
+    "@prisma/client": "^6.13.0"
+  }
 }

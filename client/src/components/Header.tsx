@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'wouter';
+import { useAuth } from '../contexts/AuthContext';
+import { User, LogOut, Settings, ShoppingBag, Store } from 'lucide-react';
 
 export const Header = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [location] = useLocation();
+  const { user, isAuthenticated, logout } = useAuth();
 
   // Handle scroll for sticky header
   useEffect(() => {
@@ -19,6 +23,7 @@ export const Header = () => {
   // Close mobile menu when route changes
   useEffect(() => {
     setIsMobileMenuOpen(false);
+    setIsUserMenuOpen(false);
   }, [location]);
 
   const isActive = (path: string) => location === path;
@@ -75,17 +80,72 @@ export const Header = () => {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link href="/join">
-              <button className="text-sm font-medium text-gray-700 hover:text-primary-600 transition-colors">
-                Join as Artisan
-              </button>
-            </Link>
-            <Link href="/login">
-              <button className="btn-secondary text-sm">Sign In</button>
-            </Link>
-            <Link href="/register">
-              <button className="btn-primary text-sm">Sign Up</button>
-            </Link>
+            {isAuthenticated ? (
+              <div className="relative">
+                <button
+                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  className="flex items-center space-x-2 text-sm font-medium text-gray-700 hover:text-primary-600 transition-colors"
+                >
+                  <User className="w-5 h-5" />
+                  <span>{user?.profile?.firstName || user?.email}</span>
+                </button>
+                
+                {isUserMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                    <div className="px-4 py-2 text-sm text-gray-700 border-b">
+                      <div className="font-medium">{user?.profile?.firstName} {user?.profile?.lastName}</div>
+                      <div className="text-gray-500">{user?.email}</div>
+                    </div>
+                    
+                    <Link href="/dashboard">
+                      <span className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
+                        Dashboard
+                      </span>
+                    </Link>
+                    
+                    {user?.role === 'CUSTOMER' && (
+                      <Link href="/dashboard/customer">
+                        <span className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
+                          <ShoppingBag className="w-4 h-4 mr-2" />
+                          My Orders
+                        </span>
+                      </Link>
+                    )}
+                    
+                    {user?.role === 'VENDOR' && (
+                      <Link href="/dashboard/vendor">
+                        <span className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
+                          <Store className="w-4 h-4 mr-2" />
+                          My Store
+                        </span>
+                      </Link>
+                    )}
+                    
+                    <button
+                      onClick={logout}
+                      className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Sign Out
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                <Link href="/join">
+                  <button className="text-sm font-medium text-gray-700 hover:text-primary-600 transition-colors">
+                    Join as Artisan
+                  </button>
+                </Link>
+                <Link href="/login">
+                  <button className="btn-secondary text-sm">Sign In</button>
+                </Link>
+                <Link href="/signup">
+                  <button className="btn-primary text-sm">Sign Up</button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -138,17 +198,39 @@ export const Header = () => {
               </Link>
               
               <div className="pt-4 border-t border-gray-200 space-y-3">
-                <Link href="/join">
-                  <button className="w-full text-left text-sm font-medium text-gray-700 hover:text-primary-600 transition-colors">
-                    Join as Artisan
-                  </button>
-                </Link>
-                <Link href="/login">
-                  <button className="w-full btn-secondary text-sm">Sign In</button>
-                </Link>
-                <Link href="/register">
-                  <button className="w-full btn-primary text-sm">Sign Up</button>
-                </Link>
+                {isAuthenticated ? (
+                  <>
+                    <div className="px-2 py-2 text-sm text-gray-700">
+                      <div className="font-medium">{user?.profile?.firstName} {user?.profile?.lastName}</div>
+                      <div className="text-gray-500">{user?.email}</div>
+                    </div>
+                    <Link href="/dashboard">
+                      <button className="w-full text-left text-sm font-medium text-gray-700 hover:text-primary-600 transition-colors">
+                        Dashboard
+                      </button>
+                    </Link>
+                    <button
+                      onClick={logout}
+                      className="w-full text-left text-sm font-medium text-red-600 hover:text-red-700 transition-colors"
+                    >
+                      Sign Out
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/join">
+                      <button className="w-full text-left text-sm font-medium text-gray-700 hover:text-primary-600 transition-colors">
+                        Join as Artisan
+                      </button>
+                    </Link>
+                    <Link href="/login">
+                      <button className="w-full btn-secondary text-sm">Sign In</button>
+                    </Link>
+                    <Link href="/signup">
+                      <button className="w-full btn-primary text-sm">Sign Up</button>
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </div>

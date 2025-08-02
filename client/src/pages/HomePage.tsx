@@ -1,9 +1,60 @@
 
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
+import { useAuth } from '../contexts/AuthContext';
 
 export const HomePage = () => {
+  const { user, login, logout } = useAuth();
+  const [, setLocation] = useLocation();
+
   return (
     <div className="min-h-screen">
+      {/* Authentication Test Section */}
+      <div className="bg-white p-6 shadow-lg">
+        <div className="max-w-4xl mx-auto">
+          {user ? (
+            <>
+              <h1 className="text-2xl font-bold text-gray-900 mb-4">
+                Welcome, {user.email} ({user.role})
+              </h1>
+              <div className="space-y-2">
+                <button 
+                  onClick={logout}
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition-colors"
+                >
+                  Logout
+                </button>
+                <button 
+                  onClick={() => setLocation('/dashboard/vendor')}
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md transition-colors ml-2"
+                >
+                  Test Vendor Dashboard
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <h1 className="text-2xl font-bold text-gray-900 mb-4">
+                You are not logged in.
+              </h1>
+              <div className="space-y-2">
+                <button 
+                  onClick={() => login("test@example.com", "testpassword123")}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors"
+                >
+                  Login
+                </button>
+                <button 
+                  onClick={() => setLocation('/dashboard/vendor')}
+                  className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md transition-colors ml-2"
+                >
+                  Test Vendor Dashboard (Not Logged In)
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
       {/* Hero Section with Snap Scroll */}
       <section className="h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 to-secondary-50 relative overflow-hidden">
         {/* Ambient Animation Background */}
