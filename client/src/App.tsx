@@ -29,6 +29,7 @@ import { EventsPage } from './pages/EventsPage';
 import { EventDetailPage } from './pages/EventDetailPage';
 import VendorWatchlistPage from './pages/VendorWatchlistPage';
 import VendorOrdersPage from './pages/VendorOrdersPage';
+import CustomerOrdersPage from './pages/CustomerOrdersPage';
 import CheckoutPage from './pages/CheckoutPage';
 import { NotFound } from './components/NotFound';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -70,6 +71,16 @@ function App() {
             <Route path="/dashboard/customer">
               <ProtectedRoute role="CUSTOMER">
                 <CustomerDashboardPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/dashboard/customer/orders">
+              <ProtectedRoute role="CUSTOMER">
+                <CustomerOrdersPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/account/orders">
+              <ProtectedRoute role="CUSTOMER">
+                <CustomerOrdersPage />
               </ProtectedRoute>
             </Route>
             <Route path="/dashboard/vendor">

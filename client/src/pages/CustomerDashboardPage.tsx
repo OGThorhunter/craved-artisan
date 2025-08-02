@@ -155,6 +155,11 @@ export const CustomerDashboardPage = () => {
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-semibold text-gray-900">Order History</h2>
                   <div className="flex items-center space-x-2">
+                    <Link href="/dashboard/customer/orders">
+                      <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        View All Orders
+                      </button>
+                    </Link>
                     <div className="relative">
                       <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                       <input
@@ -163,7 +168,10 @@ export const CustomerDashboardPage = () => {
                         className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                       />
                     </div>
-                    <button className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                    <button 
+                      className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                      title="Filter orders"
+                    >
                       <Filter className="w-4 h-4" />
                     </button>
                   </div>

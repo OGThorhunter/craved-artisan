@@ -257,6 +257,72 @@ router.get('/', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
   }
 });
 
+// GET /api/orders/history - Get customer order history
+router.get('/history', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
+  try {
+    const customerOrders = mockOrders
+      .filter(order => order.userId === req.session.userId)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    const formattedOrders = customerOrders.map(order => ({
+      id: order.id,
+      orderNumber: order.orderNumber,
+      status: order.status,
+      subtotal: order.subtotal,
+      tax: order.tax,
+      shipping: order.shipping,
+      total: order.total,
+      createdAt: order.createdAt,
+      updatedAt: order.updatedAt,
+      items: order.orderItems.map((item: any) => ({
+        id: item.id,
+        quantity: item.quantity,
+        price: item.price,
+        total: item.total,
+        product: {
+          id: item.productId,
+          name: `Product ${item.productId.slice(-4)}`,
+          imageUrl: null,
+          price: item.price
+        }
+      })),
+      fulfillment: {
+        id: order.fulfillment.id,
+        status: order.fulfillment.status,
+        type: order.fulfillment.fulfillmentType,
+        trackingNumber: order.fulfillment.trackingNumber,
+        carrier: order.fulfillment.carrier,
+        estimatedDelivery: order.fulfillment.estimatedDelivery,
+        actualDelivery: order.fulfillment.actualDelivery,
+        notes: order.fulfillment.notes
+      },
+      shippingAddress: {
+        id: order.shippingAddressId,
+        firstName: 'John',
+        lastName: 'Doe',
+        company: null,
+        address1: '123 Main St',
+        address2: null,
+        city: 'Portland',
+        state: 'OR',
+        postalCode: '97201',
+        country: 'US',
+        phone: null
+      }
+    }));
+
+    res.json({
+      orders: formattedOrders
+    });
+  } catch (error) {
+    console.error('Error fetching order history:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to fetch order history'
+    });
+  }
+});
+
 // GET /api/orders/:id - Get specific order
 router.get('/:id', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
   try {

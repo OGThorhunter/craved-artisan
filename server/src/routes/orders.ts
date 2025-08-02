@@ -254,7 +254,18 @@ router.get('/', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
             product: true
           }
         },
-        fulfillments: true,
+        fulfillments: {
+          select: {
+            id: true,
+            status: true,
+            fulfillmentType: true,
+            trackingNumber: true,
+            carrier: true,
+            estimatedDelivery: true,
+            actualDelivery: true,
+            notes: true
+          }
+        },
         shippingAddress: true
       },
       orderBy: {
@@ -311,6 +322,102 @@ router.get('/', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
   }
 });
 
+// GET /api/orders/history - Get customer order history
+router.get('/history', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
+  try {
+    const orders = await prisma.order.findMany({
+      where: { userId: req.session.userId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        orderItems: {
+          include: {
+            product: {
+              select: { 
+                id: true,
+                name: true, 
+                imageUrl: true,
+                price: true
+              }
+            }
+          }
+        },
+                 fulfillments: {
+           orderBy: { createdAt: 'desc' },
+           take: 1,
+           select: {
+             id: true,
+             status: true,
+             fulfillmentType: true,
+             trackingNumber: true,
+             carrier: true,
+             estimatedDelivery: true,
+             actualDelivery: true,
+             notes: true
+           }
+         },
+        shippingAddress: true
+      }
+    });
+
+    const formattedOrders = orders.map(order => ({
+      id: order.id,
+      orderNumber: order.orderNumber,
+      status: order.status,
+      subtotal: order.subtotal,
+      tax: order.tax,
+      shipping: order.shipping,
+      total: order.total,
+      createdAt: order.createdAt,
+      updatedAt: order.updatedAt,
+      items: order.orderItems.map(item => ({
+        id: item.id,
+        quantity: item.quantity,
+        price: item.price,
+        total: item.total,
+        product: {
+          id: item.product.id,
+          name: item.product.name,
+          imageUrl: item.product.imageUrl,
+          price: item.product.price
+        }
+      })),
+      fulfillment: order.fulfillments[0] ? {
+        id: order.fulfillments[0].id,
+        status: order.fulfillments[0].status,
+        type: order.fulfillments[0].fulfillmentType,
+        trackingNumber: order.fulfillments[0].trackingNumber,
+        carrier: order.fulfillments[0].carrier,
+        estimatedDelivery: order.fulfillments[0].estimatedDelivery,
+        actualDelivery: order.fulfillments[0].actualDelivery,
+        notes: order.fulfillments[0].notes
+      } : null,
+      shippingAddress: order.shippingAddress ? {
+        id: order.shippingAddress.id,
+        firstName: order.shippingAddress.firstName,
+        lastName: order.shippingAddress.lastName,
+        company: order.shippingAddress.company,
+        address1: order.shippingAddress.address1,
+        address2: order.shippingAddress.address2,
+        city: order.shippingAddress.city,
+        state: order.shippingAddress.state,
+        postalCode: order.shippingAddress.postalCode,
+        country: order.shippingAddress.country,
+        phone: order.shippingAddress.phone
+      } : null
+    }));
+
+    res.json({
+      orders: formattedOrders
+    });
+  } catch (error) {
+    console.error('Error fetching order history:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to fetch order history'
+    });
+  }
+});
+
 // GET /api/orders/:id - Get specific order
 router.get('/:id', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
   try {
@@ -327,7 +434,18 @@ router.get('/:id', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
             product: true
           }
         },
-        fulfillments: true,
+        fulfillments: {
+          select: {
+            id: true,
+            status: true,
+            fulfillmentType: true,
+            trackingNumber: true,
+            carrier: true,
+            estimatedDelivery: true,
+            actualDelivery: true,
+            notes: true
+          }
+        },
         shippingAddress: true
       }
     });
