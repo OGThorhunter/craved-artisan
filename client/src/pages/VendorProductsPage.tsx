@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
-import { Plus, Package, Tag, DollarSign, FileText, Edit, Trash2, Eye } from 'lucide-react';
+import { Plus, Package, Tag, DollarSign, FileText, Edit, Trash2, Eye, X, Image as ImageIcon } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 
@@ -61,10 +61,36 @@ const createProduct = async (productData: CreateProductForm): Promise<{ message:
   return response.data;
 };
 
+const updateProduct = async (productData: CreateProductForm & { id: string }): Promise<{ message: string; product: Product }> => {
+  // Convert tags string to array
+  const tags = productData.tags
+    .split(',')
+    .map(tag => tag.trim())
+    .filter(tag => tag.length > 0);
+
+  const response = await axios.put(`/api/vendor/products/${productData.id}`, {
+    ...productData,
+    tags,
+    price: Number(productData.price),
+    stock: Number(productData.stock)
+  }, {
+    withCredentials: true
+  });
+  return response.data;
+};
+
 const VendorProductsPage: React.FC = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editing, setEditing] = useState<Product | null>(null); // product or null
+  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; product: Product | null }>({
+    show: false,
+    product: null
+  });
+  const [imagePreview, setImagePreview] = useState<string>('');
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState<string>('');
 
   // React Query for fetching products
   const {
@@ -94,6 +120,37 @@ const VendorProductsPage: React.FC = () => {
     }
   });
 
+  // React Query for updating products
+  const updateProductMutation = useMutation({
+    mutationFn: updateProduct,
+    onSuccess: (data) => {
+      toast.success('Product updated successfully!');
+      queryClient.invalidateQueries({ queryKey: ['vendor-products'] });
+      setShowAddForm(false);
+      setEditing(null);
+      reset();
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to update product';
+      toast.error(message);
+    }
+  });
+
+  // React Query for deleting products
+  const deleteProductMutation = useMutation({
+    mutationFn: (id: string) => axios.delete(`/api/vendor/products/${id}`, {
+      withCredentials: true
+    }),
+    onSuccess: () => {
+      toast.success('Product deleted successfully!');
+      queryClient.invalidateQueries({ queryKey: ['vendor-products'] });
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to delete product';
+      toast.error(message);
+    }
+  });
+
   // React Hook Form
   const {
     register,
@@ -113,7 +170,18 @@ const VendorProductsPage: React.FC = () => {
   });
 
   const onSubmit = (data: CreateProductForm) => {
-    createProductMutation.mutate(data);
+    const payload = {
+      ...data,
+      price: parseFloat(data.price.toString()),
+      stock: parseInt(data.stock.toString()),
+      tags: tags, // Use the tags state instead of parsing from string
+    };
+
+    if (editing) {
+      updateProductMutation.mutate({ ...payload, id: editing.id });
+    } else {
+      createProductMutation.mutate(payload);
+    }
   };
 
   const formatPrice = (price: number) => {
@@ -129,6 +197,47 @@ const VendorProductsPage: React.FC = () => {
       month: 'short',
       day: 'numeric'
     });
+  };
+
+  const startEdit = (product: Product) => {
+    setEditing(product);
+    setShowAddForm(true);
+    setTags(product.tags);
+    setImagePreview(product.imageUrl || '');
+    reset({
+      ...product,
+      tags: '', // We'll use the tags state instead
+    });
+  };
+
+  const handleDelete = (product: Product) => {
+    setDeleteConfirm({ show: true, product });
+  };
+
+  const confirmDelete = () => {
+    if (deleteConfirm.product) {
+      deleteProductMutation.mutate(deleteConfirm.product.id);
+      setDeleteConfirm({ show: false, product: null });
+    }
+  };
+
+  const cancelDelete = () => {
+    setDeleteConfirm({ show: false, product: null });
+  };
+
+  const addTag = () => {
+    if (tagInput.trim() && !tags.includes(tagInput.trim())) {
+      setTags([...tags, tagInput.trim()]);
+      setTagInput('');
+    }
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    setTags(tags.filter(tag => tag !== tagToRemove));
+  };
+
+  const handleImageUrlChange = (url: string) => {
+    setImagePreview(url);
   };
 
   if (isLoading) {
@@ -186,20 +295,28 @@ const VendorProductsPage: React.FC = () => {
                 Manage your artisan products and inventory
               </p>
             </div>
-            <button
-              onClick={() => setShowAddForm(!showAddForm)}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              Add Product
-            </button>
+                         <button
+               onClick={() => {
+                 setShowAddForm(!showAddForm);
+                 if (!showAddForm) {
+                   setEditing(null);
+                   reset();
+                 }
+               }}
+               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+             >
+               <Plus className="h-4 w-4" />
+               Add Product
+             </button>
           </div>
         </div>
 
-        {/* Add Product Form */}
+        {/* Add/Edit Product Form */}
         {showAddForm && (
           <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Add New Product</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+              {editing ? 'Edit Product' : 'Add New Product'}
+            </h2>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -327,19 +444,32 @@ const VendorProductsPage: React.FC = () => {
                   {isSubmitting ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Creating...
+                      {editing ? 'Updating...' : 'Creating...'}
                     </>
                   ) : (
                     <>
                       <Plus className="h-4 w-4" />
-                      Create Product
+                      {editing ? 'Update Product' : 'Create Product'}
                     </>
                   )}
                 </button>
+                {editing && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditing(null);
+                      reset();
+                    }}
+                    className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition-colors"
+                  >
+                    Cancel Edit
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => {
                     setShowAddForm(false);
+                    setEditing(null);
                     reset();
                   }}
                   className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition-colors"
@@ -374,12 +504,16 @@ const VendorProductsPage: React.FC = () => {
               <p className="text-gray-600 mb-4">
                 Start by adding your first artisan product to showcase your work.
               </p>
-              <button
-                onClick={() => setShowAddForm(true)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Add Your First Product
-              </button>
+                             <button
+                 onClick={() => {
+                   setShowAddForm(true);
+                   setEditing(null);
+                   reset();
+                 }}
+                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+               >
+                 Add Your First Product
+               </button>
             </div>
           ) : (
             <div className="divide-y divide-gray-200">
@@ -448,34 +582,61 @@ const VendorProductsPage: React.FC = () => {
                             </div>
                           )}
 
-                          <div className="text-xs text-gray-500">
-                            Created: {formatDate(product.createdAt)} • 
-                            Updated: {formatDate(product.updatedAt)}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                                                     <div className="text-xs text-gray-500">
+                             Created: {formatDate(product.createdAt)} • 
+                             Updated: {formatDate(product.updatedAt)}
+                           </div>
+                           
+                           {/* Action Buttons */}
+                           <div className="flex gap-2 mt-3">
+                             <button
+                               onClick={() => startEdit(product)}
+                               disabled={updateProductMutation.isPending}
+                               className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                             >
+                               <Edit className="h-3 w-3" />
+                               Edit
+                             </button>
+                             <button
+                               onClick={() => handleDelete(product)}
+                               disabled={deleteProductMutation.isPending}
+                               className="px-3 py-1.5 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                             >
+                               <Trash2 className="h-3 w-3" />
+                               Delete
+                             </button>
+                           </div>
+                         </div>
+                       </div>
+                     </div>
 
-                    <div className="flex items-center gap-2 ml-4">
-                      <button
-                        className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
-                        title="View details"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </button>
-                      <button
-                        className="p-2 text-gray-400 hover:text-green-600 transition-colors"
-                        title="Edit product"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </button>
-                      <button
-                        className="p-2 text-gray-400 hover:text-red-600 transition-colors"
-                        title="Delete product"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
+                                         <div className="flex items-center gap-2 ml-4">
+                       <button
+                         className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
+                         title="View details"
+                       >
+                         <Eye className="h-4 w-4" />
+                       </button>
+                       <button
+                         onClick={() => startEdit(product)}
+                         className="p-2 text-gray-400 hover:text-green-600 transition-colors"
+                         title="Edit product"
+                       >
+                         <Edit className="h-4 w-4" />
+                       </button>
+                                               <button
+                          onClick={() => handleDelete(product)}
+                          disabled={deleteProductMutation.isPending}
+                          className="p-2 text-gray-400 hover:text-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="Delete product"
+                        >
+                          {deleteProductMutation.isPending ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                        </button>
+                     </div>
                   </div>
                 </div>
               ))}
