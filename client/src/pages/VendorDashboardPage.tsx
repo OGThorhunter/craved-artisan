@@ -49,8 +49,8 @@ export const VendorDashboardPage = () => {
       bgColor: 'bg-blue-50',
       link: '/dashboard/vendor/products',
       stats: `${stats.totalProducts} active products`,
-      action: 'Add Product',
-      actionLink: '/dashboard/vendor/products/new'
+      action: 'Manage Products',
+      actionLink: '/dashboard/vendor/products'
     },
     {
       id: 'analytics',
@@ -122,12 +122,20 @@ export const VendorDashboardPage = () => {
   // Quick action cards for common tasks
   const quickActions = [
     {
+      id: 'manage-products',
+      title: 'Manage Products',
+      description: 'View and manage your product catalog',
+      icon: Package,
+      color: 'bg-blue-500',
+      link: '/dashboard/vendor/products'
+    },
+    {
       id: 'add-product',
       title: 'Add New Product',
       description: 'Create a new product listing',
       icon: Plus,
       color: 'bg-emerald-500',
-      link: '/dashboard/vendor/products/new'
+      link: '/dashboard/vendor/products'
     },
     {
       id: 'view-analytics',
@@ -171,6 +179,12 @@ export const VendorDashboardPage = () => {
               </p>
             </div>
             <div className="flex items-center space-x-4">
+              <Link href="/dashboard/vendor/products">
+                <button className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2">
+                  <Package className="w-5 h-5" />
+                  Manage Products
+                </button>
+              </Link>
               <div className="text-right">
                 <p className="text-sm text-gray-500">Store Status</p>
                 <p className="text-green-600 font-medium">Active</p>

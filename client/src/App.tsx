@@ -1,5 +1,6 @@
 import { Router, Route, Switch } from 'wouter';
 import { Toaster } from 'react-hot-toast';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './contexts/AuthContext';
 import { Layout } from './components/Layout';
 import { HomePage } from './pages/HomePage';
@@ -14,6 +15,7 @@ import DashboardPage from './pages/DashboardPage';
 import { CustomerDashboardPage } from './pages/CustomerDashboardPage';
 import { VendorDashboardPage } from './pages/VendorDashboardPage';
 import { VendorSettingsPage } from './pages/VendorSettingsPage';
+import VendorProductsPage from './pages/VendorProductsPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { EventCoordinatorDashboardPage } from './pages/EventCoordinatorDashboardPage';
 import { DropoffDashboardPage } from './pages/DropoffDashboardPage';
@@ -22,12 +24,23 @@ import { EventDetailPage } from './pages/EventDetailPage';
 import { NotFound } from './components/NotFound';
 import ProtectedRoute from './components/ProtectedRoute';
 
+// Create a client
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      retry: 1,
+    },
+  },
+});
+
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <Layout>
-          <Switch>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <Router>
+          <Layout>
+            <Switch>
             <Route path="/" component={HomePage} />
             <Route path="/login" component={LoginPage} />
             <Route path="/signup" component={SignupPage} />
@@ -56,6 +69,11 @@ function App() {
             <Route path="/dashboard/vendor/site-settings">
               <ProtectedRoute role="VENDOR">
                 <VendorSettingsPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/dashboard/vendor/products">
+              <ProtectedRoute role="VENDOR">
+                <VendorProductsPage />
               </ProtectedRoute>
             </Route>
             <Route path="/dashboard/admin">
@@ -112,6 +130,7 @@ function App() {
       <Toaster position="top-right" />
     </Router>
     </AuthProvider>
+    </QueryClientProvider>
   );
 }
 

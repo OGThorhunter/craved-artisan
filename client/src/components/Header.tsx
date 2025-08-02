@@ -113,12 +113,20 @@ export const Header = () => {
                     )}
                     
                     {user?.role === 'VENDOR' && (
-                      <Link href="/dashboard/vendor">
-                        <span className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
-                          <Store className="w-4 h-4 mr-2" />
-                          My Store
-                        </span>
-                      </Link>
+                      <>
+                        <Link href="/dashboard/vendor">
+                          <span className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
+                            <Store className="w-4 h-4 mr-2" />
+                            My Store
+                          </span>
+                        </Link>
+                        <Link href="/dashboard/vendor/products">
+                          <span className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
+                            <ShoppingBag className="w-4 h-4 mr-2" />
+                            Manage Products
+                          </span>
+                        </Link>
+                      </>
                     )}
                     
                     <button
@@ -209,6 +217,20 @@ export const Header = () => {
                         Dashboard
                       </button>
                     </Link>
+                    {user?.role === 'VENDOR' && (
+                      <>
+                        <Link href="/dashboard/vendor">
+                          <button className="w-full text-left text-sm font-medium text-gray-700 hover:text-primary-600 transition-colors">
+                            My Store
+                          </button>
+                        </Link>
+                        <Link href="/dashboard/vendor/products">
+                          <button className="w-full text-left text-sm font-medium text-gray-700 hover:text-primary-600 transition-colors">
+                            Manage Products
+                          </button>
+                        </Link>
+                      </>
+                    )}
                     <button
                       onClick={logout}
                       className="w-full text-left text-sm font-medium text-red-600 hover:text-red-700 transition-colors"

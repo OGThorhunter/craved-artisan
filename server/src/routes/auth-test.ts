@@ -88,8 +88,37 @@ router.post('/login', validateRequest(loginSchema), async (req: Request, res: Re
   try {
     const { email, password } = req.body;
 
-    // Mock password check (for testing purposes)
-    const mockHashedPassword = await bcrypt.hash('testpassword123', 12);
+    // Mock user credentials for testing
+    const mockUsers = [
+      {
+        email: 'test@example.com',
+        password: 'testpassword123',
+        userId: 'test-user-id',
+        role: 'CUSTOMER',
+        firstName: 'Test',
+        lastName: 'User'
+      },
+      {
+        email: 'vendor@cravedartisan.com',
+        password: 'vendor123',
+        userId: 'mock-user-id',
+        role: 'VENDOR',
+        firstName: 'Vendor',
+        lastName: 'User'
+      }
+    ];
+
+    // Find user by email
+    const user = mockUsers.find(u => u.email === email);
+    if (!user) {
+      return res.status(401).json({
+        error: 'Invalid credentials',
+        message: 'Email or password is incorrect'
+      });
+    }
+
+    // Check password
+    const mockHashedPassword = await bcrypt.hash(user.password, 12);
     const isPasswordValid = await bcrypt.compare(password, mockHashedPassword);
 
     if (!isPasswordValid) {
@@ -100,7 +129,7 @@ router.post('/login', validateRequest(loginSchema), async (req: Request, res: Re
     }
 
     // Set session
-    req.session.userId = 'test-user-id';
+    req.session.userId = user.userId;
     
     // Save session explicitly
     req.session.save((err) => {
@@ -118,12 +147,12 @@ router.post('/login', validateRequest(loginSchema), async (req: Request, res: Re
       res.json({
         message: 'Login successful (TEST MODE)',
         user: {
-          id: 'test-user-id',
+          id: user.userId,
           email,
-          role: 'CUSTOMER',
+          role: user.role,
           profile: {
-            firstName: 'Test',
-            lastName: 'User',
+            firstName: user.firstName,
+            lastName: user.lastName,
             phone: null,
             bio: null,
             website: null,

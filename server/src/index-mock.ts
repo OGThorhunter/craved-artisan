@@ -1,14 +1,13 @@
-import 'express-async-errors';
 import express from 'express';
+import session from 'express-session';
+import pgSession from 'connect-pg-simple';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
-import dotenv from 'dotenv';
-import session from 'express-session';
-import pgSession from 'connect-pg-simple';
 import { createLogger, format, transports } from 'winston';
-import { errorHandler } from './middleware/errorHandler';
-import { env } from './utils/validateEnv';
+import dotenv from 'dotenv';
+
+// Import mock routes only
 import authRoutes from './routes/auth-test';
 import protectedRoutes from './routes/protected-demo';
 import vendorRoutes from './routes/vendor-mock';
@@ -48,41 +47,37 @@ const PORT = process.env.PORT || 3001;
 // Validate environment variables
 try {
   logger.info('Validating environment variables...');
-  logger.info(`Database URL: ${env.DATABASE_URL ? '✅ Set' : '❌ Missing'}`);
-  logger.info(`Node Environment: ${env.NODE_ENV}`);
-  logger.info(`Session Secret: ${env.SESSION_SECRET ? '✅ Set' : '❌ Missing'}`);
+  logger.info(`Database URL: ${process.env.DATABASE_URL ? '✅ Set' : '❌ Missing'}`);
+  logger.info(`Node Environment: ${process.env.NODE_ENV || 'development'}`);
+  logger.info(`Session Secret: ${process.env.SESSION_SECRET ? '✅ Set' : '❌ Missing'}`);
 } catch (error) {
   logger.error('Environment validation failed:', error);
   process.exit(1);
 }
 
-// Session store
-const PostgresStore = pgSession(session);
+// Session store (using memory store for mock mode)
+const MemoryStore = session.MemoryStore;
 
 // Middleware
 app.use(helmet());
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5174',
+  origin: process.env.CLIENT_URL || 'http://localhost:5173',
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Session middleware
+// Session middleware (using memory store)
 app.use(session({
-  store: new PostgresStore({
-    conString: env.DATABASE_URL,
-    tableName: 'sessions',
-    createTableIfMissing: true,
-  }),
-  secret: env.SESSION_SECRET,
+  store: new MemoryStore(),
+  secret: process.env.SESSION_SECRET || 'mock-secret-key',
   resave: true,
   saveUninitialized: true,
   cookie: {
-    secure: env.NODE_ENV === 'production',
+    secure: false, // Set to false for development
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    sameSite: env.NODE_ENV === 'production' ? 'strict' : 'lax',
+    sameSite: 'lax',
   },
 }));
 
@@ -101,14 +96,9 @@ app.get('/health', (req, res) => {
   res.status(200).json({ 
     status: 'OK', 
     timestamp: new Date().toISOString(),
-    service: 'craved-artisan-server'
+    service: 'craved-artisan-server',
+    mode: 'MOCK'
   });
-});
-
-// Test error route to verify Winston logging
-app.get('/test-error', (req, res) => {
-  logger.info('Test error route accessed');
-  throw new Error('This is a test error to verify Winston logging');
 });
 
 // API routes
@@ -117,45 +107,29 @@ app.use('/api/protected', protectedRoutes);
 app.use('/api/vendor', vendorRoutes);
 app.use('/api/vendor/products', vendorProductsRoutes);
 
-app.use('/api/products', (req, res) => {
-  res.json({ message: 'Product routes - to be implemented' });
-});
-
-app.use('/api/orders', (req, res) => {
-  res.json({ message: 'Order routes - to be implemented' });
-});
-
-app.use('/api/users', (req, res) => {
-  res.json({ message: 'User routes - to be implemented' });
+// Error handling middleware
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  logger.error('Unhandled error:', err);
+  res.status(500).json({
+    error: 'Internal server error',
+    message: 'Something went wrong'
+  });
 });
 
 // 404 handler
 app.use('*', (req, res) => {
-  logger.warn(`Route not found: ${req.method} ${req.originalUrl}`);
-  res.status(404).json({ 
-    error: 'Route not found',
-    path: req.originalUrl 
+  res.status(404).json({
+    error: 'Not found',
+    message: `Route ${req.originalUrl} not found`
   });
 });
 
-// Error handling middleware
-app.use(errorHandler);
-
 // Start server
 app.listen(PORT, () => {
-  logger.info(`Server running on port ${PORT}`);
-  logger.info(`Environment: ${env.NODE_ENV}`);
-});
-
-// Graceful shutdown
-process.on('SIGTERM', () => {
-  logger.info('SIGTERM received, shutting down gracefully');
-  process.exit(0);
-});
-
-process.on('SIGINT', () => {
-  logger.info('SIGINT received, shutting down gracefully');
-  process.exit(0);
-});
-
-export default app; 
+  logger.info(`🚀 Server running in MOCK MODE on port ${PORT}`);
+  logger.info(`📊 Health check: http://localhost:${PORT}/health`);
+  logger.info(`🔐 Auth endpoints: http://localhost:${PORT}/api/auth`);
+  logger.info(`🛡️ Protected endpoints: http://localhost:${PORT}/api/protected`);
+  logger.info(`🏪 Vendor endpoints: http://localhost:${PORT}/api/vendor`);
+  logger.info(`📦 Product endpoints: http://localhost:${PORT}/api/vendor/products`);
+}); 
