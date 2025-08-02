@@ -14,18 +14,18 @@ model User {
   id        String   @id @default(uuid())
   email     String   @unique
   password  String
-  name      String?  // Optional name field
+  name      String? // Optional name field
   role      Role     @default(CUSTOMER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   // Relations
-  profile        Profile?
-  vendorProfile  VendorProfile?
-  orders         Order[]
-  reviews        Review[]
-  favorites      Favorite[]
-  addresses      Address[]
+  profile       Profile?
+  vendorProfile VendorProfile?
+  orders        Order[]
+  reviews       Review[]
+  favorites     Favorite[]
+  addresses     Address[]
 
   @@map("users")
 }
@@ -38,7 +38,7 @@ model Profile {
   avatar      String?
   bio         String?
   website     String?
-  socialLinks Json?    // Store social media links as JSON
+  socialLinks Json? // Store social media links as JSON
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -61,31 +61,33 @@ model VendorProfile {
   updatedAt DateTime @updatedAt
 
   // Relations
-  products  Product[]
+  products    Product[]
+  ingredients Ingredient[]
+  recipes     Recipe[]
 
   @@map("vendor_profiles")
 }
 
 model Address {
-  id          String   @id @default(uuid())
-  type        AddressType
-  firstName   String
-  lastName    String
-  company     String?
-  address1    String
-  address2    String?
-  city        String
-  state       String
-  postalCode  String
-  country     String
-  phone       String?
-  isDefault   Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String      @id @default(uuid())
+  type       AddressType
+  firstName  String
+  lastName   String
+  company    String?
+  address1   String
+  address2   String?
+  city       String
+  state      String
+  postalCode String
+  country    String
+  phone      String?
+  isDefault  Boolean     @default(false)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
 
   // Relations
   userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   orders Order[]
 
   @@map("addresses")
@@ -109,40 +111,41 @@ model Product {
   orderItems      OrderItem[]
   reviews         Review[]
   favorites       Favorite[]
+  recipes         Recipe[] // Recipes that produce this product
 
   @@map("products")
 }
 
 model Order {
-  id            String      @id @default(uuid())
-  orderNumber   String      @unique
-  status        OrderStatus @default(PENDING)
-  subtotal      Decimal
-  tax           Decimal     @default(0)
-  shipping      Decimal     @default(0)
-  total         Decimal
-  notes         String?
+  id             String      @id @default(uuid())
+  orderNumber    String      @unique
+  status         OrderStatus @default(PENDING)
+  subtotal       Decimal
+  tax            Decimal     @default(0)
+  shipping       Decimal     @default(0)
+  total          Decimal
+  notes          String?
   trackingNumber String?
-  shippedAt     DateTime?
-  deliveredAt   DateTime?
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  shippedAt      DateTime?
+  deliveredAt    DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 
   // Relations
-  userId      String
-  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId            String
+  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   shippingAddressId String
-  shippingAddress Address @relation(fields: [shippingAddressId], references: [id])
-  orderItems  OrderItem[]
+  shippingAddress   Address     @relation(fields: [shippingAddressId], references: [id])
+  orderItems        OrderItem[]
 
   @@map("orders")
 }
 
 model OrderItem {
-  id        String @id @default(uuid())
-  quantity  Int
-  price     Decimal
-  total     Decimal
+  id       String  @id @default(uuid())
+  quantity Int
+  price    Decimal
+  total    Decimal
 
   // Relations
   orderId   String
@@ -154,13 +157,13 @@ model OrderItem {
 }
 
 model Review {
-  id        String   @id @default(uuid())
-  rating    Int
-  title     String?
-  comment   String?
-  isVerified Boolean @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(uuid())
+  rating     Int
+  title      String?
+  comment    String?
+  isVerified Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   // Relations
   userId    String
@@ -185,6 +188,67 @@ model Favorite {
   @@map("favorites")
 }
 
+model Ingredient {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  unit        String // e.g., "grams", "ounces", "cups"
+  costPerUnit Decimal  @default(0)
+  supplier    String? // Optional supplier information
+  isAvailable Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  vendorProfileId   String
+  vendorProfile     VendorProfile      @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  recipeIngredients RecipeIngredient[]
+
+  @@map("ingredients")
+}
+
+model Recipe {
+  id           String   @id @default(uuid())
+  name         String
+  description  String?
+  instructions String? // Step-by-step instructions
+  yield        Int // Number of units produced
+  yieldUnit    String // e.g., "pieces", "servings", "batches"
+  prepTime     Int? // Preparation time in minutes
+  cookTime     Int? // Cooking time in minutes
+  difficulty   String? // e.g., "Easy", "Medium", "Hard"
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  vendorProfileId   String
+  vendorProfile     VendorProfile      @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  productId         String? // Optional: recipe can produce a product
+  product           Product?           @relation(fields: [productId], references: [id], onDelete: SetNull)
+  recipeIngredients RecipeIngredient[]
+
+  @@map("recipes")
+}
+
+model RecipeIngredient {
+  id        String   @id @default(uuid())
+  quantity  Decimal // Amount of ingredient needed
+  unit      String // Unit of measurement
+  notes     String? // Optional notes about this ingredient in the recipe
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  recipeId     String
+  recipe       Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  ingredientId String
+  ingredient   Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+
+  @@unique([recipeId, ingredientId]) // Prevent duplicate ingredients in same recipe
+  @@map("recipe_ingredients")
+}
+
 enum Role {
   CUSTOMER
   VENDOR
@@ -207,4 +271,4 @@ enum OrderStatus {
   DELIVERED
   CANCELLED
   REFUNDED
-} 
+}

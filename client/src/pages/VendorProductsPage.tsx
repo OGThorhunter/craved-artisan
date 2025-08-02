@@ -113,6 +113,9 @@ const VendorProductsPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['vendor-products'] });
       setShowAddForm(false);
       reset();
+      setTags([]);
+      setImagePreview('');
+      setTagInput('');
     },
     onError: (error: any) => {
       const message = error.response?.data?.message || 'Failed to create product';
@@ -129,6 +132,9 @@ const VendorProductsPage: React.FC = () => {
       setShowAddForm(false);
       setEditing(null);
       reset();
+      setTags([]);
+      setImagePreview('');
+      setTagInput('');
     },
     onError: (error: any) => {
       const message = error.response?.data?.message || 'Failed to update product';
@@ -301,6 +307,9 @@ const VendorProductsPage: React.FC = () => {
                  if (!showAddForm) {
                    setEditing(null);
                    reset();
+                   setTags([]);
+                   setImagePreview('');
+                   setTagInput('');
                  }
                }}
                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
@@ -376,25 +385,47 @@ const VendorProductsPage: React.FC = () => {
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Image URL
-                  </label>
-                  <input
-                    type="url"
-                    {...register('imageUrl', {
-                      pattern: {
-                        value: /^https?:\/\/.+/,
-                        message: 'Please enter a valid URL'
-                      }
-                    })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="https://example.com/image.jpg"
-                  />
-                  {errors.imageUrl && (
-                    <p className="text-red-500 text-sm mt-1">{errors.imageUrl.message}</p>
-                  )}
-                </div>
+                                 <div>
+                   <label className="block text-sm font-medium text-gray-700 mb-1">
+                     Image URL
+                   </label>
+                   <input
+                     type="url"
+                     {...register('imageUrl', {
+                       pattern: {
+                         value: /^https?:\/\/.+/,
+                         message: 'Please enter a valid URL'
+                       }
+                     })}
+                     onChange={(e) => handleImageUrlChange(e.target.value)}
+                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                     placeholder="https://example.com/image.jpg"
+                   />
+                   {errors.imageUrl && (
+                     <p className="text-red-500 text-sm mt-1">{errors.imageUrl.message}</p>
+                   )}
+                   
+                   {/* Image Preview */}
+                   {imagePreview && (
+                     <div className="mt-3">
+                       <label className="block text-sm font-medium text-gray-700 mb-2">Preview:</label>
+                       <div className="relative inline-block">
+                         <img
+                           src={imagePreview}
+                           alt="Product preview"
+                           className="w-32 h-32 object-cover rounded-lg border border-gray-300"
+                           onError={(e) => {
+                             e.currentTarget.style.display = 'none';
+                             e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                           }}
+                         />
+                         <div className="hidden w-32 h-32 bg-gray-100 rounded-lg border border-gray-300 flex items-center justify-center">
+                           <ImageIcon className="w-8 h-8 text-gray-400" />
+                         </div>
+                       </div>
+                     </div>
+                   )}
+                 </div>
               </div>
 
               <div>
@@ -409,20 +440,57 @@ const VendorProductsPage: React.FC = () => {
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tags (comma-separated)
-                </label>
-                <input
-                  type="text"
-                  {...register('tags')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="handmade, artisan, wooden"
-                />
-                <p className="text-gray-500 text-sm mt-1">
-                  Separate tags with commas (e.g., handmade, artisan, wooden)
-                </p>
-              </div>
+                             <div>
+                 <label className="block text-sm font-medium text-gray-700 mb-1">
+                   Tags
+                 </label>
+                 
+                 {/* Tag Input */}
+                 <div className="flex gap-2 mb-3">
+                   <input
+                     type="text"
+                     value={tagInput}
+                     onChange={(e) => setTagInput(e.target.value)}
+                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+                     className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                     placeholder="Add a tag..."
+                   />
+                   <button
+                     type="button"
+                     onClick={addTag}
+                     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                   >
+                     Add
+                   </button>
+                 </div>
+                 
+                 {/* Tag Chips */}
+                 {tags.length > 0 && (
+                   <div className="flex flex-wrap gap-2">
+                     {tags.map((tag, index) => (
+                       <span
+                         key={index}
+                         className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full"
+                       >
+                         <Tag className="w-3 h-3" />
+                         {tag}
+                         <button
+                           type="button"
+                           onClick={() => removeTag(tag)}
+                           className="ml-1 hover:text-blue-600 transition-colors"
+                           title={`Remove tag: ${tag}`}
+                         >
+                           <X className="w-3 h-3" />
+                         </button>
+                       </span>
+                     ))}
+                   </div>
+                 )}
+                 
+                 <p className="text-gray-500 text-sm mt-2">
+                   Press Enter or click Add to add tags
+                 </p>
+               </div>
 
               <div className="flex items-center">
                 <input
@@ -453,29 +521,35 @@ const VendorProductsPage: React.FC = () => {
                     </>
                   )}
                 </button>
-                {editing && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEditing(null);
-                      reset();
-                    }}
-                    className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition-colors"
-                  >
-                    Cancel Edit
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowAddForm(false);
-                    setEditing(null);
-                    reset();
-                  }}
-                  className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition-colors"
-                >
-                  Cancel
-                </button>
+                                 {editing && (
+                   <button
+                     type="button"
+                     onClick={() => {
+                       setEditing(null);
+                       reset();
+                       setTags([]);
+                       setImagePreview('');
+                       setTagInput('');
+                     }}
+                     className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition-colors"
+                   >
+                     Cancel Edit
+                   </button>
+                 )}
+                                 <button
+                   type="button"
+                   onClick={() => {
+                     setShowAddForm(false);
+                     setEditing(null);
+                     reset();
+                     setTags([]);
+                     setImagePreview('');
+                     setTagInput('');
+                   }}
+                   className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition-colors"
+                 >
+                   Cancel
+                 </button>
               </div>
             </form>
           </div>
@@ -509,6 +583,9 @@ const VendorProductsPage: React.FC = () => {
                    setShowAddForm(true);
                    setEditing(null);
                    reset();
+                   setTags([]);
+                   setImagePreview('');
+                   setTagInput('');
                  }}
                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                >
@@ -644,6 +721,51 @@ const VendorProductsPage: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm.show && deleteConfirm.product && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                <Trash2 className="w-5 h-5 text-red-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">Delete Product</h3>
+            </div>
+            
+            <p className="text-gray-600 mb-6">
+              Are you sure you want to delete <span className="font-semibold">"{deleteConfirm.product.name}"</span>? 
+              This action cannot be undone.
+            </p>
+            
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={cancelDelete}
+                className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                disabled={deleteProductMutation.isPending}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {deleteProductMutation.isPending ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" />
+                    Delete
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

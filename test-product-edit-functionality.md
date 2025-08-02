@@ -33,8 +33,9 @@
 - ✅ **Price**: Should show existing price
 - ✅ **Stock**: Should show existing stock quantity
 - ✅ **Image URL**: Should show existing image URL
+- ✅ **Image Preview**: Should display image preview below URL field
 - ✅ **Description**: Should show existing description
-- ✅ **Tags**: Should show tags as comma-separated string
+- ✅ **Tags**: Should show tags as interactive chips with remove buttons
 - ✅ **Available**: Checkbox should reflect current availability
 
 #### 4. Test Edit Form Validation
@@ -106,17 +107,20 @@
 1. **Find Delete Button**: Look for the red trash icon next to any product OR the red "Delete" button below the product details
 2. **Click Delete**: Click either delete button on a product
 3. **Confirm Deletion**: 
-   - ✅ Confirmation dialog appears with product name
-   - ✅ Dialog asks "Are you sure you want to delete [product name]?"
-4. **Cancel Deletion**: Click "Cancel" in dialog
+   - ✅ Confirmation modal appears with product name
+   - ✅ Modal shows "Are you sure you want to delete [product name]?"
+   - ✅ Modal has Cancel and Delete buttons
+4. **Cancel Deletion**: Click "Cancel" in modal
+   - ✅ Modal closes
    - ✅ Product remains in list
    - ✅ No API call made
-5. **Confirm Deletion**: Click "OK" in dialog
+5. **Confirm Deletion**: Click "Delete" in modal
    - ✅ Loading spinner appears on delete button
-   - ✅ Button becomes disabled
+   - ✅ Button becomes disabled and shows "Deleting..."
    - ✅ Success toast appears: "Product deleted successfully!"
    - ✅ Product disappears from list
    - ✅ Product count updates
+   - ✅ Modal closes automatically
 
 #### 12. Test Action Buttons
 1. **Find Action Buttons**: Look for the blue "Edit" and red "Delete" buttons below each product
@@ -135,7 +139,50 @@
    - ✅ Buttons become disabled during their respective operations
    - ✅ Visual feedback shows operation is in progress
 
-#### 13. Test Delete Error Handling
+#### 13. Test Image Preview Functionality
+1. **Add Image URL**: Enter a valid image URL in the Image URL field
+2. **Verify Preview**: 
+   - ✅ Image preview appears below the URL field
+   - ✅ Preview shows 128x128 thumbnail
+   - ✅ Image loads correctly
+3. **Test Invalid URL**: 
+   - ✅ Enter invalid URL
+   - ✅ Preview shows placeholder icon
+4. **Test Edit Mode**: 
+   - ✅ Edit existing product with image
+   - ✅ Preview shows existing image
+   - ✅ Update URL updates preview
+
+#### 14. Test Tag Chips Functionality
+1. **Add Tags**: 
+   - ✅ Type tag name and press Enter
+   - ✅ Type tag name and click "Add" button
+   - ✅ Tag appears as blue chip with Tag icon
+2. **Remove Tags**: 
+   - ✅ Click X button on tag chip
+   - ✅ Tag disappears from list
+3. **Duplicate Prevention**: 
+   - ✅ Try to add same tag twice
+   - ✅ Only one instance appears
+4. **Edit Mode**: 
+   - ✅ Edit existing product
+   - ✅ Existing tags appear as chips
+   - ✅ Can add/remove tags
+5. **Form Submission**: 
+   - ✅ Tags are saved correctly
+   - ✅ Tags appear in product list
+
+#### 15. Test Toast Notifications
+1. **Create Product**: 
+   - ✅ Success toast: "Product created successfully!"
+2. **Update Product**: 
+   - ✅ Success toast: "Product updated successfully!"
+3. **Delete Product**: 
+   - ✅ Success toast: "Product deleted successfully!"
+4. **Error Handling**: 
+   - ✅ Error toasts for failed operations
+
+#### 16. Test Delete Error Handling
 1. **Simulate Network Error**: (if possible)
 2. **Verify Error Toast**: Should show "Failed to delete product"
 3. **Verify Product Remains**: Product should still be in the list
@@ -204,6 +251,33 @@
 - Buttons become disabled during operations
 - Hover effects and proper styling
 - Consistent with existing icon buttons in header
+
+#### ✅ Toast Notifications
+- Success toasts for create, update, and delete operations
+- Error toasts for failed operations
+- Consistent messaging across all operations
+
+#### ✅ Confirmation Modal
+- Professional modal dialog for delete confirmation
+- Shows product name in confirmation message
+- Cancel and Delete buttons with proper styling
+- Loading states during deletion
+- Backdrop overlay for focus management
+
+#### ✅ Image Preview
+- Real-time image preview when URL is entered
+- 128x128 thumbnail display
+- Fallback placeholder for invalid images
+- Updates dynamically when URL changes
+- Works in both create and edit modes
+
+#### ✅ Tag Chips
+- Interactive tag chips with Tag icons
+- Add tags via Enter key or Add button
+- Remove tags with X button
+- Duplicate prevention
+- Blue styling with hover effects
+- Proper accessibility with title attributes
 
 ### Test Data Examples
 

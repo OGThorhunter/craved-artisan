@@ -16,6 +16,8 @@ import { CustomerDashboardPage } from './pages/CustomerDashboardPage';
 import { VendorDashboardPage } from './pages/VendorDashboardPage';
 import { VendorSettingsPage } from './pages/VendorSettingsPage';
 import VendorProductsPage from './pages/VendorProductsPage';
+import VendorInventoryPage from './pages/VendorInventoryPage';
+import VendorRecipeCreatePage from './pages/VendorRecipeCreatePage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { EventCoordinatorDashboardPage } from './pages/EventCoordinatorDashboardPage';
 import { DropoffDashboardPage } from './pages/DropoffDashboardPage';
@@ -74,6 +76,16 @@ function App() {
             <Route path="/dashboard/vendor/products">
               <ProtectedRoute role="VENDOR">
                 <VendorProductsPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/dashboard/vendor/inventory">
+              <ProtectedRoute role="VENDOR">
+                <VendorInventoryPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/dashboard/vendor/recipes/create">
+              <ProtectedRoute role="VENDOR">
+                <VendorRecipeCreatePage />
               </ProtectedRoute>
             </Route>
             <Route path="/dashboard/admin">

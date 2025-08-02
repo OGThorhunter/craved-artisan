@@ -12,6 +12,10 @@ import authRoutes from './routes/auth-test';
 import protectedRoutes from './routes/protected-demo';
 import vendorRoutes from './routes/vendor-mock';
 import vendorProductsRoutes from './routes/vendor-products-mock';
+import ingredientRoutes from './routes/ingredients-mock';
+import recipeRoutes from './routes/recipes-mock';
+import inventoryDeductionRoutes from './routes/inventory-deduction';
+import supplierMarketplaceRoutes from './routes/supplier-marketplace';
 
 // Load environment variables
 dotenv.config();
@@ -106,6 +110,10 @@ app.use('/api/auth', authRoutes);
 app.use('/api/protected', protectedRoutes);
 app.use('/api/vendor', vendorRoutes);
 app.use('/api/vendor/products', vendorProductsRoutes);
+app.use('/api/ingredients', ingredientRoutes);
+app.use('/api/recipes', recipeRoutes);
+app.use('/api/inventory', inventoryDeductionRoutes);
+app.use('/api/supplier', supplierMarketplaceRoutes);
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -132,4 +140,8 @@ app.listen(PORT, () => {
   logger.info(`🛡️ Protected endpoints: http://localhost:${PORT}/api/protected`);
   logger.info(`🏪 Vendor endpoints: http://localhost:${PORT}/api/vendor`);
   logger.info(`📦 Product endpoints: http://localhost:${PORT}/api/vendor/products`);
+  logger.info(`🥘 Ingredient endpoints: http://localhost:${PORT}/api/ingredients`);
+  logger.info(`👨‍🍳 Recipe endpoints: http://localhost:${PORT}/api/recipes`);
+  logger.info(`📦 Inventory endpoints: http://localhost:${PORT}/api/inventory`);
+  logger.info(`🏪 Supplier endpoints: http://localhost:${PORT}/api/supplier`);
 }); 
