@@ -1,5 +1,8 @@
 import { Link } from 'wouter';
 import { useAuth } from '../contexts/AuthContext';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'react-hot-toast';
+import axios from 'axios';
 import { 
   Package, 
   TrendingUp, 
@@ -20,11 +23,67 @@ import {
   Shield,
   CreditCard,
   Truck,
-  Award
+  Award,
+  AlertTriangle,
+  TrendingDown,
+  RefreshCw,
+  CheckCircle,
+  XCircle
 } from 'lucide-react';
 
 export const VendorDashboardPage = () => {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  // API functions
+  const fetchLowMarginProducts = async () => {
+    const response = await axios.get('/api/vendor/products/low-margin', {
+      withCredentials: true
+    });
+    return response.data;
+  };
+
+  const fetchIngredientPriceAlerts = async () => {
+    const response = await axios.get('/api/vendor/products/ingredient-price-alerts', {
+      withCredentials: true
+    });
+    return response.data;
+  };
+
+  const batchUpdatePricing = async (data: { targetMargin: number; productIds?: string[] }) => {
+    const response = await axios.post('/api/vendor/products/batch-update-pricing', data, {
+      withCredentials: true
+    });
+    return response.data;
+  };
+
+  // React Query hooks
+  const { data: lowMarginData, isLoading: lowMarginLoading } = useQuery({
+    queryKey: ['low-margin-products'],
+    queryFn: fetchLowMarginProducts,
+    retry: 1,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const { data: priceAlertsData, isLoading: priceAlertsLoading } = useQuery({
+    queryKey: ['ingredient-price-alerts'],
+    queryFn: fetchIngredientPriceAlerts,
+    retry: 1,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const batchUpdateMutation = useMutation({
+    mutationFn: batchUpdatePricing,
+    onSuccess: (data) => {
+      toast.success(`Updated ${data.summary.updated} products with new pricing`);
+      queryClient.invalidateQueries({ queryKey: ['low-margin-products'] });
+      queryClient.invalidateQueries({ queryKey: ['ingredient-price-alerts'] });
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to update pricing';
+      toast.error(message);
+    }
+  });
 
   // Mock data - in real app, this would come from API
   const stats = {
@@ -34,7 +93,9 @@ export const VendorDashboardPage = () => {
     averageRating: 4.8,
     monthlyGrowth: 12.5,
     totalCustomers: 156,
-    lowStockItems: 3
+    lowStockItems: 3,
+    lowMarginItems: lowMarginData?.count || 0,
+    priceAlerts: priceAlertsData?.count || 0
   };
 
   // Dashboard cards configuration
@@ -271,6 +332,136 @@ export const VendorDashboardPage = () => {
           </div>
         </div>
 
+        {/* Margin Alerts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Low Margin Products Alert */}
+          <div className="bg-white rounded-2xl shadow-sm p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center">
+                <div className="p-2 bg-red-100 rounded-lg">
+                  <AlertTriangle className="w-6 h-6 text-red-600" />
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-lg font-semibold text-gray-900">Low Margin Products</h3>
+                  <p className="text-sm text-gray-600">Products with margins below 35%</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-bold text-red-600">{stats.lowMarginItems}</p>
+                <p className="text-sm text-gray-500">items need attention</p>
+              </div>
+            </div>
+            
+            {lowMarginLoading ? (
+              <div className="animate-pulse space-y-3">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="h-4 bg-gray-200 rounded"></div>
+                ))}
+              </div>
+            ) : lowMarginData?.lowMarginProducts?.length > 0 ? (
+              <div className="space-y-3">
+                {lowMarginData.lowMarginProducts.slice(0, 3).map((product: any) => (
+                  <div key={product.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div>
+                      <p className="font-medium text-gray-900">{product.name}</p>
+                      <p className="text-sm text-gray-600">
+                        Margin: <span className={`font-medium ${
+                          product.marginAnalysis.status === 'danger' ? 'text-red-600' : 'text-yellow-600'
+                        }`}>
+                          {product.marginAnalysis.currentMargin}%
+                        </span>
+                      </p>
+                    </div>
+                    <Link href="/dashboard/vendor/products">
+                      <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                        Review →
+                      </button>
+                    </Link>
+                  </div>
+                ))}
+                {lowMarginData.lowMarginProducts.length > 3 && (
+                  <div className="text-center pt-2">
+                    <Link href="/dashboard/vendor/products">
+                      <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                        View all {lowMarginData.lowMarginProducts.length} items →
+                      </button>
+                    </Link>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-6">
+                <CheckCircle className="w-8 h-8 text-green-500 mx-auto mb-2" />
+                <p className="text-gray-600">All products have healthy margins!</p>
+              </div>
+            )}
+          </div>
+
+          {/* Ingredient Price Alerts */}
+          <div className="bg-white rounded-2xl shadow-sm p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center">
+                <div className="p-2 bg-orange-100 rounded-lg">
+                  <TrendingDown className="w-6 h-6 text-orange-600" />
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-lg font-semibold text-gray-900">Price Alerts</h3>
+                  <p className="text-sm text-gray-600">Ingredient price increases detected</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-bold text-orange-600">{stats.priceAlerts}</p>
+                <p className="text-sm text-gray-500">price changes</p>
+              </div>
+            </div>
+            
+            {priceAlertsLoading ? (
+              <div className="animate-pulse space-y-3">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="h-4 bg-gray-200 rounded"></div>
+                ))}
+              </div>
+            ) : priceAlertsData?.alerts?.length > 0 ? (
+              <div className="space-y-3">
+                {priceAlertsData.alerts.slice(0, 3).map((alert: any, index: number) => (
+                  <div key={index} className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+                    <div>
+                      <p className="font-medium text-gray-900">{alert.ingredientName}</p>
+                      <p className="text-sm text-gray-600">
+                        +{alert.priceIncrease}% • {alert.productName}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-orange-600">
+                        ${alert.currentCost}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        was ${alert.previousCost}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                {priceAlertsData.alerts.length > 3 && (
+                  <div className="text-center pt-2">
+                    <button 
+                      onClick={() => batchUpdateMutation.mutate({ targetMargin: 35 })}
+                      disabled={batchUpdateMutation.isPending}
+                      className="text-blue-600 hover:text-blue-700 text-sm font-medium disabled:opacity-50"
+                    >
+                      {batchUpdateMutation.isPending ? 'Updating...' : 'Update All Prices →'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-6">
+                <CheckCircle className="w-8 h-8 text-green-500 mx-auto mb-2" />
+                <p className="text-gray-600">No significant price changes detected</p>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Quick Actions */}
         <div className="mb-8">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
@@ -290,6 +481,83 @@ export const VendorDashboardPage = () => {
                 </div>
               </Link>
             ))}
+          </div>
+        </div>
+
+        {/* Batch Pricing Update Section */}
+        <div className="mb-8">
+          <div className="bg-white rounded-2xl shadow-sm p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">Batch Pricing Update</h2>
+                <p className="text-gray-600 mt-1">Update pricing across your inventory based on target margins</p>
+              </div>
+              <div className="flex items-center space-x-3">
+                <div className="text-right">
+                  <p className="text-sm text-gray-500">Target Margin</p>
+                  <p className="text-lg font-semibold text-gray-900">35%</p>
+                </div>
+                <Link href="/dashboard/vendor/batch-pricing">
+                  <button className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2">
+                    <DollarSign className="w-5 h-5" />
+                    Manage Pricing
+                  </button>
+                </Link>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-center">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <Package className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-gray-900">Total Products</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats.totalProducts}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-center">
+                  <div className="p-2 bg-orange-100 rounded-lg">
+                    <AlertTriangle className="w-5 h-5 text-orange-600" />
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-gray-900">Low Margin Items</p>
+                    <p className="text-2xl font-bold text-orange-600">{stats.lowMarginItems}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-center">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-gray-900">Healthy Margins</p>
+                    <p className="text-2xl font-bold text-green-600">{stats.totalProducts - stats.lowMarginItems}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+              <div className="flex items-start">
+                <div className="p-1 bg-blue-100 rounded">
+                  <Target className="w-4 h-4 text-blue-600" />
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-blue-900">How it works</p>
+                  <p className="text-sm text-blue-700 mt-1">
+                    The system will calculate new prices for all products with recipes, ensuring they meet your 35% target margin. 
+                    Only products with significant price changes (>5%) will be updated.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -343,6 +611,36 @@ export const VendorDashboardPage = () => {
                 </div>
                 <span className="text-sm text-gray-500">2 hours ago</span>
               </div>
+              
+              {priceAlertsData?.alerts?.length > 0 && (
+                <div className="flex items-center space-x-4 p-4 bg-orange-50 rounded-lg border border-orange-200">
+                  <div className="p-2 bg-orange-100 rounded-lg">
+                    <TrendingDown className="w-5 h-5 text-orange-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900">Ingredient price increase detected</p>
+                    <p className="text-sm text-gray-600">
+                      {priceAlertsData.alerts[0].ingredientName} increased by {priceAlertsData.alerts[0].priceIncrease}%
+                    </p>
+                  </div>
+                  <span className="text-sm text-gray-500">1 hour ago</span>
+                </div>
+              )}
+              
+              {lowMarginData?.lowMarginProducts?.length > 0 && (
+                <div className="flex items-center space-x-4 p-4 bg-red-50 rounded-lg border border-red-200">
+                  <div className="p-2 bg-red-100 rounded-lg">
+                    <AlertTriangle className="w-5 h-5 text-red-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-900">Low margin products detected</p>
+                    <p className="text-sm text-gray-600">
+                      {lowMarginData.lowMarginProducts.length} products have margins below 35%
+                    </p>
+                  </div>
+                  <span className="text-sm text-gray-500">3 hours ago</span>
+                </div>
+              )}
               
               <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
                 <div className="p-2 bg-blue-100 rounded-lg">

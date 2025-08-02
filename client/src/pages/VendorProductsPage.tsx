@@ -16,8 +16,29 @@ interface Product {
   tags: string[];
   stock: number;
   isAvailable: boolean;
+  targetMargin?: number;
+  recipeId?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+interface MarginAnalysis {
+  product: {
+    id: string;
+    name: string;
+    currentPrice: number;
+    targetMargin: number | null;
+  };
+  costAnalysis: {
+    unitCost: number;
+    recipeYield: number;
+    hasRecipe: boolean;
+  };
+  marginAnalysis: {
+    currentMargin: number;
+    status: 'danger' | 'warning' | 'safe';
+    suggestedPrice: number | null;
+  };
 }
 
 interface ProductsResponse {
@@ -33,6 +54,8 @@ interface CreateProductForm {
   tags: string;
   stock: number;
   isAvailable: boolean;
+  targetMargin: number;
+  recipeId: string;
 }
 
 // API functions
@@ -54,7 +77,9 @@ const createProduct = async (productData: CreateProductForm): Promise<{ message:
     ...productData,
     tags,
     price: Number(productData.price),
-    stock: Number(productData.stock)
+    stock: Number(productData.stock),
+    targetMargin: productData.targetMargin ? Number(productData.targetMargin) : null,
+    recipeId: productData.recipeId || null
   }, {
     withCredentials: true
   });
@@ -72,8 +97,17 @@ const updateProduct = async (productData: CreateProductForm & { id: string }): P
     ...productData,
     tags,
     price: Number(productData.price),
-    stock: Number(productData.stock)
+    stock: Number(productData.stock),
+    targetMargin: productData.targetMargin ? Number(productData.targetMargin) : null,
+    recipeId: productData.recipeId || null
   }, {
+    withCredentials: true
+  });
+  return response.data;
+};
+
+const fetchMarginAnalysis = async (productId: string): Promise<MarginAnalysis> => {
+  const response = await axios.get(`/api/vendor/products/${productId}/margin`, {
     withCredentials: true
   });
   return response.data;
@@ -91,6 +125,8 @@ const VendorProductsPage: React.FC = () => {
   const [imagePreview, setImagePreview] = useState<string>('');
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState<string>('');
+  const [marginData, setMarginData] = useState<MarginAnalysis | null>(null);
+  const [showMarginAnalysis, setShowMarginAnalysis] = useState(false);
 
   // React Query for fetching products
   const {
@@ -135,6 +171,8 @@ const VendorProductsPage: React.FC = () => {
       setTags([]);
       setImagePreview('');
       setTagInput('');
+      setMarginData(null);
+      setShowMarginAnalysis(false);
     },
     onError: (error: any) => {
       const message = error.response?.data?.message || 'Failed to update product';
@@ -157,11 +195,25 @@ const VendorProductsPage: React.FC = () => {
     }
   });
 
+  // React Query for margin analysis
+  const marginAnalysisMutation = useMutation({
+    mutationFn: fetchMarginAnalysis,
+    onSuccess: (data) => {
+      setMarginData(data);
+      setShowMarginAnalysis(true);
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to fetch margin analysis';
+      toast.error(message);
+    }
+  });
+
   // React Hook Form
   const {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors, isSubmitting }
   } = useForm<CreateProductForm>({
     defaultValues: {
@@ -171,9 +223,15 @@ const VendorProductsPage: React.FC = () => {
       imageUrl: '',
       tags: '',
       stock: 0,
-      isAvailable: true
+      isAvailable: true,
+      targetMargin: 0,
+      recipeId: ''
     }
   });
+
+  // Watch price and target margin for real-time calculations
+  const watchedPrice = watch('price');
+  const watchedTargetMargin = watch('targetMargin');
 
   const onSubmit = (data: CreateProductForm) => {
     const payload = {
@@ -210,9 +268,13 @@ const VendorProductsPage: React.FC = () => {
     setShowAddForm(true);
     setTags(product.tags);
     setImagePreview(product.imageUrl || '');
+    setMarginData(null);
+    setShowMarginAnalysis(false);
     reset({
       ...product,
       tags: '', // We'll use the tags state instead
+      targetMargin: product.targetMargin || 0,
+      recipeId: product.recipeId || ''
     });
   };
 
@@ -310,6 +372,10 @@ const VendorProductsPage: React.FC = () => {
                    setTags([]);
                    setImagePreview('');
                    setTagInput('');
+                   setMarginData(null);
+                   setShowMarginAnalysis(false);
+                   setMarginData(null);
+                   setShowMarginAnalysis(false);
                  }
                }}
                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
@@ -492,6 +558,135 @@ const VendorProductsPage: React.FC = () => {
                  </p>
                </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Target Margin (%)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="0"
+                    max="100"
+                    {...register('targetMargin', { 
+                      min: { value: 0, message: 'Target margin must be non-negative' },
+                      max: { value: 100, message: 'Target margin cannot exceed 100%' }
+                    })}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="0.0"
+                  />
+                  {errors.targetMargin && (
+                    <p className="text-red-500 text-sm mt-1">{errors.targetMargin.message}</p>
+                  )}
+                  <p className="text-gray-500 text-sm mt-1">
+                    Set your desired profit margin percentage
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Recipe ID (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    {...register('recipeId')}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter recipe ID for cost calculation"
+                  />
+                  <p className="text-gray-500 text-sm mt-1">
+                    Link to a recipe for automatic cost calculation
+                  </p>
+                </div>
+              </div>
+
+              {/* Margin Analysis Section */}
+              {editing && (
+                <div className="border-t pt-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-medium text-gray-900">Margin Analysis</h3>
+                    <button
+                      type="button"
+                      onClick={() => marginAnalysisMutation.mutate(editing.id)}
+                      disabled={marginAnalysisMutation.isPending}
+                      className="px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                    >
+                      {marginAnalysisMutation.isPending ? (
+                        <>
+                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                          Calculating...
+                        </>
+                      ) : (
+                        <>
+                          <DollarSign className="h-3 w-3" />
+                          Calculate Margin
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {showMarginAnalysis && marginData && (
+                    <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+                      {/* Cost Analysis */}
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-900 mb-2">Cost Analysis</h4>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="text-gray-600">Unit Cost:</span>
+                            <span className="ml-2 font-medium">${marginData.costAnalysis.unitCost.toFixed(2)}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Recipe Yield:</span>
+                            <span className="ml-2 font-medium">{marginData.costAnalysis.recipeYield}</span>
+                          </div>
+                          <div className="col-span-2">
+                            <span className="text-gray-600">Has Recipe:</span>
+                            <span className={`ml-2 font-medium ${marginData.costAnalysis.hasRecipe ? 'text-green-600' : 'text-gray-500'}`}>
+                              {marginData.costAnalysis.hasRecipe ? 'Yes' : 'No'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Margin Analysis */}
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-900 mb-2">Margin Analysis</h4>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="text-gray-600">Current Margin:</span>
+                            <span className={`ml-2 font-medium ${
+                              marginData.marginAnalysis.status === 'danger' ? 'text-red-600' :
+                              marginData.marginAnalysis.status === 'warning' ? 'text-yellow-600' :
+                              'text-green-600'
+                            }`}>
+                              {marginData.marginAnalysis.currentMargin.toFixed(1)}%
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Status:</span>
+                            <span className={`ml-2 px-2 py-1 text-xs font-medium rounded-full ${
+                              marginData.marginAnalysis.status === 'danger' ? 'bg-red-100 text-red-800' :
+                              marginData.marginAnalysis.status === 'warning' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-green-100 text-green-800'
+                            }`}>
+                              {marginData.marginAnalysis.status === 'danger' ? 'Danger' :
+                               marginData.marginAnalysis.status === 'warning' ? 'Warning' : 'Safe'}
+                            </span>
+                          </div>
+                          {marginData.marginAnalysis.suggestedPrice && (
+                            <div className="col-span-2">
+                              <span className="text-gray-600">Suggested Price:</span>
+                              <span className="ml-2 font-medium text-blue-600">
+                                ${marginData.marginAnalysis.suggestedPrice.toFixed(2)}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="flex items-center">
                 <input
                   type="checkbox"
@@ -545,6 +740,8 @@ const VendorProductsPage: React.FC = () => {
                      setTags([]);
                      setImagePreview('');
                      setTagInput('');
+                     setMarginData(null);
+                     setShowMarginAnalysis(false);
                    }}
                    className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition-colors"
                  >
@@ -586,6 +783,8 @@ const VendorProductsPage: React.FC = () => {
                    setTags([]);
                    setImagePreview('');
                    setTagInput('');
+                   setMarginData(null);
+                   setShowMarginAnalysis(false);
                  }}
                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                >
@@ -632,6 +831,12 @@ const VendorProductsPage: React.FC = () => {
                               <Package className="h-4 w-4" />
                               <span>{product.stock} in stock</span>
                             </div>
+                            {product.targetMargin && (
+                              <div className="flex items-center gap-1">
+                                <span className="text-gray-500">Target:</span>
+                                <span className="font-medium">{product.targetMargin}%</span>
+                              </div>
+                            )}
                           </div>
 
                           {product.description && (
@@ -673,6 +878,14 @@ const VendorProductsPage: React.FC = () => {
                              >
                                <Edit className="h-3 w-3" />
                                Edit
+                             </button>
+                             <button
+                               onClick={() => marginAnalysisMutation.mutate(product.id)}
+                               disabled={marginAnalysisMutation.isPending}
+                               className="px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                             >
+                               <DollarSign className="h-3 w-3" />
+                               Margin
                              </button>
                              <button
                                onClick={() => handleDelete(product)}
@@ -761,6 +974,124 @@ const VendorProductsPage: React.FC = () => {
                     Delete
                   </>
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Margin Analysis Modal */}
+      {showMarginAnalysis && marginData && !editing && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                  <DollarSign className="w-5 h-5 text-green-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Margin Analysis</h3>
+              </div>
+              <button
+                onClick={() => {
+                  setShowMarginAnalysis(false);
+                  setMarginData(null);
+                }}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+                title="Close margin analysis"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="space-y-6">
+              {/* Product Info */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="text-sm font-medium text-gray-900 mb-2">Product Information</h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-600">Name:</span>
+                    <span className="ml-2 font-medium">{marginData.product.name}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Current Price:</span>
+                    <span className="ml-2 font-medium">${marginData.product.currentPrice.toFixed(2)}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Target Margin:</span>
+                    <span className="ml-2 font-medium">
+                      {marginData.product.targetMargin ? `${marginData.product.targetMargin}%` : 'Not set'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Cost Analysis */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="text-sm font-medium text-gray-900 mb-2">Cost Analysis</h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-600">Unit Cost:</span>
+                    <span className="ml-2 font-medium">${marginData.costAnalysis.unitCost.toFixed(2)}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Recipe Yield:</span>
+                    <span className="ml-2 font-medium">{marginData.costAnalysis.recipeYield}</span>
+                  </div>
+                  <div className="col-span-2">
+                    <span className="text-gray-600">Has Recipe:</span>
+                    <span className={`ml-2 font-medium ${marginData.costAnalysis.hasRecipe ? 'text-green-600' : 'text-gray-500'}`}>
+                      {marginData.costAnalysis.hasRecipe ? 'Yes' : 'No'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Margin Analysis */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="text-sm font-medium text-gray-900 mb-2">Margin Analysis</h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-600">Current Margin:</span>
+                    <span className={`ml-2 font-medium text-lg ${
+                      marginData.marginAnalysis.status === 'danger' ? 'text-red-600' :
+                      marginData.marginAnalysis.status === 'warning' ? 'text-yellow-600' :
+                      'text-green-600'
+                    }`}>
+                      {marginData.marginAnalysis.currentMargin.toFixed(1)}%
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Status:</span>
+                    <span className={`ml-2 px-3 py-1 text-sm font-medium rounded-full ${
+                      marginData.marginAnalysis.status === 'danger' ? 'bg-red-100 text-red-800' :
+                      marginData.marginAnalysis.status === 'warning' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-green-100 text-green-800'
+                    }`}>
+                      {marginData.marginAnalysis.status === 'danger' ? 'Danger' :
+                       marginData.marginAnalysis.status === 'warning' ? 'Warning' : 'Safe'}
+                    </span>
+                  </div>
+                  {marginData.marginAnalysis.suggestedPrice && (
+                    <div className="col-span-2">
+                      <span className="text-gray-600">Suggested Price:</span>
+                      <span className="ml-2 font-medium text-blue-600 text-lg">
+                        ${marginData.marginAnalysis.suggestedPrice.toFixed(2)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={() => {
+                  setShowMarginAnalysis(false);
+                  setMarginData(null);
+                }}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+              >
+                Close
               </button>
             </div>
           </div>

@@ -12,7 +12,7 @@ import { env } from './utils/validateEnv';
 import authRoutes from './routes/auth-test';
 import protectedRoutes from './routes/protected-demo';
 import vendorRoutes from './routes/vendor-mock';
-import vendorProductsRoutes from './routes/vendor-products-mock';
+import vendorProductsRoutes from './routes/vendor-products';
 import vendorRecipesRoutes from './routes/vendor-recipes';
 import ingredientRoutes from './routes/ingredients';
 import recipeRoutes from './routes/recipes';

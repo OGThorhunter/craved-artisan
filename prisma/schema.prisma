@@ -103,16 +103,19 @@ model Product {
   tags        String[] // Array of tags
   stock       Int      @default(0)
   isAvailable Boolean  @default(true)
+  targetMargin Float?  // Target profit margin as a percentage
+  recipeId    String?  // Optional reference to the recipe that produces this product
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   // Relations
   vendorProfileId String
   vendorProfile   VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  recipe          Recipe?       @relation("ProductRecipe", fields: [recipeId], references: [id], onDelete: SetNull)
+  recipes         Recipe[]      // Recipes that produce this product
   orderItems      OrderItem[]
   reviews         Review[]
   favorites       Favorite[]
-  recipes         Recipe[] // Recipes that produce this product
 
   @@map("products")
 }
@@ -228,6 +231,7 @@ model Recipe {
   vendorProfile     VendorProfile      @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
   productId         String? // Optional: recipe can produce a product
   product           Product?           @relation(fields: [productId], references: [id], onDelete: SetNull)
+  products          Product[]          @relation("ProductRecipe") // Products that reference this recipe
   recipeIngredients RecipeIngredient[]
   recipeVersions    RecipeVersion[]
 
