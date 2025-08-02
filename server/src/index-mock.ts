@@ -13,8 +13,10 @@ import protectedRoutes from './routes/protected-demo';
 import vendorRoutes from './routes/vendor-mock';
 import vendorProductsRoutes from './routes/vendor-products-mock';
 import vendorRecipesRoutes from './routes/vendor-recipes';
+import vendorOrdersRoutes from './routes/vendor-orders-mock';
 import ingredientRoutes from './routes/ingredients-mock';
 import recipeRoutes from './routes/recipes-mock';
+import orderRoutes from './routes/orders-mock';
 import inventoryDeductionRoutes from './routes/inventory-deduction';
 import supplierMarketplaceRoutes from './routes/supplier-marketplace';
 
@@ -112,8 +114,10 @@ app.use('/api/protected', protectedRoutes);
 app.use('/api/vendor', vendorRoutes);
 app.use('/api/vendor/products', vendorProductsRoutes);
 app.use('/api/vendor/recipes', vendorRecipesRoutes);
+app.use('/api/vendor/orders', vendorOrdersRoutes);
 app.use('/api/ingredients', ingredientRoutes);
 app.use('/api/recipes', recipeRoutes);
+app.use('/api/orders', orderRoutes);
 app.use('/api/inventory', inventoryDeductionRoutes);
 app.use('/api/supplier', supplierMarketplaceRoutes);
 
@@ -144,6 +148,8 @@ app.listen(PORT, () => {
   logger.info(`📦 Product endpoints: http://localhost:${PORT}/api/vendor/products`);
   logger.info(`🥘 Ingredient endpoints: http://localhost:${PORT}/api/ingredients`);
   logger.info(`👨‍🍳 Recipe endpoints: http://localhost:${PORT}/api/recipes`);
+  logger.info(`🛒 Order endpoints: http://localhost:${PORT}/api/orders`);
+  logger.info(`📦 Vendor Order endpoints: http://localhost:${PORT}/api/vendor/orders`);
   logger.info(`📦 Inventory endpoints: http://localhost:${PORT}/api/inventory`);
   logger.info(`🏪 Supplier endpoints: http://localhost:${PORT}/api/supplier`);
 }); 

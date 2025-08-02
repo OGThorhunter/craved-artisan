@@ -15,10 +15,114 @@ const createProductSchema = z.object({
   stock: z.number().int().min(0, 'Stock must be non-negative').default(0),
   isAvailable: z.boolean().default(true),
   targetMargin: z.number().min(0, 'Target margin must be non-negative').max(100, 'Target margin cannot exceed 100%').optional(),
-  recipeId: z.string().uuid('Invalid recipe ID').optional()
+  recipeId: z.string().uuid('Invalid recipe ID').optional(),
+  onWatchlist: z.boolean().default(false),
+  lastAiSuggestion: z.number().positive('AI suggestion must be positive').optional(),
+  aiSuggestionNote: z.string().optional()
 });
 
 const updateProductSchema = createProductSchema.partial();
+
+// AI Price Suggestion Function
+interface PriceHistory {
+  price: number;
+  date: string;
+  unitCost: number;
+}
+
+interface AiSuggestionResult {
+  suggestedPrice: number;
+  note: string;
+  volatilityDetected: boolean;
+  confidence: number;
+}
+
+function suggestAiPrice(
+  unitCost: number, 
+  history: PriceHistory[], 
+  targetMargin: number
+): AiSuggestionResult {
+  if (history.length === 0) {
+    // No history available, use basic calculation
+    const suggestedPrice = unitCost / (1 - targetMargin / 100);
+    return {
+      suggestedPrice: Math.round(suggestedPrice * 100) / 100,
+      note: 'No price history available. Using basic margin calculation.',
+      volatilityDetected: false,
+      confidence: 0.5
+    };
+  }
+
+  // Calculate price volatility
+  const prices = history.map(h => h.price);
+  const meanPrice = prices.reduce((sum, price) => sum + price, 0) / prices.length;
+  const variance = prices.reduce((sum, price) => sum + Math.pow(price - meanPrice, 2), 0) / prices.length;
+  const standardDeviation = Math.sqrt(variance);
+  const coefficientOfVariation = standardDeviation / meanPrice;
+
+  // Detect volatility (CV > 0.15 indicates high volatility)
+  const volatilityDetected = coefficientOfVariation > 0.15;
+
+  // Calculate cost volatility
+  const costs = history.map(h => h.unitCost);
+  const meanCost = costs.reduce((sum, cost) => sum + cost, 0) / costs.length;
+  const costVariance = costs.reduce((sum, cost) => sum + Math.pow(cost - meanCost, 0), 0) / costs.length;
+  const costStandardDeviation = Math.sqrt(costVariance);
+  const costCoefficientOfVariation = costStandardDeviation / meanCost;
+
+  // Calculate trend (simple linear regression)
+  const n = history.length;
+  const sumX = history.reduce((sum, _, index) => sum + index, 0);
+  const sumY = history.reduce((sum, h) => sum + h.price, 0);
+  const sumXY = history.reduce((sum, h, index) => sum + index * h.price, 0);
+  const sumX2 = history.reduce((sum, _, index) => sum + index * index, 0);
+  
+  const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+  const trend = slope > 0 ? 'increasing' : slope < 0 ? 'decreasing' : 'stable';
+
+  // Calculate suggested price based on multiple factors
+  let suggestedPrice: number;
+  let note: string;
+  let confidence: number;
+
+  if (volatilityDetected) {
+    // High volatility: use more conservative pricing
+    const volatilityAdjustment = 1 + (coefficientOfVariation * 0.1);
+    const basePrice = unitCost / (1 - targetMargin / 100);
+    suggestedPrice = basePrice * volatilityAdjustment;
+    note = `High price volatility detected (${(coefficientOfVariation * 100).toFixed(1)}% CV). Using conservative pricing with ${(volatilityAdjustment * 100 - 100).toFixed(1)}% adjustment.`;
+    confidence = 0.7;
+  } else if (costCoefficientOfVariation > 0.1) {
+    // High cost volatility: adjust for cost uncertainty
+    const costAdjustment = 1 + (costCoefficientOfVariation * 0.05);
+    const basePrice = unitCost / (1 - targetMargin / 100);
+    suggestedPrice = basePrice * costAdjustment;
+    note = `High cost volatility detected (${(costCoefficientOfVariation * 100).toFixed(1)}% CV). Adjusting for cost uncertainty.`;
+    confidence = 0.8;
+  } else {
+    // Stable conditions: use trend-adjusted pricing
+    const trendAdjustment = trend === 'increasing' ? 1.02 : trend === 'decreasing' ? 0.98 : 1.0;
+    const basePrice = unitCost / (1 - targetMargin / 100);
+    suggestedPrice = basePrice * trendAdjustment;
+    note = `Stable market conditions. ${trend} price trend detected. Using trend-adjusted pricing.`;
+    confidence = 0.9;
+  }
+
+  // Ensure minimum margin is maintained
+  const minMargin = targetMargin * 0.8; // Allow 20% margin buffer
+  const minPrice = unitCost / (1 - minMargin / 100);
+  if (suggestedPrice < minPrice) {
+    suggestedPrice = minPrice;
+    note += ' Adjusted to maintain minimum margin requirements.';
+  }
+
+  return {
+    suggestedPrice: Math.round(suggestedPrice * 100) / 100,
+    note,
+    volatilityDetected,
+    confidence
+  };
+}
 
 // GET /api/vendor/products - Get all products for the authenticated vendor
 router.get('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
@@ -357,6 +461,261 @@ router.delete('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => 
     res.status(500).json({
       error: 'Internal server error',
       message: 'Failed to delete product'
+    });
+  }
+});
+
+// GET /api/vendor/products/:id/ai-suggestion - Get AI-powered price suggestion
+router.get('/:id/ai-suggestion', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Get the vendor profile for the authenticated user
+    const vendorProfile = await prisma.vendorProfile.findUnique({
+      where: { userId: req.session.userId },
+    });
+
+    if (!vendorProfile) {
+      return res.status(404).json({
+        error: 'Vendor profile not found',
+        message: 'Please create your vendor profile first'
+      });
+    }
+
+    // Get the product with its linked recipe and ensure it belongs to this vendor
+    const product = await prisma.product.findFirst({
+      where: {
+        id,
+        vendorProfileId: vendorProfile.id
+      },
+      include: {
+        recipe: {
+          include: {
+            recipeIngredients: {
+              include: {
+                ingredient: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!product) {
+      return res.status(404).json({
+        error: 'Product not found',
+        message: 'Product does not exist or does not belong to you'
+      });
+    }
+
+    // Calculate unit cost from linked recipe
+    let unitCost = 0;
+    
+    if (product.recipe) {
+      // Calculate total cost of all ingredients
+      let totalCost = 0;
+      for (const recipeIngredient of product.recipe.recipeIngredients) {
+        const ingredientCost = Number(recipeIngredient.quantity) * Number(recipeIngredient.ingredient.costPerUnit);
+        totalCost += ingredientCost;
+      }
+      
+      // Calculate cost per unit based on recipe yield
+      const recipeYield = product.recipe.yield;
+      unitCost = totalCost / recipeYield;
+    }
+
+    if (unitCost === 0) {
+      return res.status(400).json({
+        error: 'No recipe data',
+        message: 'Product must have a linked recipe with ingredients to calculate AI suggestions'
+      });
+    }
+
+    // Get target margin (use product's target margin or default to 30%)
+    const targetMargin = product.targetMargin || 30;
+
+    // For now, we'll simulate price history since we don't have a price history table
+    // In a real implementation, this would come from a price history table
+    const mockHistory: PriceHistory[] = [
+      {
+        price: Number(product.price),
+        date: new Date().toISOString(),
+        unitCost: unitCost
+      }
+    ];
+
+    // Generate AI suggestion
+    const aiSuggestion = suggestAiPrice(unitCost, mockHistory, targetMargin);
+
+    // Update the product with the AI suggestion
+    await prisma.product.update({
+      where: { id: product.id },
+      data: {
+        lastAiSuggestion: aiSuggestion.suggestedPrice,
+        aiSuggestionNote: aiSuggestion.note
+      }
+    });
+
+    res.json({
+      product: {
+        id: product.id,
+        name: product.name,
+        currentPrice: Number(product.price),
+        targetMargin: targetMargin
+      },
+      costAnalysis: {
+        unitCost: Math.round(unitCost * 100) / 100,
+        hasRecipe: !!product.recipe
+      },
+      aiSuggestion: {
+        suggestedPrice: aiSuggestion.suggestedPrice,
+        note: aiSuggestion.note,
+        volatilityDetected: aiSuggestion.volatilityDetected,
+        confidence: aiSuggestion.confidence,
+        priceDifference: Math.round((aiSuggestion.suggestedPrice - Number(product.price)) * 100) / 100,
+        percentageChange: Math.round(((aiSuggestion.suggestedPrice - Number(product.price)) / Number(product.price)) * 100 * 100) / 100
+      }
+    });
+  } catch (error) {
+    console.error('Error generating AI price suggestion:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to generate AI price suggestion'
+    });
+  }
+});
+
+// POST /api/vendor/products/:id/ai-suggest - Apply AI price suggestion and update product
+router.post('/:id/ai-suggest', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Get the vendor profile for the authenticated user
+    const vendorProfile = await prisma.vendorProfile.findUnique({
+      where: { userId: req.session.userId },
+    });
+
+    if (!vendorProfile) {
+      return res.status(404).json({
+        error: 'Vendor profile not found',
+        message: 'Please create your vendor profile first'
+      });
+    }
+
+    // Get the product with its linked recipe and ensure it belongs to this vendor
+    const product = await prisma.product.findFirst({
+      where: {
+        id,
+        vendorProfileId: vendorProfile.id
+      },
+      include: {
+        recipe: {
+          include: {
+            recipeIngredients: {
+              include: {
+                ingredient: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    if (!product) {
+      return res.status(404).json({
+        error: 'Product not found',
+        message: 'Product does not exist or does not belong to you'
+      });
+    }
+
+    // Calculate unit cost from linked recipe
+    let unitCost = 0;
+    
+    if (product.recipe) {
+      // Calculate total cost of all ingredients
+      let totalCost = 0;
+      for (const recipeIngredient of product.recipe.recipeIngredients) {
+        const ingredientCost = Number(recipeIngredient.quantity) * Number(recipeIngredient.ingredient.costPerUnit);
+        totalCost += ingredientCost;
+      }
+      
+      // Calculate cost per unit based on recipe yield
+      const recipeYield = product.recipe.yield;
+      unitCost = totalCost / recipeYield;
+    }
+
+    if (unitCost === 0) {
+      return res.status(400).json({
+        error: 'No recipe data',
+        message: 'Product must have a linked recipe with ingredients to calculate AI suggestions'
+      });
+    }
+
+    // Get target margin (use product's target margin or default to 30%)
+    const targetMargin = product.targetMargin || 30;
+
+    // For now, we'll simulate price history since we don't have a price history table
+    // In a real implementation, this would come from a price history table
+    const mockHistory: PriceHistory[] = [
+      {
+        price: Number(product.price),
+        date: new Date().toISOString(),
+        unitCost: unitCost
+      }
+    ];
+
+    // Generate AI suggestion
+    const aiSuggestion = suggestAiPrice(unitCost, mockHistory, targetMargin);
+
+    // Determine if product should be on watchlist based on AI analysis
+    const shouldWatchlist = aiSuggestion.volatilityDetected || 
+                           aiSuggestion.confidence < 0.6 || 
+                           Math.abs(aiSuggestion.suggestedPrice - Number(product.price)) / Number(product.price) > 0.15;
+
+    // Update the product with AI suggestion and watchlist status
+    const updatedProduct = await prisma.product.update({
+      where: { id: product.id },
+      data: {
+        lastAiSuggestion: aiSuggestion.suggestedPrice,
+        aiSuggestionNote: aiSuggestion.note,
+        onWatchlist: shouldWatchlist
+      }
+    });
+
+    res.json({
+      message: 'AI suggestion applied successfully',
+      product: {
+        id: updatedProduct.id,
+        name: updatedProduct.name,
+        currentPrice: Number(updatedProduct.price),
+        targetMargin: targetMargin,
+        onWatchlist: updatedProduct.onWatchlist
+      },
+      costAnalysis: {
+        unitCost: Math.round(unitCost * 100) / 100,
+        hasRecipe: !!product.recipe
+      },
+      aiSuggestion: {
+        suggestedPrice: aiSuggestion.suggestedPrice,
+        note: aiSuggestion.note,
+        volatilityDetected: aiSuggestion.volatilityDetected,
+        confidence: aiSuggestion.confidence,
+        priceDifference: Math.round((aiSuggestion.suggestedPrice - Number(product.price)) * 100) / 100,
+        percentageChange: Math.round(((aiSuggestion.suggestedPrice - Number(product.price)) / Number(product.price)) * 100 * 100) / 100
+      },
+      watchlistUpdate: {
+        addedToWatchlist: shouldWatchlist,
+        reason: shouldWatchlist ? 
+          (aiSuggestion.volatilityDetected ? 'High volatility detected' :
+           aiSuggestion.confidence < 0.6 ? 'Low confidence in suggestion' :
+           'Significant price difference') : 'No monitoring needed'
+      }
+    });
+  } catch (error) {
+    console.error('Error applying AI price suggestion:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to apply AI price suggestion'
     });
   }
 });

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
-import { Plus, Package, Tag, DollarSign, FileText, Edit, Trash2, Eye, X, Image as ImageIcon } from 'lucide-react';
+import { Plus, Package, Tag, DollarSign, FileText, Edit, Trash2, Eye, X, Image as ImageIcon, Brain, AlertTriangle, RefreshCw } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 
@@ -18,6 +18,9 @@ interface Product {
   isAvailable: boolean;
   targetMargin?: number;
   recipeId?: string;
+  onWatchlist: boolean;
+  lastAiSuggestion?: number;
+  aiSuggestionNote?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -41,6 +44,33 @@ interface MarginAnalysis {
   };
 }
 
+interface AiSuggestionResponse {
+  message: string;
+  product: {
+    id: string;
+    name: string;
+    currentPrice: number;
+    targetMargin: number;
+    onWatchlist: boolean;
+  };
+  costAnalysis: {
+    unitCost: number;
+    hasRecipe: boolean;
+  };
+  aiSuggestion: {
+    suggestedPrice: number;
+    note: string;
+    volatilityDetected: boolean;
+    confidence: number;
+    priceDifference: number;
+    percentageChange: number;
+  };
+  watchlistUpdate: {
+    addedToWatchlist: boolean;
+    reason: string;
+  };
+}
+
 interface ProductsResponse {
   products: Product[];
   count: number;
@@ -56,6 +86,9 @@ interface CreateProductForm {
   isAvailable: boolean;
   targetMargin: number;
   recipeId: string;
+  onWatchlist: boolean;
+  lastAiSuggestion: number;
+  aiSuggestionNote: string;
 }
 
 // API functions
@@ -113,6 +146,13 @@ const fetchMarginAnalysis = async (productId: string): Promise<MarginAnalysis> =
   return response.data;
 };
 
+const fetchAiSuggestion = async (productId: string): Promise<AiSuggestionResponse> => {
+  const response = await axios.post(`/api/vendor/products/${productId}/ai-suggest`, {}, {
+    withCredentials: true
+  });
+  return response.data;
+};
+
 const VendorProductsPage: React.FC = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -127,6 +167,8 @@ const VendorProductsPage: React.FC = () => {
   const [tagInput, setTagInput] = useState<string>('');
   const [marginData, setMarginData] = useState<MarginAnalysis | null>(null);
   const [showMarginAnalysis, setShowMarginAnalysis] = useState(false);
+  const [aiSuggestionData, setAiSuggestionData] = useState<AiSuggestionResponse | null>(null);
+  const [showAiSuggestionModal, setShowAiSuggestionModal] = useState(false);
 
   // React Query for fetching products
   const {
@@ -208,6 +250,22 @@ const VendorProductsPage: React.FC = () => {
     }
   });
 
+  // React Query for AI suggestion
+  const aiSuggestionMutation = useMutation({
+    mutationFn: fetchAiSuggestion,
+    onSuccess: (data) => {
+      setAiSuggestionData(data);
+      setShowAiSuggestionModal(true);
+      // Refresh the products data to show updated watchlist status and AI suggestion data
+      queryClient.invalidateQueries({ queryKey: ['vendor-products'] });
+      toast.success('AI suggestion applied successfully!');
+    },
+    onError: (error: any) => {
+      const message = error.response?.data?.message || 'Failed to fetch AI suggestion';
+      toast.error(message);
+    }
+  });
+
   // React Hook Form
   const {
     register,
@@ -225,7 +283,10 @@ const VendorProductsPage: React.FC = () => {
       stock: 0,
       isAvailable: true,
       targetMargin: 0,
-      recipeId: ''
+      recipeId: '',
+      onWatchlist: false,
+      lastAiSuggestion: 0,
+      aiSuggestionNote: ''
     }
   });
 
@@ -274,7 +335,10 @@ const VendorProductsPage: React.FC = () => {
       ...product,
       tags: '', // We'll use the tags state instead
       targetMargin: product.targetMargin || 0,
-      recipeId: product.recipeId || ''
+      recipeId: product.recipeId || '',
+      onWatchlist: product.onWatchlist,
+      lastAiSuggestion: product.lastAiSuggestion || 0,
+      aiSuggestionNote: product.aiSuggestionNote || ''
     });
   };
 
@@ -374,8 +438,8 @@ const VendorProductsPage: React.FC = () => {
                    setTagInput('');
                    setMarginData(null);
                    setShowMarginAnalysis(false);
-                   setMarginData(null);
-                   setShowMarginAnalysis(false);
+                   setAiSuggestionData(null);
+                   setShowAiSuggestionModal(false);
                  }
                }}
                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
@@ -599,6 +663,84 @@ const VendorProductsPage: React.FC = () => {
                 </div>
               </div>
 
+              {/* Watchlist Warning Banner */}
+              {editing && editing.onWatchlist && (
+                <div className="border-t pt-4">
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <AlertTriangle className="h-5 w-5 text-yellow-600" />
+                      <h4 className="text-sm font-medium text-yellow-800">Product on Watchlist</h4>
+                    </div>
+                    <p className="text-yellow-700 text-sm">
+                      This product is being monitored due to price volatility, low confidence in AI suggestions, or significant price differences.
+                    </p>
+                    {editing.aiSuggestionNote && (
+                      <p className="text-yellow-600 text-sm mt-2">
+                        <strong>AI Note:</strong> {editing.aiSuggestionNote}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* AI Suggestion Section */}
+              {editing && (
+                <div className="border-t pt-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-medium text-gray-900">AI Price Suggestion</h3>
+                    <button
+                      type="button"
+                      onClick={() => aiSuggestionMutation.mutate(editing.id)}
+                      disabled={aiSuggestionMutation.isPending}
+                      className="px-3 py-1.5 text-sm bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                    >
+                      {aiSuggestionMutation.isPending ? (
+                        <>
+                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                          Calculating...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="h-3 w-3" />
+                          Recalculate
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  {editing.lastAiSuggestion && (
+                    <div className="bg-purple-50 rounded-lg p-4 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <Brain className="h-4 w-4 text-purple-600" />
+                        <h4 className="text-sm font-medium text-purple-900">Last AI Suggestion</h4>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <span className="text-purple-700">Suggested Price:</span>
+                          <span className="ml-2 font-medium text-purple-900">
+                            ${editing.lastAiSuggestion.toFixed(2)}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-purple-700">Price Difference:</span>
+                          <span className={`ml-2 font-medium ${
+                            editing.lastAiSuggestion > editing.price ? 'text-green-600' : 'text-red-600'
+                          }`}>
+                            ${(editing.lastAiSuggestion - editing.price).toFixed(2)}
+                          </span>
+                        </div>
+                        {editing.aiSuggestionNote && (
+                          <div className="col-span-2">
+                            <span className="text-purple-700">AI Note:</span>
+                            <p className="ml-2 text-purple-800 text-sm mt-1">{editing.aiSuggestionNote}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Margin Analysis Section */}
               {editing && (
                 <div className="border-t pt-4">
@@ -742,6 +884,8 @@ const VendorProductsPage: React.FC = () => {
                      setTagInput('');
                      setMarginData(null);
                      setShowMarginAnalysis(false);
+                     setAiSuggestionData(null);
+                     setShowAiSuggestionModal(false);
                    }}
                    className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition-colors"
                  >
@@ -785,6 +929,8 @@ const VendorProductsPage: React.FC = () => {
                    setTagInput('');
                    setMarginData(null);
                    setShowMarginAnalysis(false);
+                   setAiSuggestionData(null);
+                   setShowAiSuggestionModal(false);
                  }}
                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                >
@@ -837,6 +983,12 @@ const VendorProductsPage: React.FC = () => {
                                 <span className="font-medium">{product.targetMargin}%</span>
                               </div>
                             )}
+                            {product.onWatchlist && (
+                              <div className="flex items-center gap-1">
+                                <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                                <span className="text-yellow-600 font-medium">Watchlist</span>
+                              </div>
+                            )}
                           </div>
 
                           {product.description && (
@@ -886,6 +1038,14 @@ const VendorProductsPage: React.FC = () => {
                              >
                                <DollarSign className="h-3 w-3" />
                                Margin
+                             </button>
+                             <button
+                               onClick={() => aiSuggestionMutation.mutate(product.id)}
+                               disabled={aiSuggestionMutation.isPending}
+                               className="px-3 py-1.5 text-sm bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                             >
+                               <Brain className="h-3 w-3" />
+                               AI Suggestion
                              </button>
                              <button
                                onClick={() => handleDelete(product)}
@@ -1088,6 +1248,140 @@ const VendorProductsPage: React.FC = () => {
                 onClick={() => {
                   setShowMarginAnalysis(false);
                   setMarginData(null);
+                }}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AI Suggestion Modal */}
+      {showAiSuggestionModal && aiSuggestionData && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                  <Brain className="w-5 h-5 text-purple-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">AI Suggestion</h3>
+              </div>
+              <button
+                onClick={() => {
+                  setShowAiSuggestionModal(false);
+                  setAiSuggestionData(null);
+                }}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+                title="Close AI suggestion"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="space-y-6">
+              {/* Product Info */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="text-sm font-medium text-gray-900 mb-2">Product Information</h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-600">Name:</span>
+                    <span className="ml-2 font-medium">{aiSuggestionData.product.name}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Current Price:</span>
+                    <span className="ml-2 font-medium">${aiSuggestionData.product.currentPrice.toFixed(2)}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Target Margin:</span>
+                    <span className="ml-2 font-medium">
+                      {aiSuggestionData.product.targetMargin ? `${aiSuggestionData.product.targetMargin}%` : 'Not set'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+                             {/* Cost Analysis */}
+               <div className="bg-gray-50 rounded-lg p-4">
+                 <h4 className="text-sm font-medium text-gray-900 mb-2">Cost Analysis</h4>
+                 <div className="grid grid-cols-2 gap-4 text-sm">
+                   <div>
+                     <span className="text-gray-600">Unit Cost:</span>
+                     <span className="ml-2 font-medium">${aiSuggestionData.costAnalysis.unitCost.toFixed(2)}</span>
+                   </div>
+                   <div>
+                     <span className="text-gray-600">Has Recipe:</span>
+                     <span className={`ml-2 font-medium ${aiSuggestionData.costAnalysis.hasRecipe ? 'text-green-600' : 'text-gray-500'}`}>
+                       {aiSuggestionData.costAnalysis.hasRecipe ? 'Yes' : 'No'}
+                     </span>
+                   </div>
+                 </div>
+               </div>
+
+              {/* AI Suggestion */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="text-sm font-medium text-gray-900 mb-2">AI Suggestion</h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-600">Suggested Price:</span>
+                    <span className="ml-2 font-medium text-blue-600 text-lg">
+                      ${aiSuggestionData.aiSuggestion.suggestedPrice.toFixed(2)}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Note:</span>
+                    <p className="ml-2 text-gray-600 text-sm">{aiSuggestionData.aiSuggestion.note}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Volatility Detected:</span>
+                    <span className={`ml-2 px-2 py-1 text-xs font-medium rounded-full ${
+                      aiSuggestionData.aiSuggestion.volatilityDetected ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
+                    }`}>
+                      {aiSuggestionData.aiSuggestion.volatilityDetected ? 'Yes' : 'No'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Confidence:</span>
+                    <span className="ml-2 font-medium">{aiSuggestionData.aiSuggestion.confidence}%</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Price Difference:</span>
+                    <span className="ml-2 font-medium">${aiSuggestionData.aiSuggestion.priceDifference.toFixed(2)}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Percentage Change:</span>
+                    <span className="ml-2 font-medium">{aiSuggestionData.aiSuggestion.percentageChange.toFixed(1)}%</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Watchlist Update */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="text-sm font-medium text-gray-900 mb-2">Watchlist Update</h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-600">Added to Watchlist:</span>
+                    <span className={`ml-2 px-2 py-1 text-xs font-medium rounded-full ${
+                      aiSuggestionData.watchlistUpdate.addedToWatchlist ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    }`}>
+                      {aiSuggestionData.watchlistUpdate.addedToWatchlist ? 'Yes' : 'No'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">Reason:</span>
+                    <p className="ml-2 text-gray-600 text-sm">{aiSuggestionData.watchlistUpdate.reason}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={() => {
+                  setShowAiSuggestionModal(false);
+                  setAiSuggestionData(null);
                 }}
                 className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
               >

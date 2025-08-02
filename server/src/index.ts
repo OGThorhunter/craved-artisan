@@ -14,8 +14,10 @@ import protectedRoutes from './routes/protected-demo';
 import vendorRoutes from './routes/vendor-mock';
 import vendorProductsRoutes from './routes/vendor-products';
 import vendorRecipesRoutes from './routes/vendor-recipes';
+import vendorOrdersRoutes from './routes/vendor-orders';
 import ingredientRoutes from './routes/ingredients';
 import recipeRoutes from './routes/recipes';
+import orderRoutes from './routes/orders';
 
 // Load environment variables
 dotenv.config();
@@ -120,15 +122,13 @@ app.use('/api/protected', protectedRoutes);
 app.use('/api/vendor', vendorRoutes);
 app.use('/api/vendor/products', vendorProductsRoutes);
 app.use('/api/vendor/recipes', vendorRecipesRoutes);
+app.use('/api/vendor/orders', vendorOrdersRoutes);
 app.use('/api/ingredients', ingredientRoutes);
 app.use('/api/recipes', recipeRoutes);
+app.use('/api/orders', orderRoutes);
 
 app.use('/api/products', (req, res) => {
   res.json({ message: 'Product routes - to be implemented' });
-});
-
-app.use('/api/orders', (req, res) => {
-  res.json({ message: 'Order routes - to be implemented' });
 });
 
 app.use('/api/users', (req, res) => {

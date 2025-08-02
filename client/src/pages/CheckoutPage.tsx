@@ -1,0 +1,273 @@
+import { useState } from 'react';
+import { useLocation } from 'wouter';
+import { useMutation } from '@tanstack/react-query';
+import { useCart } from '../contexts/CartContext';
+import { useAuth } from '../contexts/AuthContext';
+import { 
+  ShoppingCart, 
+  CreditCard, 
+  Truck, 
+  CheckCircle, 
+  AlertCircle,
+  Minus,
+  Plus,
+  Trash2,
+  ArrowLeft,
+  Lock
+} from 'lucide-react';
+import toast from 'react-hot-toast';
+
+const CheckoutPage = () => {
+  const { state: { items }, removeItem, updateQuantity, getSubtotal, getTax, getShipping, getTotal, checkout } = useCart();
+  const { user } = useAuth();
+  const [, setLocation] = useLocation();
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const checkoutMutation = useMutation({
+    mutationFn: async () => {
+      if (!user?.id) {
+        throw new Error('User not authenticated');
+      }
+      return await checkout(user.id);
+    },
+    onSuccess: (order) => {
+      toast.success('Order placed successfully!');
+      setLocation(`/orders/${order.id}/confirmation`);
+    },
+    onError: (error) => {
+      console.error('Checkout error:', error);
+      toast.error('Failed to place order. Please try again.');
+      setIsProcessing(false);
+    }
+  });
+
+  const handleCheckout = async () => {
+    if (!user) {
+      toast.error('Please log in to complete your order');
+      setLocation('/login');
+      return;
+    }
+
+    if (items.length === 0) {
+      toast.error('Your cart is empty');
+      return;
+    }
+
+    setIsProcessing(true);
+    checkoutMutation.mutate();
+  };
+
+  const handleQuantityChange = (productId: string, newQuantity: number) => {
+    if (newQuantity <= 0) {
+      removeItem(productId);
+    } else {
+      updateQuantity(productId, newQuantity);
+    }
+  };
+
+  if (items.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <ShoppingCart className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Your cart is empty</h2>
+          <p className="text-gray-600 mb-6">Add some products to your cart to continue</p>
+          <button
+            onClick={() => setLocation('/')}
+            className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Continue Shopping
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-4 mb-4">
+            <button
+              onClick={() => setLocation('/')}
+              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              <ArrowLeft className="h-5 w-5" />
+              Continue Shopping
+            </button>
+          </div>
+          <h1 className="text-3xl font-bold text-gray-900">Checkout</h1>
+          <p className="text-gray-600 mt-2">Complete your purchase</p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Cart Items */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-lg shadow-sm p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
+                <ShoppingCart className="h-6 w-6" />
+                Order Items ({items.length})
+              </h2>
+              
+              <div className="space-y-4">
+                {items.map((item) => (
+                  <div key={item.product.id} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg">
+                    {/* Product Image */}
+                    <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                      {item.product.imageUrl ? (
+                        <img 
+                          src={item.product.imageUrl} 
+                          alt={item.product.name}
+                          className="w-full h-full object-cover rounded-lg"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 bg-gray-300 rounded-lg flex items-center justify-center">
+                          <ShoppingCart className="h-6 w-6 text-gray-500" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Product Details */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-gray-900 truncate">{item.product.name}</h3>
+                      <p className="text-sm text-gray-600">${item.product.price.toFixed(2)} each</p>
+                    </div>
+
+                                         {/* Quantity Controls */}
+                     <div className="flex items-center gap-2">
+                       <button
+                         onClick={() => handleQuantityChange(item.product.id, item.quantity - 1)}
+                         className="p-1 rounded-md hover:bg-gray-100 transition-colors"
+                         disabled={item.quantity <= 1}
+                         title="Decrease quantity"
+                       >
+                         <Minus className="h-4 w-4" />
+                       </button>
+                       <span className="w-8 text-center font-medium">{item.quantity}</span>
+                       <button
+                         onClick={() => handleQuantityChange(item.product.id, item.quantity + 1)}
+                         className="p-1 rounded-md hover:bg-gray-100 transition-colors"
+                         title="Increase quantity"
+                       >
+                         <Plus className="h-4 w-4" />
+                       </button>
+                     </div>
+
+                    {/* Item Total */}
+                    <div className="text-right">
+                      <p className="font-medium text-gray-900">
+                        ${(item.product.price * item.quantity).toFixed(2)}
+                      </p>
+                    </div>
+
+                                         {/* Remove Button */}
+                     <button
+                       onClick={() => removeItem(item.product.id)}
+                       className="p-1 text-red-500 hover:text-red-700 transition-colors"
+                       title="Remove item from cart"
+                     >
+                       <Trash2 className="h-4 w-4" />
+                     </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Order Summary */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-lg shadow-sm p-6 sticky top-8">
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">Order Summary</h2>
+              
+              {/* Price Breakdown */}
+              <div className="space-y-3 mb-6">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Subtotal</span>
+                  <span className="font-medium">${getSubtotal().toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Tax</span>
+                  <span className="font-medium">${getTax().toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Shipping</span>
+                  <span className="font-medium">
+                    {getShipping() === 0 ? 'Free' : `$${getShipping().toFixed(2)}`}
+                  </span>
+                </div>
+                <div className="border-t pt-3">
+                  <div className="flex justify-between text-lg font-semibold">
+                    <span>Total</span>
+                    <span>${getTotal().toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Shipping Info */}
+              <div className="mb-6 p-4 bg-blue-50 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <Truck className="h-5 w-5 text-blue-600" />
+                  <span className="font-medium text-blue-900">Shipping</span>
+                </div>
+                <p className="text-sm text-blue-700">
+                  {getShipping() === 0 
+                    ? 'Free shipping on orders over $50'
+                    : 'Standard shipping: $5.99'
+                  }
+                </p>
+              </div>
+
+              {/* Security Notice */}
+              <div className="mb-6 p-4 bg-green-50 rounded-lg">
+                <div className="flex items-center gap-2 mb-2">
+                  <Lock className="h-5 w-5 text-green-600" />
+                  <span className="font-medium text-green-900">Secure Checkout</span>
+                </div>
+                <p className="text-sm text-green-700">
+                  Your payment information is encrypted and secure
+                </p>
+              </div>
+
+              {/* Checkout Button */}
+              <button
+                onClick={handleCheckout}
+                disabled={isProcessing || items.length === 0}
+                className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isProcessing ? (
+                  <>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="h-5 w-5" />
+                    Place Order
+                  </>
+                )}
+              </button>
+
+              {/* Error Display */}
+              {checkoutMutation.isError && (
+                <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 text-red-600" />
+                    <span className="text-sm text-red-800">
+                      {checkoutMutation.error instanceof Error 
+                        ? checkoutMutation.error.message 
+                        : 'An error occurred during checkout'
+                      }
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CheckoutPage; 

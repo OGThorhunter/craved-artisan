@@ -4,6 +4,107 @@ import { z } from 'zod';
 
 const router = express.Router();
 
+// AI Price Suggestion Function (Mock version)
+interface PriceHistory {
+  price: number;
+  date: string;
+  unitCost: number;
+}
+
+interface AiSuggestionResult {
+  suggestedPrice: number;
+  note: string;
+  volatilityDetected: boolean;
+  confidence: number;
+}
+
+function suggestAiPrice(
+  unitCost: number, 
+  history: PriceHistory[], 
+  targetMargin: number
+): AiSuggestionResult {
+  if (history.length === 0) {
+    // No history available, use basic calculation
+    const suggestedPrice = unitCost / (1 - targetMargin / 100);
+    return {
+      suggestedPrice: Math.round(suggestedPrice * 100) / 100,
+      note: 'No price history available. Using basic margin calculation.',
+      volatilityDetected: false,
+      confidence: 0.5
+    };
+  }
+
+  // Calculate price volatility
+  const prices = history.map(h => h.price);
+  const meanPrice = prices.reduce((sum, price) => sum + price, 0) / prices.length;
+  const variance = prices.reduce((sum, price) => sum + Math.pow(price - meanPrice, 2), 0) / prices.length;
+  const standardDeviation = Math.sqrt(variance);
+  const coefficientOfVariation = standardDeviation / meanPrice;
+
+  // Detect volatility (CV > 0.15 indicates high volatility)
+  const volatilityDetected = coefficientOfVariation > 0.15;
+
+  // Calculate cost volatility
+  const costs = history.map(h => h.unitCost);
+  const meanCost = costs.reduce((sum, cost) => sum + cost, 0) / costs.length;
+  const costVariance = costs.reduce((sum, cost) => sum + Math.pow(cost - meanCost, 2), 0) / costs.length;
+  const costStandardDeviation = Math.sqrt(costVariance);
+  const costCoefficientOfVariation = costStandardDeviation / meanCost;
+
+  // Calculate trend (simple linear regression)
+  const n = history.length;
+  const sumX = history.reduce((sum, _, index) => sum + index, 0);
+  const sumY = history.reduce((sum, h) => sum + h.price, 0);
+  const sumXY = history.reduce((sum, h, index) => sum + index * h.price, 0);
+  const sumX2 = history.reduce((sum, _, index) => sum + index * index, 0);
+  
+  const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+  const trend = slope > 0 ? 'increasing' : slope < 0 ? 'decreasing' : 'stable';
+
+  // Calculate suggested price based on multiple factors
+  let suggestedPrice: number;
+  let note: string;
+  let confidence: number;
+
+  if (volatilityDetected) {
+    // High volatility: use more conservative pricing
+    const volatilityAdjustment = 1 + (coefficientOfVariation * 0.1);
+    const basePrice = unitCost / (1 - targetMargin / 100);
+    suggestedPrice = basePrice * volatilityAdjustment;
+    note = `High price volatility detected (${(coefficientOfVariation * 100).toFixed(1)}% CV). Using conservative pricing with ${(volatilityAdjustment * 100 - 100).toFixed(1)}% adjustment.`;
+    confidence = 0.7;
+  } else if (costCoefficientOfVariation > 0.1) {
+    // High cost volatility: adjust for cost uncertainty
+    const costAdjustment = 1 + (costCoefficientOfVariation * 0.05);
+    const basePrice = unitCost / (1 - targetMargin / 100);
+    suggestedPrice = basePrice * costAdjustment;
+    note = `High cost volatility detected (${(costCoefficientOfVariation * 100).toFixed(1)}% CV). Adjusting for cost uncertainty.`;
+    confidence = 0.8;
+  } else {
+    // Stable conditions: use trend-adjusted pricing
+    const trendAdjustment = trend === 'increasing' ? 1.02 : trend === 'decreasing' ? 0.98 : 1.0;
+    const basePrice = unitCost / (1 - targetMargin / 100);
+    suggestedPrice = basePrice * trendAdjustment;
+    note = `Stable market conditions. ${trend} price trend detected. Using trend-adjusted pricing.`;
+    confidence = 0.9;
+  }
+
+  // Ensure minimum margin is maintained
+  const minMargin = targetMargin * 0.8; // Allow 20% margin buffer
+  const minPrice = unitCost / (1 - minMargin / 100);
+  if (suggestedPrice < minPrice) {
+    suggestedPrice = minPrice;
+    note += ' Adjusted to maintain minimum margin requirements.';
+  }
+
+  return {
+    suggestedPrice: Math.round(suggestedPrice * 100) / 100,
+    note,
+    volatilityDetected,
+    confidence
+  };
+}
+
 // Mock product data
 let mockProducts = [
   {
@@ -16,6 +117,11 @@ let mockProducts = [
     tags: ['handmade', 'wooden', 'artisan'],
     stock: 5,
     isAvailable: true,
+    targetMargin: 35.0,
+    recipeId: 'mock-recipe-1',
+    onWatchlist: false,
+    lastAiSuggestion: null,
+    aiSuggestionNote: null,
     createdAt: new Date('2024-01-15').toISOString(),
     updatedAt: new Date('2024-01-15').toISOString()
   },
@@ -29,6 +135,11 @@ let mockProducts = [
     tags: ['ceramic', 'coffee', 'handmade'],
     stock: 12,
     isAvailable: true,
+    targetMargin: 25.0,
+    recipeId: 'mock-recipe-2',
+    onWatchlist: true,
+    lastAiSuggestion: 24.75,
+    aiSuggestionNote: 'Previous AI suggestion applied',
     createdAt: new Date('2024-01-10').toISOString(),
     updatedAt: new Date('2024-01-10').toISOString()
   }
@@ -241,6 +352,183 @@ router.delete('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => 
     res.status(500).json({
       error: 'Internal server error',
       message: 'Failed to delete product'
+    });
+  }
+});
+
+// GET /api/vendor/products/:id/ai-suggestion - Get AI-powered price suggestion
+router.get('/:id/ai-suggestion', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Simulate vendor profile lookup
+    if (req.session.userId !== 'mock-user-id') {
+      return res.status(404).json({
+        error: 'Vendor profile not found',
+        message: 'Please create your vendor profile first'
+      });
+    }
+
+    // Get the product and ensure it belongs to this vendor
+    const product = mockProducts.find(p => p.id === id && p.vendorProfileId === 'mock-vendor-id');
+
+    if (!product) {
+      return res.status(404).json({
+        error: 'Product not found',
+        message: 'Product does not exist or does not belong to you'
+      });
+    }
+
+    // Mock unit cost calculation (in real implementation, this would come from recipe)
+    const unitCost = product.price * 0.6; // Assume 60% of price is cost
+
+    // Get target margin (use product's target margin or default to 30%)
+    const targetMargin = product.targetMargin || 30;
+
+    // Mock price history
+    const mockHistory: PriceHistory[] = [
+      {
+        price: product.price,
+        date: new Date().toISOString(),
+        unitCost: unitCost
+      }
+    ];
+
+    // Generate AI suggestion
+    const aiSuggestion = suggestAiPrice(unitCost, mockHistory, targetMargin);
+
+    // Update the product with the AI suggestion
+    const productIndex = mockProducts.findIndex(p => p.id === id);
+    if (productIndex !== -1) {
+      mockProducts[productIndex] = {
+        ...mockProducts[productIndex],
+        lastAiSuggestion: aiSuggestion.suggestedPrice,
+        aiSuggestionNote: aiSuggestion.note,
+        updatedAt: new Date().toISOString()
+      };
+    }
+
+    res.json({
+      product: {
+        id: product.id,
+        name: product.name,
+        currentPrice: product.price,
+        targetMargin: targetMargin
+      },
+      costAnalysis: {
+        unitCost: Math.round(unitCost * 100) / 100,
+        hasRecipe: !!product.recipeId
+      },
+      aiSuggestion: {
+        suggestedPrice: aiSuggestion.suggestedPrice,
+        note: aiSuggestion.note,
+        volatilityDetected: aiSuggestion.volatilityDetected,
+        confidence: aiSuggestion.confidence,
+        priceDifference: Math.round((aiSuggestion.suggestedPrice - product.price) * 100) / 100,
+        percentageChange: Math.round(((aiSuggestion.suggestedPrice - product.price) / product.price) * 100 * 100) / 100
+      }
+    });
+  } catch (error) {
+    console.error('Error generating AI price suggestion:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to generate AI price suggestion'
+    });
+  }
+});
+
+// POST /api/vendor/products/:id/ai-suggest - Apply AI price suggestion and update product
+router.post('/:id/ai-suggest', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Simulate vendor profile lookup
+    if (req.session.userId !== 'mock-user-id') {
+      return res.status(404).json({
+        error: 'Vendor profile not found',
+        message: 'Please create your vendor profile first'
+      });
+    }
+
+    // Get the product and ensure it belongs to this vendor
+    const product = mockProducts.find(p => p.id === id && p.vendorProfileId === 'mock-vendor-id');
+
+    if (!product) {
+      return res.status(404).json({
+        error: 'Product not found',
+        message: 'Product does not exist or does not belong to you'
+      });
+    }
+
+    // Mock unit cost calculation (in real implementation, this would come from recipe)
+    const unitCost = product.price * 0.6; // Assume 60% of price is cost
+
+    // Get target margin (use product's target margin or default to 30%)
+    const targetMargin = product.targetMargin || 30;
+
+    // Mock price history
+    const mockHistory: PriceHistory[] = [
+      {
+        price: product.price,
+        date: new Date().toISOString(),
+        unitCost: unitCost
+      }
+    ];
+
+    // Generate AI suggestion
+    const aiSuggestion = suggestAiPrice(unitCost, mockHistory, targetMargin);
+
+    // Determine if product should be on watchlist based on AI analysis
+    const shouldWatchlist = aiSuggestion.volatilityDetected || 
+                           aiSuggestion.confidence < 0.6 || 
+                           Math.abs(aiSuggestion.suggestedPrice - product.price) / product.price > 0.15;
+
+    // Update the product with AI suggestion and watchlist status
+    const productIndex = mockProducts.findIndex(p => p.id === id);
+    if (productIndex !== -1) {
+      mockProducts[productIndex] = {
+        ...mockProducts[productIndex],
+        lastAiSuggestion: aiSuggestion.suggestedPrice,
+        aiSuggestionNote: aiSuggestion.note,
+        onWatchlist: shouldWatchlist,
+        updatedAt: new Date().toISOString()
+      };
+    }
+
+    res.json({
+      message: 'AI suggestion applied successfully',
+      product: {
+        id: product.id,
+        name: product.name,
+        currentPrice: product.price,
+        targetMargin: targetMargin,
+        onWatchlist: shouldWatchlist
+      },
+      costAnalysis: {
+        unitCost: Math.round(unitCost * 100) / 100,
+        hasRecipe: !!product.recipeId
+      },
+      aiSuggestion: {
+        suggestedPrice: aiSuggestion.suggestedPrice,
+        note: aiSuggestion.note,
+        volatilityDetected: aiSuggestion.volatilityDetected,
+        confidence: aiSuggestion.confidence,
+        priceDifference: Math.round((aiSuggestion.suggestedPrice - product.price) * 100) / 100,
+        percentageChange: Math.round(((aiSuggestion.suggestedPrice - product.price) / product.price) * 100 * 100) / 100
+      },
+      watchlistUpdate: {
+        addedToWatchlist: shouldWatchlist,
+        reason: shouldWatchlist ? 
+          (aiSuggestion.volatilityDetected ? 'High volatility detected' :
+           aiSuggestion.confidence < 0.6 ? 'Low confidence in suggestion' :
+           'Significant price difference') : 'No monitoring needed'
+      }
+    });
+  } catch (error) {
+    console.error('Error applying AI price suggestion:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to apply AI price suggestion'
     });
   }
 });

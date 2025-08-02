@@ -105,6 +105,9 @@ model Product {
   isAvailable Boolean  @default(true)
   targetMargin Float?  // Target profit margin as a percentage
   recipeId    String?  // Optional reference to the recipe that produces this product
+  onWatchlist Boolean  @default(false) // Whether the product is on watchlist for monitoring
+  lastAiSuggestion Float? // Last AI-suggested price
+  aiSuggestionNote String? // Note about the AI suggestion
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -141,6 +144,7 @@ model Order {
   shippingAddressId String
   shippingAddress   Address     @relation(fields: [shippingAddressId], references: [id])
   orderItems        OrderItem[]
+  fulfillments      Fulfillment[]
 
   @@map("orders")
 }
@@ -158,6 +162,25 @@ model OrderItem {
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@map("order_items")
+}
+
+model Fulfillment {
+  id              String            @id @default(uuid())
+  fulfillmentType FulfillmentType
+  status          FulfillmentStatus @default(PENDING)
+  trackingNumber  String?
+  carrier         String? // e.g., "UPS", "FedEx", "USPS"
+  estimatedDelivery DateTime?
+  actualDelivery   DateTime?
+  notes            String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  // Relations
+  orderId String
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("fulfillments")
 }
 
 model Review {
@@ -325,4 +348,18 @@ enum OrderStatus {
   DELIVERED
   CANCELLED
   REFUNDED
+}
+
+enum FulfillmentStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  FAILED
+}
+
+enum FulfillmentType {
+  SHIPPING
+  PICKUP
+  DELIVERY
 }

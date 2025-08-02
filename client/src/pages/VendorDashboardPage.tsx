@@ -95,7 +95,8 @@ export const VendorDashboardPage = () => {
     totalCustomers: 156,
     lowStockItems: 3,
     lowMarginItems: lowMarginData?.count || 0,
-    priceAlerts: priceAlertsData?.count || 0
+    priceAlerts: priceAlertsData?.count || 0,
+    watchlistItems: 5 // This would come from API in real implementation
   };
 
   // Dashboard cards configuration
@@ -177,7 +178,33 @@ export const VendorDashboardPage = () => {
       stats: `${stats.totalOrders} total orders`,
       action: 'View Orders',
       actionLink: '/dashboard/vendor/orders'
-    }
+    },
+              {
+            id: 'watchlist',
+            title: 'Product Watchlist',
+            description: 'Monitor products with price volatility and margin issues',
+            icon: Eye,
+            color: 'bg-yellow-500',
+            iconColor: 'text-yellow-600',
+            bgColor: 'bg-yellow-50',
+            link: '/dashboard/watchlist',
+            stats: `${stats.watchlistItems} items on watchlist`,
+            action: 'View Watchlist',
+            actionLink: '/dashboard/watchlist'
+          },
+          {
+            id: 'orders',
+            title: 'Order Fulfillment',
+            description: 'Manage and track customer orders',
+            icon: Package,
+            color: 'bg-blue-500',
+            iconColor: 'text-blue-600',
+            bgColor: 'bg-blue-50',
+            link: '/dashboard/orders',
+            stats: `${stats.totalOrders || 0} total orders`,
+            action: 'Manage Orders',
+            actionLink: '/dashboard/orders'
+          }
   ];
 
   // Quick action cards for common tasks
@@ -198,6 +225,22 @@ export const VendorDashboardPage = () => {
       color: 'bg-emerald-500',
       link: '/dashboard/vendor/products'
     },
+              {
+            id: 'watchlist',
+            title: 'Product Watchlist',
+            description: 'Monitor products with price volatility',
+            icon: Eye,
+            color: 'bg-yellow-500',
+            link: '/dashboard/watchlist'
+          },
+          {
+            id: 'orders',
+            title: 'Order Fulfillment',
+            description: 'Manage and track customer orders',
+            icon: Package,
+            color: 'bg-blue-500',
+            link: '/dashboard/orders'
+          },
     {
       id: 'view-analytics',
       title: 'View Analytics',

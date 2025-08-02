@@ -2,6 +2,7 @@ import { Router, Route, Switch } from 'wouter';
 import { Toaster } from 'react-hot-toast';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './contexts/AuthContext';
+import { CartProvider } from './contexts/CartContext';
 import { Layout } from './components/Layout';
 import { HomePage } from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
@@ -26,6 +27,9 @@ import { EventCoordinatorDashboardPage } from './pages/EventCoordinatorDashboard
 import { DropoffDashboardPage } from './pages/DropoffDashboardPage';
 import { EventsPage } from './pages/EventsPage';
 import { EventDetailPage } from './pages/EventDetailPage';
+import VendorWatchlistPage from './pages/VendorWatchlistPage';
+import VendorOrdersPage from './pages/VendorOrdersPage';
+import CheckoutPage from './pages/CheckoutPage';
 import { NotFound } from './components/NotFound';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -43,8 +47,9 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Router>
-          <Layout>
+        <CartProvider>
+          <Router>
+            <Layout>
             <Switch>
             <Route path="/" component={HomePage} />
             <Route path="/login" component={LoginPage} />
@@ -54,6 +59,7 @@ function App() {
             <Route path="/join/customer" component={JoinCustomerPage} />
             <Route path="/vendor/:id" component={VendorPage} />
             <Route path="/product/:id" component={ProductPage} />
+            <Route path="/checkout" component={CheckoutPage} />
             
             {/* Protected Dashboard Routes */}
             <Route path="/dashboard">
@@ -104,6 +110,16 @@ function App() {
             <Route path="/dashboard/vendor/batch-pricing">
               <ProtectedRoute role="VENDOR">
                 <BatchPricingPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/dashboard/watchlist">
+              <ProtectedRoute role="VENDOR">
+                <VendorWatchlistPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/dashboard/orders">
+              <ProtectedRoute role="VENDOR">
+                <VendorOrdersPage />
               </ProtectedRoute>
             </Route>
             <Route path="/dashboard/admin">
@@ -159,6 +175,7 @@ function App() {
       </Layout>
       <Toaster position="top-right" />
     </Router>
+    </CartProvider>
     </AuthProvider>
     </QueryClientProvider>
   );
