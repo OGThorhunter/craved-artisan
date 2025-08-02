@@ -18,6 +18,8 @@ import ingredientRoutes from './routes/ingredients-mock';
 import recipeRoutes from './routes/recipes-mock';
 import orderRoutes from './routes/orders-mock';
 import fulfillmentRoutes from './routes/fulfillment-mock';
+import routeOptimizationRoutes from './routes/route-optimization-mock';
+import financialRoutes from './routes/financial-mock';
 // import inventoryDeductionRoutes from './routes/inventory-deduction-mock';
 // import supplierMarketplaceRoutes from './routes/supplier-marketplace-mock';
 
@@ -113,6 +115,8 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/protected', protectedRoutes);
 app.use('/api/vendor', vendorRoutes);
+app.use('/api/vendors', vendorRoutes); // Add vendors route for analytics
+app.use('/api/vendors', financialRoutes); // Mount financial routes under /api/vendors
 app.use('/api/vendor/products', vendorProductsRoutes);
 // app.use('/api/vendor/recipes', vendorRecipesRoutes);
 app.use('/api/vendor/orders', vendorOrdersRoutes);
@@ -120,6 +124,8 @@ app.use('/api/ingredients', ingredientRoutes);
 app.use('/api/recipes', recipeRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/fulfillment', fulfillmentRoutes);
+app.use('/api/route', routeOptimizationRoutes);
+app.use('/api/financial', financialRoutes); // Keep for backward compatibility
 // app.use('/api/inventory', inventoryDeductionRoutes);
 // app.use('/api/supplier', supplierMarketplaceRoutes);
 

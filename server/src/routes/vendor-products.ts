@@ -2,6 +2,7 @@ import express from 'express';
 import { requireAuth, requireRole } from '../middleware/auth';
 import prisma from '../lib/prisma';
 import { z } from 'zod';
+import { calculateMargin, generateAlertNote } from '../utils/marginCalculator';
 
 const router = express.Router();
 
@@ -10,11 +11,14 @@ const createProductSchema = z.object({
   name: z.string().min(1, 'Product name is required').max(100, 'Product name must be less than 100 characters'),
   description: z.string().optional(),
   price: z.number().positive('Price must be positive'),
+  cost: z.number().positive('Cost must be positive').optional(),
   imageUrl: z.string().url('Invalid image URL').optional(),
   tags: z.array(z.string()).optional(),
   stock: z.number().int().min(0, 'Stock must be non-negative').default(0),
   isAvailable: z.boolean().default(true),
   targetMargin: z.number().min(0, 'Target margin must be non-negative').max(100, 'Target margin cannot exceed 100%').optional(),
+  marginAlert: z.boolean().default(false),
+  alertNote: z.string().optional(),
   recipeId: z.string().uuid('Invalid recipe ID').optional(),
   onWatchlist: z.boolean().default(false),
   lastAiSuggestion: z.number().positive('AI suggestion must be positive').optional(),
@@ -184,12 +188,31 @@ router.post('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
       });
     }
 
+    // Calculate margin and check for alerts if cost is provided
+    let marginAlert = false;
+    let alertNote = null;
+    
+    if (productData.cost && productData.price) {
+      const marginCalculation = calculateMargin(
+        productData.price,
+        productData.cost,
+        productData.targetMargin
+      );
+      
+      marginAlert = marginCalculation.isAlertTriggered;
+      alertNote = marginCalculation.isAlertTriggered 
+        ? generateAlertNote(productData.price, productData.cost, productData.targetMargin)
+        : null;
+    }
+
     // Create the product
     const product = await prisma.product.create({
       data: {
         ...productData,
         vendorProfileId: vendorProfile.id,
-        tags: productData.tags || []
+        tags: productData.tags || [],
+        marginAlert,
+        alertNote
       }
     });
 
@@ -276,13 +299,56 @@ router.put('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
       });
     }
 
+    // Get current product to check if we need to recalculate margin alerts
+    const currentProduct = await prisma.product.findFirst({
+      where: {
+        id,
+        vendorProfileId: vendorProfile.id
+      }
+    });
+
+    if (!currentProduct) {
+      return res.status(404).json({
+        error: 'Product not found',
+        message: 'Product does not exist or does not belong to you'
+      });
+    }
+
+    // Calculate margin and check for alerts if price or cost is being updated
+    let marginAlert = currentProduct.marginAlert;
+    let alertNote = currentProduct.alertNote;
+    
+    if ((updateData.price !== undefined || updateData.cost !== undefined) && 
+        (updateData.cost || currentProduct.cost) && 
+        (updateData.price || currentProduct.price)) {
+      
+      const price = updateData.price || currentProduct.price;
+      const cost = updateData.cost || currentProduct.cost;
+      const targetMargin = updateData.targetMargin || currentProduct.targetMargin;
+      
+      const marginCalculation = calculateMargin(
+        Number(price),
+        cost || 0,
+        targetMargin
+      );
+      
+      marginAlert = marginCalculation.isAlertTriggered;
+      alertNote = marginCalculation.isAlertTriggered 
+        ? generateAlertNote(Number(price), cost || 0, targetMargin)
+        : null;
+    }
+
     // Update the product and ensure it belongs to this vendor
     const product = await prisma.product.updateMany({
       where: {
         id,
         vendorProfileId: vendorProfile.id
       },
-      data: updateData
+      data: {
+        ...updateData,
+        marginAlert,
+        alertNote
+      }
     });
 
     if (product.count === 0) {
@@ -1011,6 +1077,62 @@ router.post('/batch-update-pricing', requireAuth, requireRole(['VENDOR']), async
     res.status(500).json({
       error: 'Internal server error',
       message: 'Failed to update pricing'
+    });
+  }
+});
+
+// GET /api/vendor/products/alerts/margin - Get products with margin alerts
+router.get('/alerts/margin', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+  try {
+    // Get the vendor profile for the authenticated user
+    const vendorProfile = await prisma.vendorProfile.findUnique({
+      where: { userId: req.session.userId },
+    });
+
+    if (!vendorProfile) {
+      return res.status(404).json({
+        error: 'Vendor profile not found',
+        message: 'Please create your vendor profile first'
+      });
+    }
+
+    // Get products with margin alerts
+    const productsWithAlerts = await prisma.product.findMany({
+      where: {
+        vendorProfileId: vendorProfile.id,
+        marginAlert: true
+      },
+      orderBy: { updatedAt: 'desc' }
+    });
+
+    // Calculate current margin for each product
+    const productsWithMarginData = productsWithAlerts.map(product => {
+      const cost = product.cost || 0;
+      const price = Number(product.price);
+      const margin = price - cost;
+      const marginPercentage = price > 0 ? (margin / price) * 100 : 0;
+
+      return {
+        ...product,
+        currentMargin: margin,
+        currentMarginPercentage: marginPercentage
+      };
+    });
+
+    res.json({
+      products: productsWithMarginData,
+      count: productsWithMarginData.length,
+      summary: {
+        totalAlerts: productsWithMarginData.length,
+        lowMarginCount: productsWithMarginData.filter(p => p.currentMarginPercentage < 15).length,
+        highCostCount: productsWithMarginData.filter(p => p.cost && p.cost / Number(p.price) > 0.7).length
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching products with margin alerts:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to fetch products with margin alerts'
     });
   }
 });

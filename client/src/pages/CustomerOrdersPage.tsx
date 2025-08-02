@@ -483,6 +483,14 @@ const CustomerOrdersPage = () => {
                        >
                          Download Invoice
                        </button>
+                       <a
+                         href={`/api/orders/${order.id}/receipt`}
+                         target="_blank"
+                         className="text-sm text-green-600 underline"
+                         title="Download receipt"
+                       >
+                         🧾 Download Receipt
+                       </a>
                      </div>
                      <div className="text-sm text-gray-600">
                        {order.items.length} {order.items.length === 1 ? 'item' : 'items'}

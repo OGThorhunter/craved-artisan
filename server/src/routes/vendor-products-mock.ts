@@ -1,6 +1,7 @@
 import express from 'express';
 import { requireAuth, requireRole } from '../middleware/auth-mock';
 import { z } from 'zod';
+import { calculateMargin, generateAlertNote } from '../utils/marginCalculator';
 
 const router = express.Router();
 
@@ -113,11 +114,14 @@ let mockProducts = [
     name: 'Handcrafted Wooden Bowl',
     description: 'Beautiful hand-carved wooden bowl made from sustainable oak',
     price: 45.99,
+    cost: 25.00,
     imageUrl: 'https://placekitten.com/400/300',
     tags: ['handmade', 'wooden', 'artisan'],
     stock: 5,
     isAvailable: true,
     targetMargin: 35.0,
+    marginAlert: false,
+    alertNote: null,
     recipeId: 'mock-recipe-1',
     onWatchlist: false,
     lastAiSuggestion: null,
@@ -131,17 +135,41 @@ let mockProducts = [
     name: 'Ceramic Coffee Mug',
     description: 'Hand-thrown ceramic coffee mug with unique glaze',
     price: 22.50,
+    cost: 18.00, // High cost ratio, should trigger alert
     imageUrl: 'https://placekitten.com/400/301',
     tags: ['ceramic', 'coffee', 'handmade'],
     stock: 12,
     isAvailable: true,
     targetMargin: 25.0,
+    marginAlert: true,
+    alertNote: '⚠️ Margin Alert: Cost ratio (80.0%) too high (>70%). Suggestions: Review ingredient costs and supplier pricing',
     recipeId: 'mock-recipe-2',
     onWatchlist: true,
     lastAiSuggestion: 24.75,
     aiSuggestionNote: 'Previous AI suggestion applied',
     createdAt: new Date('2024-01-10').toISOString(),
     updatedAt: new Date('2024-01-10').toISOString()
+  },
+  {
+    id: 'mock-product-3',
+    vendorProfileId: 'mock-vendor-id',
+    name: 'Low Margin Test Product',
+    description: 'A product with very low margin to test alerts',
+    price: 10.00,
+    cost: 9.00, // 90% cost ratio, very low margin
+    imageUrl: 'https://placekitten.com/400/302',
+    tags: ['test', 'low-margin'],
+    stock: 3,
+    isAvailable: true,
+    targetMargin: 25.0,
+    marginAlert: true,
+    alertNote: '⚠️ Margin Alert: Margin (10.0%) below minimum (15%); Cost ratio (90.0%) too high (>70%). Suggestions: Consider increasing price or reducing costs; Review ingredient costs and supplier pricing',
+    recipeId: null,
+    onWatchlist: false,
+    lastAiSuggestion: null,
+    aiSuggestionNote: null,
+    createdAt: new Date('2024-01-20').toISOString(),
+    updatedAt: new Date('2024-01-20').toISOString()
   }
 ];
 
@@ -150,10 +178,14 @@ const createProductSchema = z.object({
   name: z.string().min(1, 'Product name is required').max(100, 'Product name must be less than 100 characters'),
   description: z.string().optional(),
   price: z.number().positive('Price must be positive'),
+  cost: z.number().positive('Cost must be positive').optional(),
   imageUrl: z.string().url('Invalid image URL').optional(),
   tags: z.array(z.string()).optional(),
   stock: z.number().int().min(0, 'Stock must be non-negative').default(0),
-  isAvailable: z.boolean().default(true)
+  isAvailable: z.boolean().default(true),
+  targetMargin: z.number().min(0, 'Target margin must be non-negative').max(100, 'Target margin cannot exceed 100%').optional(),
+  marginAlert: z.boolean().default(false),
+  alertNote: z.string().optional()
 });
 
 const updateProductSchema = createProductSchema.partial();
@@ -206,12 +238,31 @@ router.post('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
       });
     }
 
+    // Calculate margin and check for alerts if cost is provided
+    let marginAlert = false;
+    let alertNote = null;
+    
+    if (productData.cost && productData.price) {
+      const marginCalculation = calculateMargin(
+        productData.price,
+        productData.cost,
+        productData.targetMargin
+      );
+      
+      marginAlert = marginCalculation.isAlertTriggered;
+      alertNote = marginCalculation.isAlertTriggered 
+        ? generateAlertNote(productData.price, productData.cost, productData.targetMargin)
+        : null;
+    }
+
     // Create the product
     const newProduct = {
       id: `mock-product-${Date.now()}`,
       vendorProfileId: 'mock-vendor-id',
       ...productData,
       tags: productData.tags || [],
+      marginAlert,
+      alertNote,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -298,10 +349,36 @@ router.put('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
       });
     }
 
+    // Calculate margin and check for alerts if price or cost is being updated
+    let marginAlert = mockProducts[productIndex].marginAlert;
+    let alertNote = mockProducts[productIndex].alertNote;
+    
+    if ((updateData.price !== undefined || updateData.cost !== undefined) && 
+        (updateData.cost || mockProducts[productIndex].cost) && 
+        (updateData.price || mockProducts[productIndex].price)) {
+      
+      const price = updateData.price || mockProducts[productIndex].price;
+      const cost = updateData.cost || mockProducts[productIndex].cost;
+      const targetMargin = updateData.targetMargin || mockProducts[productIndex].targetMargin;
+      
+      const marginCalculation = calculateMargin(
+        price,
+        cost || 0,
+        targetMargin
+      );
+      
+      marginAlert = marginCalculation.isAlertTriggered;
+      alertNote = marginCalculation.isAlertTriggered 
+        ? generateAlertNote(price, cost || 0, targetMargin)
+        : null;
+    }
+
     // Update the product
     mockProducts[productIndex] = {
       ...mockProducts[productIndex],
       ...updateData,
+      marginAlert,
+      alertNote,
       updatedAt: new Date().toISOString()
     };
 
@@ -529,6 +606,54 @@ router.post('/:id/ai-suggest', requireAuth, requireRole(['VENDOR']), async (req,
     res.status(500).json({
       error: 'Internal server error',
       message: 'Failed to apply AI price suggestion'
+    });
+  }
+});
+
+// GET /api/vendor/products/alerts/margin - Get products with margin alerts
+router.get('/alerts/margin', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+  try {
+    // Simulate vendor profile lookup
+    if (req.session.userId !== 'mock-user-id') {
+      return res.status(404).json({
+        error: 'Vendor profile not found',
+        message: 'Please create your vendor profile first'
+      });
+    }
+
+    // Get products with margin alerts
+    const productsWithAlerts = mockProducts.filter(product => 
+      product.vendorProfileId === 'mock-vendor-id' && product.marginAlert === true
+    );
+
+    // Calculate current margin for each product
+    const productsWithMarginData = productsWithAlerts.map(product => {
+      const cost = product.cost || 0;
+      const price = product.price;
+      const margin = price - cost;
+      const marginPercentage = price > 0 ? (margin / price) * 100 : 0;
+
+      return {
+        ...product,
+        currentMargin: margin,
+        currentMarginPercentage: marginPercentage
+      };
+    });
+
+    res.json({
+      products: productsWithMarginData,
+      count: productsWithMarginData.length,
+      summary: {
+        totalAlerts: productsWithMarginData.length,
+        lowMarginCount: productsWithMarginData.filter(p => p.currentMarginPercentage < 15).length,
+        highCostCount: productsWithMarginData.filter(p => p.cost && p.cost / p.price > 0.7).length
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching products with margin alerts:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to fetch products with margin alerts'
     });
   }
 });

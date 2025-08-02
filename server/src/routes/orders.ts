@@ -2,6 +2,8 @@ import express from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { requireAuth, requireRole } from '../middleware/auth';
+import { sendDeliveryConfirmation, sendDeliveryETAWithTime } from '../utils/twilio';
+import PDFDocument from 'pdfkit';
 
 const router = express.Router();
 
@@ -602,6 +604,378 @@ router.get('/:id', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
     res.status(500).json({
       error: 'Internal server error',
       message: 'Failed to fetch order'
+    });
+  }
+});
+
+// POST /api/orders/:id/confirm-delivery - Confirm delivery with optional photo
+router.post('/:id/confirm-delivery', requireAuth, requireRole(['VENDOR', 'ADMIN']), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { photoUrl } = req.body;
+
+    // Find the order
+    const order = await prisma.order.findUnique({
+      where: { id },
+      include: {
+        fulfillments: true,
+        user: {
+          select: {
+            email: true,
+            profile: {
+              select: {
+                phone: true
+              }
+            }
+          }
+        }
+      }
+    });
+    
+    if (!order) {
+      return res.status(404).json({
+        error: 'Order not found',
+        message: 'Order does not exist'
+      });
+    }
+
+    // Update order delivery status
+    const updatedOrder = await prisma.order.update({
+      where: { id },
+      data: {
+        deliveryStatus: 'delivered',
+        deliveryTimestamp: new Date(),
+        deliveryPhotoUrl: photoUrl || null,
+        status: 'DELIVERED',
+        deliveredAt: new Date()
+      }
+    });
+
+    // Update fulfillment status
+    if (order.fulfillments.length > 0) {
+      await prisma.fulfillment.updateMany({
+        where: {
+          orderId: id
+        },
+        data: {
+          status: 'DELIVERED',
+          actualDelivery: new Date()
+        }
+      });
+    }
+
+    // Send customer notifications
+    console.log(`📧 Customer notification sent for order ${order.orderNumber} to ${order.user.email}`);
+    if (order.user.profile?.phone) {
+      // Send SMS notification via Twilio
+      await sendDeliveryConfirmation(order.user.profile.phone, order.orderNumber);
+    }
+
+    res.json({
+      success: true,
+      message: 'Delivery confirmed successfully',
+      order: {
+        id: updatedOrder.id,
+        orderNumber: updatedOrder.orderNumber,
+        deliveryStatus: updatedOrder.deliveryStatus,
+        deliveryTimestamp: updatedOrder.deliveryTimestamp,
+        deliveryPhotoUrl: updatedOrder.deliveryPhotoUrl,
+        status: updatedOrder.status,
+        deliveredAt: updatedOrder.deliveredAt
+      }
+    });
+  } catch (error) {
+    console.error('Error confirming delivery:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to confirm delivery'
+    });
+  }
+});
+
+// POST /api/orders/:id/send-eta - Send delivery ETA notification
+router.post('/:id/send-eta', requireAuth, requireRole(['VENDOR', 'ADMIN']), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { timeWindow } = req.body;
+
+    // Find the order
+    const order = await prisma.order.findUnique({
+      where: { id },
+      include: {
+        user: {
+          select: {
+            email: true,
+            profile: {
+              select: {
+                phone: true
+              }
+            }
+          }
+        },
+        vendor: {
+          select: {
+            name: true
+          }
+        }
+      }
+    });
+    
+    if (!order) {
+      return res.status(404).json({
+        error: 'Order not found',
+        message: 'Order does not exist'
+      });
+    }
+
+    if (!order.user.profile?.phone) {
+      return res.status(400).json({
+        error: 'No phone number',
+        message: 'Customer does not have a phone number for SMS notifications'
+      });
+    }
+
+    // Send ETA notification via Twilio
+    await sendDeliveryETAWithTime(
+      order.user.profile.phone,
+      order.vendor?.name || 'Rose Creek',
+      timeWindow || '3-5 PM',
+      order.orderNumber
+    );
+
+    res.json({
+      success: true,
+      message: 'Delivery ETA notification sent successfully'
+    });
+  } catch (error) {
+    console.error('Error sending ETA notification:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to send ETA notification'
+    });
+  }
+});
+
+// GET /api/orders/:id/receipt - Generate and serve PDF receipt
+router.get('/:id/receipt', requireAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Find the order with all necessary relations
+    const order = await prisma.order.findUnique({
+      where: { id },
+      include: {
+        items: {
+          include: {
+            product: {
+              select: {
+                name: true,
+                description: true
+              }
+            }
+          }
+        },
+        vendor: {
+          select: {
+            name: true,
+            email: true
+          }
+        },
+        user: {
+          select: {
+            email: true,
+            profile: {
+              select: {
+                firstName: true,
+                lastName: true,
+                phone: true
+              }
+            }
+          }
+        },
+        shippingAddress: {
+          select: {
+            street: true,
+            city: true,
+            state: true,
+            zipCode: true
+          }
+        }
+      }
+    });
+
+    if (!order) {
+      return res.status(404).json({
+        error: 'Order not found',
+        message: 'Order does not exist'
+      });
+    }
+
+    // Verify user has access to this order
+    if (req.session.userId !== order.userId && req.session.user.role !== 'ADMIN') {
+      return res.status(403).json({
+        error: 'Unauthorized',
+        message: 'You can only view receipts for your own orders'
+      });
+    }
+
+    // Create PDF document
+    const doc = new PDFDocument({
+      size: 'A4',
+      margin: 50
+    });
+
+    // Set response headers
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="receipt-${order.orderNumber}.pdf"`);
+    doc.pipe(res);
+
+    // Add header
+    doc.fontSize(24)
+       .font('Helvetica-Bold')
+       .text('Craved Artisan', { align: 'center' });
+    
+    doc.fontSize(16)
+       .font('Helvetica')
+       .text('Delivery Receipt', { align: 'center' });
+    
+    doc.moveDown(0.5);
+
+    // Add order details
+    doc.fontSize(12)
+       .font('Helvetica-Bold')
+       .text('Order Information');
+    
+    doc.fontSize(10)
+       .font('Helvetica')
+       .text(`Order Number: ${order.orderNumber}`)
+       .text(`Order Date: ${order.createdAt.toLocaleDateString()}`)
+       .text(`Status: ${order.status}`)
+       .text(`Delivery Status: ${order.deliveryStatus || 'Pending'}`);
+    
+    if (order.deliveryTimestamp) {
+      doc.text(`Delivered: ${order.deliveryTimestamp.toLocaleDateString()} at ${order.deliveryTimestamp.toLocaleTimeString()}`);
+    }
+    
+    doc.moveDown(0.5);
+
+    // Add vendor information
+    doc.fontSize(12)
+       .font('Helvetica-Bold')
+       .text('Vendor Information');
+    
+    doc.fontSize(10)
+       .font('Helvetica')
+       .text(`Vendor: ${order.vendor?.name || 'Unknown'}`)
+       .text(`Email: ${order.vendor?.email || 'N/A'}`);
+    
+    doc.moveDown(0.5);
+
+    // Add customer information
+    doc.fontSize(12)
+       .font('Helvetica-Bold')
+       .text('Customer Information');
+    
+    const customerName = order.user.profile 
+      ? `${order.user.profile.firstName || ''} ${order.user.profile.lastName || ''}`.trim()
+      : order.user.email;
+    
+    doc.fontSize(10)
+       .font('Helvetica')
+       .text(`Customer: ${customerName}`)
+       .text(`Email: ${order.user.email}`)
+       .text(`Phone: ${order.user.profile?.phone || 'N/A'}`);
+    
+    doc.moveDown(0.5);
+
+    // Add shipping address
+    if (order.shippingAddress) {
+      doc.fontSize(12)
+         .font('Helvetica-Bold')
+         .text('Shipping Address');
+      
+      doc.fontSize(10)
+         .font('Helvetica')
+         .text(`${order.shippingAddress.street}`)
+         .text(`${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.zipCode}`);
+      
+      doc.moveDown(0.5);
+    }
+
+    // Add order items
+    doc.fontSize(12)
+       .font('Helvetica-Bold')
+       .text('Order Items');
+    
+    doc.moveDown(0.25);
+
+    let yPosition = doc.y;
+    const itemStartY = yPosition;
+
+    order.items.forEach((item, index) => {
+      const itemName = item.product?.name || `Product ${index + 1}`;
+      const itemDescription = item.product?.description || '';
+      
+      doc.fontSize(10)
+         .font('Helvetica-Bold')
+         .text(itemName);
+      
+      if (itemDescription) {
+        doc.fontSize(8)
+           .font('Helvetica')
+           .text(itemDescription, { indent: 10 });
+      }
+      
+      doc.fontSize(10)
+         .font('Helvetica')
+         .text(`Quantity: ${item.quantity}`, { indent: 10 })
+         .text(`Price: $${item.price.toFixed(2)}`, { indent: 10 })
+         .text(`Subtotal: $${(item.quantity * item.price).toFixed(2)}`, { indent: 10 });
+      
+      doc.moveDown(0.25);
+    });
+
+    // Add totals
+    doc.moveDown(0.5);
+    doc.fontSize(12)
+       .font('Helvetica-Bold')
+       .text('Order Summary');
+    
+    doc.fontSize(10)
+       .font('Helvetica')
+       .text(`Subtotal: $${order.subtotal.toFixed(2)}`)
+       .text(`Tax: $${order.tax.toFixed(2)}`)
+       .text(`Shipping: $${order.shipping.toFixed(2)}`)
+       .text(`Total: $${order.total.toFixed(2)}`, { continued: false });
+    
+    doc.moveDown(0.5);
+
+    // Add notes if any
+    if (order.notes) {
+      doc.fontSize(12)
+         .font('Helvetica-Bold')
+         .text('Order Notes');
+      
+      doc.fontSize(10)
+         .font('Helvetica')
+         .text(order.notes);
+      
+      doc.moveDown(0.5);
+    }
+
+    // Add footer
+    doc.fontSize(8)
+       .font('Helvetica')
+       .text('Thank you for choosing Craved Artisan!', { align: 'center' })
+       .text(`Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}`, { align: 'center' });
+
+    // End the document
+    doc.end();
+  } catch (error) {
+    console.error('Error generating receipt:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to generate receipt'
     });
   }
 });

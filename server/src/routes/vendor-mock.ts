@@ -71,4 +71,36 @@ router.put('/profile', requireAuth, requireRole(['VENDOR']), async (req, res) =>
   }
 });
 
+// GET /api/vendors/:id/delivery-metrics/test - Mock delivery analytics for vendor
+router.get('/:id/delivery-metrics/test', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Mock delivery metrics data
+    const mockDeliveryMetrics = {
+      zipStats: [
+        { zip: '30248', delivered: 12, delayed: 3 },
+        { zip: '30301', delivered: 8, delayed: 1 },
+        { zip: '30305', delivered: 15, delayed: 2 },
+        { zip: '30308', delivered: 6, delayed: 4 },
+        { zip: '30309', delivered: 10, delayed: 1 }
+      ],
+      onTimeRate: 0.91,
+      avgTimeToDeliver: "2.3h",
+      totalOrders: 75,
+      totalDelivered: 51,
+      onTimeDeliveries: 46,
+      delayedDeliveries: 5
+    };
+
+    res.json(mockDeliveryMetrics);
+  } catch (error) {
+    console.error('Error fetching mock delivery metrics:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to fetch delivery metrics'
+    });
+  }
+});
+
 export default router; 

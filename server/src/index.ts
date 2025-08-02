@@ -19,6 +19,8 @@ import ingredientRoutes from './routes/ingredients';
 import recipeRoutes from './routes/recipes';
 import orderRoutes from './routes/orders';
 import fulfillmentRoutes from './routes/fulfillment';
+import routeOptimizationRoutes from './routes/route-optimization';
+import financialRoutes from './routes/financial';
 
 // Load environment variables
 dotenv.config();
@@ -128,6 +130,8 @@ app.use('/api/ingredients', ingredientRoutes);
 app.use('/api/recipes', recipeRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/fulfillment', fulfillmentRoutes);
+app.use('/api/route', routeOptimizationRoutes);
+app.use('/api/financial', financialRoutes);
 
 app.use('/api/products', (req, res) => {
   res.json({ message: 'Product routes - to be implemented' });

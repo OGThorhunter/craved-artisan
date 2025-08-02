@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import { useLocation } from 'wouter';
-import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import axios from 'axios';
+import type { AxiosInstance, AxiosResponse } from 'axios';
 
 // Types
 export interface User {

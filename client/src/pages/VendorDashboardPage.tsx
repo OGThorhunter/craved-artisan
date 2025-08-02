@@ -604,7 +604,7 @@ export const VendorDashboardPage = () => {
                   <p className="text-sm font-medium text-blue-900">How it works</p>
                   <p className="text-sm text-blue-700 mt-1">
                     The system will calculate new prices for all products with recipes, ensuring they meet your 35% target margin. 
-                    Only products with significant price changes (>5%) will be updated.
+                    Only products with significant price changes (&gt;5%) will be updated.
                   </p>
                 </div>
               </div>

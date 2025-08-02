@@ -30,8 +30,11 @@ import { EventDetailPage } from './pages/EventDetailPage';
 import VendorWatchlistPage from './pages/VendorWatchlistPage';
 import VendorOrdersPage from './pages/VendorOrdersPage';
 import VendorDeliveryBatchingPage from './pages/VendorDeliveryBatchingPage';
+import VendorDeliveryPage from './pages/VendorDeliveryPage';
 import CustomerOrdersPage from './pages/CustomerOrdersPage';
 import CheckoutPage from './pages/CheckoutPage';
+import VendorAnalyticsPage from './pages/VendorAnalyticsPage';
+import { VendorFinancialPage } from './pages/VendorFinancialPage';
 import { NotFound } from './components/NotFound';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -137,6 +140,21 @@ function App() {
             <Route path="/dashboard/vendor/delivery-batching">
               <ProtectedRoute role="VENDOR">
                 <VendorDeliveryBatchingPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/vendor/delivery/:batchId">
+              <ProtectedRoute role="VENDOR">
+                <VendorDeliveryPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/vendor/analytics/delivery">
+              <ProtectedRoute role="VENDOR">
+                <VendorAnalyticsPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/vendor/financial">
+              <ProtectedRoute role="VENDOR">
+                <VendorFinancialPage />
               </ProtectedRoute>
             </Route>
             <Route path="/dashboard/admin">

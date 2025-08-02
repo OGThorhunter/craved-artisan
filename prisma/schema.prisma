@@ -65,6 +65,7 @@ model VendorProfile {
   products    Product[]
   ingredients Ingredient[]
   recipes     Recipe[]
+  financialSnapshots FinancialSnapshot[]
 
   @@map("vendor_profiles")
 }
@@ -99,11 +100,14 @@ model Product {
   name        String
   description String?
   price       Decimal
+  cost        Float?   // Cost field for margin calculations
   imageUrl    String?
   tags        String[] // Array of tags
   stock       Int      @default(0)
   isAvailable Boolean  @default(true)
   targetMargin Float?  // Target profit margin as a percentage
+  marginAlert  Boolean @default(false) // Smart margin alert trigger
+  alertNote    String? // Note about the margin alert
   recipeId    String?  // Optional reference to the recipe that produces this product
   onWatchlist Boolean  @default(false) // Whether the product is on watchlist for monitoring
   lastAiSuggestion Float? // Last AI-suggested price
@@ -137,6 +141,9 @@ model Order {
   deliveredAt    DateTime?
   shippingZip    String
   deliveryDay    String?     // Mon, Tue, etc.
+  deliveryStatus String      @default("pending")
+  deliveryTimestamp DateTime?
+  deliveryPhotoUrl String?
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 
@@ -147,6 +154,8 @@ model Order {
   shippingAddress   Address     @relation(fields: [shippingAddressId], references: [id])
   orderItems        OrderItem[]
   fulfillments      Fulfillment[]
+  deliveryBatchId   String?
+  deliveryBatch     DeliveryBatch? @relation(fields: [deliveryBatchId], references: [id])
 
   @@map("orders")
 }
@@ -185,6 +194,36 @@ model Fulfillment {
   order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@map("fulfillments")
+}
+
+model DeliveryBatch {
+  id          String   @id @default(uuid())
+  batchId     String   @unique
+  deliveryDay String
+  status      BatchStatus @default(PENDING)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Batch tracking
+  packedAt    DateTime?
+  loadedAt    DateTime?
+  outForDeliveryAt DateTime?
+  completedAt DateTime?
+  
+  // Driver info
+  assignedDriver String?
+  driverPhone    String?
+  vehicleId      String?
+  
+  // Route optimization
+  totalDistance  Float?
+  estimatedTime  Int?
+  fuelCost       Float?
+  
+  // Orders in this batch
+  orders         Order[]
+  
+  @@map("delivery_batches")
 }
 
 model Review {
@@ -330,6 +369,27 @@ model RecipeIngredientVersion {
   @@map("recipe_ingredient_versions")
 }
 
+model FinancialSnapshot {
+  id         String   @id @default(uuid())
+  vendorId   String
+  date       DateTime @default(now())
+  revenue    Float
+  cogs       Float
+  opex       Float
+  netProfit  Float
+  assets     Float
+  liabilities Float
+  equity     Float
+  cashIn     Float
+  cashOut    Float
+  notes      String?
+  
+  // Relations
+  vendor     VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  
+  @@index([vendorId, date])
+}
+
 enum Role {
   CUSTOMER
   VENDOR
@@ -366,4 +426,13 @@ enum FulfillmentType {
   SHIPPING
   PICKUP
   DELIVERY
+}
+
+enum BatchStatus {
+  PENDING
+  PACKED
+  LOADED
+  OUT_FOR_DELIVERY
+  COMPLETED
+  CANCELLED
 }
