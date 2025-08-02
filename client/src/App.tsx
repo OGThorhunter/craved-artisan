@@ -18,6 +18,8 @@ import { VendorSettingsPage } from './pages/VendorSettingsPage';
 import VendorProductsPage from './pages/VendorProductsPage';
 import VendorInventoryPage from './pages/VendorInventoryPage';
 import VendorRecipeCreatePage from './pages/VendorRecipeCreatePage';
+import VendorRecipeEditPage from './pages/VendorRecipeEditPage';
+import RecipeVersionHistoryPage from './pages/RecipeVersionHistoryPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 import { EventCoordinatorDashboardPage } from './pages/EventCoordinatorDashboardPage';
 import { DropoffDashboardPage } from './pages/DropoffDashboardPage';
@@ -86,6 +88,16 @@ function App() {
             <Route path="/dashboard/vendor/recipes/create">
               <ProtectedRoute role="VENDOR">
                 <VendorRecipeCreatePage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/dashboard/vendor/recipes/:recipeId/edit">
+              <ProtectedRoute role="VENDOR">
+                <VendorRecipeEditPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/dashboard/vendor/recipes/:recipeId/versions">
+              <ProtectedRoute role="VENDOR">
+                <RecipeVersionHistoryPage />
               </ProtectedRoute>
             </Route>
             <Route path="/dashboard/admin">

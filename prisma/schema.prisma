@@ -23,6 +23,7 @@ model User {
   profile       Profile?
   vendorProfile VendorProfile?
   orders        Order[]
+  recipeVersions RecipeVersion[] // Versions created by this user
   reviews       Review[]
   favorites     Favorite[]
   addresses     Address[]
@@ -203,6 +204,7 @@ model Ingredient {
   vendorProfileId   String
   vendorProfile     VendorProfile      @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
   recipeIngredients RecipeIngredient[]
+  recipeIngredientVersions RecipeIngredientVersion[]
 
   @@map("ingredients")
 }
@@ -227,6 +229,7 @@ model Recipe {
   productId         String? // Optional: recipe can produce a product
   product           Product?           @relation(fields: [productId], references: [id], onDelete: SetNull)
   recipeIngredients RecipeIngredient[]
+  recipeVersions    RecipeVersion[]
 
   @@map("recipes")
 }
@@ -247,6 +250,53 @@ model RecipeIngredient {
 
   @@unique([recipeId, ingredientId]) // Prevent duplicate ingredients in same recipe
   @@map("recipe_ingredients")
+}
+
+model RecipeVersion {
+  id           String   @id @default(uuid())
+  version      Int      // Version number (1, 2, 3, etc.)
+  name         String
+  description  String?
+  instructions String? // Step-by-step instructions
+  yield        Int // Number of units produced
+  yieldUnit    String // e.g., "pieces", "servings", "batches"
+  prepTime     Int? // Preparation time in minutes
+  cookTime     Int? // Cooking time in minutes
+  difficulty   String? // e.g., "Easy", "Medium", "Hard"
+  totalCost    Decimal @default(0) // Total cost of all ingredients at save time
+  notes        String? // Version notes (e.g., "Switched to organic sugar")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  recipeId         String
+  recipe           Recipe                @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  editorId         String // User who created this version
+  editor           User                  @relation(fields: [editorId], references: [id], onDelete: Cascade)
+  recipeIngredientVersions RecipeIngredientVersion[]
+
+  @@unique([recipeId, version]) // Ensure unique version per recipe
+  @@map("recipe_versions")
+}
+
+model RecipeIngredientVersion {
+  id           String   @id @default(uuid())
+  quantity     Decimal // Amount of ingredient needed
+  unit         String // Unit of measurement
+  pricePerUnit Decimal @default(0) // Price per unit at save time
+  totalCost    Decimal @default(0) // Total cost for this ingredient (quantity * pricePerUnit)
+  notes        String? // Optional notes about this ingredient in the recipe
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  recipeVersionId String
+  recipeVersion   RecipeVersion @relation(fields: [recipeVersionId], references: [id], onDelete: Cascade)
+  ingredientId    String
+  ingredient      Ingredient    @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
+
+  @@unique([recipeVersionId, ingredientId]) // Prevent duplicate ingredients in same recipe version
+  @@map("recipe_ingredient_versions")
 }
 
 enum Role {

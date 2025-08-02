@@ -475,4 +475,133 @@ router.delete('/:id/ingredients/:ingredientId', requireAuth, requireRole(['VENDO
   }
 });
 
+// POST /api/recipes/:id/version - Create a snapshot version of a recipe
+router.post('/:id/version', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const vendorProfile = await prisma.vendorProfile.findUnique({
+      where: { userId: req.session.userId! }
+    });
+
+    if (!vendorProfile) {
+      return res.status(404).json({ message: 'Vendor profile not found' });
+    }
+
+    // Get the recipe with all its ingredients and their current costs
+    const recipe = await prisma.recipe.findFirst({
+      where: {
+        id,
+        vendorProfileId: vendorProfile.id
+      },
+      include: {
+        recipeIngredients: {
+          include: {
+            ingredient: true
+          }
+        }
+      }
+    });
+
+    if (!recipe) {
+      return res.status(404).json({ message: 'Recipe not found' });
+    }
+
+    if (recipe.recipeIngredients.length === 0) {
+      return res.status(400).json({ message: 'Cannot create version for recipe with no ingredients' });
+    }
+
+    // Get the next version number
+    const latestVersion = await prisma.recipeVersion.findFirst({
+      where: { recipeId: id },
+      orderBy: { version: 'desc' }
+    });
+    const nextVersion = (latestVersion?.version || 0) + 1;
+
+    // Calculate total cost and prepare ingredient versions
+    let totalCost = 0;
+    const ingredientVersions = [];
+
+    for (const recipeIngredient of recipe.recipeIngredients) {
+      const ingredientCost = recipeIngredient.quantity * recipeIngredient.ingredient.costPerUnit;
+      totalCost += ingredientCost;
+
+      ingredientVersions.push({
+        quantity: recipeIngredient.quantity,
+        unit: recipeIngredient.unit,
+        pricePerUnit: recipeIngredient.ingredient.costPerUnit,
+        totalCost: ingredientCost,
+        notes: recipeIngredient.notes,
+        ingredientId: recipeIngredient.ingredientId
+      });
+    }
+
+    // Create the recipe version with all ingredient versions
+    const recipeVersion = await prisma.recipeVersion.create({
+      data: {
+        version: nextVersion,
+        name: recipe.name,
+        description: recipe.description,
+        instructions: recipe.instructions,
+        yield: recipe.yield,
+        yieldUnit: recipe.yieldUnit,
+        prepTime: recipe.prepTime,
+        cookTime: recipe.cookTime,
+        difficulty: recipe.difficulty,
+        totalCost,
+        recipeId: id,
+        recipeIngredientVersions: {
+          create: ingredientVersions
+        }
+      },
+      include: {
+        recipeIngredientVersions: {
+          include: {
+            ingredient: {
+              select: {
+                id: true,
+                name: true,
+                description: true,
+                unit: true,
+                costPerUnit: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    res.status(201).json({
+      message: `Recipe version ${nextVersion} created successfully`,
+      recipeVersion: {
+        id: recipeVersion.id,
+        version: recipeVersion.version,
+        name: recipeVersion.name,
+        description: recipeVersion.description,
+        instructions: recipeVersion.instructions,
+        yield: recipeVersion.yield,
+        yieldUnit: recipeVersion.yieldUnit,
+        prepTime: recipeVersion.prepTime,
+        cookTime: recipeVersion.cookTime,
+        difficulty: recipeVersion.difficulty,
+        totalCost: recipeVersion.totalCost,
+        createdAt: recipeVersion.createdAt,
+        updatedAt: recipeVersion.updatedAt,
+        ingredients: recipeVersion.recipeIngredientVersions.map(ing => ({
+          id: ing.id,
+          quantity: ing.quantity,
+          unit: ing.unit,
+          pricePerUnit: ing.pricePerUnit,
+          totalCost: ing.totalCost,
+          notes: ing.notes,
+          ingredient: ing.ingredient
+        }))
+      }
+    });
+  } catch (error) {
+    console.error('Error creating recipe version:', error);
+    res.status(500).json({ message: 'Failed to create recipe version' });
+  }
+});
+
 export default router; 
