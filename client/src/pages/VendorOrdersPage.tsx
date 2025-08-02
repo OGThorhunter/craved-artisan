@@ -47,6 +47,8 @@ interface Fulfillment {
   estimatedDelivery?: string;
   actualDelivery?: string;
   notes?: string;
+  etaLabel?: string; // AI-generated label (e.g., "⚡ Fast Fulfillment", "📦 Standard")
+  predictedHours?: number; // AI prediction raw hours
 }
 
 interface Customer {
@@ -107,6 +109,7 @@ const VendorOrdersPage = () => {
     status: 'PENDING'
   });
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [filterLabel, setFilterLabel] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
 
   // Fetch orders
@@ -158,12 +161,13 @@ const VendorOrdersPage = () => {
   // Filter orders
   const filteredOrders = orders.filter(order => {
     const matchesStatus = filterStatus === 'all' || order.fulfillment.status === filterStatus;
+    const matchesLabel = filterLabel === 'all' || order.fulfillment.etaLabel === filterLabel;
     const matchesSearch = 
       order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.customer.email.toLowerCase().includes(searchTerm.toLowerCase());
     
-    return matchesStatus && matchesSearch;
+    return matchesStatus && matchesLabel && matchesSearch;
   });
 
   const getStatusColor = (status: string) => {
@@ -341,6 +345,17 @@ const VendorOrdersPage = () => {
                 <option value="CANCELLED">Cancelled</option>
                 <option value="FAILED">Failed</option>
               </select>
+              <select
+                value={filterLabel}
+                onChange={(e) => setFilterLabel(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                title="Filter by fulfillment label"
+              >
+                <option value="all">All Labels</option>
+                <option value="⚡ Fast Fulfillment">⚡ Fast Fulfillment</option>
+                <option value="📦 Standard">📦 Standard</option>
+                <option value="⏳ Delayed">⏳ Delayed</option>
+              </select>
             </div>
           </div>
         </div>
@@ -374,6 +389,11 @@ const VendorOrdersPage = () => {
                             {order.fulfillment.status.replace('_', ' ')}
                           </div>
                         </span>
+                        {order.fulfillment.etaLabel && (
+                          <span className="px-2 py-1 text-xs font-medium rounded-full border border-blue-200 bg-blue-50 text-blue-700">
+                            {order.fulfillment.etaLabel}
+                          </span>
+                        )}
                       </div>
                       
                       <div className="flex items-center gap-6 text-sm text-gray-600">

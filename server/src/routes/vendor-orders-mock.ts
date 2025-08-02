@@ -79,7 +79,9 @@ const mockVendorOrders: any[] = [
       carrier: null,
       estimatedDelivery: null,
       actualDelivery: null,
-      notes: null
+      notes: null,
+      etaLabel: '⚡ Fast Fulfillment',
+      predictedHours: 2
     }
   },
   {
@@ -125,7 +127,9 @@ const mockVendorOrders: any[] = [
       carrier: 'UPS',
       estimatedDelivery: '2024-01-18T12:00:00Z',
       actualDelivery: null,
-      notes: 'Package picked up by carrier'
+      notes: 'Package picked up by carrier',
+      etaLabel: '📦 Standard',
+      predictedHours: 34
     }
   }
 ];
@@ -263,6 +267,147 @@ router.patch('/:id/fulfillment', requireAuth, requireRole(['VENDOR']), async (re
     res.status(500).json({
       error: 'Internal server error',
       message: 'Failed to update fulfillment'
+    });
+  }
+});
+
+// GET /api/vendor/orders/delivery-batches - Get orders grouped by delivery day
+router.get('/delivery-batches', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+  try {
+    const { optimize = 'false' } = req.query;
+    
+    // Mock delivery batches data
+    const mockBatches = {
+      'Monday': [
+        {
+          id: 'order-1',
+          orderNumber: 'ORD-1234567890-ABC',
+          status: 'PENDING',
+          total: 89.97,
+          createdAt: '2025-08-02T10:00:00Z',
+          customerName: 'John Smith',
+          customerEmail: 'john@example.com',
+          shippingZip: '30248',
+          shippingCity: 'Atlanta',
+          shippingState: 'GA',
+          items: [
+            { id: 'item-1', quantity: 2, productName: 'Handcrafted Ceramic Mug', productImage: null },
+            { id: 'item-2', quantity: 1, productName: 'Artisan Soap', productImage: null }
+          ],
+          fulfillmentStatus: 'PENDING',
+          etaLabel: '⚡ Fast Fulfillment'
+        },
+        {
+          id: 'order-2',
+          orderNumber: 'ORD-1234567891-DEF',
+          status: 'CONFIRMED',
+          total: 45.99,
+          createdAt: '2025-08-02T11:30:00Z',
+          customerName: 'Sarah Johnson',
+          customerEmail: 'sarah@example.com',
+          shippingZip: '30248',
+          shippingCity: 'Atlanta',
+          shippingState: 'GA',
+          items: [
+            { id: 'item-3', quantity: 1, productName: 'Wooden Cutting Board', productImage: null }
+          ],
+          fulfillmentStatus: 'PENDING',
+          etaLabel: '📦 Standard'
+        }
+      ],
+      'Tuesday': [
+        {
+          id: 'order-3',
+          orderNumber: 'ORD-1234567892-GHI',
+          status: 'PENDING',
+          total: 34.98,
+          createdAt: '2025-08-02T14:15:00Z',
+          customerName: 'Mike Wilson',
+          customerEmail: 'mike@example.com',
+          shippingZip: '30252',
+          shippingCity: 'Decatur',
+          shippingState: 'GA',
+          items: [
+            { id: 'item-4', quantity: 1, productName: 'Handcrafted Ceramic Mug', productImage: null },
+            { id: 'item-5', quantity: 1, productName: 'Artisan Soap', productImage: null }
+          ],
+          fulfillmentStatus: 'PENDING',
+          etaLabel: '⚡ Fast Fulfillment'
+        }
+      ],
+      'Wednesday': [
+        {
+          id: 'order-4',
+          orderNumber: 'ORD-1234567893-JKL',
+          status: 'CONFIRMED',
+          total: 67.96,
+          createdAt: '2025-08-02T16:45:00Z',
+          customerName: 'Emily Davis',
+          customerEmail: 'emily@example.com',
+          shippingZip: '30236',
+          shippingCity: 'Marietta',
+          shippingState: 'GA',
+          items: [
+            { id: 'item-6', quantity: 1, productName: 'Wooden Cutting Board', productImage: null },
+            { id: 'item-7', quantity: 2, productName: 'Artisan Soap', productImage: null }
+          ],
+          fulfillmentStatus: 'PENDING',
+          etaLabel: '📦 Standard'
+        }
+      ],
+      'Thursday': [
+        {
+          id: 'order-5',
+          orderNumber: 'ORD-1234567894-MNO',
+          status: 'PENDING',
+          total: 25.99,
+          createdAt: '2025-08-02T18:20:00Z',
+          customerName: 'David Brown',
+          customerEmail: 'david@example.com',
+          shippingZip: '30301',
+          shippingCity: 'Atlanta',
+          shippingState: 'GA',
+          items: [
+            { id: 'item-8', quantity: 1, productName: 'Handcrafted Ceramic Mug', productImage: null }
+          ],
+          fulfillmentStatus: 'PENDING',
+          etaLabel: '⚡ Fast Fulfillment'
+        }
+      ],
+      'Friday': [
+        {
+          id: 'order-6',
+          orderNumber: 'ORD-1234567895-PQR',
+          status: 'CONFIRMED',
+          total: 123.94,
+          createdAt: '2025-08-02T20:10:00Z',
+          customerName: 'Lisa Anderson',
+          customerEmail: 'lisa@example.com',
+          shippingZip: '30302',
+          shippingCity: 'Atlanta',
+          shippingState: 'GA',
+          items: [
+            { id: 'item-9', quantity: 2, productName: 'Wooden Cutting Board', productImage: null },
+            { id: 'item-10', quantity: 3, productName: 'Artisan Soap', productImage: null },
+            { id: 'item-11', quantity: 1, productName: 'Handcrafted Ceramic Mug', productImage: null }
+          ],
+          fulfillmentStatus: 'PENDING',
+          etaLabel: '📦 Standard'
+        }
+      ]
+    };
+
+    res.json({
+      batches: mockBatches,
+      totalOrders: 6,
+      totalBatches: 5
+    });
+
+  } catch (error) {
+    console.error('Error fetching delivery batches:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to fetch delivery batches'
     });
   }
 });

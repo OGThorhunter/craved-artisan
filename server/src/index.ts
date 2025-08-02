@@ -18,6 +18,7 @@ import vendorOrdersRoutes from './routes/vendor-orders';
 import ingredientRoutes from './routes/ingredients';
 import recipeRoutes from './routes/recipes';
 import orderRoutes from './routes/orders';
+import fulfillmentRoutes from './routes/fulfillment';
 
 // Load environment variables
 dotenv.config();
@@ -126,6 +127,7 @@ app.use('/api/vendor/orders', vendorOrdersRoutes);
 app.use('/api/ingredients', ingredientRoutes);
 app.use('/api/recipes', recipeRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/fulfillment', fulfillmentRoutes);
 
 app.use('/api/products', (req, res) => {
   res.json({ message: 'Product routes - to be implemented' });

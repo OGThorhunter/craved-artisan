@@ -20,7 +20,14 @@ const checkoutSchema = z.object({
   shipping: z.number().min(0),
   total: z.number().positive(),
   shippingAddressId: z.string().uuid().optional(),
-  notes: z.string().optional()
+  notes: z.string().optional(),
+  prediction: z.object({
+    predictedFulfillmentTime: z.string(),
+    label: z.string(),
+    baseEstimate: z.number(),
+    prepTime: z.number(),
+    shippingTime: z.number()
+  }).optional()
 });
 
 // POST /api/orders/checkout - Create a new order from cart items
@@ -35,7 +42,7 @@ router.post('/checkout', requireAuth, requireRole(['CUSTOMER']), async (req, res
       });
     }
 
-    const { items, userId, subtotal, tax, shipping, total, shippingAddressId, notes } = validationResult.data;
+    const { items, userId, subtotal, tax, shipping, total, shippingAddressId, notes, prediction } = validationResult.data;
 
     // Verify user is creating order for themselves
     if (req.session.userId !== userId) {
@@ -144,6 +151,80 @@ router.post('/checkout', requireAuth, requireRole(['CUSTOMER']), async (req, res
       });
     }
 
+    // Get shipping address to extract ZIP code for delivery day assignment
+    const shippingAddress = await prisma.address.findUnique({
+      where: { id: finalShippingAddressId }
+    });
+
+    if (!shippingAddress) {
+      return res.status(400).json({
+        error: 'Shipping address not found',
+        message: 'The specified shipping address does not exist'
+      });
+    }
+
+    // Auto-assign delivery day based on ZIP code
+    function getNextAvailableDay(zip: string): string {
+      const dayMap: Record<string, string> = {
+        '30248': 'Monday',
+        '30252': 'Tuesday', 
+        '30236': 'Wednesday',
+        '30301': 'Thursday',
+        '30302': 'Friday',
+        '30303': 'Saturday',
+        '30304': 'Sunday',
+        '30305': 'Monday',
+        '30306': 'Tuesday',
+        '30307': 'Wednesday',
+        '30308': 'Thursday',
+        '30309': 'Friday',
+        '30310': 'Saturday',
+        '30311': 'Sunday',
+        '30312': 'Monday',
+        '30313': 'Tuesday',
+        '30314': 'Wednesday',
+        '30315': 'Thursday',
+        '30316': 'Friday',
+        '30317': 'Saturday',
+        '30318': 'Sunday',
+        '30319': 'Monday',
+        '30320': 'Tuesday',
+        '30321': 'Wednesday',
+        '30322': 'Thursday',
+        '30323': 'Friday',
+        '30324': 'Saturday',
+        '30325': 'Sunday',
+        '30326': 'Monday',
+        '30327': 'Tuesday',
+        '30328': 'Wednesday',
+        '30329': 'Thursday',
+        '30330': 'Friday',
+        '30331': 'Saturday',
+        '30332': 'Sunday',
+        '30333': 'Monday',
+        '30334': 'Tuesday',
+        '30335': 'Wednesday',
+        '30336': 'Thursday',
+        '30337': 'Friday',
+        '30338': 'Saturday',
+        '30339': 'Sunday',
+        '30340': 'Monday',
+        '30341': 'Tuesday',
+        '30342': 'Wednesday',
+        '30343': 'Thursday',
+        '30344': 'Friday',
+        '30345': 'Saturday',
+        '30346': 'Sunday',
+        '30347': 'Monday',
+        '30348': 'Tuesday',
+        '30349': 'Wednesday',
+        '30350': 'Thursday'
+      };
+      return dayMap[zip] || 'Friday'; // Default to Friday for unknown ZIPs
+    }
+
+    const deliveryDay = getNextAvailableDay(shippingAddress.postalCode);
+
     // Generate order number
     const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
 
@@ -160,7 +241,9 @@ router.post('/checkout', requireAuth, requireRole(['CUSTOMER']), async (req, res
           total: calculatedTotal,
           notes,
           userId,
-          shippingAddressId: finalShippingAddressId
+          shippingAddressId: finalShippingAddressId,
+          shippingZip: shippingAddress.postalCode,
+          deliveryDay
         }
       });
 
@@ -198,7 +281,9 @@ router.post('/checkout', requireAuth, requireRole(['CUSTOMER']), async (req, res
         data: {
           fulfillmentType: 'SHIPPING',
           status: 'PENDING',
-          orderId: newOrder.id
+          orderId: newOrder.id,
+          etaLabel: prediction?.label || null,
+          predictedHours: prediction?.baseEstimate || null
         }
       });
 
@@ -367,6 +452,8 @@ router.get('/history', requireAuth, requireRole(['CUSTOMER']), async (req, res) 
       tax: order.tax,
       shipping: order.shipping,
       total: order.total,
+      shippingZip: order.shippingZip,
+      deliveryDay: order.deliveryDay,
       createdAt: order.createdAt,
       updatedAt: order.updatedAt,
       items: order.orderItems.map(item => ({

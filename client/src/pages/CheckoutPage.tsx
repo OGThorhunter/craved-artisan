@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useMutation } from '@tanstack/react-query';
 import { useCart } from '../contexts/CartContext';
@@ -13,22 +13,31 @@ import {
   Plus,
   Trash2,
   ArrowLeft,
-  Lock
+  Lock,
+  Clock,
+  Package,
+  TrendingUp,
+  MapPin
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import axios from 'axios';
 
 const CheckoutPage = () => {
   const { state: { items }, removeItem, updateQuantity, getSubtotal, getTax, getShipping, getTotal, checkout } = useCart();
   const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [selectedShippingMethod, setSelectedShippingMethod] = useState('shipping');
+  const [customerZip, setCustomerZip] = useState('');
+  const [prediction, setPrediction] = useState<any>(null);
+  const [isLoadingPrediction, setIsLoadingPrediction] = useState(false);
 
   const checkoutMutation = useMutation({
     mutationFn: async () => {
       if (!user?.id) {
         throw new Error('User not authenticated');
       }
-      return await checkout(user.id);
+      return await checkout(user.id, prediction);
     },
     onSuccess: (order) => {
       toast.success('Order placed successfully!');
@@ -64,6 +73,37 @@ const CheckoutPage = () => {
       updateQuantity(productId, newQuantity);
     }
   };
+
+  // Fetch fulfillment prediction
+  useEffect(() => {
+    if (items.length === 0) {
+      setPrediction(null);
+      return;
+    }
+
+    const fetchPrediction = async () => {
+      setIsLoadingPrediction(true);
+      try {
+        const response = await axios.post('/api/fulfillment/predict', {
+          vendorId: 'mock-vendor-id', // In a real app, this would come from the cart/items
+          items: items.map(item => ({
+            quantity: item.quantity,
+            productId: item.product.id
+          })),
+          shippingMethod: selectedShippingMethod,
+          customerZip: customerZip || undefined
+        });
+        setPrediction(response.data);
+      } catch (error) {
+        console.error('Error fetching prediction:', error);
+        setPrediction(null);
+      } finally {
+        setIsLoadingPrediction(false);
+      }
+    };
+
+    fetchPrediction();
+  }, [items, selectedShippingMethod, customerZip]);
 
   if (items.length === 0) {
     return (
@@ -204,19 +244,128 @@ const CheckoutPage = () => {
                 </div>
               </div>
 
-              {/* Shipping Info */}
-              <div className="mb-6 p-4 bg-blue-50 rounded-lg">
-                <div className="flex items-center gap-2 mb-2">
-                  <Truck className="h-5 w-5 text-blue-600" />
-                  <span className="font-medium text-blue-900">Shipping</span>
+              {/* Shipping Method Selection */}
+              <div className="mb-6">
+                <h3 className="font-medium text-gray-900 mb-3">Shipping Method</h3>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input
+                      type="radio"
+                      name="shippingMethod"
+                      value="shipping"
+                      checked={selectedShippingMethod === 'shipping'}
+                      onChange={(e) => setSelectedShippingMethod(e.target.value)}
+                      className="text-blue-600"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <Truck className="h-4 w-4 text-gray-600" />
+                        <span className="font-medium">Standard Shipping</span>
+                      </div>
+                      <p className="text-sm text-gray-600">3-5 business days</p>
+                    </div>
+                  </label>
+                  
+                  <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input
+                      type="radio"
+                      name="shippingMethod"
+                      value="local_pickup"
+                      checked={selectedShippingMethod === 'local_pickup'}
+                      onChange={(e) => setSelectedShippingMethod(e.target.value)}
+                      className="text-blue-600"
+                    />
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <Package className="h-4 w-4 text-gray-600" />
+                        <span className="font-medium">Local Pickup</span>
+                      </div>
+                      <p className="text-sm text-gray-600">Same day pickup available</p>
+                    </div>
+                  </label>
                 </div>
-                <p className="text-sm text-blue-700">
-                  {getShipping() === 0 
-                    ? 'Free shipping on orders over $50'
-                    : 'Standard shipping: $5.99'
-                  }
-                </p>
               </div>
+
+              {/* ZIP Code Input for Shipping */}
+              {selectedShippingMethod === 'shipping' && (
+                <div className="mb-6">
+                  <h3 className="font-medium text-gray-900 mb-3">Delivery ZIP Code</h3>
+                  <input
+                    type="text"
+                    placeholder="Enter ZIP code for accurate delivery estimate"
+                    value={customerZip}
+                    onChange={(e) => setCustomerZip(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    maxLength={5}
+                  />
+                  <p className="text-xs text-gray-600 mt-1">
+                    Providing your ZIP code helps us give you a more accurate delivery estimate
+                  </p>
+                </div>
+              )}
+
+              {/* Fulfillment Prediction */}
+              {isLoadingPrediction && (
+                <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    <span className="text-sm text-gray-600">Calculating fulfillment time...</span>
+                  </div>
+                </div>
+              )}
+
+              {prediction && !isLoadingPrediction && (
+                <div className="mb-6 space-y-4">
+                  {/* Fulfillment Prediction */}
+                  <div className="p-4 border rounded-lg bg-blue-50 text-blue-700">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Clock className="h-4 w-4" />
+                      <span className="font-medium">Estimated Fulfillment</span>
+                    </div>
+                    <p className="text-sm">
+                      <strong>{prediction.predictedFulfillmentTime}</strong>
+                    </p>
+                    <p className="text-sm mt-1">
+                      <strong>{prediction.label}</strong>
+                    </p>
+                    {prediction.prepTime > 0 && (
+                      <p className="text-xs mt-1 text-blue-600">
+                        Prep time: {prediction.prepTime} min
+                        {prediction.shippingTime > 0 && ` • Shipping: ${prediction.shippingTime} hrs`}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Margin Prediction */}
+                  {prediction.predictedMargin && (
+                    <div className="p-4 border rounded-lg bg-green-50 text-green-700">
+                      <div className="flex items-center gap-2 mb-2">
+                        <TrendingUp className="h-4 w-4" />
+                        <span className="font-medium">Margin Prediction</span>
+                      </div>
+                      <p className="text-sm">
+                        <strong>{prediction.predictedMargin}%</strong>
+                      </p>
+                      <p className="text-sm mt-1">
+                        <strong>{prediction.marginLabel}</strong>
+                      </p>
+                      <p className="text-xs mt-1 text-green-600">
+                        Based on {selectedShippingMethod === 'local_pickup' ? 'local pickup' : 'shipping'} method
+                      </p>
+                    </div>
+                  )}
+
+                  {/* ZIP Adjustment Info */}
+                  {prediction.zipAdjustment && (
+                    <div className="p-3 border rounded-lg bg-blue-50 text-blue-700">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4" />
+                        <span className="text-xs font-medium">{prediction.zipAdjustment}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Security Notice */}
               <div className="mb-6 p-4 bg-green-50 rounded-lg">

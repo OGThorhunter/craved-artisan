@@ -52,7 +52,7 @@ interface CartContextType {
   getTax: () => number;
   getShipping: () => number;
   getTotal: () => number;
-  checkout: (userId: string) => Promise<any>;
+  checkout: (userId: string, prediction?: any) => Promise<any>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -220,7 +220,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return getSubtotal() + getTax() + getShipping();
   };
 
-  const checkout = async (userId: string): Promise<any> => {
+  const checkout = async (userId: string, prediction?: any): Promise<any> => {
     try {
       const response = await fetch('/api/orders/checkout', {
         method: 'POST',
@@ -238,7 +238,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
           subtotal: getSubtotal(),
           tax: getTax(),
           shipping: getShipping(),
-          total: getTotal()
+          total: getTotal(),
+          prediction: prediction
         }),
       });
 

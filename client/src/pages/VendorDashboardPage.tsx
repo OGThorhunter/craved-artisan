@@ -241,6 +241,14 @@ export const VendorDashboardPage = () => {
             color: 'bg-blue-500',
             link: '/dashboard/orders'
           },
+          {
+            id: 'delivery-batching',
+            title: 'Delivery Batching',
+            description: 'Organize orders by delivery day',
+            icon: Calendar,
+            color: 'bg-purple-500',
+            link: '/dashboard/vendor/delivery-batching'
+          },
     {
       id: 'view-analytics',
       title: 'View Analytics',

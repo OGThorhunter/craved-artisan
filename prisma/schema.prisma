@@ -135,6 +135,8 @@ model Order {
   trackingNumber String?
   shippedAt      DateTime?
   deliveredAt    DateTime?
+  shippingZip    String
+  deliveryDay    String?     // Mon, Tue, etc.
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 
@@ -173,6 +175,8 @@ model Fulfillment {
   estimatedDelivery DateTime?
   actualDelivery   DateTime?
   notes            String?
+  etaLabel         String? // AI-generated label (e.g., "⚡ Fast Fulfillment", "📦 Standard")
+  predictedHours   Int?    // AI prediction raw hours
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
 

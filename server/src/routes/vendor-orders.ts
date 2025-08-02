@@ -120,7 +120,9 @@ router.get('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
           carrier: order.fulfillments[0].carrier,
           estimatedDelivery: order.fulfillments[0].estimatedDelivery,
           actualDelivery: order.fulfillments[0].actualDelivery,
-          notes: order.fulfillments[0].notes
+          notes: order.fulfillments[0].notes,
+          etaLabel: order.fulfillments[0].etaLabel,
+          predictedHours: order.fulfillments[0].predictedHours
         } : null
       };
     });
@@ -259,7 +261,9 @@ router.get('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
           carrier: order.fulfillments[0].carrier,
           estimatedDelivery: order.fulfillments[0].estimatedDelivery,
           actualDelivery: order.fulfillments[0].actualDelivery,
-          notes: order.fulfillments[0].notes
+          notes: order.fulfillments[0].notes,
+          etaLabel: order.fulfillments[0].etaLabel,
+          predictedHours: order.fulfillments[0].predictedHours
         } : null
       }
     });
@@ -485,6 +489,107 @@ router.get('/stats', requireAuth, requireRole(['VENDOR']), async (req, res) => {
     res.status(500).json({
       error: 'Internal server error',
       message: 'Failed to fetch order statistics'
+    });
+  }
+});
+
+// GET /api/vendor/orders/delivery-batches - Get orders grouped by delivery day
+router.get('/delivery-batches', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+  try {
+    const orders = await prisma.order.findMany({
+      where: {
+        status: { in: ['PENDING', 'CONFIRMED'] },
+        deliveryDay: { not: null }
+      },
+      include: {
+        user: {
+          select: {
+            name: true,
+            email: true
+          }
+        },
+        orderItems: {
+          include: {
+            product: {
+              select: {
+                name: true,
+                imageUrl: true
+              }
+            }
+          }
+        },
+        shippingAddress: {
+          select: {
+            firstName: true,
+            lastName: true,
+            city: true,
+            state: true
+          }
+        },
+        fulfillments: {
+          select: {
+            status: true,
+            etaLabel: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'asc'
+      }
+    });
+
+    // Group orders by delivery day
+    const batchedOrders: Record<string, any[]> = {};
+    
+    orders.forEach(order => {
+      const day = order.deliveryDay || 'Unassigned';
+      if (!batchedOrders[day]) {
+        batchedOrders[day] = [];
+      }
+      
+      batchedOrders[day].push({
+        id: order.id,
+        orderNumber: order.orderNumber,
+        status: order.status,
+        total: order.total,
+        createdAt: order.createdAt,
+        customerName: order.user?.name || order.user?.email || 'Unknown',
+        customerEmail: order.user?.email,
+        shippingZip: order.shippingZip,
+        shippingCity: order.shippingAddress?.city,
+        shippingState: order.shippingAddress?.state,
+        items: order.orderItems.map(item => ({
+          id: item.id,
+          quantity: item.quantity,
+          productName: item.product.name,
+          productImage: item.product.imageUrl
+        })),
+        fulfillmentStatus: order.fulfillments[0]?.status || 'PENDING',
+        etaLabel: order.fulfillments[0]?.etaLabel
+      });
+    });
+
+    // Sort days in logical order
+    const dayOrder = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday', 'Unassigned'];
+    const sortedBatches: Record<string, any[]> = {};
+    
+    dayOrder.forEach(day => {
+      if (batchedOrders[day]) {
+        sortedBatches[day] = batchedOrders[day];
+      }
+    });
+
+    res.json({
+      batches: sortedBatches,
+      totalOrders: orders.length,
+      totalBatches: Object.keys(sortedBatches).length
+    });
+
+  } catch (error) {
+    console.error('Error fetching delivery batches:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to fetch delivery batches'
     });
   }
 });

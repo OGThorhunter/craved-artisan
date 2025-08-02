@@ -19,7 +19,14 @@ const checkoutSchema = z.object({
   shipping: z.number().min(0),
   total: z.number().positive(),
   shippingAddressId: z.string().uuid().optional(),
-  notes: z.string().optional()
+  notes: z.string().optional(),
+  prediction: z.object({
+    predictedFulfillmentTime: z.string(),
+    label: z.string(),
+    baseEstimate: z.number(),
+    prepTime: z.number(),
+    shippingTime: z.number()
+  }).optional()
 });
 
 // Mock data
@@ -38,7 +45,7 @@ router.post('/checkout', requireAuth, requireRole(['CUSTOMER']), async (req, res
       });
     }
 
-    const { items, userId, subtotal, tax, shipping, total, shippingAddressId, notes } = validationResult.data;
+    const { items, userId, subtotal, tax, shipping, total, shippingAddressId, notes, prediction } = validationResult.data;
 
     // Verify user is creating order for themselves
     if (req.session.userId !== userId) {
@@ -120,6 +127,70 @@ router.post('/checkout', requireAuth, requireRole(['CUSTOMER']), async (req, res
       });
     }
 
+    // Auto-assign delivery day based on ZIP code (mock implementation)
+    function getNextAvailableDay(zip: string): string {
+      const dayMap: Record<string, string> = {
+        '30248': 'Monday',
+        '30252': 'Tuesday', 
+        '30236': 'Wednesday',
+        '30301': 'Thursday',
+        '30302': 'Friday',
+        '30303': 'Saturday',
+        '30304': 'Sunday',
+        '30305': 'Monday',
+        '30306': 'Tuesday',
+        '30307': 'Wednesday',
+        '30308': 'Thursday',
+        '30309': 'Friday',
+        '30310': 'Saturday',
+        '30311': 'Sunday',
+        '30312': 'Monday',
+        '30313': 'Tuesday',
+        '30314': 'Wednesday',
+        '30315': 'Thursday',
+        '30316': 'Friday',
+        '30317': 'Saturday',
+        '30318': 'Sunday',
+        '30319': 'Monday',
+        '30320': 'Tuesday',
+        '30321': 'Wednesday',
+        '30322': 'Thursday',
+        '30323': 'Friday',
+        '30324': 'Saturday',
+        '30325': 'Sunday',
+        '30326': 'Monday',
+        '30327': 'Tuesday',
+        '30328': 'Wednesday',
+        '30329': 'Thursday',
+        '30330': 'Friday',
+        '30331': 'Saturday',
+        '30332': 'Sunday',
+        '30333': 'Monday',
+        '30334': 'Tuesday',
+        '30335': 'Wednesday',
+        '30336': 'Thursday',
+        '30337': 'Friday',
+        '30338': 'Saturday',
+        '30339': 'Sunday',
+        '30340': 'Monday',
+        '30341': 'Tuesday',
+        '30342': 'Wednesday',
+        '30343': 'Thursday',
+        '30344': 'Friday',
+        '30345': 'Saturday',
+        '30346': 'Sunday',
+        '30347': 'Monday',
+        '30348': 'Tuesday',
+        '30349': 'Wednesday',
+        '30350': 'Thursday'
+      };
+      return dayMap[zip] || 'Friday'; // Default to Friday for unknown ZIPs
+    }
+
+    // Mock shipping address with ZIP code
+    const mockShippingZip = '30301'; // Default mock ZIP
+    const deliveryDay = getNextAvailableDay(mockShippingZip);
+
     // Generate order number
     const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
 
@@ -135,6 +206,8 @@ router.post('/checkout', requireAuth, requireRole(['CUSTOMER']), async (req, res
       notes,
       userId,
       shippingAddressId: shippingAddressId || 'mock-address-id',
+      shippingZip: mockShippingZip,
+      deliveryDay,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -160,6 +233,8 @@ router.post('/checkout', requireAuth, requireRole(['CUSTOMER']), async (req, res
       estimatedDelivery: null,
       actualDelivery: null,
       notes: null,
+      etaLabel: prediction?.label || null,
+      predictedHours: prediction?.baseEstimate || null,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -235,7 +310,9 @@ router.get('/', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
           status: order.fulfillment.status,
           type: order.fulfillment.fulfillmentType,
           trackingNumber: order.fulfillment.trackingNumber,
-          estimatedDelivery: order.fulfillment.estimatedDelivery
+          estimatedDelivery: order.fulfillment.estimatedDelivery,
+          etaLabel: order.fulfillment.etaLabel,
+          predictedHours: order.fulfillment.predictedHours
         },
         shippingAddress: {
           id: order.shippingAddressId,
@@ -272,6 +349,8 @@ router.get('/history', requireAuth, requireRole(['CUSTOMER']), async (req, res) 
       tax: order.tax,
       shipping: order.shipping,
       total: order.total,
+      shippingZip: order.shippingZip || '30301',
+      deliveryDay: order.deliveryDay || 'Thursday',
       createdAt: order.createdAt,
       updatedAt: order.updatedAt,
       items: order.orderItems.map((item: any) => ({
@@ -337,21 +416,23 @@ router.get('/:id', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
       });
     }
 
-    res.json({
-      order: {
-        id: order.id,
-        orderNumber: order.orderNumber,
-        status: order.status,
-        subtotal: order.subtotal,
-        tax: order.tax,
-        shipping: order.shipping,
-        total: order.total,
-        notes: order.notes,
-        trackingNumber: order.trackingNumber,
-        shippedAt: order.shippedAt,
-        deliveredAt: order.deliveredAt,
-        createdAt: order.createdAt,
-        updatedAt: order.updatedAt,
+          res.json({
+        order: {
+          id: order.id,
+          orderNumber: order.orderNumber,
+          status: order.status,
+          subtotal: order.subtotal,
+          tax: order.tax,
+          shipping: order.shipping,
+          total: order.total,
+          shippingZip: order.shippingZip || '30301',
+          deliveryDay: order.deliveryDay || 'Thursday',
+          notes: order.notes,
+          trackingNumber: order.trackingNumber,
+          shippedAt: order.shippedAt,
+          deliveredAt: order.deliveredAt,
+          createdAt: order.createdAt,
+          updatedAt: order.updatedAt,
         items: order.orderItems.map((item: any) => ({
           id: item.id,
           quantity: item.quantity,
@@ -373,7 +454,9 @@ router.get('/:id', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
           carrier: order.fulfillment.carrier,
           estimatedDelivery: order.fulfillment.estimatedDelivery,
           actualDelivery: order.fulfillment.actualDelivery,
-          notes: order.fulfillment.notes
+          notes: order.fulfillment.notes,
+          etaLabel: order.fulfillment.etaLabel,
+          predictedHours: order.fulfillment.predictedHours
         },
         shippingAddress: {
           id: order.shippingAddressId,

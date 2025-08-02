@@ -29,6 +29,7 @@ import { EventsPage } from './pages/EventsPage';
 import { EventDetailPage } from './pages/EventDetailPage';
 import VendorWatchlistPage from './pages/VendorWatchlistPage';
 import VendorOrdersPage from './pages/VendorOrdersPage';
+import VendorDeliveryBatchingPage from './pages/VendorDeliveryBatchingPage';
 import CustomerOrdersPage from './pages/CustomerOrdersPage';
 import CheckoutPage from './pages/CheckoutPage';
 import { NotFound } from './components/NotFound';
@@ -131,6 +132,11 @@ function App() {
             <Route path="/dashboard/orders">
               <ProtectedRoute role="VENDOR">
                 <VendorOrdersPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/dashboard/vendor/delivery-batching">
+              <ProtectedRoute role="VENDOR">
+                <VendorDeliveryBatchingPage />
               </ProtectedRoute>
             </Route>
             <Route path="/dashboard/admin">
