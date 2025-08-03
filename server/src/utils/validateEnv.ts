@@ -13,6 +13,10 @@ const envSchema = z.object({
   TWILIO_SID: z.string().optional(),
   TWILIO_AUTH_TOKEN: z.string().optional(),
   TWILIO_PHONE: z.string().optional(),
+  // Stripe configuration
+  STRIPE_SECRET_KEY: z.string().min(1),
+  STRIPE_PUBLISHABLE_KEY: z.string().min(1),
+  STRIPE_WEBHOOK_SECRET: z.string().optional(),
 });
 
 export const env = envSchema.parse(process.env); 

@@ -35,6 +35,7 @@ import CustomerOrdersPage from './pages/CustomerOrdersPage';
 import CheckoutPage from './pages/CheckoutPage';
 import VendorAnalyticsPage from './pages/VendorAnalyticsPage';
 import { VendorFinancialPage } from './pages/VendorFinancialPage';
+import VendorOnboardingPage from './pages/VendorOnboardingPage';
 import { NotFound } from './components/NotFound';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -155,6 +156,11 @@ function App() {
             <Route path="/vendor/financial">
               <ProtectedRoute role="VENDOR">
                 <VendorFinancialPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/vendor/onboarding">
+              <ProtectedRoute role="VENDOR">
+                <VendorOnboardingPage />
               </ProtectedRoute>
             </Route>
             <Route path="/dashboard/admin">

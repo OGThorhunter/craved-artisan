@@ -1,0 +1,5 @@
+﻿"id","vendorId","date","revenue","cogs","opex","netProfit","assets","liabilities","equity","cashIn","cashOut","notes"
+"snapshot-1754163665294","vendor-1","2025-08-02T19:41:05.294Z",350,240,52.5,57.5,25057.5,8000,17057.5,350,292.5,"Test snapshot for comprehensive testing"
+"snapshot-1","vendor-1","2025-08-01T00:00:00.000Z",12500,7500,2000,3000,25000,8000,17000,13000,10000,"Strong month with new product launch"
+"snapshot-2","vendor-1","2025-07-01T00:00:00.000Z",9800,6000,1800,2000,22000,7500,14500,10500,8500,"Steady growth month"
+"snapshot-3","vendor-1","2025-06-01T00:00:00.000Z",8200,5200,1600,1400,20000,7000,13000,9000,7500,"Recovery from slow period"

@@ -21,6 +21,14 @@ import orderRoutes from './routes/orders';
 import fulfillmentRoutes from './routes/fulfillment';
 import routeOptimizationRoutes from './routes/route-optimization';
 import financialRoutes from './routes/financial';
+import stripeRoutes from './routes/stripe';
+import stripeControllerRoutes from './routes/stripe-controller';
+import checkoutRoutes from './routes/checkout';
+import webhookRoutes from './routes/webhooks';
+import vendorPayoutRoutes from './routes/vendor-payouts';
+import aiValidationRoutes from './routes/ai-validation';
+import payoutReportsRoutes from './routes/payout-reports';
+import taxReportsRoutes from './routes/tax-reports';
 
 // Load environment variables
 dotenv.config();
@@ -132,6 +140,14 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/fulfillment', fulfillmentRoutes);
 app.use('/api/route', routeOptimizationRoutes);
 app.use('/api/financial', financialRoutes);
+app.use('/api/stripe', stripeRoutes);
+app.use('/api/stripe-controller', stripeControllerRoutes);
+app.use('/api/checkout', checkoutRoutes);
+app.use('/api/webhooks', webhookRoutes);
+app.use('/api/vendor-payouts', vendorPayoutRoutes);
+app.use('/api/ai-validation', aiValidationRoutes);
+app.use('/api/payout-reports', payoutReportsRoutes);
+app.use('/api/tax-reports', taxReportsRoutes);
 
 app.use('/api/products', (req, res) => {
   res.json({ message: 'Product routes - to be implemented' });

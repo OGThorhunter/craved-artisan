@@ -21,6 +21,21 @@ const mockUsers = [
     id: 'mock-user-id',
     email: 'vendor@cravedartisan.com',
     role: Role.VENDOR
+  },
+  {
+    id: 'user-1',
+    email: 'vendor1@example.com',
+    role: Role.VENDOR
+  },
+  {
+    id: 'user-2',
+    email: 'vendor2@example.com',
+    role: Role.VENDOR
+  },
+  {
+    id: 'user-admin',
+    email: 'admin@example.com',
+    role: Role.ADMIN
   }
 ];
 

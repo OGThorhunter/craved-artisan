@@ -1,10 +1,12 @@
 import express from 'express';
 import { z } from 'zod';
 import { requireAuth, requireRole } from '../middleware/auth-mock';
+import { isVendorOwnerOrAdmin } from '../middleware/isVendorOwnerOrAdmin-mock';
 import { Parser } from 'json2csv';
 import PDFDocument from 'pdfkit';
 import multer from 'multer';
 import { parse } from 'csv-parse/sync';
+import { ChartJSNodeCanvas } from 'chartjs-node-canvas';
 
 const router = express.Router();
 
@@ -13,6 +15,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 // Mock data
 let mockSnapshots = [
+  // 2025 Data
   {
     id: 'snapshot-1',
     vendorId: 'vendor-1',
@@ -57,6 +60,142 @@ let mockSnapshots = [
     cashIn: 9000.00,
     cashOut: 7500.00,
     notes: 'Recovery from slow period'
+  },
+  {
+    id: 'snapshot-4',
+    vendorId: 'vendor-1',
+    date: new Date('2025-05-01'),
+    revenue: 7500.00,
+    cogs: 4800.00,
+    opex: 1500.00,
+    netProfit: 1200.00,
+    assets: 18500.00,
+    liabilities: 6800.00,
+    equity: 11700.00,
+    cashIn: 8000.00,
+    cashOut: 7000.00,
+    notes: 'Spring season boost'
+  },
+  {
+    id: 'snapshot-5',
+    vendorId: 'vendor-1',
+    date: new Date('2025-04-01'),
+    revenue: 6800.00,
+    cogs: 4200.00,
+    opex: 1400.00,
+    netProfit: 1200.00,
+    assets: 17000.00,
+    liabilities: 6500.00,
+    equity: 10500.00,
+    cashIn: 7200.00,
+    cashOut: 6500.00,
+    notes: 'Easter holiday sales'
+  },
+  {
+    id: 'snapshot-6',
+    vendorId: 'vendor-1',
+    date: new Date('2025-03-01'),
+    revenue: 6200.00,
+    cogs: 3800.00,
+    opex: 1300.00,
+    netProfit: 1100.00,
+    assets: 15500.00,
+    liabilities: 6200.00,
+    equity: 9300.00,
+    cashIn: 6500.00,
+    cashOut: 6000.00,
+    notes: 'March Madness catering'
+  },
+  {
+    id: 'snapshot-7',
+    vendorId: 'vendor-1',
+    date: new Date('2025-02-01'),
+    revenue: 5800.00,
+    cogs: 3500.00,
+    opex: 1200.00,
+    netProfit: 1100.00,
+    assets: 14000.00,
+    liabilities: 5900.00,
+    equity: 8100.00,
+    cashIn: 6000.00,
+    cashOut: 5500.00,
+    notes: 'Valentine\'s Day specials'
+  },
+  {
+    id: 'snapshot-8',
+    vendorId: 'vendor-1',
+    date: new Date('2025-01-01'),
+    revenue: 5200.00,
+    cogs: 3200.00,
+    opex: 1100.00,
+    netProfit: 900.00,
+    assets: 12500.00,
+    liabilities: 5600.00,
+    equity: 6900.00,
+    cashIn: 5500.00,
+    cashOut: 5000.00,
+    notes: 'New Year resolution boost'
+  },
+  // 2024 Data
+  {
+    id: 'snapshot-9',
+    vendorId: 'vendor-1',
+    date: new Date('2024-12-01'),
+    revenue: 15000.00,
+    cogs: 9000.00,
+    opex: 2500.00,
+    netProfit: 3500.00,
+    assets: 12000.00,
+    liabilities: 5300.00,
+    equity: 6700.00,
+    cashIn: 15500.00,
+    cashOut: 12000.00,
+    notes: 'Holiday season peak'
+  },
+  {
+    id: 'snapshot-10',
+    vendorId: 'vendor-1',
+    date: new Date('2024-11-01'),
+    revenue: 11000.00,
+    cogs: 6600.00,
+    opex: 2000.00,
+    netProfit: 2400.00,
+    assets: 10000.00,
+    liabilities: 5000.00,
+    equity: 5000.00,
+    cashIn: 11500.00,
+    cashOut: 9500.00,
+    notes: 'Thanksgiving preparation'
+  },
+  {
+    id: 'snapshot-11',
+    vendorId: 'vendor-1',
+    date: new Date('2024-10-01'),
+    revenue: 9500.00,
+    cogs: 5700.00,
+    opex: 1800.00,
+    netProfit: 2000.00,
+    assets: 8500.00,
+    liabilities: 4700.00,
+    equity: 3800.00,
+    cashIn: 10000.00,
+    cashOut: 8500.00,
+    notes: 'Fall festival season'
+  },
+  {
+    id: 'snapshot-12',
+    vendorId: 'vendor-1',
+    date: new Date('2024-09-01'),
+    revenue: 8800.00,
+    cogs: 5300.00,
+    opex: 1700.00,
+    netProfit: 1800.00,
+    assets: 7000.00,
+    liabilities: 4400.00,
+    equity: 2600.00,
+    cashIn: 9200.00,
+    cashOut: 8000.00,
+    notes: 'Back to school rush'
   }
 ];
 
@@ -137,10 +276,10 @@ const createFinancialSnapshotSchema = z.object({
 const updateFinancialSnapshotSchema = createFinancialSnapshotSchema.partial();
 
 // GET /api/vendors/:id/financials/test - Get financial snapshots for a specific vendor with range filtering
-router.get('/:id/financials/test', async (req, res) => {
+router.get('/:id/financials/test', requireAuth, requireRole(['VENDOR', 'ADMIN']), isVendorOwnerOrAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const { range = 'monthly' } = req.query;
+    const { range = 'monthly', year, quarter } = req.query;
     
     // Verify vendor exists
     const vendor = mockVendors.find(v => v.id === id);
@@ -151,27 +290,58 @@ router.get('/:id/financials/test', async (req, res) => {
       });
     }
 
-    // Calculate date range based on the range parameter
-    const now = new Date();
     let startDate: Date;
-    
-    switch (range) {
-      case 'monthly':
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-        break;
-      case 'quarterly':
-        const quarter = Math.floor(now.getMonth() / 3);
-        startDate = new Date(now.getFullYear(), quarter * 3, 1);
-        break;
-      case 'yearly':
-        startDate = new Date(now.getFullYear(), 0, 1);
-        break;
-      default:
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    let endDate: Date;
+    const now = new Date();
+
+    // Handle year and quarter filtering
+    if (year) {
+      const yearNum = parseInt(year as string);
+      startDate = new Date(yearNum, 0, 1); // January 1st of the year
+      endDate = new Date(yearNum + 1, 0, 1); // January 1st of next year
+
+      // If quarter is specified, filter to that specific quarter
+      if (quarter) {
+        const quarterMap: { [key: string]: [number, number] } = {
+          'Q1': [0, 3],
+          'Q2': [3, 6],
+          'Q3': [6, 9],
+          'Q4': [9, 12],
+        };
+
+        const quarterRange = quarterMap[quarter as string];
+        if (quarterRange) {
+          startDate = new Date(yearNum, quarterRange[0], 1);
+          endDate = new Date(yearNum, quarterRange[1], 1);
+        }
+      }
+    } else {
+      // Fall back to range-based filtering
+      switch (range) {
+        case 'monthly':
+          startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+          endDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+          break;
+        case 'quarterly':
+          const quarter = Math.floor(now.getMonth() / 3);
+          startDate = new Date(now.getFullYear(), quarter * 3, 1);
+          endDate = new Date(now.getFullYear(), (quarter + 1) * 3, 1);
+          break;
+        case 'yearly':
+          startDate = new Date(now.getFullYear(), 0, 1);
+          endDate = new Date(now.getFullYear() + 1, 0, 1);
+          break;
+        default:
+          startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+          endDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      }
     }
 
     const snapshots = mockSnapshots
-      .filter(s => s.vendorId === id && new Date(s.date) >= startDate)
+      .filter(s => {
+        const snapshotDate = new Date(s.date);
+        return s.vendorId === id && snapshotDate >= startDate && snapshotDate < endDate;
+      })
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
     // Calculate summary metrics for the range
@@ -190,9 +360,11 @@ router.get('/:id/financials/test', async (req, res) => {
         storeName: vendor.storeName
       },
       range,
+      year: year ? parseInt(year as string) : now.getFullYear(),
+      quarter: quarter || null,
       period: {
         start: startDate,
-        end: now
+        end: endDate
       },
       summary: {
         totalRevenue,
@@ -214,7 +386,7 @@ router.get('/:id/financials/test', async (req, res) => {
 });
 
 // GET /api/vendors/:id/financials/export.csv/test - Export financial data as CSV
-router.get('/:id/financials/export.csv/test', async (req, res) => {
+router.get('/:id/financials/export.csv/test', requireAuth, requireRole(['VENDOR', 'ADMIN']), isVendorOwnerOrAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     
@@ -253,8 +425,8 @@ router.get('/:id/financials/export.csv/test', async (req, res) => {
   }
 });
 
-// GET /api/vendors/:id/financials/export.pdf/test - Export financial data as PDF
-router.get('/:id/financials/export.pdf/test', async (req, res) => {
+// GET /api/vendors/:id/financials/export.pdf/test - Export financial data as PDF with charts
+router.get('/:id/financials/export.pdf/test', requireAuth, requireRole(['VENDOR', 'ADMIN']), isVendorOwnerOrAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     
@@ -269,7 +441,7 @@ router.get('/:id/financials/export.pdf/test', async (req, res) => {
 
     const entries = mockSnapshots
       .filter(s => s.vendorId === id)
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()); // Sort ascending for charts
 
     if (entries.length === 0) {
       return res.status(404).json({
@@ -279,7 +451,7 @@ router.get('/:id/financials/export.pdf/test', async (req, res) => {
     }
 
     // Create PDF document
-    const doc = new PDFDocument();
+    const doc = new PDFDocument({ margin: 40 });
     
     // Set response headers
     res.setHeader('Content-Type', 'application/pdf');
@@ -288,40 +460,226 @@ router.get('/:id/financials/export.pdf/test', async (req, res) => {
     // Pipe the PDF to the response
     doc.pipe(res);
 
-    // Add title
-    doc.fontSize(24).text('Financial Report', { align: 'center' });
+    // Create chart canvas
+    const chartJSNodeCanvas = new ChartJSNodeCanvas({ width: 800, height: 400 });
+
+    // Add title page
+    doc.fontSize(28).text('Financial Report', { align: 'center' });
     doc.moveDown(0.5);
-    doc.fontSize(18).text(vendor.storeName, { align: 'center' });
+    doc.fontSize(20).text(vendor.storeName, { align: 'center' });
     doc.moveDown(0.5);
-    doc.fontSize(12).text(`Generated on ${new Date().toLocaleDateString()}`, { align: 'center' });
-    doc.moveDown(2);
+    doc.fontSize(14).text(`Generated on ${new Date().toLocaleDateString()}`, { align: 'center' });
+    doc.moveDown(3);
 
     // Add summary section
     const totalRevenue = entries.reduce((sum, e) => sum + e.revenue, 0);
     const totalProfit = entries.reduce((sum, e) => sum + e.netProfit, 0);
     const avgProfitMargin = totalRevenue > 0 ? (totalProfit / totalRevenue) * 100 : 0;
-    const latestSnapshot = entries[0];
+    const latestSnapshot = entries[entries.length - 1];
 
-    doc.fontSize(16).text('Executive Summary', { underline: true });
+    doc.fontSize(18).text('Executive Summary', { underline: true });
     doc.moveDown(0.5);
     doc.fontSize(12).text(`Total Revenue: $${totalRevenue.toLocaleString()}`);
     doc.fontSize(12).text(`Total Net Profit: $${totalProfit.toLocaleString()}`);
     doc.fontSize(12).text(`Average Profit Margin: ${avgProfitMargin.toFixed(1)}%`);
     doc.fontSize(12).text(`Current Net Worth: $${latestSnapshot.equity.toLocaleString()}`);
+    doc.fontSize(12).text(`Reporting Period: ${entries.length} snapshots`);
     doc.moveDown(2);
 
-    // Add financial snapshots table
-    doc.fontSize(16).text('Financial Snapshots', { underline: true });
+    // Generate Revenue Chart
+    const revenueChartConfig = {
+      type: 'line' as const,
+      data: {
+        labels: entries.map(e => new Date(e.date).toLocaleDateString()),
+        datasets: [{
+          label: 'Revenue',
+          data: entries.map(e => e.revenue),
+          borderColor: 'rgb(75, 192, 192)',
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          tension: 0.1
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          title: {
+            display: true,
+            text: 'Revenue Trend Over Time'
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: function(value: any) {
+                return '$' + value.toLocaleString();
+              }
+            }
+          }
+        }
+      }
+    };
+
+    const revenueChartBuffer = await chartJSNodeCanvas.renderToBuffer(revenueChartConfig);
+    doc.addPage();
+    doc.fontSize(18).text('Revenue Analysis', { underline: true });
+    doc.moveDown(0.5);
+    doc.image(revenueChartBuffer, { fit: [500, 250] });
+    doc.moveDown(1);
+
+    // Generate Profit vs COGS Chart
+    const profitCogsChartConfig = {
+      type: 'bar' as const,
+      data: {
+        labels: entries.map(e => new Date(e.date).toLocaleDateString()),
+        datasets: [
+          {
+            label: 'Net Profit',
+            data: entries.map(e => e.netProfit),
+            backgroundColor: 'rgba(54, 162, 235, 0.8)',
+            borderColor: 'rgb(54, 162, 235)',
+            borderWidth: 1
+          },
+          {
+            label: 'COGS',
+            data: entries.map(e => e.cogs),
+            backgroundColor: 'rgba(255, 99, 132, 0.8)',
+            borderColor: 'rgb(255, 99, 132)',
+            borderWidth: 1
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          title: {
+            display: true,
+            text: 'Net Profit vs Cost of Goods Sold'
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: function(value: any) {
+                return '$' + value.toLocaleString();
+              }
+            }
+          }
+        }
+      }
+    };
+
+    const profitCogsChartBuffer = await chartJSNodeCanvas.renderToBuffer(profitCogsChartConfig);
+    doc.fontSize(18).text('Profitability Analysis', { underline: true });
+    doc.moveDown(0.5);
+    doc.image(profitCogsChartBuffer, { fit: [500, 250] });
+
+    // Generate Cash Flow Chart
+    const cashFlowChartConfig = {
+      type: 'line' as const,
+      data: {
+        labels: entries.map(e => new Date(e.date).toLocaleDateString()),
+        datasets: [
+          {
+            label: 'Cash In',
+            data: entries.map(e => e.cashIn),
+            borderColor: 'rgb(75, 192, 192)',
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            tension: 0.1
+          },
+          {
+            label: 'Cash Out',
+            data: entries.map(e => e.cashOut),
+            borderColor: 'rgb(255, 99, 132)',
+            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+            tension: 0.1
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          title: {
+            display: true,
+            text: 'Cash Flow Analysis'
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              callback: function(value: any) {
+                return '$' + value.toLocaleString();
+              }
+            }
+          }
+        }
+      }
+    };
+
+    const cashFlowChartBuffer = await chartJSNodeCanvas.renderToBuffer(cashFlowChartConfig);
+    doc.addPage();
+    doc.fontSize(18).text('Cash Flow Analysis', { underline: true });
+    doc.moveDown(0.5);
+    doc.image(cashFlowChartBuffer, { fit: [500, 250] });
+
+    // Generate Balance Sheet Chart
+    const balanceSheetChartConfig = {
+      type: 'doughnut' as const,
+      data: {
+        labels: ['Assets', 'Liabilities', 'Equity'],
+        datasets: [{
+          data: [
+            latestSnapshot.assets,
+            latestSnapshot.liabilities,
+            latestSnapshot.equity
+          ],
+          backgroundColor: [
+            'rgba(75, 192, 192, 0.8)',
+            'rgba(255, 99, 132, 0.8)',
+            'rgba(54, 162, 235, 0.8)'
+          ],
+          borderColor: [
+            'rgb(75, 192, 192)',
+            'rgb(255, 99, 132)',
+            'rgb(54, 162, 235)'
+          ],
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          title: {
+            display: true,
+            text: 'Current Balance Sheet Composition'
+          },
+          legend: {
+            position: 'bottom' as const
+          }
+        }
+      }
+    };
+
+    const balanceSheetChartBuffer = await chartJSNodeCanvas.renderToBuffer(balanceSheetChartConfig);
+    doc.fontSize(18).text('Balance Sheet Overview', { underline: true });
+    doc.moveDown(0.5);
+    doc.image(balanceSheetChartBuffer, { fit: [400, 300] });
+
+    // Add detailed financial snapshots table
+    doc.addPage();
+    doc.fontSize(18).text('Detailed Financial Snapshots', { underline: true });
     doc.moveDown(0.5);
 
     // Table headers
     const tableTop = doc.y;
     const tableLeft = 50;
-    const colWidth = 100;
-    const rowHeight = 20;
+    const colWidth = 90;
+    const rowHeight = 18;
 
     // Draw table headers
-    doc.fontSize(10).font('Helvetica-Bold');
+    doc.fontSize(9).font('Helvetica-Bold');
     doc.text('Date', tableLeft, tableTop);
     doc.text('Revenue', tableLeft + colWidth, tableTop);
     doc.text('COGS', tableLeft + colWidth * 2, tableTop);
@@ -333,7 +691,7 @@ router.get('/:id/financials/export.pdf/test', async (req, res) => {
     doc.moveTo(tableLeft, tableTop + 15).lineTo(tableLeft + colWidth * 6, tableTop + 15).stroke();
 
     // Add table rows
-    doc.fontSize(9).font('Helvetica');
+    doc.fontSize(8).font('Helvetica');
     entries.forEach((entry, index) => {
       const y = tableTop + rowHeight + (index * rowHeight);
       
@@ -344,7 +702,7 @@ router.get('/:id/financials/export.pdf/test', async (req, res) => {
         doc.moveDown(0.5);
         // Reset table position for new page
         const newTableTop = doc.y;
-        doc.fontSize(10).font('Helvetica-Bold');
+        doc.fontSize(9).font('Helvetica-Bold');
         doc.text('Date', tableLeft, newTableTop);
         doc.text('Revenue', tableLeft + colWidth, newTableTop);
         doc.text('COGS', tableLeft + colWidth * 2, newTableTop);
@@ -352,7 +710,7 @@ router.get('/:id/financials/export.pdf/test', async (req, res) => {
         doc.text('Net Profit', tableLeft + colWidth * 4, newTableTop);
         doc.text('Equity', tableLeft + colWidth * 5, newTableTop);
         doc.moveTo(tableLeft, newTableTop + 15).lineTo(tableLeft + colWidth * 6, newTableTop + 15).stroke();
-        doc.fontSize(9).font('Helvetica');
+        doc.fontSize(8).font('Helvetica');
         const adjustedY = newTableTop + rowHeight;
         doc.text(new Date(entry.date).toLocaleDateString(), tableLeft, adjustedY);
         doc.text(`$${entry.revenue.toLocaleString()}`, tableLeft + colWidth, adjustedY);
@@ -371,6 +729,13 @@ router.get('/:id/financials/export.pdf/test', async (req, res) => {
     });
 
     // Add footer
+    doc.addPage();
+    doc.fontSize(12).text('Report Summary', { underline: true });
+    doc.moveDown(0.5);
+    doc.fontSize(10).text(`• Total snapshots analyzed: ${entries.length}`);
+    doc.fontSize(10).text(`• Date range: ${new Date(entries[0].date).toLocaleDateString()} to ${new Date(entries[entries.length - 1].date).toLocaleDateString()}`);
+    doc.fontSize(10).text(`• Average monthly revenue: $${(totalRevenue / entries.length).toLocaleString()}`);
+    doc.fontSize(10).text(`• Average monthly profit: $${(totalProfit / entries.length).toLocaleString()}`);
     doc.moveDown(2);
     doc.fontSize(10).text(`Report generated for ${vendor.storeName} on ${new Date().toLocaleString()}`, { align: 'center' });
 
@@ -386,7 +751,7 @@ router.get('/:id/financials/export.pdf/test', async (req, res) => {
 });
 
 // POST /api/vendors/:id/financials/generate/test - Generate financial snapshot automatically
-router.post('/:id/financials/generate/test', async (req, res) => {
+router.post('/:id/financials/generate/test', requireAuth, requireRole(['VENDOR', 'ADMIN']), isVendorOwnerOrAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const { period = 'monthly', notes } = req.body;
@@ -711,7 +1076,7 @@ router.get('/analytics/test', async (req, res) => {
 });
 
 // POST /api/vendors/:id/financials/import/test - Mock upload and import CSV/Excel financial data
-router.post('/:id/financials/import/test', upload.single('file'), async (req, res) => {
+router.post('/:id/financials/import/test', requireAuth, requireRole(['VENDOR', 'ADMIN']), isVendorOwnerOrAdmin, upload.single('file'), async (req, res) => {
   try {
     const { id } = req.params;
     
@@ -800,6 +1165,214 @@ router.post('/:id/financials/import/test', upload.single('file'), async (req, re
       error: 'Internal server error',
       message: 'Failed to import financial data'
     });
+  }
+});
+
+// GET /api/vendors/:id/financials/insights/test - Get financial insights and analytics (Mock)
+router.get('/:id/financials/insights/test', requireAuth, requireRole(['VENDOR', 'ADMIN']), isVendorOwnerOrAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { year, quarter } = req.query;
+
+    // Verify vendor exists
+    const vendor = mockVendors.find(v => v.id === id);
+    if (!vendor) {
+      return res.status(404).json({
+        error: 'Vendor not found',
+        message: 'Vendor does not exist'
+      });
+    }
+
+    // Build date filter
+    let startDate: Date;
+    let endDate: Date;
+    const now = new Date();
+
+    if (year) {
+      const yearNum = parseInt(year as string);
+      startDate = new Date(yearNum, 0, 1);
+      endDate = new Date(yearNum + 1, 0, 1);
+
+      if (quarter) {
+        const quarterMap: { [key: string]: [number, number] } = {
+          'Q1': [0, 3],
+          'Q2': [3, 6],
+          'Q3': [6, 9],
+          'Q4': [9, 12],
+        };
+
+        const quarterRange = quarterMap[quarter as string];
+        if (quarterRange) {
+          startDate = new Date(yearNum, quarterRange[0], 1);
+          endDate = new Date(yearNum, quarterRange[1], 1);
+        }
+      }
+    } else {
+      // Default to last 12 months
+      startDate = new Date(now.getFullYear() - 1, now.getMonth(), 1);
+      endDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    }
+
+    // Filter snapshots for the period
+    const snapshots = mockSnapshots.filter(s => 
+      s.vendorId === id && 
+      new Date(s.date) >= startDate && 
+      new Date(s.date) < endDate
+    ).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    if (snapshots.length === 0) {
+      return res.json({
+        topGains: [],
+        costTrend: { trend: 'stable', percentage: 0, direction: 'neutral' },
+        burnRate: { monthly: 0, runway: 0, status: 'healthy' },
+        period: { start: startDate, end: endDate },
+        summary: 'No financial data available for the specified period'
+      });
+    }
+
+    // Calculate top gains (highest net profit periods)
+    const topGains = snapshots
+      .map(snapshot => ({
+        date: snapshot.date,
+        netProfit: snapshot.netProfit,
+        revenue: snapshot.revenue,
+        margin: snapshot.revenue > 0 ? (snapshot.netProfit / snapshot.revenue) * 100 : 0
+      }))
+      .sort((a, b) => b.netProfit - a.netProfit)
+      .slice(0, 5);
+
+    // Calculate cost trend
+    const totalCogs = snapshots.reduce((sum, s) => sum + s.cogs, 0);
+    const totalOpex = snapshots.reduce((sum, s) => sum + s.opex, 0);
+    const totalRevenue = snapshots.reduce((sum, s) => sum + s.revenue, 0);
+    
+    const avgCostRatio = totalRevenue > 0 ? ((totalCogs + totalOpex) / totalRevenue) * 100 : 0;
+    
+    // Determine cost trend direction by comparing first and last periods
+    const firstHalf = snapshots.slice(0, Math.ceil(snapshots.length / 2));
+    const secondHalf = snapshots.slice(Math.ceil(snapshots.length / 2));
+    
+    const firstHalfCostRatio = firstHalf.length > 0 && firstHalf.reduce((sum, s) => sum + s.revenue, 0) > 0 
+      ? (firstHalf.reduce((sum, s) => sum + s.cogs + s.opex, 0) / firstHalf.reduce((sum, s) => sum + s.revenue, 0)) * 100 
+      : 0;
+    
+    const secondHalfCostRatio = secondHalf.length > 0 && secondHalf.reduce((sum, s) => sum + s.revenue, 0) > 0 
+      ? (secondHalf.reduce((sum, s) => sum + s.cogs + s.opex, 0) / secondHalf.reduce((sum, s) => sum + s.revenue, 0)) * 100 
+      : 0;
+
+    const costTrendPercentage = secondHalfCostRatio - firstHalfCostRatio;
+    let costTrendDirection: 'increasing' | 'decreasing' | 'stable' = 'stable';
+    let costTrendTrend: 'improving' | 'worsening' | 'stable' = 'stable';
+
+    if (Math.abs(costTrendPercentage) > 2) { // 2% threshold
+      costTrendDirection = costTrendPercentage > 0 ? 'increasing' : 'decreasing';
+      costTrendTrend = costTrendPercentage > 0 ? 'worsening' : 'improving';
+    }
+
+    // Calculate burn rate
+    const avgMonthlyCashOut = snapshots.reduce((sum, s) => sum + s.cashOut, 0) / snapshots.length;
+    const avgMonthlyCashIn = snapshots.reduce((sum, s) => sum + s.cashIn, 0) / snapshots.length;
+    const netCashFlow = avgMonthlyCashIn - avgMonthlyCashOut;
+    
+    // Get current cash balance (latest snapshot)
+    const latestSnapshot = snapshots[snapshots.length - 1];
+    const currentCashBalance = latestSnapshot.assets - latestSnapshot.liabilities;
+    
+    const runway = netCashFlow < 0 ? Math.abs(currentCashBalance / Math.abs(netCashFlow)) : Infinity;
+    
+    let burnRateStatus: 'healthy' | 'caution' | 'critical' = 'healthy';
+    if (netCashFlow < 0) {
+      if (runway < 3) {
+        burnRateStatus = 'critical';
+      } else if (runway < 6) {
+        burnRateStatus = 'caution';
+      }
+    }
+
+    res.json({
+      topGains,
+      costTrend: {
+        trend: costTrendTrend,
+        percentage: Math.abs(costTrendPercentage),
+        direction: costTrendDirection,
+        avgCostRatio: Math.round(avgCostRatio * 100) / 100
+      },
+      burnRate: {
+        monthly: Math.round(netCashFlow * 100) / 100,
+        runway: Math.round(runway * 100) / 100,
+        status: burnRateStatus,
+        currentBalance: Math.round(currentCashBalance * 100) / 100
+      },
+      period: {
+        start: startDate,
+        end: endDate,
+        snapshotsCount: snapshots.length
+      },
+      summary: `Analyzed ${snapshots.length} financial snapshots from ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}`
+    });
+
+  } catch (error) {
+    console.error('Error generating financial insights:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to generate financial insights'
+    });
+  }
+});
+
+// GET /api/vendors/:vendorId/financials/summary/test - Get financial summary data for charts (Mock)
+router.get('/:vendorId/financials/summary/test', requireAuth, requireRole(['VENDOR', 'ADMIN']), isVendorOwnerOrAdmin, async (req, res) => {
+  try {
+    const { vendorId } = req.params;
+    
+    // Filter snapshots for the vendor
+    const data = mockSnapshots.filter(s => s.vendorId === vendorId)
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    const revenueVsProfit = data.map(d => ({
+      date: d.date,
+      revenue: d.revenue,
+      profit: d.netProfit,
+    }));
+
+    const cogsTrend = data.map(d => ({
+      date: d.date,
+      cogs: d.cogs,
+    }));
+
+    res.json({ revenueVsProfit, cogsTrend });
+  } catch (error) {
+    console.error('Error fetching financial summary:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to fetch financial summary'
+    });
+  }
+});
+
+// PATCH endpoint for inline editing of financial snapshots
+router.patch('/:id/financials/:snapshotId/test', requireAuth, requireRole(['VENDOR', 'ADMIN']), isVendorOwnerOrAdmin, async (req, res) => {
+  try {
+    const { id, snapshotId } = req.params;
+    const updateData = req.body;
+
+    // Find the snapshot in mock data
+    const snapshotIndex = mockSnapshots.findIndex(s => s.id === snapshotId && s.vendorId === id);
+
+    if (snapshotIndex === -1) {
+      return res.status(404).json({ error: 'Financial snapshot not found' });
+    }
+
+    // Update the snapshot
+    mockSnapshots[snapshotIndex] = {
+      ...mockSnapshots[snapshotIndex],
+      ...updateData
+    };
+
+    res.json(mockSnapshots[snapshotIndex]);
+  } catch (error) {
+    console.error('Error updating financial snapshot:', error);
+    res.status(500).json({ error: 'Failed to update financial snapshot' });
   }
 });
 

@@ -27,7 +27,6 @@ export const BalanceSheetTable: React.FC<BalanceSheetTableProps> = ({ data, clas
 
   const getBalanceSheetStatus = () => {
     const debtRatio = (data.liabilities / data.assets) * 100;
-    const equityRatio = (data.equity / data.assets) * 100;
     
     if (debtRatio > 70) return { status: 'high-debt', color: 'red', icon: '🔴' };
     if (debtRatio > 50) return { status: 'moderate-debt', color: 'yellow', icon: '🟡' };

@@ -10,13 +10,12 @@ interface ProductMarginAlertProps {
   className?: string;
 }
 
-const ProductMarginAlert: React.FC<ProductMarginAlertProps> = ({
-  price,
-  cost,
-  targetMargin,
-  marginAlert,
-  alertNote,
-  className = ''
+const ProductMarginAlert: React.FC<ProductMarginAlertProps> = ({ 
+  price, 
+  cost, 
+  targetMargin, 
+  marginAlert, 
+  className = '' 
 }) => {
   if (!marginAlert || !cost) {
     return null;

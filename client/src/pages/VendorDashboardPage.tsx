@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
+import OnboardingPrompt from '../components/OnboardingPrompt';
 import { 
   Package, 
   TrendingUp, 
@@ -36,6 +37,13 @@ export const VendorDashboardPage = () => {
   const queryClient = useQueryClient();
 
   // API functions
+  const fetchVendorProfile = async () => {
+    const response = await axios.get('/api/vendor/profile', {
+      withCredentials: true
+    });
+    return response.data;
+  };
+
   const fetchLowMarginProducts = async () => {
     const response = await axios.get('/api/vendor/products/low-margin', {
       withCredentials: true
@@ -58,6 +66,13 @@ export const VendorDashboardPage = () => {
   };
 
   // React Query hooks
+  const { data: vendorProfile, isLoading: vendorProfileLoading } = useQuery({
+    queryKey: ['vendor-profile'],
+    queryFn: fetchVendorProfile,
+    retry: 1,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
   const { data: lowMarginData, isLoading: lowMarginLoading } = useQuery({
     queryKey: ['low-margin-products'],
     queryFn: fetchLowMarginProducts,
@@ -98,6 +113,11 @@ export const VendorDashboardPage = () => {
     priceAlerts: priceAlertsData?.count || 0,
     watchlistItems: 5 // This would come from API in real implementation
   };
+
+  // Check if vendor has completed Stripe onboarding
+  if (!vendorProfileLoading && vendorProfile && !vendorProfile.stripeAccountId) {
+    return <OnboardingPrompt />;
+  }
 
   // Dashboard cards configuration
   const dashboardCards = [
@@ -178,6 +198,19 @@ export const VendorDashboardPage = () => {
       stats: `${stats.totalOrders} total orders`,
       action: 'View Orders',
       actionLink: '/dashboard/vendor/orders'
+    },
+    {
+      id: 'financials',
+      title: 'Financials',
+      description: 'Track revenue, profits, cash flow, and financial health',
+      icon: DollarSign,
+      color: 'bg-emerald-500',
+      iconColor: 'text-emerald-600',
+      bgColor: 'bg-emerald-50',
+      link: '/vendor/financial',
+      stats: 'Financial tracking & reporting',
+      action: 'View Financials',
+      actionLink: '/vendor/financial'
     },
               {
             id: 'watchlist',
@@ -272,6 +305,14 @@ export const VendorDashboardPage = () => {
       icon: Store,
       color: 'bg-slate-500',
       link: '/dashboard/vendor/site-settings'
+    },
+    {
+      id: 'view-financials',
+      title: 'View Financials',
+      description: 'Check your financial performance',
+      icon: DollarSign,
+      color: 'bg-emerald-500',
+      link: '/vendor/financial'
     }
   ];
 

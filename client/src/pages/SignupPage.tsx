@@ -3,7 +3,8 @@ import { useLocation } from 'wouter';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useAuth, SignupData } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
+import type { SignupData } from '../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
 import { Eye, EyeOff, Mail, Lock, User, Phone, Globe, FileText } from 'lucide-react';
 

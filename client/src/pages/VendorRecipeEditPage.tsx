@@ -628,7 +628,7 @@ const VendorRecipeEditPage: React.FC = () => {
           <div>
             <RecipeCostCalculator
               ingredients={calculatorIngredients}
-              yield={watchedYield || 0}
+              yieldAmount={watchedYield || 0}
               yieldUnit={watchedYieldUnit || ''}
               linkedProduct={linkedProduct}
             />

@@ -137,6 +137,33 @@ router.post('/checkout', requireAuth, requireRole(['CUSTOMER']), async (req, res
       });
     }
 
+    // Verify all vendors are connected to Stripe before allowing order creation
+    const productsWithVendors = await prisma.product.findMany({
+      where: {
+        id: { in: productIds }
+      },
+      include: {
+        vendorProfile: true
+      }
+    });
+
+    const vendorsNotConnected = productsWithVendors.filter(product => 
+      !product.vendorProfile.stripeAccountId
+    );
+
+    if (vendorsNotConnected.length > 0) {
+      return res.status(400).json({
+        error: 'Vendors not connected',
+        message: 'Some vendors are not connected to Stripe. Please contact support.',
+        vendors: vendorsNotConnected.map(product => ({
+          productId: product.id,
+          productName: product.name,
+          vendorId: product.vendorProfile.id,
+          vendorName: product.vendorProfile.storeName,
+        }))
+      });
+    }
+
     // Recalculate totals to ensure accuracy
     const calculatedSubtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const calculatedTax = calculatedSubtotal * 0.085; // 8.5% tax rate

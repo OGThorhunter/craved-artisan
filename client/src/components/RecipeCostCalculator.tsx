@@ -18,7 +18,7 @@ interface Product {
 
 interface RecipeCostCalculatorProps {
   ingredients: Ingredient[];
-  yield: number;
+  yieldAmount: number;
   yieldUnit: string;
   linkedProduct?: Product | null;
   className?: string;
@@ -26,7 +26,7 @@ interface RecipeCostCalculatorProps {
 
 const RecipeCostCalculator: React.FC<RecipeCostCalculatorProps> = ({
   ingredients,
-  yield,
+  yieldAmount,
   yieldUnit,
   linkedProduct,
   className = ''
@@ -41,7 +41,7 @@ const RecipeCostCalculator: React.FC<RecipeCostCalculatorProps> = ({
     const perBatchCost = totalIngredientCost;
 
     // Calculate per-unit cost
-    const perUnitCost = yield > 0 ? perBatchCost / yield : 0;
+    const perUnitCost = yieldAmount > 0 ? perBatchCost / yieldAmount : 0;
 
     // Calculate margin if product is linked
     let margin = 0;
@@ -81,7 +81,7 @@ const RecipeCostCalculator: React.FC<RecipeCostCalculatorProps> = ({
       marginIcon,
       marginLabel
     };
-  }, [ingredients, yield, linkedProduct]);
+  }, [ingredients, yieldAmount, linkedProduct]);
 
   const colorClasses = {
     red: 'text-red-600 bg-red-50 border-red-200',

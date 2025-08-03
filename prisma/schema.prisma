@@ -58,6 +58,10 @@ model VendorProfile {
   slug      String   @unique
   bio       String?
   imageUrl  String?
+  // Stripe Connect fields
+  stripeAccountId String? // Stripe Connect account ID
+  stripeAccountStatus String? // 'pending', 'active', 'restricted', 'disabled'
+  stripeOnboardingUrl String? // URL for vendor onboarding
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -66,6 +70,7 @@ model VendorProfile {
   ingredients Ingredient[]
   recipes     Recipe[]
   financialSnapshots FinancialSnapshot[]
+  payouts     Payout[]
 
   @@map("vendor_profiles")
 }
@@ -144,6 +149,11 @@ model Order {
   deliveryStatus String      @default("pending")
   deliveryTimestamp DateTime?
   deliveryPhotoUrl String?
+  // Stripe payment fields
+  stripePaymentIntentId String? // Stripe Payment Intent ID
+  stripeTransferId String? // Stripe Transfer ID for vendor payout
+  commissionAmount Decimal @default(0) // 2% commission amount
+  vendorPayoutAmount Decimal @default(0) // Amount sent to vendor (98%)
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
 
@@ -388,6 +398,23 @@ model FinancialSnapshot {
   vendor     VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
   
   @@index([vendorId, date])
+}
+
+model Payout {
+  id           String   @id @default(cuid())
+  vendorId     String
+  amount       Float
+  platformFee  Float
+  date         DateTime
+  method       String // 'stripe' | 'paypal'
+  referenceId  String
+  createdAt    DateTime @default(now())
+  
+  // Relations
+  vendor       VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  
+  @@index([vendorId, date])
+  @@map("payouts")
 }
 
 enum Role {

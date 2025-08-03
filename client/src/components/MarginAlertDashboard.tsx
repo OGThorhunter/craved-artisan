@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { AlertTriangle, TrendingDown, DollarSign, Package, Eye, EyeOff } from 'lucide-react';
-import toast from 'react-hot-toast';
 
 interface ProductWithMargin {
   id: string;

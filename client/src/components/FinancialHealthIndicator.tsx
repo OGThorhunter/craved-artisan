@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertTriangle, CheckCircle, TrendingUp, TrendingDown } from 'lucide-react';
+import { AlertTriangle, CheckCircle, TrendingUp } from 'lucide-react';
 
 interface FinancialMetrics {
   netProfit: number;

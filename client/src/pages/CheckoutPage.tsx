@@ -3,6 +3,7 @@ import { useLocation } from 'wouter';
 import { useMutation } from '@tanstack/react-query';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
+import StripePaymentForm from '../components/StripePaymentForm';
 import { 
   ShoppingCart, 
   CreditCard, 
@@ -31,6 +32,8 @@ const CheckoutPage = () => {
   const [customerZip, setCustomerZip] = useState('');
   const [prediction, setPrediction] = useState<any>(null);
   const [isLoadingPrediction, setIsLoadingPrediction] = useState(false);
+  const [orderId, setOrderId] = useState<string | null>(null);
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
 
   const checkoutMutation = useMutation({
     mutationFn: async () => {
@@ -40,8 +43,9 @@ const CheckoutPage = () => {
       return await checkout(user.id, prediction);
     },
     onSuccess: (order) => {
-      toast.success('Order placed successfully!');
-      setLocation(`/orders/${order.id}/confirmation`);
+      setOrderId(order.id);
+      setShowPaymentForm(true);
+      setIsProcessing(false);
     },
     onError: (error) => {
       console.error('Checkout error:', error);
@@ -64,6 +68,15 @@ const CheckoutPage = () => {
 
     setIsProcessing(true);
     checkoutMutation.mutate();
+  };
+
+  const handlePaymentSuccess = (paymentIntentId: string) => {
+    toast.success('Payment successful! Order confirmed.');
+    setLocation(`/orders/${orderId}/confirmation`);
+  };
+
+  const handlePaymentError = (error: string) => {
+    toast.error(`Payment failed: ${error}`);
   };
 
   const handleQuantityChange = (productId: string, newQuantity: number) => {
@@ -378,24 +391,33 @@ const CheckoutPage = () => {
                 </p>
               </div>
 
-              {/* Checkout Button */}
-              <button
-                onClick={handleCheckout}
-                disabled={isProcessing || items.length === 0}
-                className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                {isProcessing ? (
-                  <>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <CreditCard className="h-5 w-5" />
-                    Place Order
-                  </>
-                )}
-              </button>
+              {/* Payment Form or Checkout Button */}
+              {showPaymentForm && orderId ? (
+                <StripePaymentForm
+                  orderId={orderId}
+                  amount={getTotal()}
+                  onPaymentSuccess={handlePaymentSuccess}
+                  onPaymentError={handlePaymentError}
+                />
+              ) : (
+                <button
+                  onClick={handleCheckout}
+                  disabled={isProcessing || items.length === 0}
+                  className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {isProcessing ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard className="h-5 w-5" />
+                      Place Order
+                    </>
+                  )}
+                </button>
+              )}
 
               {/* Error Display */}
               {checkoutMutation.isError && (

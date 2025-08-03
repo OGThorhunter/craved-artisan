@@ -105,6 +105,30 @@ router.post('/login', validateRequest(loginSchema), async (req: Request, res: Re
         role: 'VENDOR',
         firstName: 'Vendor',
         lastName: 'User'
+      },
+      {
+        email: 'vendor1@example.com',
+        password: 'password123',
+        userId: 'user-1',
+        role: 'VENDOR',
+        firstName: 'Vendor',
+        lastName: 'One'
+      },
+      {
+        email: 'vendor2@example.com',
+        password: 'password123',
+        userId: 'user-2',
+        role: 'VENDOR',
+        firstName: 'Vendor',
+        lastName: 'Two'
+      },
+      {
+        email: 'admin@example.com',
+        password: 'admin123',
+        userId: 'user-admin',
+        role: 'ADMIN',
+        firstName: 'Admin',
+        lastName: 'User'
       }
     ];
 
@@ -128,8 +152,15 @@ router.post('/login', validateRequest(loginSchema), async (req: Request, res: Re
       });
     }
 
-    // Set session
+    // Set session with user data
     req.session.userId = user.userId;
+    req.session.user = {
+      id: user.userId,
+      email: user.email,
+      role: user.role
+    };
+    
+    console.log('Session before save - userId:', req.session.userId, 'user:', req.session.user);
     
     // Save session explicitly
     req.session.save((err) => {
@@ -141,7 +172,7 @@ router.post('/login', validateRequest(loginSchema), async (req: Request, res: Re
         });
       }
       
-      console.log('Session saved successfully, userId:', req.session.userId);
+      console.log('Session saved successfully, userId:', req.session.userId, 'role:', req.session.user?.role);
       
       // Return mock user data
       res.json({
@@ -191,6 +222,10 @@ router.post('/logout', (req: Request, res: Response) => {
 // Test session route
 router.get('/session', async (req: Request, res: Response) => {
   try {
+    console.log('Session check - session data:', req.session);
+    console.log('Session userId:', req.session.userId);
+    console.log('Session user:', req.session.user);
+    
     if (!req.session.userId) {
       return res.status(401).json({
         authenticated: false,
@@ -198,12 +233,15 @@ router.get('/session', async (req: Request, res: Response) => {
       });
     }
 
+    // Get user data from session
+    const userData = req.session.user;
+    
     res.json({
       authenticated: true,
       user: {
         id: req.session.userId,
-        email: 'test@example.com',
-        role: 'CUSTOMER',
+        email: userData?.email || 'unknown@example.com',
+        role: userData?.role || 'CUSTOMER',
         profile: {
           firstName: 'Test',
           lastName: 'User',

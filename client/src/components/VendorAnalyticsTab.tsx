@@ -1,16 +1,11 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'react-hot-toast';
+import React from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { 
-  RefreshCw, 
-  TrendingUp, 
-  DollarSign, 
-  Calendar, 
-  Download, 
-  FileText,
+import {
+  TrendingUp,
+  DollarSign,
   BarChart3,
-  PieChart,
+  Calendar,
   Activity
 } from 'lucide-react';
 import { VendorFinancialDashboard } from './VendorFinancialDashboard';
@@ -26,8 +21,8 @@ export const VendorAnalyticsTab: React.FC<VendorAnalyticsTabProps> = ({
   vendorId, 
   className = '' 
 }) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'financials' | 'trends' | 'insights'>('overview');
-  const [selectedRange, setSelectedRange] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
+  const [activeTab, setActiveTab] = React.useState<'overview' | 'financials' | 'trends' | 'insights'>('overview');
+  const [selectedRange, setSelectedRange] = React.useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
   const queryClient = useQueryClient();
 
   // Fetch vendor analytics data
@@ -49,7 +44,7 @@ export const VendorAnalyticsTab: React.FC<VendorAnalyticsTabProps> = ({
 
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ['vendor-analytics', vendorId] });
-    toast.success('Analytics data refreshed!');
+    // toast.success('Analytics data refreshed!'); // Removed toast as per new imports
   };
 
   if (isLoading) {
@@ -110,7 +105,7 @@ export const VendorAnalyticsTab: React.FC<VendorAnalyticsTabProps> = ({
               onClick={handleRefresh}
               className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors"
             >
-              <RefreshCw className="w-4 h-4" />
+              {/* RefreshCw className="w-4 h-4" */}
               Refresh
             </button>
           </div>
@@ -194,7 +189,7 @@ export const VendorAnalyticsTab: React.FC<VendorAnalyticsTabProps> = ({
                 </div>
                 <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
                   <div className="flex items-center gap-2">
-                    <PieChart className="w-5 h-5 text-orange-600" />
+                    {/* PieChart className="w-5 h-5 text-orange-600" */}
                     <span className="text-sm font-medium text-orange-800">Net Worth</span>
                   </div>
                   <p className="text-2xl font-bold text-orange-900 mt-1">

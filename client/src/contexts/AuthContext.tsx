@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import type { ReactNode } from 'react';
 import { useLocation } from 'wouter';
 import axios from 'axios';
 import type { AxiosInstance, AxiosResponse } from 'axios';

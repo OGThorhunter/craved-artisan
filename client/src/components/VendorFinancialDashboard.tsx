@@ -2,13 +2,17 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
-import { RefreshCw, TrendingUp, DollarSign, Calendar, Download, FileText } from 'lucide-react';
+import { RefreshCw, TrendingUp, DollarSign } from 'lucide-react';
 import { ProfitLossTable } from './ProfitLossTable';
 import { FreeCashFlowTable } from './FreeCashFlowTable';
 import { BalanceSheetTable } from './BalanceSheetTable';
 import { FinancialHealthIndicator } from './FinancialHealthIndicator';
+import { FinancialFilters } from './FinancialFilters';
 import LoadingSpinner from './LoadingSpinner';
 import CSVImportButton from './CSVImportButton';
+import { EditableFinancialTable } from './EditableFinancialTable';
+import { FinancialInsights } from './FinancialInsights';
+import { FinancialSummary } from './FinancialSummary';
 
 interface FinancialSnapshot {
   id: string;
@@ -32,6 +36,8 @@ interface VendorFinancialsResponse {
     storeName: string;
   };
   range: string;
+  year?: number;
+  quarter?: string | null;
   period: {
     start: string;
     end: string;
@@ -56,14 +62,27 @@ export const VendorFinancialDashboard: React.FC<VendorFinancialDashboardProps> =
   vendorId, 
   className = '' 
 }) => {
-  const [selectedRange, setSelectedRange] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
+
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedQuarter, setSelectedQuarter] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   // Fetch financial data
   const { data: financialData, isLoading, error } = useQuery({
-    queryKey: ['vendor-financials', vendorId, selectedRange],
+    queryKey: ['vendor-financials', vendorId, selectedYear, selectedQuarter],
     queryFn: async (): Promise<VendorFinancialsResponse> => {
-      const response = await axios.get(`/api/vendors/${vendorId}/financials/test?range=${selectedRange}`, {
+      const params = new URLSearchParams();
+      if (selectedYear) {
+        params.append('year', selectedYear.toString());
+      }
+      if (selectedQuarter) {
+        params.append('quarter', selectedQuarter);
+      }
+      if (!selectedYear && !selectedQuarter) {
+        params.append('range', 'monthly');
+      }
+      
+      const response = await axios.get(`/api/vendors/${vendorId}/financials/test?${params.toString()}`, {
         withCredentials: true
       });
       return response.data;
@@ -99,8 +118,14 @@ export const VendorFinancialDashboard: React.FC<VendorFinancialDashboardProps> =
     });
   };
 
-  const handleRangeChange = (range: 'monthly' | 'quarterly' | 'yearly') => {
-    setSelectedRange(range);
+
+
+  const handleYearChange = (year: number) => {
+    setSelectedYear(year);
+  };
+
+  const handleQuarterChange = (quarter: string | null) => {
+    setSelectedQuarter(quarter);
   };
 
   // Export functions
@@ -239,21 +264,6 @@ export const VendorFinancialDashboard: React.FC<VendorFinancialDashboardProps> =
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-gray-500" />
-              <label htmlFor="range-select" className="sr-only">Select time range</label>
-              <select
-                id="range-select"
-                value={selectedRange}
-                onChange={(e) => handleRangeChange(e.target.value as any)}
-                className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                aria-label="Select time range"
-              >
-                <option value="monthly">Monthly</option>
-                <option value="quarterly">Quarterly</option>
-                <option value="yearly">Yearly</option>
-              </select>
-            </div>
             <button
               onClick={handleGenerateSnapshot}
               disabled={generateSnapshotMutation.isPending}
@@ -268,38 +278,36 @@ export const VendorFinancialDashboard: React.FC<VendorFinancialDashboardProps> =
             </button>
           </div>
         </div>
+      </div>
 
-        {/* Export and Import Buttons */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mt-4 pt-4 border-t border-gray-200">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleExportPDF}
-              className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
-            >
-              <FileText className="w-4 h-4" />
-              Download Full Financial Portfolio (PDF)
-            </button>
-            <button
-              onClick={handleExportCSV}
-              className="flex items-center gap-2 bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors"
-            >
-              <Download className="w-4 h-4" />
-              Export CSV
-            </button>
+      {/* Financial Filters */}
+      <FinancialFilters
+        selectedYear={selectedYear}
+        selectedQuarter={selectedQuarter}
+        onYearChange={handleYearChange}
+        onQuarterChange={handleQuarterChange}
+        onExportCSV={handleExportCSV}
+        onExportPDF={handleExportPDF}
+      />
+
+      {/* Import Button */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900">Import Financial Data</h3>
+            <p className="text-sm text-gray-600">Upload CSV files to import historical financial data</p>
           </div>
-          
-          <div className="flex-shrink-0">
-            <CSVImportButton 
-              vendorId={vendorId} 
-              onImportSuccess={() => {
-                queryClient.invalidateQueries({ queryKey: ['vendor-financials', vendorId] });
-              }}
-            />
-          </div>
+          <CSVImportButton 
+            vendorId={vendorId} 
+            onImportSuccess={() => {
+              queryClient.invalidateQueries({ queryKey: ['vendor-financials', vendorId] });
+            }} 
+          />
         </div>
+      </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
           <div className="bg-green-50 border border-green-200 rounded-lg p-4">
             <div className="flex items-center gap-2">
               <DollarSign className="w-5 h-5 text-green-600" />
@@ -337,30 +345,50 @@ export const VendorFinancialDashboard: React.FC<VendorFinancialDashboardProps> =
             </p>
           </div>
         </div>
+
+      {/* Financial Health Indicator */}
+      <FinancialHealthIndicator 
+        metrics={{
+          netProfit: financialData.summary.totalProfit,
+          totalRevenue: financialData.summary.totalRevenue,
+          cogs: latestSnapshot?.cogs || 0,
+          cashIn: latestSnapshot?.cashIn || 0,
+          cashOut: latestSnapshot?.cashOut || 0,
+          assets: latestSnapshot?.assets || 0,
+          liabilities: latestSnapshot?.liabilities || 0,
+        }}
+      />
+
+      {/* Financial Insights */}
+      <FinancialInsights
+        vendorId={vendorId}
+        selectedYear={selectedYear}
+        selectedQuarter={selectedQuarter}
+        className="mt-6"
+      />
+
+      {/* Financial Summary Charts */}
+      <FinancialSummary
+        vendorId={vendorId}
+        className="mt-6"
+      />
+
+      {/* Financial Tables */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <ProfitLossTable data={profitLossData} />
+        <FreeCashFlowTable data={cashFlowData} />
+      </div>
+      
+      <div className="grid grid-cols-1 gap-6">
+        <BalanceSheetTable data={balanceSheetData} />
       </div>
 
-             {/* Financial Health Indicator */}
-       <FinancialHealthIndicator 
-         metrics={{
-           netProfit: financialData.summary.totalProfit,
-           totalRevenue: financialData.summary.totalRevenue,
-           cogs: latestSnapshot?.cogs || 0,
-           cashIn: latestSnapshot?.cashIn || 0,
-           cashOut: latestSnapshot?.cashOut || 0,
-           assets: latestSnapshot?.assets || 0,
-           liabilities: latestSnapshot?.liabilities || 0,
-         }}
-       />
-
-       {/* Financial Tables */}
-       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-         <ProfitLossTable data={profitLossData} />
-         <FreeCashFlowTable data={cashFlowData} />
-       </div>
-       
-       <div className="grid grid-cols-1 gap-6">
-         <BalanceSheetTable data={balanceSheetData} />
-       </div>
+      {/* Editable Financial Table */}
+      <EditableFinancialTable 
+        data={financialData.snapshots}
+        vendorId={vendorId}
+        className="mt-6"
+      />
 
       {/* Snapshot History */}
       {financialData.snapshots.length > 0 && (
