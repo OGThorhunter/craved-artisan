@@ -16,4 +16,15 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  css: {
+    postcss: path.resolve(__dirname, 'postcss.config.cjs'),
+  },
+  optimizeDeps: {
+    exclude: ['zod/v4/core'],
+  },
+  build: {
+    rollupOptions: {
+      external: ['zod/v4/core'],
+    },
+  },
 });

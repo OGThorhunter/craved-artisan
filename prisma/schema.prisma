@@ -62,6 +62,9 @@ model VendorProfile {
   stripeAccountId String? // Stripe Connect account ID
   stripeAccountStatus String? // 'pending', 'active', 'restricted', 'disabled'
   stripeOnboardingUrl String? // URL for vendor onboarding
+  // Margin management
+  minMarginPercent Float? // Minimum allowed margin percentage (e.g., 30.0)
+  marginOverrideEnabled Boolean @default(false) // Allow vendor to override minimum margin
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -71,6 +74,10 @@ model VendorProfile {
   recipes     Recipe[]
   financialSnapshots FinancialSnapshot[]
   payouts     Payout[]
+  taxAlerts   TaxAlert[]
+  wallet      Wallet?
+  walletTransactions WalletTransaction[]
+  labelPrints LabelPrint[]
 
   @@map("vendor_profiles")
 }
@@ -415,6 +422,93 @@ model Payout {
   
   @@index([vendorId, date])
   @@map("payouts")
+}
+
+model SystemSettings {
+  id                String   @id @default(uuid())
+  key               String   @unique
+  value             String
+  description       String?
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("system_settings")
+}
+
+model TaxAlert {
+  id              String   @id @default(uuid())
+  vendorId        String
+  quarter         String   // Q1, Q2, Q3, Q4
+  year            Int
+  estimatedAmount Float
+  dueDate         DateTime
+  alertType       String   // 'reminder', 'overdue', 'payment_confirmed'
+  status          String   @default("pending") // 'pending', 'sent', 'failed'
+  sentAt          DateTime?
+  createdAt       DateTime @default(now())
+
+  // Relations
+  vendor          VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@index([vendorId, quarter, year])
+  @@index([status, alertType])
+  @@map("tax_alerts")
+}
+
+model Wallet {
+  id          String   @id @default(uuid())
+  vendorId    String   @unique
+  balance     Float    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  vendor      VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  transactions WalletTransaction[]
+
+  @@map("wallets")
+}
+
+model WalletTransaction {
+  id          String   @id @default(cuid())
+  vendorId    String
+  type        String   // "debit" | "credit"
+  source      String   // "Label Print", "Payout", "Manual Adjustment", etc.
+  amount      Float
+  description String?
+  referenceId String?  // Reference to related entity (order, label, etc.)
+  metadata    Json?    // Additional data as JSON
+  createdAt   DateTime @default(now())
+
+  // Relations
+  vendor      VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  wallet      Wallet?       @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  walletId    String?
+
+  @@index([vendorId, type, source])
+  @@index([vendorId, createdAt])
+  @@map("wallet_transactions")
+}
+
+model LabelPrint {
+  id          String   @id @default(uuid())
+  vendorId    String
+  type        String   // "shipping", "inventory", "tax_doc", "custom"
+  quantity    Int      @default(1)
+  cost        Float
+  status      String   @default("pending") // "pending", "processing", "completed", "failed"
+  fileUrl     String?  // URL to generated label file
+  metadata    Json?    // Additional label data
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  vendor      VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
+  @@index([vendorId, type, status])
+  @@index([vendorId, createdAt])
+  @@map("label_prints")
 }
 
 enum Role {

@@ -3,54 +3,57 @@ import React from 'react';
 // Global error handlers for runtime error trapping
 
 export const setupGlobalErrorHandlers = () => {
+  // Temporarily disabled to prevent issues
+  console.log('Error handlers disabled for debugging');
+  
   // Global window error handler
-  window.onerror = (message, source, lineno, colno, error) => {
-    console.error('Global error caught:', {
-      message,
-      source,
-      lineno,
-      colno,
-      error,
-      timestamp: new Date().toISOString(),
-      userAgent: navigator.userAgent,
-      url: window.location.href
-    });
+  // window.onerror = (message, source, lineno, colno, error) => {
+  //   console.error('Global error caught:', {
+  //     message,
+  //     source,
+  //     lineno,
+  //     colno,
+  //     error,
+  //     timestamp: new Date().toISOString(),
+  //     userAgent: navigator.userAgent,
+  //     url: window.location.href
+  //   });
     
-    // You can send this to your error tracking service here
-    // Example: sendToErrorTracking({ message, source, lineno, colno, error });
+  //   // You can send this to your error tracking service here
+  //   // Example: sendToErrorTracking({ message, source, lineno, colno, error });
     
-    return false; // Don't prevent default error handling
-  };
+  //   return false; // Don't prevent default error handling
+  // };
 
   // Unhandled promise rejection handler
-  window.onunhandledrejection = (event) => {
-    console.error('Unhandled promise rejection:', {
-      reason: event.reason,
-      timestamp: new Date().toISOString(),
-      userAgent: navigator.userAgent,
-      url: window.location.href
-    });
+  // window.onunhandledrejection = (event) => {
+  //   console.error('Unhandled promise rejection:', {
+  //     reason: event.reason,
+  //     timestamp: new Date().toISOString(),
+  //     userAgent: navigator.userAgent,
+  //     url: window.location.href
+  //   });
     
-    // You can send this to your error tracking service here
-    // Example: sendToErrorTracking({ type: 'unhandledRejection', reason: event.reason });
+  //   // You can send this to your error tracking service here
+  //   // Example: sendToErrorTracking({ type: 'unhandledRejection', reason: event.reason });
     
-    event.preventDefault(); // Prevent default browser handling
-  };
+  //   event.preventDefault(); // Prevent default browser handling
+  // };
 
-  // Console error interceptor
-  const originalConsoleError = console.error;
-  console.error = (...args) => {
-    // Log to your error tracking service
-    console.error('Console error intercepted:', {
-      args,
-      timestamp: new Date().toISOString(),
-      userAgent: navigator.userAgent,
-      url: window.location.href
-    });
+  // Console error interceptor - FIXED: Removed recursive call
+  // const originalConsoleError = console.error;
+  // console.error = (...args) => {
+  //   // Call original console.error first
+  //   originalConsoleError.apply(console, args);
     
-    // Call original console.error
-    originalConsoleError.apply(console, args);
-  };
+  //   // Then log to your error tracking service (without calling console.error again)
+  //   // console.error('Console error intercepted:', {
+  //   //   args,
+  //   //   timestamp: new Date().toISOString(),
+  //   //   userAgent: navigator.userAgent,
+  //   //   url: window.location.href
+  //   // });
+  // };
 };
 
 // Error boundary fallback component

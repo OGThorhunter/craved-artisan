@@ -3,8 +3,12 @@ import { VendorFinancialDashboard } from '../components/VendorFinancialDashboard
 import { ProfitLossTable } from '../components/ProfitLossTable';
 import { FreeCashFlowTable } from '../components/FreeCashFlowTable';
 import { BalanceSheetTable } from '../components/BalanceSheetTable';
+import TaxForecastCard from '../components/TaxForecastCard';
+import { useAuth } from '../contexts/AuthContext';
 
 export const VendorFinancialPage: React.FC = () => {
+  const { user } = useAuth();
+
   // Sample data for demonstration
   const sampleProfitLossData = {
     totalRevenue: 12345,
@@ -36,6 +40,14 @@ export const VendorFinancialPage: React.FC = () => {
           </p>
         </div>
 
+        {/* Tax Forecast Section */}
+        {user && (
+          <div className="mb-12">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-6">Tax Forecast & Obligations</h2>
+            <TaxForecastCard vendorId={user.id} />
+          </div>
+        )}
+
         {/* Live API Dashboard */}
         <div className="mb-12">
           <h2 className="text-2xl font-semibold text-gray-900 mb-6">Live API Dashboard</h2>
@@ -61,6 +73,12 @@ export const VendorFinancialPage: React.FC = () => {
           <h2 className="text-2xl font-semibold text-gray-900 mb-6">Features</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Tax Forecast & Alerts</h3>
+              <p className="text-gray-600">
+                Quarterly tax projections with automated reminders and payment tracking.
+              </p>
+            </div>
+            <div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">Profit & Loss Tracking</h3>
               <p className="text-gray-600">
                 Monitor revenue, costs, and profitability with detailed breakdowns and visual indicators.
@@ -82,12 +100,6 @@ export const VendorFinancialPage: React.FC = () => {
               <h3 className="text-lg font-medium text-gray-900 mb-2">Time Range Filtering</h3>
               <p className="text-gray-600">
                 Analyze data by monthly, quarterly, or yearly periods with easy switching.
-              </p>
-            </div>
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Snapshot Generation</h3>
-              <p className="text-gray-600">
-                Automatically generate financial snapshots with real-time data calculations.
               </p>
             </div>
             <div>

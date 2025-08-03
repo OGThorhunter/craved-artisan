@@ -54,7 +54,7 @@ type AuthAction =
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'FETCH_USER_START' }
   | { type: 'FETCH_USER_SUCCESS'; payload: User }
-  | { type: 'FETCH_USER_FAILURE'; payload: string };
+  | { type: 'FETCH_USER_FAILURE'; payload: string | null };
 
 // Initial state
 const initialState: AuthState = {
@@ -183,12 +183,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (response.data.authenticated && response.data.user) {
         dispatch({ type: 'FETCH_USER_SUCCESS', payload: response.data.user });
       } else {
-        dispatch({ type: 'FETCH_USER_FAILURE', payload: 'No active session' });
+        // Don't treat this as an error - just no active session
+        dispatch({ type: 'FETCH_USER_FAILURE', payload: null });
       }
     } catch (error) {
-      console.error('Fetch user error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch user';
-      dispatch({ type: 'FETCH_USER_FAILURE', payload: errorMessage });
+      // Only log the error, don't treat 401 as a failure since it's expected when not logged in
+      if (axios.isAxiosError(error) && error.response?.status === 401) {
+        dispatch({ type: 'FETCH_USER_FAILURE', payload: null });
+      } else {
+        console.error('Fetch user error:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Failed to fetch user';
+        dispatch({ type: 'FETCH_USER_FAILURE', payload: errorMessage });
+      }
     }
   };
 
@@ -287,7 +293,4 @@ export const useAuth = (): AuthContextType => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-};
-
-// Export the API instance for use in other parts of the app
-export { api }; 
+}; 

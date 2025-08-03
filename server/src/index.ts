@@ -29,6 +29,9 @@ import vendorPayoutRoutes from './routes/vendor-payouts';
 import aiValidationRoutes from './routes/ai-validation';
 import payoutReportsRoutes from './routes/payout-reports';
 import taxReportsRoutes from './routes/tax-reports';
+import marginManagementRoutes from './routes/margin-management';
+import taxProjectionRoutes from './routes/tax-projection';
+import { initializeTaxReminderCron } from './services/taxReminderCron';
 
 // Load environment variables
 dotenv.config();
@@ -148,6 +151,8 @@ app.use('/api/vendor-payouts', vendorPayoutRoutes);
 app.use('/api/ai-validation', aiValidationRoutes);
 app.use('/api/payout-reports', payoutReportsRoutes);
 app.use('/api/tax-reports', taxReportsRoutes);
+app.use('/api/margin-management', marginManagementRoutes);
+app.use('/api/tax-projection', taxProjectionRoutes);
 
 app.use('/api/products', (req, res) => {
   res.json({ message: 'Product routes - to be implemented' });
@@ -173,6 +178,14 @@ app.use(errorHandler);
 app.listen(PORT, () => {
   logger.info(`Server running on port ${PORT}`);
   logger.info(`Environment: ${env.NODE_ENV}`);
+  
+  // Initialize tax reminder CRON jobs
+  if (env.NODE_ENV === 'production') {
+    initializeTaxReminderCron();
+    logger.info('Tax reminder CRON jobs initialized');
+  } else {
+    logger.info('Tax reminder CRON jobs disabled in development mode');
+  }
 });
 
 // Graceful shutdown

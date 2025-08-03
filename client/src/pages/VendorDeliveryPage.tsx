@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useParams, useNavigate } from 'wouter';
+import { useParams, useLocation } from 'wouter';
 import { 
   MapPin, 
   Package, 
@@ -67,7 +67,7 @@ interface DeliveryBatch {
 
 const VendorDeliveryPage: React.FC = () => {
   const { batchId } = useParams();
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
@@ -256,7 +256,7 @@ const VendorDeliveryPage: React.FC = () => {
         <div className="p-4">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => navigate('/vendor/delivery-batching')}
+                              onClick={() => setLocation('/vendor/delivery-batching')}
               className="p-2 rounded-lg hover:bg-gray-100"
               aria-label="Go back to delivery batching"
               title="Go back to delivery batching"

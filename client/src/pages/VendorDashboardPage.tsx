@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import OnboardingPrompt from '../components/OnboardingPrompt';
+import TaxForecastCard from '../components/TaxForecastCard';
 import { 
   Package, 
   TrendingUp, 
@@ -423,6 +424,14 @@ export const VendorDashboardPage = () => {
             </div>
           </div>
         </div>
+
+        {/* Tax Forecast Section */}
+        {user && (
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Tax Forecast & Obligations</h2>
+            <TaxForecastCard vendorId={user.id} />
+          </div>
+        )}
 
         {/* Margin Alerts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">

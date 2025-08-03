@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import {
   Elements,
@@ -9,8 +9,14 @@ import {
 import { CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-// Load Stripe with your publishable key
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY!);
+// Lazy load Stripe only when needed
+let stripePromise: Promise<any> | null = null;
+const getStripePromise = () => {
+  if (!stripePromise) {
+    stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY!);
+  }
+  return stripePromise;
+};
 
 interface StripePaymentFormProps {
   orderId: string;
@@ -34,7 +40,7 @@ const PaymentForm: React.FC<StripePaymentFormProps> = ({
   const [error, setError] = useState<string | null>(null);
 
   // Create payment intent when component mounts
-  useEffect(() => {
+  useState(() => {
     const createPaymentIntent = async () => {
       try {
         const response = await fetch('/api/stripe/create-payment-intent', {
@@ -67,7 +73,7 @@ const PaymentForm: React.FC<StripePaymentFormProps> = ({
     if (orderId && amount > 0) {
       createPaymentIntent();
     }
-  }, [orderId, amount, onPaymentError]);
+  });
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -207,7 +213,7 @@ const PaymentForm: React.FC<StripePaymentFormProps> = ({
 
 const StripePaymentForm: React.FC<StripePaymentFormProps> = (props) => {
   return (
-    <Elements stripe={stripePromise}>
+    <Elements stripe={getStripePromise()}>
       <PaymentForm {...props} />
     </Elements>
   );
