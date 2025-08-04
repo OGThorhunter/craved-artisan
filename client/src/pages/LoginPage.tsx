@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useLocation } from 'wouter';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
+import { Chrome, Facebook, Apple } from 'lucide-react';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -35,6 +36,22 @@ const LoginPage: React.FC = () => {
     }
   };
 
+  const handleSocialLogin = async (provider: 'google' | 'facebook' | 'apple') => {
+    setIsLoading(true);
+    clearError();
+
+    try {
+      // TODO: Implement social login logic
+      toast.info(`${provider.charAt(0).toUpperCase() + provider.slice(1)} login coming soon!`);
+      console.log(`Logging in with ${provider}`);
+    } catch (error) {
+      toast.error(`${provider.charAt(0).toUpperCase() + provider.slice(1)} login failed`);
+      console.error(`${provider} login failed:`, error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -54,6 +71,49 @@ const LoginPage: React.FC = () => {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          {/* Social Login Buttons */}
+          <div className="space-y-3 mb-6">
+            <button
+              type="button"
+              onClick={() => handleSocialLogin('google')}
+              disabled={isLoading}
+              className="w-full flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Chrome className="h-5 w-5 mr-2 text-red-600" />
+              Continue with Google
+            </button>
+            
+            <button
+              type="button"
+              onClick={() => handleSocialLogin('facebook')}
+              disabled={isLoading}
+              className="w-full flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Facebook className="h-5 w-5 mr-2 text-blue-600" />
+              Continue with Facebook
+            </button>
+            
+            <button
+              type="button"
+              onClick={() => handleSocialLogin('apple')}
+              disabled={isLoading}
+              className="w-full flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Apple className="h-5 w-5 mr-2 text-gray-900" />
+              Continue with Apple
+            </button>
+          </div>
+
+          {/* Divider */}
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">Or continue with email</span>
+            </div>
+          </div>
+
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">

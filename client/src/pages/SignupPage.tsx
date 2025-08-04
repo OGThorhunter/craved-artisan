@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { useAuth } from '../contexts/AuthContext';
 import type { SignupData } from '../contexts/AuthContext';
 import { toast } from 'react-hot-toast';
-import { Eye, EyeOff, Mail, Lock, User, Phone, Globe, FileText } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, Phone, Globe, FileText, Chrome, Facebook, Apple } from 'lucide-react';
 
 const signupSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
@@ -78,6 +78,22 @@ export const SignupPage: React.FC = () => {
     }
   };
 
+  const handleSocialSignup = async (provider: 'google' | 'facebook' | 'apple') => {
+    setIsLoading(true);
+    clearError();
+
+    try {
+      // TODO: Implement social signup logic
+      toast.info(`${provider.charAt(0).toUpperCase() + provider.slice(1)} signup coming soon!`);
+      console.log(`Signing up with ${provider}`);
+    } catch (error) {
+      toast.error(`${provider.charAt(0).toUpperCase() + provider.slice(1)} signup failed`);
+      console.error(`${provider} signup failed:`, error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
@@ -97,6 +113,49 @@ export const SignupPage: React.FC = () => {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+          {/* Social Signup Buttons */}
+          <div className="space-y-3 mb-6">
+            <button
+              type="button"
+              onClick={() => handleSocialSignup('google')}
+              disabled={isLoading}
+              className="w-full flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Chrome className="h-5 w-5 mr-2 text-red-600" />
+              Continue with Google
+            </button>
+            
+            <button
+              type="button"
+              onClick={() => handleSocialSignup('facebook')}
+              disabled={isLoading}
+              className="w-full flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Facebook className="h-5 w-5 mr-2 text-blue-600" />
+              Continue with Facebook
+            </button>
+            
+            <button
+              type="button"
+              onClick={() => handleSocialSignup('apple')}
+              disabled={isLoading}
+              className="w-full flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Apple className="h-5 w-5 mr-2 text-gray-900" />
+              Continue with Apple
+            </button>
+          </div>
+
+          {/* Divider */}
+          <div className="relative mb-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">Or continue with email</span>
+            </div>
+          </div>
+
           <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
             {/* Role Selection */}
             <div>
