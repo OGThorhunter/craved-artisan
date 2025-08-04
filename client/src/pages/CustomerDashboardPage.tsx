@@ -10,11 +10,119 @@ import {
   User, 
   Settings,
   Search,
-  Filter
+  Filter,
+  CreditCard,
+  Gift,
+  Calendar,
+  MessageCircle,
+  Shield,
+  QrCode,
+  TrendingUp,
+  Award,
+  ChefHat,
+  Map
 } from 'lucide-react';
+import { ReorderCard } from '../components/ReorderCard';
+import { MyPantry } from '../components/MyPantry';
+import { PickupMap } from '../components/PickupMap';
+import { ScheduledOrderFramework } from '../components/ScheduledOrderFramework';
 
 export const CustomerDashboardPage = () => {
   const [activeTab, setActiveTab] = useState('orders');
+
+  // Mock reorder data
+  const reorderProducts = [
+    {
+      id: '1',
+      name: 'Cinnamon Rolls',
+      price: 12.00,
+      image: '/api/placeholder/200/200',
+      vendor: {
+        id: 'vendor1',
+        name: 'Rose Creek Bakery',
+        logo: '/api/placeholder/50/50'
+      },
+      lastOrdered: '2024-01-15',
+      reorderCount: 3,
+      inStock: true
+    },
+    {
+      id: '2',
+      name: 'Artisan Sourdough Bread',
+      price: 8.50,
+      image: '/api/placeholder/200/200',
+      vendor: {
+        id: 'vendor1',
+        name: 'Rose Creek Bakery',
+        logo: '/api/placeholder/50/50'
+      },
+      lastOrdered: '2024-01-10',
+      reorderCount: 2,
+      inStock: true
+    }
+  ];
+
+  const handleReorder = (productId: string, quantity: number, deliveryType: 'pickup' | 'delivery') => {
+    console.log('Reorder:', { productId, quantity, deliveryType });
+    // TODO: Add to cart or show product modal
+  };
+
+  // Mock fulfillment windows for scheduled orders
+  const mockFulfillmentWindows = [
+    {
+      id: 'window1',
+      dayOfWeek: 3, // Wednesday
+      startTime: '15:00',
+      endTime: '18:00',
+      isActive: true,
+      maxOrders: 20,
+      currentOrders: 12
+    },
+    {
+      id: 'window2',
+      dayOfWeek: 5, // Friday
+      startTime: '14:00',
+      endTime: '17:00',
+      isActive: true,
+      maxOrders: 15,
+      currentOrders: 8
+    },
+    {
+      id: 'window3',
+      dayOfWeek: 6, // Saturday
+      startTime: '09:00',
+      endTime: '12:00',
+      isActive: true,
+      maxOrders: 25,
+      currentOrders: 18
+    }
+  ];
+
+  // Mock scheduled orders
+  const mockScheduledOrders = [
+    {
+      id: 'scheduled1',
+      vendorId: 'vendor1',
+      vendorName: 'Rose Creek Bakery',
+      fulfillmentWindowId: 'window1',
+      scheduledDate: '2024-01-24T15:00:00',
+      isRecurring: true,
+      recurringSchedule: {
+        id: 'recurring1',
+        frequency: 'weekly',
+        dayOfWeek: 3,
+        startDate: '2024-01-24T15:00:00',
+        isActive: true
+      },
+      items: [
+        { productId: 'prod1', name: 'Cinnamon Rolls', quantity: 2, price: 12.00 },
+        { productId: 'prod2', name: 'Sourdough Bread', quantity: 1, price: 8.50 }
+      ],
+      totalAmount: 32.50,
+      status: 'confirmed',
+      createdAt: '2024-01-20T10:00:00'
+    }
+  ];
 
   // Mock data - in real app, this would come from API
   const orders = [
@@ -103,8 +211,12 @@ export const CustomerDashboardPage = () => {
         <div className="bg-white rounded-2xl shadow-sm p-6 mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Customer Dashboard</h1>
-              <p className="text-gray-600 mt-1">Welcome back, John!</p>
+              <h1 className="text-2xl font-bold">Good morning, Casey 👋</h1>
+              <p className="text-sm text-brand-grey">
+                Your next pickup window is <strong>Friday 3–5 PM</strong> near <strong>ZIP 30248</strong>
+              </p>
+              {/* TODO: Show "You've supported 6 local families this month" */}
+              {/* TODO: Show dynamic vendor spotlight or promo: "Top Seller This Week: Sweetwater Farms 🍓" */}
             </div>
             <div className="flex items-center space-x-4">
               <Link href="/profile">
@@ -318,6 +430,170 @@ export const CustomerDashboardPage = () => {
             )}
           </div>
         </div>
+
+        {/* Wallet & Loyalty Section */}
+        <div className="bg-white rounded-2xl shadow-sm p-6 mb-8">
+          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <CreditCard className="w-5 h-5" />
+            Wallet & Loyalty
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-brand-cream rounded-lg p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium">Available Credit</span>
+                <Gift className="w-4 h-4 text-brand-green" />
+              </div>
+              <p className="text-2xl font-bold text-brand-maroon">$24.50</p>
+              <p className="text-xs text-brand-grey">From referrals & rewards</p>
+            </div>
+            <div className="bg-brand-cream rounded-lg p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium">Points Earned</span>
+                <TrendingUp className="w-4 h-4 text-brand-green" />
+              </div>
+              <p className="text-2xl font-bold text-brand-maroon">1,247</p>
+              <p className="text-xs text-brand-grey">This month</p>
+            </div>
+            <div className="bg-brand-cream rounded-lg p-4">
+              <p className="text-sm">Referral Code: <code className="bg-brand-beige px-2 py-1 rounded">CASEY10</code></p>
+              {/* TODO: Show QR code generator for referral link */}
+              {/* TODO: Show referral impact tracker */}
+            </div>
+          </div>
+        </div>
+
+                 {/* Smart Reorder Section */}
+         <div className="bg-white rounded-2xl shadow-sm p-6 mb-8">
+           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+             <ChefHat className="w-5 h-5" />
+             Smart Reorder
+           </h2>
+           <p className="text-sm text-brand-grey mb-4">We noticed you often order these items...</p>
+           {/* TODO: Offer recurring order toggle for favorite items */}
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+             {reorderProducts.map((product) => (
+               <ReorderCard
+                 key={product.id}
+                 product={product}
+                 onReorder={handleReorder}
+                 compact={false}
+               />
+             ))}
+           </div>
+         </div>
+
+                 {/* My Pantry Section */}
+         <MyPantry 
+           className="mb-8"
+           onIngredientAdd={(ingredient) => {
+             console.log('Added ingredient:', ingredient);
+             // TODO: Save to backend
+           }}
+           onIngredientRemove={(ingredientId) => {
+             console.log('Removed ingredient:', ingredientId);
+             // TODO: Remove from backend
+           }}
+           onIngredientEdit={(ingredientId, updates) => {
+             console.log('Updated ingredient:', ingredientId, updates);
+             // TODO: Update in backend
+           }}
+         />
+
+        {/* Vendor Messages & Polls Section */}
+        <div className="bg-white rounded-2xl shadow-sm p-6 mb-8">
+          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <MessageCircle className="w-5 h-5" />
+            From Your Vendors
+          </h2>
+          {/* TODO: Show embedded short-form vendor video (e.g. via CDN or upload) */}
+          {/* TODO: Display vendor polls: "What should we bake next week?" */}
+          <div className="space-y-4">
+            <div className="border border-gray-200 rounded-lg p-4">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 bg-gray-200 rounded-full"></div>
+                <div>
+                  <h3 className="font-medium">Rose Creek Bakery</h3>
+                  <p className="text-sm text-brand-grey">2 hours ago</p>
+                </div>
+              </div>
+              <p className="text-sm mb-3">"What should we bake next week? Vote for your favorite! 🍞"</p>
+              <div className="space-y-2">
+                <button className="w-full text-left p-2 border border-gray-200 rounded hover:bg-gray-50 text-sm">
+                  🥖 Sourdough Bread (12 votes)
+                </button>
+                <button className="w-full text-left p-2 border border-gray-200 rounded hover:bg-gray-50 text-sm">
+                  🥨 Pretzels (8 votes)
+                </button>
+                <button className="w-full text-left p-2 border border-gray-200 rounded hover:bg-gray-50 text-sm">
+                  🥐 Croissants (15 votes)
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+                 {/* Pickup Map Section */}
+         <PickupMap 
+           className="mb-8"
+           userZip="30248"
+           onLocationSelect={(location) => {
+             console.log('Selected location:', location);
+             // TODO: Navigate to location details or vendor page
+           }}
+           onAddLocation={(location) => {
+             console.log('Added location:', location);
+             // TODO: Save to user's saved locations
+           }}
+           onOrderHere={(location) => {
+             console.log('Order here:', location);
+             // TODO: Navigate to vendor's ordering page
+           }}
+         />
+
+                 {/* Scheduled Orders Section */}
+         <ScheduledOrderFramework 
+           className="mb-8"
+           vendorId="vendor1"
+           vendorName="Rose Creek Bakery"
+           fulfillmentWindows={mockFulfillmentWindows}
+           existingOrders={mockScheduledOrders}
+           onScheduleOrder={(order) => {
+             console.log('Scheduled order:', order);
+             // TODO: Save to backend
+           }}
+           onUpdateOrder={(orderId, updates) => {
+             console.log('Updated order:', orderId, updates);
+             // TODO: Update in backend
+           }}
+           onCancelOrder={(orderId) => {
+             console.log('Cancelled order:', orderId);
+             // TODO: Cancel in backend
+           }}
+         />
+
+         {/* Trust & Security Section */}
+         <div className="bg-white rounded-2xl shadow-sm p-6 mb-8">
+           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+             <Shield className="w-5 h-5" />
+             Trust & Safety
+           </h2>
+           <p className="text-sm">All vendors are verified and meet local food safety laws.</p>
+           <p className="text-sm text-brand-grey mt-1">Secure payments. Local-only sellers. No resellers.</p>
+           <div className="mt-4 flex gap-4">
+             <div className="flex items-center gap-2">
+               <Shield className="w-4 h-4 text-green-600" />
+               <span className="text-sm">Verified Vendors</span>
+             </div>
+             <div className="flex items-center gap-2">
+               <Shield className="w-4 h-4 text-green-600" />
+               <span className="text-sm">Local Only</span>
+             </div>
+             <div className="flex items-center gap-2">
+               <Shield className="w-4 h-4 text-green-600" />
+               <span className="text-sm">Secure Payments</span>
+             </div>
+           </div>
+         </div>
       </div>
     </div>
   );
