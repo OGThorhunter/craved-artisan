@@ -279,6 +279,26 @@ export default function NavHeader() {
                      <div className="relative hidden sm:block search-container">
              <button
                onClick={() => setIsSearchOpen(!isSearchOpen)}
+               onMouseEnter={() => {
+                 // Close other dropdowns first
+                 setIsCartOpen(false);
+                 setIsNotificationsOpen(false);
+                 setIsChatOpen(false);
+                 
+                 // Clear other timeouts
+                 if (cartTimeout) {
+                   clearTimeout(cartTimeout);
+                   setCartTimeout(null);
+                 }
+                 if (notificationsTimeout) {
+                   clearTimeout(notificationsTimeout);
+                   setNotificationsTimeout(null);
+                 }
+                 if (chatTimeout) {
+                   clearTimeout(chatTimeout);
+                   setChatTimeout(null);
+                 }
+               }}
                className="p-1 hover:bg-brand-beige rounded transition-colors"
                title="Search"
              >
@@ -319,6 +339,22 @@ export default function NavHeader() {
              <button
                onClick={handleCartClick}
                onMouseEnter={() => {
+                 // Close other dropdowns first
+                 setIsNotificationsOpen(false);
+                 setIsChatOpen(false);
+                 setIsSearchOpen(false);
+                 
+                 // Clear other timeouts
+                 if (notificationsTimeout) {
+                   clearTimeout(notificationsTimeout);
+                   setNotificationsTimeout(null);
+                 }
+                 if (chatTimeout) {
+                   clearTimeout(chatTimeout);
+                   setChatTimeout(null);
+                 }
+                 
+                 // Open cart dropdown
                  if (cartTimeout) {
                    clearTimeout(cartTimeout);
                    setCartTimeout(null);
@@ -428,6 +464,22 @@ export default function NavHeader() {
              <button
                onClick={handleNotificationsClick}
                onMouseEnter={() => {
+                 // Close other dropdowns first
+                 setIsCartOpen(false);
+                 setIsChatOpen(false);
+                 setIsSearchOpen(false);
+                 
+                 // Clear other timeouts
+                 if (cartTimeout) {
+                   clearTimeout(cartTimeout);
+                   setCartTimeout(null);
+                 }
+                 if (chatTimeout) {
+                   clearTimeout(chatTimeout);
+                   setChatTimeout(null);
+                 }
+                 
+                 // Open notifications dropdown
                  if (notificationsTimeout) {
                    clearTimeout(notificationsTimeout);
                    setNotificationsTimeout(null);
@@ -525,6 +577,22 @@ export default function NavHeader() {
              <button
                onClick={handleChatClick}
                onMouseEnter={() => {
+                 // Close other dropdowns first
+                 setIsCartOpen(false);
+                 setIsNotificationsOpen(false);
+                 setIsSearchOpen(false);
+                 
+                 // Clear other timeouts
+                 if (cartTimeout) {
+                   clearTimeout(cartTimeout);
+                   setCartTimeout(null);
+                 }
+                 if (notificationsTimeout) {
+                   clearTimeout(notificationsTimeout);
+                   setNotificationsTimeout(null);
+                 }
+                 
+                 // Open chat dropdown
                  if (chatTimeout) {
                    clearTimeout(chatTimeout);
                    setChatTimeout(null);

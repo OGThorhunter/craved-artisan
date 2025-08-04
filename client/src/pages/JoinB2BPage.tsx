@@ -1,33 +1,33 @@
 'use client';
 
-import { CheckCircle, LayoutDashboard, Store, Users, MessageSquareText } from 'lucide-react';
+import { CheckCircle, LayoutDashboard, Store, Users, MessageSquareText, Package, Truck, TrendingUp } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'wouter';
 
-export const JoinVendorPage = () => {
+export const JoinB2BPage = () => {
   return (
     <section className="bg-brand-cream text-brand-charcoal">
       {/* Hero Banner */}
       <div className="relative bg-cover bg-center h-[80vh] flex flex-col justify-center items-center text-center px-6"
-        style={{ backgroundImage: `url('/images/vendor_1750622113753.png')` }}>
+        style={{ backgroundImage: `url('/images/supplier_1750627234352.png')` }}>
         <div className="absolute inset-0 bg-[#F7F2EC]/70 backdrop-blur-sm" />
         <div className="relative z-10">
-          <h1 className="text-4xl sm:text-5xl font-bold mb-4">Become a Vendor on Craved Artisan</h1>
+          <h1 className="text-4xl sm:text-5xl font-bold mb-4">Become a B2B Vendor on Craved Artisan</h1>
           <p className="text-lg text-gray-600 max-w-2xl">
-            Sell directly to your community with tools built for local makers.
+            Supply local artisans with the ingredients and materials they need to create amazing products.
           </p>
         </div>
       </div>
 
       {/* Benefits */}
       <div className="max-w-6xl mx-auto py-16 px-6">
-        <h2 className="text-2xl font-bold mb-6">Why Vendors Love Craved Artisan</h2>
+        <h2 className="text-2xl font-bold mb-6">Why B2B Vendors Choose Craved Artisan</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
-            { icon: <Store />, label: 'Custom Storefront' },
-            { icon: <LayoutDashboard />, label: 'Smart Inventory Tools' },
-            { icon: <MessageSquareText />, label: 'Direct Customer Messaging' },
-            { icon: <Users />, label: 'Affiliate Product Access (B2B)' },
+            { icon: <Package />, label: 'Bulk Order Management' },
+            { icon: <Truck />, label: 'Local Delivery Network' },
+            { icon: <TrendingUp />, label: 'Steady Customer Base' },
+            { icon: <Users />, label: 'Direct Vendor Relationships' },
           ].map(({ icon, label }) => (
             <motion.div 
               key={label} 
@@ -47,10 +47,10 @@ export const JoinVendorPage = () => {
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-xl font-semibold mb-4">What You'll Need</h2>
           <ul className="flex flex-wrap gap-4 justify-center text-sm">
-            <li className="bg-white border border-gray-300 px-3 py-2 rounded shadow">Food/Artisan Business</li>
-            <li className="bg-white border border-gray-300 px-3 py-2 rounded shadow">Locally Made Products</li>
-            <li className="bg-white border border-gray-300 px-3 py-2 rounded shadow">Pickup/Delivery Plan</li>
-            <li className="bg-white border border-gray-300 px-3 py-2 rounded shadow">Stripe Account (or ready to create)</li>
+            <li className="bg-white border border-gray-300 px-3 py-2 rounded shadow">Wholesale Business License</li>
+            <li className="bg-white border border-gray-300 px-3 py-2 rounded shadow">Quality Ingredients/Materials</li>
+            <li className="bg-white border border-gray-300 px-3 py-2 rounded shadow">Reliable Delivery System</li>
+            <li className="bg-white border border-gray-300 px-3 py-2 rounded shadow">Stripe Business Account</li>
           </ul>
         </div>
       </div>
@@ -60,11 +60,11 @@ export const JoinVendorPage = () => {
         <h2 className="text-xl font-semibold mb-6 text-center">Get Started in 5 Simple Steps</h2>
         <ul className="space-y-4">
           {[
-            'Create an account',
-            'Complete your profile',
-            'Upload your first product',
-            'Connect your Stripe account',
-            'Go live!',
+            'Create your B2B account',
+            'Verify your business credentials',
+            'List your products and pricing',
+            'Set up delivery zones and schedules',
+            'Start receiving orders!',
           ].map((step, i) => (
             <motion.li 
               key={i} 
@@ -82,21 +82,21 @@ export const JoinVendorPage = () => {
 
       {/* Social Proof */}
       <div className="bg-brand-cream py-12 px-6 text-center">
-        <h2 className="text-xl font-semibold mb-4">What Vendors Are Saying</h2>
+        <h2 className="text-xl font-semibold mb-4">What B2B Vendors Are Saying</h2>
         <div className="max-w-3xl mx-auto space-y-6 text-sm italic">
-          <p>"It's the first platform that actually feels like it was made for local sellers like me."</p>
-          <p>"Setting up was shockingly easy. I had my first order the same week."</p>
+          <p>"The local artisan community is my best customer base. They appreciate quality and pay fair prices."</p>
+          <p>"Craved Artisan helped me connect with vendors I never would have found otherwise."</p>
         </div>
       </div>
 
       {/* Dashboard Preview */}
       <div className="max-w-5xl mx-auto py-16 px-6">
-        <h2 className="text-xl font-semibold mb-4 text-center">What Your Dashboard Looks Like</h2>
+        <h2 className="text-xl font-semibold mb-4 text-center">What Your B2B Dashboard Looks Like</h2>
         <div className="bg-white rounded-lg shadow-lg p-8">
           <div className="bg-gray-100 rounded-lg p-6 text-center">
             <LayoutDashboard className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-            <p className="text-gray-600">Vendor Dashboard Preview</p>
-            <p className="text-sm text-gray-500 mt-2">Complete with inventory management, order tracking, and customer insights</p>
+            <p className="text-gray-600">B2B Vendor Dashboard Preview</p>
+            <p className="text-sm text-gray-500 mt-2">Complete with order management, inventory tracking, and vendor analytics</p>
           </div>
         </div>
       </div>
@@ -107,20 +107,20 @@ export const JoinVendorPage = () => {
           <h2 className="text-xl font-semibold mb-6">Frequently Asked Questions</h2>
           <div className="space-y-4">
             <details className="bg-white p-4 rounded shadow">
-              <summary className="cursor-pointer font-medium">Do I need a license or permit to sell?</summary>
-              <p className="mt-2 text-sm text-gray-600">Vendors must follow local cottage food laws or submit licenses if required for their products.</p>
+              <summary className="cursor-pointer font-medium">What types of products can I supply?</summary>
+              <p className="mt-2 text-sm text-gray-600">Ingredients, raw materials, packaging, tools, and supplies that local artisans need for their crafts.</p>
+            </details>
+            <details className="bg-white p-4 rounded shadow">
+              <summary className="cursor-pointer font-medium">How do I handle delivery?</summary>
+              <p className="mt-2 text-sm text-gray-600">You can offer local delivery, pickup at your location, or use our drop-off network.</p>
+            </details>
+            <details className="bg-white p-4 rounded shadow">
+              <summary className="cursor-pointer font-medium">What are the minimum order requirements?</summary>
+              <p className="mt-2 text-sm text-gray-600">You set your own minimums and pricing structure for your products.</p>
             </details>
             <details className="bg-white p-4 rounded shadow">
               <summary className="cursor-pointer font-medium">How do I get paid?</summary>
-              <p className="mt-2 text-sm text-gray-600">Instant payouts via Stripe once your account is connected.</p>
-            </details>
-            <details className="bg-white p-4 rounded shadow">
-              <summary className="cursor-pointer font-medium">What are the fees?</summary>
-              <p className="mt-2 text-sm text-gray-600">Lower fees than traditional marketplaces - you keep more of your earnings.</p>
-            </details>
-            <details className="bg-white p-4 rounded shadow">
-              <summary className="cursor-pointer font-medium">How do I handle shipping and delivery?</summary>
-              <p className="mt-2 text-sm text-gray-600">You can offer local pickup, delivery, or use our network of drop-off locations.</p>
+              <p className="mt-2 text-sm text-gray-600">Secure payments via Stripe with instant payouts once orders are fulfilled.</p>
             </details>
           </div>
         </div>
@@ -130,7 +130,7 @@ export const JoinVendorPage = () => {
       <div className="text-center py-12 px-6">
         <p className="text-sm text-gray-600 mb-4">Not quite what you're looking for?</p>
         <div className="flex flex-wrap gap-4 justify-center">
-          <Link href="/join/customer" className="underline text-brand-green">Join as a Customer</Link>
+          <Link href="/join/vendor" className="underline text-brand-green">Join as a Vendor</Link>
           <Link href="/join" className="underline text-brand-green">View All Roles</Link>
           <Link href="/contact" className="underline text-brand-green">Contact Support</Link>
         </div>
@@ -138,7 +138,7 @@ export const JoinVendorPage = () => {
 
       {/* Sticky CTA */}
       <div className="fixed bottom-0 w-full bg-brand-green text-white px-6 py-4 flex justify-between items-center z-40 shadow-lg">
-        <span>Ready to start selling?</span>
+        <span>Ready to supply local artisans?</span>
         <div className="flex gap-4">
           <Link
             href="/join"
@@ -147,7 +147,7 @@ export const JoinVendorPage = () => {
             Get Started
           </Link>
           <a
-            href="mailto:support@cravedartisan.com?subject=Vendor%20Questions"
+            href="mailto:support@cravedartisan.com?subject=B2B%20Vendor%20Questions"
             className="text-white underline"
           >
             Ask Questions
@@ -158,4 +158,4 @@ export const JoinVendorPage = () => {
   );
 };
 
-export default JoinVendorPage; 
+export default JoinB2BPage; 

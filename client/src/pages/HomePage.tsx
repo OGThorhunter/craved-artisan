@@ -624,35 +624,35 @@ export default function Home() {
                img: 'vendor_1750622113753', 
                label: 'Vendor', 
                description: 'Share your handmade goods with a community that values craftsmanship and quality.',
-               learnMore: '/learn/vendor',
+               learnMore: '/join/vendor',
                joinHref: '/join?vendor=true'
              },
              { 
                img: 'supplier_1750627234352', 
                label: 'B2B Vendors', 
                description: 'Supply ingredients and materials to help other vendors create their best products.',
-               learnMore: '/learn/b2b',
+               learnMore: '/join/b2b',
                joinHref: '/join?b2b=true'
              },
              { 
                img: 'winecheese_1750622113753', 
                label: 'Customer', 
                description: 'Discover and support local artisans while enjoying fresh, high-quality products.',
-               learnMore: '/learn/customer',
+               learnMore: '/join/customer',
                joinHref: '/join?customer=true'
              },
              { 
                img: 'Event coordinator_1750627631683', 
                label: 'Coordinator', 
                description: 'Organize events and markets that bring the community together around local goods.',
-               learnMore: '/learn/coordinator',
+               learnMore: '/join/coordinator',
                joinHref: '/join?coordinator=true'
              },
              { 
                img: 'DoL1_1750621743272', 
                label: 'Drop-Off', 
                description: 'Host pickup locations that serve as community hubs for local commerce.',
-               learnMore: '/learn/dropoff',
+               learnMore: '/join/dropoff',
                joinHref: '/join?dropoff=true'
              },
            ].map(({ img, label, description, learnMore, joinHref }) => (

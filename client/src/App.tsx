@@ -11,6 +11,9 @@ import { SignupPage } from './pages/SignupPage';
 import { JoinPage } from './pages/JoinPage';
 import { JoinVendorPage } from './pages/JoinVendorPage';
 import { JoinCustomerPage } from './pages/JoinCustomerPage';
+import { JoinB2BPage } from './pages/JoinB2BPage';
+import { JoinCoordinatorPage } from './pages/JoinCoordinatorPage';
+import { JoinDropoffPage } from './pages/JoinDropoffPage';
 import { VendorPage } from './pages/VendorPage';
 import { ProductPage } from './pages/ProductPage';
 import DashboardPage from './pages/DashboardPage';
@@ -69,6 +72,9 @@ function App() {
             <Route path="/join" component={JoinPage} />
             <Route path="/join/vendor" component={JoinVendorPage} />
             <Route path="/join/customer" component={JoinCustomerPage} />
+            <Route path="/join/b2b" component={JoinB2BPage} />
+            <Route path="/join/coordinator" component={JoinCoordinatorPage} />
+            <Route path="/join/dropoff" component={JoinDropoffPage} />
             <Route path="/vendor/:id" component={VendorPage} />
             <Route path="/product/:id" component={ProductPage} />
             <Route path="/checkout" component={CheckoutPage} />
