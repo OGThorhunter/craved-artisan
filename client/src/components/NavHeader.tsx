@@ -2,180 +2,742 @@
 
 import { useEffect, useState } from 'react';
 import { Link } from 'wouter';
-import { motion } from 'framer-motion';
-import { Menu, X, ShoppingCart, Search, User, Bell } from 'lucide-react';
+import { Menu, X, ShoppingCart, Search, Bell, MapPin, MessageCircle, Send, X as CloseIcon } from 'lucide-react';
+import logonobg from '/images/logonobg.png';
+import { useAuth } from '../contexts/AuthContext';
+import { useZip } from '../contexts/ZipContext';
 
-type UserRole = 'guest' | 'vendor' | 'coordinator' | 'customer' | 'admin';
-
-interface Props {
-  role: UserRole;
-  currentZip: string;
-  onZipChange: (zip: string) => void;
-}
-
-export default function NavHeader({ role, currentZip, onZipChange }: Props) {
-  const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [zipInput, setZipInput] = useState(currentZip);
-  const [isZipValid, setIsZipValid] = useState(true);
+export default function NavHeader() {
+  const { user, isAuthenticated, logout } = useAuth();
+  const { zip, updateZip, isValidZip, isUsingLocation, setUsingLocation } = useZip();
+  const [zipInput, setZipInput] = useState(zip);
+  const [isMobileOpen, setMobileOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [userMenuTimeout, setUserMenuTimeout] = useState<NodeJS.Timeout | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [cartTimeout, setCartTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [notificationsTimeout, setNotificationsTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [chatTimeout, setChatTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [chatMessage, setChatMessage] = useState('');
+  const [chatMessages, setChatMessages] = useState([
+    {
+      id: 1,
+      type: 'ai',
+      message: 'Hi! I\'m your Craved Artisan assistant. How can I help you today?',
+      timestamp: new Date()
+    }
+  ]);
+  const [isTyping, setIsTyping] = useState(false);
 
-  useEffect(() => {
-    // Optional: Browser geolocation logic
-    // navigator.geolocation.getCurrentPosition(...) -> reverse lookup ZIP
-  }, []);
+  // Determine user role from auth context
+  const role = user?.role?.toLowerCase() || 'guest';
 
-  const roleLinks = {
-    vendor: <Link href="/vendor"><span>Manage Shop</span></Link>,
-    coordinator: <Link href="/events/manage"><span>My Events</span></Link>,
-    customer: <Link href="/orders"><span>My Orders</span></Link>,
-    admin: <Link href="/admin"><span>The Bridge</span></Link>,
+  const navLinks = [
+    { label: 'Marketplace', href: '/marketplace' },
+    { label: 'Forums', href: '/community' },
+    { label: 'Events', href: '/events' },
+    { label: 'About', href: '/about' },
+    { label: 'Contact', href: '/contact' },
+  ];
+
+  const roleLinks: Record<string, React.ReactElement | null> = {
+    vendor: <Link href="/dashboard/vendor">Manage Shop</Link>,
+    coordinator: <Link href="/events/manage">My Events</Link>,
+    customer: <Link href="/dashboard/customer/orders">My Orders</Link>,
+    admin: <Link href="/admin">The Bridge</Link>,
     guest: null,
   };
 
-  const validateZip = (zip: string) => {
-    const zipRegex = /^\d{5}(-\d{4})?$/;
-    return zipRegex.test(zip);
-  };
+  // Handle scroll for transparent header
+  useEffect(() => {
+    const handleScroll = () => {
+      // Use a fixed pixel threshold instead of percentage for snap scrolling
+      const scrollThreshold = window.innerHeight * 0.2; // 20% of viewport height
+      setIsScrolled(window.scrollY > scrollThreshold);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.user-menu-container')) {
+        setIsUserMenuOpen(false);
+      }
+      if (!target.closest('.search-container')) {
+        setIsSearchOpen(false);
+      }
+      if (!target.closest('.cart-container')) {
+        setIsCartOpen(false);
+      }
+             if (!target.closest('.notifications-container')) {
+         setIsNotificationsOpen(false);
+       }
+       if (!target.closest('.chat-container')) {
+         setIsChatOpen(false);
+       }
+    };
+
+         if (isUserMenuOpen || isSearchOpen || isCartOpen || isNotificationsOpen || isChatOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isUserMenuOpen, isSearchOpen, isCartOpen, isNotificationsOpen]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (userMenuTimeout) {
+        clearTimeout(userMenuTimeout);
+      }
+      if (cartTimeout) {
+        clearTimeout(cartTimeout);
+      }
+             if (notificationsTimeout) {
+         clearTimeout(notificationsTimeout);
+       }
+       if (chatTimeout) {
+         clearTimeout(chatTimeout);
+       }
+    };
+  }, [userMenuTimeout, cartTimeout, notificationsTimeout]);
 
   const handleZipSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateZip(zipInput)) {
-      setIsZipValid(true);
-      onZipChange(zipInput);
+    if (isValidZip(zipInput)) {
+      updateZip(zipInput);
     } else {
-      setIsZipValid(false);
+      console.warn('Invalid ZIP code format:', zipInput);
+    }
+  };
+
+  const handleLocateMe = () => {
+    setIsLocating(true);
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          // Reverse geocoding to get ZIP from coordinates
+          const { latitude, longitude } = position.coords;
+          fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`)
+            .then(response => response.json())
+            .then(data => {
+              if (data.postcode) {
+                setZipInput(data.postcode);
+                updateZip(data.postcode);
+                setUsingLocation(true);
+              }
+            })
+            .catch(error => {
+              console.error('Error getting ZIP from location:', error);
+            })
+            .finally(() => {
+              setIsLocating(false);
+            });
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+          setIsLocating(false);
+        }
+      );
+    } else {
+      console.error('Geolocation is not supported by this browser.');
+      setIsLocating(false);
+    }
+  };
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      // TODO: Implement search functionality
+      console.log('Searching for:', searchQuery);
+      setIsSearchOpen(false);
+      setSearchQuery('');
+    }
+  };
+
+  const handleCartClick = () => {
+    setIsCartOpen(!isCartOpen);
+  };
+
+  const handleNotificationsClick = () => {
+    setIsNotificationsOpen(!isNotificationsOpen);
+  };
+
+  const handleChatClick = () => {
+    setIsChatOpen(!isChatOpen);
+  };
+
+  const handleChatSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (chatMessage.trim()) {
+      // Add user message
+      const userMessage = {
+        id: Date.now(),
+        type: 'user' as const,
+        message: chatMessage.trim(),
+        timestamp: new Date()
+      };
+      setChatMessages(prev => [...prev, userMessage]);
+      setChatMessage('');
+      
+      // Simulate AI response
+      setIsTyping(true);
+      setTimeout(() => {
+        const aiResponses = [
+          "I'd be happy to help you with that! Let me connect you with the right information.",
+          "That's a great question! Here's what I can tell you about that.",
+          "I understand you're looking for information about that. Let me help you find what you need.",
+          "Thanks for asking! I can definitely help you with that.",
+          "I'm here to assist you with any questions about Craved Artisan. What specific information are you looking for?"
+        ];
+        const randomResponse = aiResponses[Math.floor(Math.random() * aiResponses.length)];
+        const aiMessage = {
+          id: Date.now() + 1,
+          type: 'ai' as const,
+          message: randomResponse,
+          timestamp: new Date()
+        };
+        setChatMessages(prev => [...prev, aiMessage]);
+        setIsTyping(false);
+      }, 1500);
     }
   };
 
   return (
-    <header className="fixed top-0 z-50 w-full backdrop-blur-md bg-white/95 shadow-sm border-b border-brand-soft-beige/20">
+    <header className={`fixed top-0 z-50 w-full transition-all duration-300 ${
+      isScrolled 
+        ? 'bg-transparent shadow-none' 
+        : 'bg-brand-cream/80 backdrop-blur-md shadow-sm'
+    }`}>
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
-        
-        {/* Left: Logo + Primary Nav */}
+
+        {/* LEFT: Logo + Desktop Nav */}
         <div className="flex items-center space-x-6">
           <Link href="/">
-            <span className="text-xl font-bold tracking-wide text-brand-verdun-green">Craved Artisan</span>
+                         <img 
+               src={logonobg} 
+               alt="Craved Artisan Logo" 
+               className="h-12 w-auto object-contain max-w-[200px]"
+             />
           </Link>
 
-          {/* Desktop Nav */}
           <nav className="hidden md:flex items-center space-x-4 text-sm font-medium text-brand-charcoal">
-            <Link href="/categories" className="hover:text-brand-verdun-green transition-colors">Marketplace</Link>
-            <Link href="/vendors" className="hover:text-brand-verdun-green transition-colors">Vendors</Link>
-            <Link href="/events" className="hover:text-brand-verdun-green transition-colors">Events</Link>
-            <Link href="/about" className="hover:text-brand-verdun-green transition-colors">About</Link>
-            <Link href="/contact" className="hover:text-brand-verdun-green transition-colors">Contact</Link>
-            <Link href="/join" className="bg-brand-crown-thorns text-white px-3 py-1 rounded-lg shadow hover:bg-brand-crown-thorns/90 transition-colors">Join</Link>
-            {roleLinks[role]}
+            {navLinks.map(link => (
+              <Link key={link.href} href={link.href}>{link.label}</Link>
+            ))}
+            <Link
+              href="/join"
+              className="bg-brand-maroon text-white px-3 py-1 rounded-lg shadow hover:bg-[#681b24] transition"
+            >
+              Join
+            </Link>
+            {role !== 'guest' && roleLinks[role]}
           </nav>
         </div>
 
-        {/* Right: ZIP + Search + Cart + Auth */}
+        {/* RIGHT: ZIP + Icons + Auth */}
         <div className="flex items-center space-x-4">
-          {/* ZIP Code Input */}
-          <form onSubmit={handleZipSubmit} className="hidden lg:flex items-center border border-brand-soft-beige rounded-lg px-2 bg-white">
-            <input
-              type="text"
-              value={zipInput}
-              onChange={(e) => {
-                setZipInput(e.target.value);
-                setIsZipValid(true);
-              }}
-              placeholder="Enter ZIP"
-              className={`bg-transparent px-2 py-1 text-sm outline-none w-20 text-brand-charcoal ${
-                !isZipValid ? 'border-red-500' : ''
-              }`}
-            />
-            <button type="submit" className="text-xs text-brand-verdun-green hover:text-brand-verdun-green/80 transition-colors">Go</button>
-          </form>
-
-          {/* Search */}
-          <div className="relative group hidden sm:block">
-            <button 
-              onClick={() => setIsSearchOpen(!isSearchOpen)}
-              className="p-1 hover:bg-brand-off-white rounded-lg transition-colors"
-              aria-label="Open search"
-            >
-              <Search className="h-5 w-5 text-brand-charcoal" />
-            </button>
-            
-            {isSearchOpen && (
-              <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-brand-soft-beige p-4">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search products, vendors, events..."
-                  className="w-full px-3 py-2 border border-brand-soft-beige rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-verdun-green text-brand-charcoal"
-                  autoFocus
-                />
-                {/* Search results would go here */}
+          <div className="hidden lg:flex items-center space-x-2">
+            <form onSubmit={handleZipSubmit} className="flex items-center border border-brand-beige rounded px-2">
+              <input
+                type="text"
+                value={zipInput}
+                onChange={(e) => setZipInput(e.target.value)}
+                placeholder="ZIP"
+                className="bg-transparent text-sm text-brand-charcoal outline-none w-20 placeholder-brand-grey"
+              />
+              <button type="submit" className="text-xs text-brand-green">Go</button>
+            </form>
+            {isUsingLocation && (
+              <div className="flex items-center text-xs text-brand-green">
+                <MapPin className="h-3 w-3 mr-1" />
+                <span>Located</span>
               </div>
+            )}
+            <button
+              onClick={handleLocateMe}
+              disabled={isLocating}
+              className="p-1.5 rounded-full bg-brand-green text-white hover:bg-brand-green/80 transition-colors disabled:opacity-50"
+              title="Use my location"
+            >
+              <MapPin className="h-3 w-3" />
+            </button>
+          </div>
+
+                     <div className="relative hidden sm:block search-container">
+             <button
+               onClick={() => setIsSearchOpen(!isSearchOpen)}
+               className="p-1 hover:bg-brand-beige rounded transition-colors"
+               title="Search"
+             >
+               <Search className="h-5 w-5 text-brand-charcoal cursor-pointer" />
+             </button>
+             {isSearchOpen && (
+               <div className="absolute right-0 mt-2 w-80 bg-brand-beige text-brand-charcoal rounded shadow-md p-4 z-50">
+                 <form onSubmit={handleSearch} className="space-y-3">
+                   <input
+                     type="text"
+                     value={searchQuery}
+                     onChange={(e) => setSearchQuery(e.target.value)}
+                     placeholder="Search products, vendors, events..."
+                     className="w-full px-3 py-2 border border-brand-cream rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green text-brand-charcoal"
+                     autoFocus
+                   />
+                   <div className="flex justify-between items-center">
+                     <button
+                       type="submit"
+                       className="bg-brand-green text-white px-4 py-1 rounded hover:bg-brand-green/80 transition-colors"
+                     >
+                       Search
+                     </button>
+                     <button
+                       type="button"
+                       onClick={() => setIsSearchOpen(false)}
+                       className="text-brand-charcoal hover:underline"
+                     >
+                       Cancel
+                     </button>
+                   </div>
+                 </form>
+               </div>
+             )}
+           </div>
+
+                     <div className="relative cart-container">
+             <button
+               onClick={handleCartClick}
+               onMouseEnter={() => {
+                 if (cartTimeout) {
+                   clearTimeout(cartTimeout);
+                   setCartTimeout(null);
+                 }
+                 setIsCartOpen(true);
+               }}
+               onMouseLeave={() => {
+                 const timeout = setTimeout(() => {
+                   setIsCartOpen(false);
+                 }, 300);
+                 setCartTimeout(timeout);
+               }}
+               className="p-1 hover:bg-brand-beige rounded transition-colors relative"
+               title="Shopping Cart"
+             >
+               <ShoppingCart className="h-5 w-5 text-brand-charcoal cursor-pointer" />
+               {/* Cart badge - you can add cart item count here */}
+               <span className="absolute -top-1 -right-1 bg-brand-maroon text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                 3
+               </span>
+             </button>
+             {isCartOpen && (
+               <div 
+                 className="absolute right-0 mt-2 w-80 bg-brand-beige text-brand-charcoal rounded shadow-md p-4 z-50"
+                 onMouseEnter={() => {
+                   if (cartTimeout) {
+                     clearTimeout(cartTimeout);
+                     setCartTimeout(null);
+                   }
+                 }}
+                 onMouseLeave={() => {
+                   const timeout = setTimeout(() => {
+                     setIsCartOpen(false);
+                   }, 300);
+                   setCartTimeout(timeout);
+                 }}
+               >
+                 <h3 className="font-semibold mb-3 flex items-center justify-between">
+                   Shopping Cart
+                   <span className="text-sm text-brand-grey">3 items</span>
+                 </h3>
+                 
+                 {/* Cart Items Preview */}
+                 <div className="space-y-3 max-h-48 overflow-y-auto">
+                   <div className="flex items-center gap-3 p-2 bg-white rounded">
+                     <div className="w-10 h-10 bg-brand-cream rounded flex items-center justify-center">
+                       <span className="text-xs">🥖</span>
+                     </div>
+                     <div className="flex-1 min-w-0">
+                       <p className="text-sm font-medium truncate">Fresh Sourdough Bread</p>
+                       <p className="text-xs text-brand-grey">Rustic Bakes</p>
+                       <p className="text-xs text-brand-maroon">$6.50</p>
+                     </div>
+                     <div className="text-xs text-brand-grey">Qty: 1</div>
+                   </div>
+                   
+                   <div className="flex items-center gap-3 p-2 bg-white rounded">
+                     <div className="w-10 h-10 bg-brand-cream rounded flex items-center justify-center">
+                       <span className="text-xs">🍯</span>
+                     </div>
+                     <div className="flex-1 min-w-0">
+                       <p className="text-sm font-medium truncate">Local Honey</p>
+                       <p className="text-xs text-brand-grey">Sweet Georgia</p>
+                       <p className="text-xs text-brand-maroon">$8.00</p>
+                     </div>
+                     <div className="text-xs text-brand-grey">Qty: 1</div>
+                   </div>
+                   
+                   <div className="flex items-center gap-3 p-2 bg-white rounded">
+                     <div className="w-10 h-10 bg-brand-cream rounded flex items-center justify-center">
+                       <span className="text-xs">🧀</span>
+                     </div>
+                     <div className="flex-1 min-w-0">
+                       <p className="text-sm font-medium truncate">Artisan Cheese</p>
+                       <p className="text-xs text-brand-grey">Dairy Delights</p>
+                       <p className="text-xs text-brand-maroon">$12.00</p>
+                     </div>
+                     <div className="text-xs text-brand-grey">Qty: 1</div>
+                   </div>
+                 </div>
+                 
+                 <div className="mt-3 pt-3 border-t border-brand-cream">
+                   <div className="flex justify-between items-center mb-3">
+                     <span className="font-medium">Total:</span>
+                     <span className="font-bold text-brand-maroon">$26.50</span>
+                   </div>
+                   <div className="flex gap-2">
+                     <Link 
+                       href="/cart" 
+                       className="flex-1 bg-brand-maroon text-white py-2 px-3 rounded text-sm text-center hover:bg-[#681b24] transition-colors"
+                     >
+                       View Cart
+                     </Link>
+                     <Link 
+                       href="/checkout" 
+                       className="flex-1 bg-brand-green text-white py-2 px-3 rounded text-sm text-center hover:bg-brand-green/80 transition-colors"
+                     >
+                       Checkout
+                     </Link>
+                   </div>
+                 </div>
+               </div>
+             )}
+           </div>
+
+                     <div className="relative notifications-container">
+             <button
+               onClick={handleNotificationsClick}
+               onMouseEnter={() => {
+                 if (notificationsTimeout) {
+                   clearTimeout(notificationsTimeout);
+                   setNotificationsTimeout(null);
+                 }
+                 setIsNotificationsOpen(true);
+               }}
+               onMouseLeave={() => {
+                 const timeout = setTimeout(() => {
+                   setIsNotificationsOpen(false);
+                 }, 300);
+                 setNotificationsTimeout(timeout);
+               }}
+               className="p-1 hover:bg-brand-beige rounded transition-colors relative"
+               title="Notifications"
+             >
+               <Bell className="h-5 w-5 text-brand-charcoal cursor-pointer" />
+               {/* Notification badge - you can add notification count here */}
+               <span className="absolute -top-1 -right-1 bg-brand-maroon text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                 2
+               </span>
+             </button>
+             {isNotificationsOpen && (
+               <div 
+                 className="absolute right-0 mt-2 w-80 bg-brand-beige text-brand-charcoal rounded shadow-md p-4 z-50"
+                 onMouseEnter={() => {
+                   if (notificationsTimeout) {
+                     clearTimeout(notificationsTimeout);
+                     setNotificationsTimeout(null);
+                   }
+                 }}
+                 onMouseLeave={() => {
+                   const timeout = setTimeout(() => {
+                     setIsNotificationsOpen(false);
+                   }, 300);
+                   setNotificationsTimeout(timeout);
+                 }}
+               >
+                 <h3 className="font-semibold mb-3 flex items-center justify-between">
+                   Notifications
+                   <span className="text-sm text-brand-grey">2 new</span>
+                 </h3>
+                 
+                 {/* Notifications Preview */}
+                 <div className="space-y-3 max-h-48 overflow-y-auto">
+                   <div className="flex items-start gap-3 p-2 bg-white rounded">
+                     <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                       <span className="text-xs">📦</span>
+                     </div>
+                     <div className="flex-1 min-w-0">
+                       <p className="text-sm font-medium">Order Shipped!</p>
+                       <p className="text-xs text-brand-grey">Your order #1234 has been shipped and will arrive tomorrow.</p>
+                       <p className="text-xs text-brand-maroon mt-1">2 hours ago</p>
+                     </div>
+                     <div className="w-2 h-2 bg-brand-maroon rounded-full flex-shrink-0"></div>
+                   </div>
+                   
+                   <div className="flex items-start gap-3 p-2 bg-white rounded">
+                     <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                       <span className="text-xs">🎪</span>
+                     </div>
+                     <div className="flex-1 min-w-0">
+                       <p className="text-sm font-medium">New Event Near You</p>
+                       <p className="text-xs text-brand-grey">Locust Grove Farmers Market this Saturday at 9 AM.</p>
+                       <p className="text-xs text-brand-maroon mt-1">1 day ago</p>
+                     </div>
+                     <div className="w-2 h-2 bg-brand-maroon rounded-full flex-shrink-0"></div>
+                   </div>
+                   
+                   <div className="flex items-start gap-3 p-2 bg-white/50 rounded">
+                     <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                       <span className="text-xs">🥖</span>
+                     </div>
+                     <div className="flex-1 min-w-0">
+                       <p className="text-sm font-medium">New Product Available</p>
+                       <p className="text-xs text-brand-grey">Rustic Bakes just added fresh sourdough to their menu.</p>
+                       <p className="text-xs text-brand-grey mt-1">3 days ago</p>
+                     </div>
+                   </div>
+                 </div>
+                 
+                 <div className="mt-3 pt-3 border-t border-brand-cream">
+                   <Link 
+                     href="/notifications" 
+                     className="w-full bg-brand-maroon text-white py-2 px-3 rounded text-sm text-center hover:bg-[#681b24] transition-colors block"
+                   >
+                     View All Notifications
+                   </Link>
+                 </div>
+               </div>
+                          )}
+           </div>
+
+           {/* AI Chat Widget */}
+           <div className="relative chat-container">
+             <button
+               onClick={handleChatClick}
+               onMouseEnter={() => {
+                 if (chatTimeout) {
+                   clearTimeout(chatTimeout);
+                   setChatTimeout(null);
+                 }
+                 setIsChatOpen(true);
+               }}
+               onMouseLeave={() => {
+                 const timeout = setTimeout(() => {
+                   setIsChatOpen(false);
+                 }, 300);
+                 setChatTimeout(timeout);
+               }}
+               className="p-1 hover:bg-brand-beige rounded transition-colors relative"
+               title="AI Assistant"
+             >
+               <MessageCircle className="h-5 w-5 text-brand-charcoal cursor-pointer" />
+               {/* Chat indicator - shows when there are unread messages */}
+               <span className="absolute -top-1 -right-1 bg-brand-green text-white text-xs rounded-full w-4 h-4 flex items-center justify-center animate-pulse">
+                 AI
+               </span>
+             </button>
+             {isChatOpen && (
+               <div 
+                 className="absolute right-0 mt-2 w-96 bg-brand-beige text-brand-charcoal rounded shadow-md z-50"
+                 onMouseEnter={() => {
+                   if (chatTimeout) {
+                     clearTimeout(chatTimeout);
+                     setChatTimeout(null);
+                   }
+                 }}
+                 onMouseLeave={() => {
+                   const timeout = setTimeout(() => {
+                     setIsChatOpen(false);
+                   }, 300);
+                   setChatTimeout(timeout);
+                 }}
+               >
+                 {/* Chat Header */}
+                 <div className="flex items-center justify-between p-4 border-b border-brand-cream">
+                   <div className="flex items-center gap-2">
+                     <div className="w-8 h-8 bg-brand-green rounded-full flex items-center justify-center">
+                       <span className="text-white text-sm font-bold">AI</span>
+                     </div>
+                     <div>
+                       <h3 className="font-semibold text-sm">Craved Artisan Assistant</h3>
+                       <p className="text-xs text-brand-grey">Live AI Support</p>
+                     </div>
+                   </div>
+                   <button
+                     onClick={() => setIsChatOpen(false)}
+                     className="p-1 hover:bg-brand-cream rounded transition-colors"
+                     title="Close chat"
+                   >
+                     <CloseIcon className="h-4 w-4" />
+                   </button>
+                 </div>
+
+                 {/* Chat Messages */}
+                 <div className="h-80 overflow-y-auto p-4 space-y-3">
+                   {chatMessages.map((msg) => (
+                     <div
+                       key={msg.id}
+                       className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                     >
+                       <div
+                         className={`max-w-[80%] p-3 rounded-lg ${
+                           msg.type === 'user'
+                             ? 'bg-brand-maroon text-white'
+                             : 'bg-white text-brand-charcoal'
+                         }`}
+                       >
+                         <p className="text-sm">{msg.message}</p>
+                         <p className="text-xs opacity-70 mt-1">
+                           {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                         </p>
+                       </div>
+                     </div>
+                   ))}
+                   
+                   {/* Typing indicator */}
+                   {isTyping && (
+                     <div className="flex justify-start">
+                       <div className="bg-white text-brand-charcoal p-3 rounded-lg">
+                         <div className="flex items-center gap-1">
+                           <div className="w-2 h-2 bg-brand-grey rounded-full animate-bounce"></div>
+                           <div className="w-2 h-2 bg-brand-grey rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                           <div className="w-2 h-2 bg-brand-grey rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                         </div>
+                       </div>
+                     </div>
+                   )}
+                 </div>
+
+                 {/* Chat Input */}
+                 <div className="p-4 border-t border-brand-cream">
+                   <form onSubmit={handleChatSubmit} className="flex gap-2">
+                     <input
+                       type="text"
+                       value={chatMessage}
+                       onChange={(e) => setChatMessage(e.target.value)}
+                       placeholder="Ask me anything about Craved Artisan..."
+                       className="flex-1 px-3 py-2 border border-brand-cream rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green text-sm"
+                       disabled={isTyping}
+                     />
+                     <button
+                       type="submit"
+                       disabled={!chatMessage.trim() || isTyping}
+                       className="p-2 bg-brand-green text-white rounded-lg hover:bg-brand-green/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                       title="Send message"
+                     >
+                       <Send className="h-4 w-4" />
+                     </button>
+                   </form>
+                 </div>
+               </div>
+             )}
+           </div>
+
+           <div className="relative user-menu-container">
+            {isAuthenticated && user ? (
+              <div className="relative">
+                <button
+                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  onMouseEnter={() => {
+                    if (userMenuTimeout) {
+                      clearTimeout(userMenuTimeout);
+                      setUserMenuTimeout(null);
+                    }
+                  }}
+                  onMouseLeave={() => {
+                    const timeout = setTimeout(() => {
+                      setIsUserMenuOpen(false);
+                    }, 300);
+                    setUserMenuTimeout(timeout);
+                  }}
+                  className="w-8 h-8 rounded-full bg-brand-green text-white flex items-center justify-center cursor-pointer hover:bg-brand-green/80 transition-colors"
+                >
+                  <span className="text-sm font-medium">
+                    {user.profile?.firstName?.charAt(0) || user.email?.charAt(0) || 'U'}
+                  </span>
+                </button>
+                {isUserMenuOpen && (
+                  <div 
+                    className="absolute right-0 mt-2 w-40 bg-brand-beige text-brand-charcoal rounded shadow-md p-2 z-50"
+                    onMouseEnter={() => {
+                      if (userMenuTimeout) {
+                        clearTimeout(userMenuTimeout);
+                        setUserMenuTimeout(null);
+                      }
+                    }}
+                    onMouseLeave={() => {
+                      const timeout = setTimeout(() => {
+                        setIsUserMenuOpen(false);
+                      }, 300);
+                      setUserMenuTimeout(timeout);
+                    }}
+                  >
+                    <p className="text-sm mb-1">Hello, {user.profile?.firstName || user.email}</p>
+                    <Link href="/dashboard" className="block text-sm hover:underline">Dashboard</Link>
+                    <Link href="/settings" className="block text-sm hover:underline">Settings</Link>
+                    <button onClick={logout} className="mt-2 text-sm text-brand-maroon hover:underline">Logout</button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link href="/login" className="text-sm text-brand-charcoal">Login</Link>
             )}
           </div>
 
-          {/* Shopping Cart */}
-          <div className="relative group">
-            <Link href="/cart" className="p-1 hover:bg-brand-off-white rounded-lg transition-colors relative">
-              <ShoppingCart className="h-5 w-5 text-brand-charcoal" />
-              {/* Cart badge would go here */}
-            </Link>
-          </div>
-
-          {/* Notifications */}
-          <div className="relative group">
-            <Link href="/notifications" className="p-1 hover:bg-brand-off-white rounded-lg transition-colors relative">
-              <Bell className="h-5 w-5 text-brand-charcoal" />
-              {/* Notification badge would go here */}
-            </Link>
-          </div>
-
-          {/* User Menu */}
-          <div className="relative group">
-            <button 
-              onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-              className="flex items-center space-x-2 p-1 hover:bg-brand-off-white rounded-lg transition-colors"
-              aria-label="User menu"
-            >
-              <User className="h-5 w-5 text-brand-charcoal" />
-            </button>
-            
-            {isUserMenuOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-brand-soft-beige">
-                <Link href="/login" className="block px-4 py-2 hover:bg-brand-off-white text-brand-charcoal">Login</Link>
-                <Link href="/signup" className="block px-4 py-2 hover:bg-brand-off-white text-brand-charcoal">Sign Up</Link>
-              </div>
-            )}
-          </div>
-
-          {/* Mobile Menu Toggle */}
-          <button 
-            className="md:hidden p-1 hover:bg-brand-off-white rounded-lg transition-colors" 
-            onClick={() => setMobileMenuOpen(!isMobileMenuOpen)}
-            aria-label={isMobileMenuOpen ? "Close mobile menu" : "Open mobile menu"}
-          >
-            {isMobileMenuOpen ? <X className="h-6 w-6 text-brand-charcoal" /> : <Menu className="h-6 w-6 text-brand-charcoal" />}
+          {/* Mobile menu toggle */}
+          <button className="md:hidden" onClick={() => setMobileOpen(!isMobileOpen)}>
+            {isMobileOpen ? <X className="h-6 w-6 text-brand-charcoal" /> : <Menu className="h-6 w-6 text-brand-charcoal" />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Menu */}
-      {isMobileMenuOpen && (
-        <motion.div
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -20, opacity: 0 }}
-          className="md:hidden bg-brand-off-white border-t border-brand-soft-beige px-6 py-4 space-y-4"
-        >
-          <Link href="/categories" className="block text-brand-charcoal hover:text-brand-verdun-green transition-colors">Marketplace</Link>
-          <Link href="/vendors" className="block text-brand-charcoal hover:text-brand-verdun-green transition-colors">Vendors</Link>
-          <Link href="/events" className="block text-brand-charcoal hover:text-brand-verdun-green transition-colors">Events</Link>
-          <Link href="/about" className="block text-brand-charcoal hover:text-brand-verdun-green transition-colors">About</Link>
-          <Link href="/contact" className="block text-brand-charcoal hover:text-brand-verdun-green transition-colors">Contact</Link>
-          <Link href="/join" className="block bg-brand-crown-thorns text-white px-3 py-2 rounded-lg shadow text-center">Join</Link>
+      {/* Mobile Slideout */}
+      {isMobileOpen && (
+        <div className="md:hidden bg-brand-cream border-t px-6 py-4 space-y-4 text-brand-charcoal">
+          {/* Mobile ZIP input */}
+          <div className="flex items-center space-x-2 pb-4 border-b border-brand-beige">
+            <form onSubmit={handleZipSubmit} className="flex-1 flex items-center border border-brand-beige rounded px-2">
+              <input
+                type="text"
+                value={zipInput}
+                onChange={(e) => setZipInput(e.target.value)}
+                placeholder="ZIP"
+                className="bg-transparent text-sm text-brand-charcoal outline-none w-full placeholder-brand-grey"
+              />
+              <button type="submit" className="text-xs text-brand-green">Go</button>
+            </form>
+            {isUsingLocation && (
+              <div className="flex items-center text-xs text-brand-green">
+                <MapPin className="h-3 w-3 mr-1" />
+                <span>Located</span>
+              </div>
+            )}
+            <button
+              onClick={handleLocateMe}
+              disabled={isLocating}
+              className="p-2 rounded-full bg-brand-green text-white hover:bg-brand-green/80 transition-colors disabled:opacity-50"
+              title="Use my location"
+            >
+              <MapPin className="h-4 w-4" />
+            </button>
+          </div>
+          
+          {navLinks.map(link => (
+            <Link key={link.href} href={link.href}>{link.label}</Link>
+          ))}
+          <Link href="/join" className="block bg-brand-maroon text-white px-3 py-1 rounded shadow">Join</Link>
           {role !== 'guest' && roleLinks[role]}
-        </motion.div>
+        </div>
       )}
     </header>
   );

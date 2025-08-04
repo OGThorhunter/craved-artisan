@@ -3,8 +3,9 @@ import { Toaster } from 'react-hot-toast';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
+import { ZipProvider } from './contexts/ZipContext';
 import { Layout } from './components/Layout';
-import { HomePage } from './pages/HomePage';
+import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
 import { JoinPage } from './pages/JoinPage';
@@ -27,6 +28,10 @@ import { EventCoordinatorDashboardPage } from './pages/EventCoordinatorDashboard
 import { DropoffDashboardPage } from './pages/DropoffDashboardPage';
 import { EventsPage } from './pages/EventsPage';
 import { EventDetailPage } from './pages/EventDetailPage';
+import CommunityPage from './pages/CommunityPage';
+import MarketplacePage from './pages/MarketplacePage';
+import AboutPage from './pages/AboutPage';
+import ContactPage from './pages/ContactPage';
 import VendorWatchlistPage from './pages/VendorWatchlistPage';
 import VendorOrdersPage from './pages/VendorOrdersPage';
 import VendorDeliveryBatchingPage from './pages/VendorDeliveryBatchingPage';
@@ -54,6 +59,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <CartProvider>
+          <ZipProvider>
           <Router>
             <Layout>
             <Switch>
@@ -66,6 +72,14 @@ function App() {
             <Route path="/vendor/:id" component={VendorPage} />
             <Route path="/product/:id" component={ProductPage} />
             <Route path="/checkout" component={CheckoutPage} />
+            
+            {/* Public Pages */}
+            <Route path="/marketplace" component={MarketplacePage} />
+            <Route path="/about" component={AboutPage} />
+            <Route path="/contact" component={ContactPage} />
+            <Route path="/community" component={CommunityPage} />
+            <Route path="/events" component={EventsPage} />
+            <Route path="/events/:id" component={EventDetailPage} />
             
             {/* Protected Dashboard Routes */}
             <Route path="/dashboard">
@@ -181,6 +195,7 @@ function App() {
             
             <Route path="/events" component={EventsPage} />
             <Route path="/events/:id" component={EventDetailPage} />
+            <Route path="/community" component={CommunityPage} />
           
           {/* Placeholder routes for future pages */}
           <Route path="/products">
@@ -216,6 +231,7 @@ function App() {
       </Layout>
       <Toaster position="top-right" />
     </Router>
+    </ZipProvider>
     </CartProvider>
     </AuthProvider>
     </QueryClientProvider>

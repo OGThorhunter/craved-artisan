@@ -10,6 +10,11 @@
     scroll-behavior: smooth;
   }
   
+  html, body, #root {
+    height: 100%;
+    /* Removed overflow: hidden to allow footer to be visible */
+  }
+  
   body {
     @apply bg-brand-cream text-foreground font-sans;
   }

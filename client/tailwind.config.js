@@ -45,18 +45,12 @@ export default {
         muted: '#f5f5f4',
         // Brand color scheme
         brand: {
-          // Primary backgrounds
-          'off-white': '#F7F2EC',
-          // Secondary panels/cards
-          'soft-beige': '#E8CBAE',
-          // Primary accent/CTA
-          'verdun-green': '#5B6E02',
-          // Secondary accent
-          'crown-thorns': '#7F232E',
-          // Standard text
-          'charcoal': '#333333',
-          // Muted text/labels
-          'warm-grey': '#777777',
+          cream: '#F7F2EC',
+          beige: '#E8CBAE',
+          green: '#5B6E02',
+          maroon: '#7F232E',
+          charcoal: '#333333',
+          grey: '#777777',
         },
       },
       fontFamily: {
