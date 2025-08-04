@@ -25,7 +25,7 @@ import {
 import { ReorderCard } from '../components/ReorderCard';
 import { MyPantry } from '../components/MyPantry';
 import { PickupMap } from '../components/PickupMap';
-import { ScheduledOrderFramework } from '../components/ScheduledOrderFramework';
+import { ScheduledOrderFramework } from '../components/ScheduleOrder';
 
 export const CustomerDashboardPage = () => {
   const [activeTab, setActiveTab] = useState('orders');

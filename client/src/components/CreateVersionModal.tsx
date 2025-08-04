@@ -29,7 +29,7 @@ const CreateVersionModal: React.FC<CreateVersionModalProps> = ({
     },
     onSuccess: (data) => {
       toast.success(`Version ${data.recipeVersion.version} created successfully`);
-      queryClient.invalidateQueries(['recipe-versions', recipeId]);
+      queryClient.invalidateQueries({ queryKey: ['recipe-versions', recipeId] });
       setNotes('');
       onClose();
       onSuccess?.();

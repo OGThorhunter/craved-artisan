@@ -13,6 +13,18 @@ import {
   Truck,
   Store
 } from 'lucide-react';
+import { 
+  DEFAULT_MAP_CONFIG, 
+  MARKER_CONFIG, 
+  LOCATION_TYPES, 
+  FILTER_OPTIONS,
+  calculateDistance,
+  getNextAvailableDate,
+  formatPickupTime,
+  filterLocationsByTime,
+  getLocationTypeInfo,
+  type MapLocation 
+} from '../lib/mapConfig';
 
 // Fix for default markers in React Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -49,20 +61,8 @@ const createCustomIcon = (color: string, icon: string) => {
   });
 };
 
-interface PickupLocation {
-  id: string;
-  name: string;
-  type: 'vendor' | 'zip' | 'pickup';
-  coordinates: [number, number];
-  address: string;
-  schedule: string;
-  nextPickup?: string;
-  vendorId?: string;
-  vendorName?: string;
-  rating?: number;
-  isActive?: boolean;
-  distance?: number;
-}
+// Use MapLocation interface from mapConfig
+type PickupLocation = MapLocation;
 
 interface PickupMapProps {
   className?: string;
@@ -80,7 +80,7 @@ export const PickupMap: React.FC<PickupMapProps> = ({
   onOrderHere
 }) => {
   const [locations, setLocations] = useState<PickupLocation[]>([]);
-  const [selectedFilter, setSelectedFilter] = useState<'all' | 'today' | 'tomorrow' | 'week'>('all');
+  const [selectedFilter, setSelectedFilter] = useState<keyof typeof FILTER_OPTIONS>('all');
   const [selectedLocation, setSelectedLocation] = useState<PickupLocation | null>(null);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
 
@@ -147,58 +147,18 @@ export const PickupMap: React.FC<PickupMapProps> = ({
     setUserLocation([33.3469, -84.1091]); // Locust Grove area
   }, []);
 
-  // Filter locations based on selected filter
+  // Filter locations based on selected filter using utility function
   const filteredLocations = useMemo(() => {
-    if (selectedFilter === 'all') return locations;
-
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
-    const weekEnd = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
-
-    return locations.filter(location => {
-      if (!location.nextPickup) return false;
-      const pickupDate = new Date(location.nextPickup);
-
-      switch (selectedFilter) {
-        case 'today':
-          return pickupDate >= today && pickupDate < tomorrow;
-        case 'tomorrow':
-          return pickupDate >= tomorrow && pickupDate < new Date(tomorrow.getTime() + 24 * 60 * 60 * 1000);
-        case 'week':
-          return pickupDate >= today && pickupDate <= weekEnd;
-        default:
-          return true;
-      }
-    });
+    return filterLocationsByTime(locations, selectedFilter);
   }, [locations, selectedFilter]);
 
-  // Get marker icon based on location type
+  // Get marker icon based on location type using config
   const getMarkerIcon = (location: PickupLocation) => {
-    switch (location.type) {
-      case 'vendor':
-        return createCustomIcon('#10B981', '🏪');
-      case 'pickup':
-        return createCustomIcon('#3B82F6', '📦');
-      case 'zip':
-        return createCustomIcon('#F59E0B', '📍');
-      default:
-        return createCustomIcon('#6B7280', '📍');
-    }
+    const typeInfo = getLocationTypeInfo(location.type);
+    return createCustomIcon(typeInfo.color, typeInfo.icon);
   };
 
-  // Format date for display
-  const formatPickupTime = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffTime = date.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Tomorrow';
-    if (diffDays < 7) return `${diffDays} days`;
-    return date.toLocaleDateString();
-  };
+  // Use formatPickupTime from mapConfig utility
 
   // Handle location click
   const handleLocationClick = (location: PickupLocation) => {
@@ -240,32 +200,31 @@ export const PickupMap: React.FC<PickupMapProps> = ({
         </div>
         <div className="flex items-center gap-2">
           <span className="text-sm text-brand-grey">Filter:</span>
-          <select
-            value={selectedFilter}
-            onChange={(e) => setSelectedFilter(e.target.value as any)}
-            className="px-3 py-1 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
-            aria-label="Filter pickup locations by time"
-          >
-            <option value="all">All</option>
-            <option value="today">Today</option>
-            <option value="tomorrow">Tomorrow</option>
-            <option value="week">This Week</option>
-          </select>
+                         <select
+                 value={selectedFilter}
+                 onChange={(e) => setSelectedFilter(e.target.value as keyof typeof FILTER_OPTIONS)}
+                 className="px-3 py-1 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
+                 aria-label="Filter pickup locations by time"
+               >
+                 {Object.entries(FILTER_OPTIONS).map(([key, option]) => (
+                   <option key={key} value={key}>{option.label}</option>
+                 ))}
+               </select>
         </div>
       </div>
 
       {/* Map Container */}
       <div className="relative">
-        <MapContainer
-          center={userLocation}
-          zoom={11}
-          className="h-96 w-full rounded-lg"
-          style={{ minHeight: '400px' }}
-        >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
+                 <MapContainer
+           center={userLocation}
+           zoom={DEFAULT_MAP_CONFIG.defaultZoom}
+           className="h-96 w-full rounded-lg"
+           style={{ minHeight: '400px' }}
+         >
+           <TileLayer
+             attribution={DEFAULT_MAP_CONFIG.tileLayerAttribution}
+             url={DEFAULT_MAP_CONFIG.tileLayerUrl}
+           />
           
           {/* User location marker */}
           <Marker position={userLocation} icon={createCustomIcon('#EF4444', '📍')}>

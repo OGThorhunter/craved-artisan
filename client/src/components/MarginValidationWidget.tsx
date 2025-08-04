@@ -96,7 +96,7 @@ const MarginValidationWidget: React.FC<MarginValidationWidgetProps> = ({
       // Show toast notification
       if (validationResult.isValid) {
         if (validationResult.warning) {
-          toast.warning(validationResult.warning);
+          toast.error(validationResult.warning);
         } else {
           toast.success(`Margin validation passed: ${validationResult.margin.toFixed(1)}%`);
         }

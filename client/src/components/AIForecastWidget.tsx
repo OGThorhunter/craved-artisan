@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import {
-  TrendingUp, TrendingDown, Minus, AlertTriangle, CheckCircle,
+  TrendingUp, TrendingDown, AlertTriangle, CheckCircle,
   DollarSign, ShoppingCart, BarChart3, RefreshCw, Calendar,
   Target, Zap, Info, ArrowUpRight, ArrowDownRight, Minus as MinusIcon
 } from 'lucide-react';
@@ -104,18 +104,7 @@ const AIForecastWidget: React.FC<AIForecastWidgetProps> = ({
     }
   };
 
-  const getTrendColor = (trend: string) => {
-    switch (trend) {
-      case 'increasing':
-        return 'text-green-600';
-      case 'decreasing':
-        return 'text-red-600';
-      case 'stable':
-        return 'text-gray-600';
-      default:
-        return 'text-yellow-600';
-    }
-  };
+
 
   const getConfidenceColor = (confidence: string) => {
     switch (confidence) {

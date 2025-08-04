@@ -1,14 +1,14 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'wouter';
-import { 
-  Search, 
-  Filter, 
-  Plus, 
-  Camera, 
-  ChefHat, 
-  Package, 
-  Leaf, 
-  Wheat, 
+import {
+  Search,
+  Filter,
+  Plus,
+  Camera,
+  ChefHat,
+  Package,
+  Leaf,
+  Wheat,
   Droplets,
   Sparkles,
   X,
@@ -18,16 +18,17 @@ import {
   Clock,
   Star
 } from 'lucide-react';
+import { 
+  parseIngredients, 
+  validateIngredients, 
+  formatIngredient, 
+  getCategoryInfo, 
+  getAvailableCategories,
+  type ParsedIngredient 
+} from '../lib/parseIngredients';
 
-// Ingredient categories
-const INGREDIENT_CATEGORIES = {
-  spices: { name: 'Spices & Herbs', icon: Sparkles, color: 'text-orange-600' },
-  vegetables: { name: 'Vegetables', icon: Leaf, color: 'text-green-600' },
-  grains: { name: 'Grains & Flour', icon: Wheat, color: 'text-amber-600' },
-  dairy: { name: 'Dairy & Eggs', icon: Droplets, color: 'text-blue-600' },
-  pantry: { name: 'Pantry Staples', icon: Package, color: 'text-gray-600' },
-  proteins: { name: 'Proteins', icon: ChefHat, color: 'text-red-600' }
-};
+// Get ingredient categories from utility
+const INGREDIENT_CATEGORIES = getAvailableCategories();
 
 interface Ingredient {
   id: string;
@@ -155,29 +156,16 @@ export const MyPantry: React.FC<MyPantryProps> = ({
     );
   }, [filteredIngredients]);
 
-  // Parse ingredients from text (normalize to singular nouns with units)
-  const parseIngredients = (text: string): Partial<Ingredient>[] => {
-    const lines = text.split('\n').filter(line => line.trim());
-    return lines.map(line => {
-      // Simple regex to extract quantity, unit, and ingredient name
-      const match = line.match(/^(\d+(?:\.\d+)?)\s*(\w+)?\s+(.+)$/i);
-      if (match) {
-        const [, quantity, unit, name] = match;
-        return {
-          name: name.trim().toLowerCase().replace(/s$/, ''), // Convert to singular
-          quantity: parseFloat(quantity),
-          unit: unit || 'count',
-          category: 'pantry' as keyof typeof INGREDIENT_CATEGORIES // Default category
-        };
-      }
-      return {
-        name: line.trim().toLowerCase().replace(/s$/, ''),
-        quantity: 1,
-        unit: 'count',
-        category: 'pantry' as keyof typeof INGREDIENT_CATEGORIES
-      };
-    });
-  };
+           // Parse ingredients from text using utility function
+         const parseIngredientsFromText = (text: string): Partial<Ingredient>[] => {
+           const parsed = parseIngredients(text);
+           return parsed.map(ingredient => ({
+             name: ingredient.name,
+             quantity: ingredient.quantity,
+             unit: ingredient.unit,
+             category: ingredient.category as keyof typeof INGREDIENT_CATEGORIES
+           }));
+         };
 
   // Find recipes that use a specific ingredient
   const findMatchingRecipes = (ingredientName: string): Recipe[] => {
@@ -310,12 +298,11 @@ export const MyPantry: React.FC<MyPantryProps> = ({
         {groupedIngredients.length > 0 ? (
           groupedIngredients.map(([category, categoryIngredients]) => {
             const categoryInfo = INGREDIENT_CATEGORIES[category as keyof typeof INGREDIENT_CATEGORIES];
-            const CategoryIcon = categoryInfo.icon;
             
             return (
               <div key={category}>
                 <h3 className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-3">
-                  <CategoryIcon className={`w-4 h-4 ${categoryInfo.color}`} />
+                  <Package className={`w-4 h-4 ${categoryInfo.color}`} />
                   {categoryInfo.name}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -419,10 +406,10 @@ const AddIngredientModal: React.FC<AddIngredientModalProps> = ({ onClose, onAdd,
     expiryDate: ''
   });
 
-  const handleParse = () => {
-    const parsed = parseIngredients(parseText);
-    setParsedIngredients(parsed);
-  };
+           const handleParse = () => {
+                       const parsed = parseIngredients(parseText);
+           setParsedIngredients(parsed);
+         };
 
   const handleAddParsed = (ingredient: Partial<Ingredient>) => {
     onAdd(ingredient);
