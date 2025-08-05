@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { Link } from 'wouter';
@@ -147,19 +147,19 @@ export default function CommunityPage() {
   });
 
   return (
-    <div className="min-h-screen bg-brand-cream">
+    <div className="page-container bg-brand-cream">
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-brand-beige">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="container-responsive py-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-brand-charcoal mb-2">Community Forum</h1>
+              <h1 className="responsive-heading text-brand-charcoal mb-2">Community Forum</h1>
               <p className="text-brand-grey">Connect, share, and learn with your local food community</p>
             </div>
             {isAuthenticated && (
               <Link
                 href="/community/new-topic"
-                className="mt-4 md:mt-0 bg-brand-maroon text-white px-6 py-3 rounded-lg hover:bg-[#681b24] transition flex items-center gap-2 font-medium"
+                className="mt-4 md:mt-0 bg-brand-maroon text-white responsive-button rounded-lg hover:bg-[#681b24] transition flex items-center gap-2 font-medium"
               >
                 <Plus className="h-5 w-5" />
                 New Topic
@@ -169,7 +169,7 @@ export default function CommunityPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="container-responsive py-8">
         {/* Search and Filter */}
         <div className="bg-white rounded-xl shadow-sm border border-brand-beige p-6 mb-8">
           <div className="flex flex-col md:flex-row gap-4">
@@ -207,7 +207,7 @@ export default function CommunityPage() {
           {/* Categories */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-xl shadow-sm border border-brand-beige p-6">
-              <h2 className="text-xl font-semibold text-brand-charcoal mb-4">Forum Categories</h2>
+              <h2 className="responsive-subheading text-brand-charcoal mb-4">Forum Categories</h2>
               <div className="space-y-3">
                 {forumCategories.map((category) => {
                   const IconComponent = category.icon;
@@ -243,13 +243,13 @@ export default function CommunityPage() {
           <div className="lg:col-span-2">
             <div className="bg-white rounded-xl shadow-sm border border-brand-beige">
               <div className="p-6 border-b border-brand-beige">
-                <h2 className="text-xl font-semibold text-brand-charcoal">Recent Discussions</h2>
+                <h2 className="responsive-subheading text-brand-charcoal">Recent Discussions</h2>
               </div>
               
               {filteredDiscussions.length === 0 ? (
                 <div className="p-8 text-center">
                   <MessageSquare className="h-12 w-12 text-brand-grey mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-brand-charcoal mb-2">No discussions found</h3>
+                  <h3 className="responsive-subheading text-brand-charcoal mb-2">No discussions found</h3>
                   <p className="text-brand-grey">Try adjusting your search or filter criteria</p>
                 </div>
               ) : (
@@ -279,7 +279,7 @@ export default function CommunityPage() {
                             href={`/community/discussion/${discussion.id}`}
                             className="block"
                           >
-                            <h3 className="text-lg font-medium text-brand-charcoal hover:text-brand-maroon transition mb-2">
+                            <h3 className="responsive-subheading text-brand-charcoal hover:text-brand-maroon transition mb-2">
                               {discussion.title}
                             </h3>
                           </Link>
@@ -317,22 +317,22 @@ export default function CommunityPage() {
 
         {/* Community Stats */}
         <div className="mt-8 bg-white rounded-xl shadow-sm border border-brand-beige p-6">
-          <h2 className="text-xl font-semibold text-brand-charcoal mb-4">Community Stats</h2>
+          <h2 className="responsive-subheading text-brand-charcoal mb-4">Community Stats</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div className="text-center">
-              <div className="text-2xl font-bold text-brand-maroon">1,234</div>
+              <div className="responsive-heading text-brand-maroon">1,234</div>
               <div className="text-sm text-brand-grey">Members</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-brand-green">567</div>
+              <div className="responsive-heading text-brand-green">567</div>
               <div className="text-sm text-brand-grey">Topics</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-brand-charcoal">2,890</div>
+              <div className="responsive-heading text-brand-charcoal">2,890</div>
               <div className="text-sm text-brand-grey">Posts</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-orange-500">89</div>
+              <div className="responsive-heading text-orange-500">89</div>
               <div className="text-sm text-brand-grey">Online Now</div>
             </div>
           </div>

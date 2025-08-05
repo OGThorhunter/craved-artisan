@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { motion } from 'framer-motion';
 import { Link } from 'wouter';
@@ -15,22 +15,22 @@ const values = [
   {
     title: 'Local First',
     description: 'We believe in supporting local economies and keeping money in our communities.',
-    icon: '🏘️'
+    icon: 'ðŸ˜ï¸'
   },
   {
     title: 'Quality Craftsmanship',
     description: 'Every product on our platform meets our high standards for quality and authenticity.',
-    icon: '✨'
+    icon: 'âœ¨'
   },
   {
     title: 'Sustainable Practices',
     description: 'We promote environmentally conscious practices and reduce food waste.',
-    icon: '🌱'
+    icon: 'ðŸŒ±'
   },
   {
     title: 'Community Connection',
     description: 'We build bridges between makers and consumers, fostering meaningful relationships.',
-    icon: '🤝'
+    icon: 'ðŸ¤'
   }
 ];
 
@@ -57,10 +57,10 @@ const team = [
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-brand-cream">
+    <div className="page-container bg-brand-cream">
       {/* Hero Section */}
       <div className="bg-brand-maroon text-white py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div className="container-responsive text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -77,7 +77,7 @@ export default function AboutPage() {
 
       {/* Stats Section */}
       <div className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-responsive">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
             {stats.map((stat, index) => (
               <motion.div
@@ -90,7 +90,7 @@ export default function AboutPage() {
                 <div className="flex justify-center mb-4">
                   <stat.icon className="h-12 w-12 text-brand-maroon" />
                 </div>
-                <div className="text-3xl font-bold text-brand-charcoal mb-2">{stat.value}</div>
+                <div className="responsive-heading text-brand-charcoal mb-2">{stat.value}</div>
                 <div className="text-brand-grey">{stat.label}</div>
               </motion.div>
             ))}
@@ -100,7 +100,7 @@ export default function AboutPage() {
 
       {/* Story Section */}
       <div className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-responsive">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
@@ -132,7 +132,7 @@ export default function AboutPage() {
               className="bg-brand-beige rounded-lg p-8"
             >
               <div className="text-center">
-                <div className="text-6xl mb-4">🏪</div>
+                <div className="text-6xl mb-4">ðŸª</div>
                 <h3 className="text-2xl font-semibold text-brand-charcoal mb-4">Started in 2020</h3>
                 <p className="text-brand-grey">
                   From a single market to a statewide network of local commerce
@@ -145,7 +145,7 @@ export default function AboutPage() {
 
       {/* Values Section */}
       <div className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-responsive">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -168,7 +168,7 @@ export default function AboutPage() {
                 className="text-center p-6 rounded-lg bg-brand-cream"
               >
                 <div className="text-4xl mb-4">{value.icon}</div>
-                <h3 className="text-xl font-semibold text-brand-charcoal mb-3">{value.title}</h3>
+                <h3 className="responsive-subheading text-brand-charcoal mb-3">{value.title}</h3>
                 <p className="text-brand-grey">{value.description}</p>
               </motion.div>
             ))}
@@ -178,7 +178,7 @@ export default function AboutPage() {
 
       {/* Team Section */}
       <div className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-responsive">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -201,9 +201,9 @@ export default function AboutPage() {
                 className="text-center"
               >
                 <div className="w-32 h-32 bg-brand-beige rounded-full mx-auto mb-6 flex items-center justify-center">
-                  <span className="text-4xl">👤</span>
+                  <span className="text-4xl">ðŸ‘¤</span>
                 </div>
-                <h3 className="text-xl font-semibold text-brand-charcoal mb-2">{member.name}</h3>
+                <h3 className="responsive-subheading text-brand-charcoal mb-2">{member.name}</h3>
                 <p className="text-brand-maroon font-medium mb-4">{member.role}</p>
                 <p className="text-brand-grey">{member.bio}</p>
               </motion.div>
@@ -214,7 +214,7 @@ export default function AboutPage() {
 
       {/* CTA Section */}
       <div className="py-20 bg-brand-green text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div className="container-responsive text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

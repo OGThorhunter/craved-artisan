@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { Link } from 'wouter';
@@ -24,7 +24,7 @@ export const JoinPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white py-20">
+    <div className="page-container bg-white py-20">
       <div className="max-w-4xl mx-auto px-6">
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold text-gray-900 mb-4">
@@ -38,7 +38,7 @@ export const JoinPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Benefits Section */}
           <div className="bg-brand-cream rounded-2xl p-8 shadow-2xl">
-            <h2 className="text-3xl font-bold text-gray-900 mb-6">
+            <h2 className="responsive-heading text-gray-900 mb-6">
               Why Join Craved Artisan?
             </h2>
             
@@ -50,7 +50,7 @@ export const JoinPage = () => {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Keep More of Your Earnings</h3>
+                  <h3 className="responsive-subheading text-gray-900 mb-2">Keep More of Your Earnings</h3>
                   <p className="text-gray-600">Lower fees than traditional marketplaces, so you keep more of what you earn.</p>
                 </div>
               </div>
@@ -62,7 +62,7 @@ export const JoinPage = () => {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Connect with Your Community</h3>
+                  <h3 className="responsive-subheading text-gray-900 mb-2">Connect with Your Community</h3>
                   <p className="text-gray-600">Build relationships with customers who appreciate the story behind your work.</p>
                 </div>
               </div>
@@ -74,7 +74,7 @@ export const JoinPage = () => {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Easy Setup & Management</h3>
+                  <h3 className="responsive-subheading text-gray-900 mb-2">Easy Setup & Management</h3>
                   <p className="text-gray-600">Simple tools to showcase your work, manage orders, and grow your business.</p>
                 </div>
               </div>
@@ -86,7 +86,7 @@ export const JoinPage = () => {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">AI-Powered Automation</h3>
+                  <h3 className="responsive-subheading text-gray-900 mb-2">AI-Powered Automation</h3>
                   <p className="text-gray-600">Smart AI assistance handles repetitive tasks, inventory management, and customer inquiries so you can focus on your craft.</p>
                 </div>
               </div>
@@ -98,7 +98,7 @@ export const JoinPage = () => {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Customer Relationship Management</h3>
+                  <h3 className="responsive-subheading text-gray-900 mb-2">Customer Relationship Management</h3>
                   <p className="text-gray-600">Built-in CRM tools help you track customer preferences, manage repeat business, and build lasting relationships that drive growth.</p>
                 </div>
               </div>
@@ -107,7 +107,7 @@ export const JoinPage = () => {
 
           {/* Sign Up Form */}
           <div className="bg-brand-cream/30 rounded-2xl p-8 shadow-2xl">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Get Started Today</h2>
+            <h2 className="responsive-heading text-gray-900 mb-6">Get Started Today</h2>
             
             {/* Social Join Buttons */}
             <div className="space-y-3 mb-6">
@@ -115,7 +115,7 @@ export const JoinPage = () => {
                 type="button"
                 onClick={() => handleSocialJoin('google')}
                 disabled={isLoading}
-                className="w-full flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex justify-center items-center responsive-button border border-gray-300 rounded-md shadow-sm bg-white responsive-text font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Chrome className="h-5 w-5 mr-2 text-red-600" />
                 Continue with Google
@@ -125,7 +125,7 @@ export const JoinPage = () => {
                 type="button"
                 onClick={() => handleSocialJoin('facebook')}
                 disabled={isLoading}
-                className="w-full flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex justify-center items-center responsive-button border border-gray-300 rounded-md shadow-sm bg-white responsive-text font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Facebook className="h-5 w-5 mr-2 text-blue-600" />
                 Continue with Facebook
@@ -135,7 +135,7 @@ export const JoinPage = () => {
                 type="button"
                 onClick={() => handleSocialJoin('apple')}
                 disabled={isLoading}
-                className="w-full flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex justify-center items-center responsive-button border border-gray-300 rounded-md shadow-sm bg-white responsive-text font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Apple className="h-5 w-5 mr-2 text-gray-900" />
                 Continue with Apple
@@ -154,7 +154,7 @@ export const JoinPage = () => {
             
             <form className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block responsive-text font-medium text-gray-700 mb-2">
                   Full Name
                 </label>
                 <input
@@ -165,7 +165,7 @@ export const JoinPage = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block responsive-text font-medium text-gray-700 mb-2">
                   Email Address
                 </label>
                 <input
@@ -176,7 +176,7 @@ export const JoinPage = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block responsive-text font-medium text-gray-700 mb-2">
                   Category
                 </label>
                 <select 
@@ -204,7 +204,7 @@ export const JoinPage = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block responsive-text font-medium text-gray-700 mb-2">
                   Tell us about your craft
                 </label>
                 <textarea
@@ -222,7 +222,7 @@ export const JoinPage = () => {
               </button>
             </form>
 
-            <div className="mt-6 text-center text-sm text-gray-600">
+            <div className="mt-6 text-center responsive-text text-gray-600">
               Already have an account?{' '}
               <Link href="/login" className="text-primary-600 hover:text-primary-700 font-medium">
                 Sign in

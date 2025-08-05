@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Link } from 'wouter';
 import { 
   Users, 
@@ -79,18 +79,18 @@ export const AdminDashboardPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="page-container bg-gray-50">
+      <div className="container-responsive py-8">
         {/* Header */}
         <div className="bg-white rounded-2xl shadow-sm p-6 mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+              <h1 className="responsive-heading text-gray-900">Admin Dashboard</h1>
               <p className="text-gray-600 mt-1">System overview and management</p>
             </div>
             <div className="flex items-center space-x-4">
               <Link href="/admin/settings">
-                <button className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900">
+                <button className="flex items-center space-x-2 responsive-button text-gray-600 hover:text-gray-900">
                   <Settings className="w-5 h-5" />
                   <span>Settings</span>
                 </button>
@@ -107,8 +107,8 @@ export const AdminDashboardPage = () => {
                 <Users className="w-6 h-6 text-blue-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Users</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalUsers.toLocaleString()}</p>
+                <p className="responsive-text font-medium text-gray-600">Total Users</p>
+                <p className="responsive-heading text-gray-900">{stats.totalUsers.toLocaleString()}</p>
               </div>
             </div>
           </div>
@@ -119,8 +119,8 @@ export const AdminDashboardPage = () => {
                 <Store className="w-6 h-6 text-green-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Vendors</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalVendors}</p>
+                <p className="responsive-text font-medium text-gray-600">Total Vendors</p>
+                <p className="responsive-heading text-gray-900">{stats.totalVendors}</p>
               </div>
             </div>
           </div>
@@ -131,8 +131,8 @@ export const AdminDashboardPage = () => {
                 <Package className="w-6 h-6 text-purple-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Products</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalProducts.toLocaleString()}</p>
+                <p className="responsive-text font-medium text-gray-600">Total Products</p>
+                <p className="responsive-heading text-gray-900">{stats.totalProducts.toLocaleString()}</p>
               </div>
             </div>
           </div>
@@ -143,8 +143,8 @@ export const AdminDashboardPage = () => {
                 <DollarSign className="w-6 h-6 text-yellow-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                <p className="text-2xl font-bold text-gray-900">${stats.totalRevenue.toLocaleString()}</p>
+                <p className="responsive-text font-medium text-gray-600">Total Revenue</p>
+                <p className="responsive-heading text-gray-900">${stats.totalRevenue.toLocaleString()}</p>
               </div>
             </div>
           </div>
@@ -155,8 +155,8 @@ export const AdminDashboardPage = () => {
                 <AlertTriangle className="w-6 h-6 text-red-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Pending Approvals</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.pendingApprovals}</p>
+                <p className="responsive-text font-medium text-gray-600">Pending Approvals</p>
+                <p className="responsive-heading text-gray-900">{stats.pendingApprovals}</p>
               </div>
             </div>
           </div>
@@ -167,8 +167,8 @@ export const AdminDashboardPage = () => {
                 <TrendingUp className="w-6 h-6 text-indigo-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Active Events</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.activeEvents}</p>
+                <p className="responsive-text font-medium text-gray-600">Active Events</p>
+                <p className="responsive-heading text-gray-900">{stats.activeEvents}</p>
               </div>
             </div>
           </div>
@@ -207,9 +207,9 @@ export const AdminDashboardPage = () => {
                 {/* Pending Approvals */}
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-semibold text-gray-900">Pending Approvals</h2>
+                    <h2 className="responsive-subheading text-gray-900">Pending Approvals</h2>
                     <Link href="/admin/approvals">
-                      <button className="text-primary-600 hover:text-primary-700 text-sm font-medium">
+                      <button className="text-primary-600 hover:text-primary-700 responsive-text font-medium">
                         View All Approvals
                       </button>
                     </Link>
@@ -225,13 +225,13 @@ export const AdminDashboardPage = () => {
                             <p className="font-medium text-gray-900">
                               {item.type === 'vendor' ? item.business : item.name}
                             </p>
-                            <p className="text-sm text-gray-500">
+                            <p className="responsive-text text-gray-500">
                               {item.type === 'vendor' ? 'Vendor Application' : 'Product Submission'}
                             </p>
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm text-gray-500">Submitted {item.submitted}</p>
+                          <p className="responsive-text text-gray-500">Submitted {item.submitted}</p>
                           <div className="flex space-x-2 mt-2">
                             <button className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700">
                               Approve
@@ -248,7 +248,7 @@ export const AdminDashboardPage = () => {
 
                 {/* Recent Activity */}
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Recent Activity</h2>
+                  <h2 className="responsive-subheading text-gray-900 mb-4">Recent Activity</h2>
                   <div className="space-y-3">
                     {recentActivity.map((activity) => (
                       <div key={activity.id} className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg">
@@ -267,7 +267,7 @@ export const AdminDashboardPage = () => {
             {activeTab === 'approvals' && (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold text-gray-900">All Pending Approvals</h2>
+                  <h2 className="responsive-subheading text-gray-900">All Pending Approvals</h2>
                   <div className="flex items-center space-x-2">
                     <select className="px-3 py-2 border border-gray-300 rounded-lg text-sm" aria-label="Filter by type">
                       <option>All Types</option>
@@ -286,7 +286,7 @@ export const AdminDashboardPage = () => {
                           <h3 className="text-lg font-semibold text-gray-900">
                             {item.type === 'vendor' ? item.business : item.name}
                           </h3>
-                          <p className="text-sm text-gray-500">
+                          <p className="responsive-text text-gray-500">
                             {item.type === 'vendor' ? 'Vendor Application' : 'Product Submission'}
                           </p>
                         </div>
@@ -296,17 +296,17 @@ export const AdminDashboardPage = () => {
                       </div>
 
                       <div className="flex items-center justify-between">
-                        <p className="text-sm text-gray-600">
+                        <p className="responsive-text text-gray-600">
                           Submitted on {item.submitted}
                         </p>
                         <div className="flex space-x-2">
-                          <button className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
+                          <button className="responsive-button text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
                             View Details
                           </button>
-                          <button className="px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700">
+                          <button className="responsive-button text-sm bg-green-600 text-white rounded-lg hover:bg-green-700">
                             Approve
                           </button>
-                          <button className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700">
+                          <button className="responsive-button text-sm bg-red-600 text-white rounded-lg hover:bg-red-700">
                             Reject
                           </button>
                         </div>
@@ -320,8 +320,8 @@ export const AdminDashboardPage = () => {
             {activeTab === 'users' && (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold text-gray-900">User Management</h2>
-                  <button className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
+                  <h2 className="responsive-subheading text-gray-900">User Management</h2>
+                  <button className="responsive-button bg-primary-600 text-white rounded-lg hover:bg-primary-700">
                     Add User
                   </button>
                 </div>
@@ -329,7 +329,7 @@ export const AdminDashboardPage = () => {
                 <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
                   <div className="px-6 py-4 border-b border-gray-200">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-medium text-gray-900">All Users</h3>
+                      <h3 className="responsive-subheading text-gray-900">All Users</h3>
                       <div className="flex items-center space-x-2">
                         <input
                           type="text"
@@ -358,8 +358,8 @@ export const AdminDashboardPage = () => {
             {activeTab === 'vendors' && (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold text-gray-900">Vendor Management</h2>
-                  <button className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
+                  <h2 className="responsive-subheading text-gray-900">Vendor Management</h2>
+                  <button className="responsive-button bg-primary-600 text-white rounded-lg hover:bg-primary-700">
                     Add Vendor
                   </button>
                 </div>
@@ -367,7 +367,7 @@ export const AdminDashboardPage = () => {
                 <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
                   <div className="px-6 py-4 border-b border-gray-200">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-medium text-gray-900">All Vendors</h3>
+                      <h3 className="responsive-subheading text-gray-900">All Vendors</h3>
                       <div className="flex items-center space-x-2">
                         <input
                           type="text"
@@ -395,7 +395,7 @@ export const AdminDashboardPage = () => {
 
             {activeTab === 'analytics' && (
               <div className="space-y-6">
-                <h2 className="text-xl font-semibold text-gray-900">System Analytics</h2>
+                <h2 className="responsive-subheading text-gray-900">System Analytics</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="bg-white border border-gray-200 rounded-lg p-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">User Growth</h3>

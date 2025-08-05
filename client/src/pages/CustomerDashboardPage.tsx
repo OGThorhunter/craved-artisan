@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Link } from 'wouter';
 import { 
   ShoppingBag, 
@@ -205,28 +205,28 @@ export const CustomerDashboardPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="page-container bg-gray-50">
+      <div className="container-responsive py-8">
         {/* Header */}
         <div className="bg-white rounded-2xl shadow-sm p-6 mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold">Good morning, Casey 👋</h1>
+              <h1 className="responsive-heading">Good morning, Casey ðŸ‘‹</h1>
               <p className="text-sm text-brand-grey">
-                Your next pickup window is <strong>Friday 3–5 PM</strong> near <strong>ZIP 30248</strong>
+                Your next pickup window is <strong>Friday 3â€“5 PM</strong> near <strong>ZIP 30248</strong>
               </p>
               {/* TODO: Show "You've supported 6 local families this month" */}
-              {/* TODO: Show dynamic vendor spotlight or promo: "Top Seller This Week: Sweetwater Farms 🍓" */}
+              {/* TODO: Show dynamic vendor spotlight or promo: "Top Seller This Week: Sweetwater Farms ðŸ“" */}
             </div>
             <div className="flex items-center space-x-4">
               <Link href="/profile">
-                <button className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900">
+                <button className="flex items-center space-x-2 responsive-button text-gray-600 hover:text-gray-900">
                   <User className="w-5 h-5" />
                   <span>Profile</span>
                 </button>
               </Link>
               <Link href="/settings">
-                <button className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-900">
+                <button className="flex items-center space-x-2 responsive-button text-gray-600 hover:text-gray-900">
                   <Settings className="w-5 h-5" />
                   <span>Settings</span>
                 </button>
@@ -265,10 +265,10 @@ export const CustomerDashboardPage = () => {
             {activeTab === 'orders' && (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold text-gray-900">Order History</h2>
+                  <h2 className="responsive-subheading text-gray-900">Order History</h2>
                   <div className="flex items-center space-x-2">
                     <Link href="/dashboard/customer/orders">
-                      <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                      <button className="responsive-button bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
                         View All Orders
                       </button>
                     </Link>
@@ -297,7 +297,7 @@ export const CustomerDashboardPage = () => {
                           <h3 className="text-lg font-semibold text-gray-900">
                             Order #{order.orderNumber}
                           </h3>
-                          <p className="text-sm text-gray-500">Placed on {order.date}</p>
+                          <p className="responsive-text text-gray-500">Placed on {order.date}</p>
                         </div>
                         <div className="text-right">
                           <p className="text-lg font-semibold text-gray-900">${order.total}</p>
@@ -320,17 +320,17 @@ export const CustomerDashboardPage = () => {
                       </div>
 
                       <div className="mt-4 pt-4 border-t border-gray-200">
-                        <p className="text-sm text-gray-500">
+                        <p className="responsive-text text-gray-500">
                           Vendor: <span className="text-gray-900">{order.vendor}</span>
                         </p>
                       </div>
 
                       <div className="mt-4 flex space-x-2">
-                        <button className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
+                        <button className="responsive-button text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
                           View Details
                         </button>
                         {order.status === 'delivered' && (
-                          <button className="px-4 py-2 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700">
+                          <button className="responsive-button text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700">
                             Write Review
                           </button>
                         )}
@@ -343,7 +343,7 @@ export const CustomerDashboardPage = () => {
 
             {activeTab === 'favorites' && (
               <div className="space-y-6">
-                <h2 className="text-xl font-semibold text-gray-900">Favorite Products</h2>
+                <h2 className="responsive-subheading text-gray-900">Favorite Products</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {favorites.map((item) => (
                     <div key={item.id} className="border border-gray-200 rounded-lg overflow-hidden">
@@ -356,12 +356,12 @@ export const CustomerDashboardPage = () => {
                       </div>
                       <div className="p-4">
                         <h3 className="font-semibold text-gray-900 mb-1">{item.name}</h3>
-                        <p className="text-sm text-gray-500 mb-2">{item.vendor}</p>
+                        <p className="responsive-text text-gray-500 mb-2">{item.vendor}</p>
                         <div className="flex items-center justify-between">
                           <span className="text-lg font-semibold text-gray-900">${item.price}</span>
                           <div className="flex items-center">
                             <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                            <span className="text-sm text-gray-600 ml-1">{item.rating}</span>
+                            <span className="responsive-text text-gray-600 ml-1">{item.rating}</span>
                           </div>
                         </div>
                         <div className="mt-3 flex space-x-2">
@@ -384,8 +384,8 @@ export const CustomerDashboardPage = () => {
             {activeTab === 'addresses' && (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold text-gray-900">Shipping Addresses</h2>
-                  <button className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
+                  <h2 className="responsive-subheading text-gray-900">Shipping Addresses</h2>
+                  <button className="responsive-button bg-primary-600 text-white rounded-lg hover:bg-primary-700">
                     Add New Address
                   </button>
                 </div>
@@ -396,7 +396,7 @@ export const CustomerDashboardPage = () => {
                       <div className="flex items-start justify-between mb-4">
                         <div>
                           <h3 className="font-semibold text-gray-900">{address.name}</h3>
-                          <p className="text-sm text-gray-500 capitalize">{address.type} Address</p>
+                          <p className="responsive-text text-gray-500 capitalize">{address.type} Address</p>
                         </div>
                         {address.isDefault && (
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -405,7 +405,7 @@ export const CustomerDashboardPage = () => {
                         )}
                       </div>
 
-                      <div className="space-y-1 text-sm text-gray-600">
+                      <div className="space-y-1 responsive-text text-gray-600">
                         <p>{address.address}</p>
                         <p>{address.city}, {address.state} {address.zip}</p>
                       </div>
@@ -440,18 +440,18 @@ export const CustomerDashboardPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-brand-cream rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Available Credit</span>
+                <span className="responsive-text font-medium">Available Credit</span>
                 <Gift className="w-4 h-4 text-brand-green" />
               </div>
-              <p className="text-2xl font-bold text-brand-maroon">$24.50</p>
+              <p className="responsive-heading text-brand-maroon">$24.50</p>
               <p className="text-xs text-brand-grey">From referrals & rewards</p>
             </div>
             <div className="bg-brand-cream rounded-lg p-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Points Earned</span>
+                <span className="responsive-text font-medium">Points Earned</span>
                 <TrendingUp className="w-4 h-4 text-brand-green" />
               </div>
-              <p className="text-2xl font-bold text-brand-maroon">1,247</p>
+              <p className="responsive-heading text-brand-maroon">1,247</p>
               <p className="text-xs text-brand-grey">This month</p>
             </div>
             <div className="bg-brand-cream rounded-lg p-4">
@@ -516,16 +516,16 @@ export const CustomerDashboardPage = () => {
                   <p className="text-sm text-brand-grey">2 hours ago</p>
                 </div>
               </div>
-              <p className="text-sm mb-3">"What should we bake next week? Vote for your favorite! 🍞"</p>
+              <p className="text-sm mb-3">"What should we bake next week? Vote for your favorite! ðŸž"</p>
               <div className="space-y-2">
                 <button className="w-full text-left p-2 border border-gray-200 rounded hover:bg-gray-50 text-sm">
-                  🥖 Sourdough Bread (12 votes)
+                  ðŸ¥– Sourdough Bread (12 votes)
                 </button>
                 <button className="w-full text-left p-2 border border-gray-200 rounded hover:bg-gray-50 text-sm">
-                  🥨 Pretzels (8 votes)
+                  ðŸ¥¨ Pretzels (8 votes)
                 </button>
                 <button className="w-full text-left p-2 border border-gray-200 rounded hover:bg-gray-50 text-sm">
-                  🥐 Croissants (15 votes)
+                  ðŸ¥ Croissants (15 votes)
                 </button>
               </div>
             </div>

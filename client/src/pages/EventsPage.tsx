@@ -1,4 +1,4 @@
-
+﻿
 import { Link } from 'wouter';
 
 export const EventsPage = () => {
@@ -36,7 +36,7 @@ export const EventsPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="page-container bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm">
         <div className="max-w-6xl mx-auto px-6 py-12">
@@ -55,23 +55,23 @@ export const EventsPage = () => {
         {/* Filters */}
         <div className="flex flex-wrap items-center justify-between mb-8">
           <div className="flex space-x-2 mb-4 md:mb-0">
-            <button className="px-4 py-2 bg-primary-600 text-white rounded-lg text-sm font-medium">
+            <button className="responsive-button bg-primary-600 text-white rounded-lg responsive-text font-medium">
               All Events
             </button>
-            <button className="px-4 py-2 bg-white text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50">
+            <button className="responsive-button bg-white text-gray-700 rounded-lg responsive-text font-medium hover:bg-gray-50">
               Markets
             </button>
-            <button className="px-4 py-2 bg-white text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50">
+            <button className="responsive-button bg-white text-gray-700 rounded-lg responsive-text font-medium hover:bg-gray-50">
               Workshops
             </button>
-            <button className="px-4 py-2 bg-white text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50">
+            <button className="responsive-button bg-white text-gray-700 rounded-lg responsive-text font-medium hover:bg-gray-50">
               Networking
             </button>
           </div>
           
           <div className="flex items-center space-x-4">
             <select 
-              className="px-4 py-2 border border-gray-300 rounded-lg text-sm"
+              className="responsive-button border border-gray-300 rounded-lg text-sm"
               aria-label="Sort events by"
             >
               <option>Sort by Date</option>
@@ -92,12 +92,12 @@ export const EventsPage = () => {
                   <span className="px-3 py-1 bg-primary-100 text-primary-800 text-xs font-medium rounded-full">
                     {event.category}
                   </span>
-                  <span className="text-sm text-gray-500">
+                  <span className="responsive-text text-gray-500">
                     {new Date(event.date).toLocaleDateString()}
                   </span>
                 </div>
                 
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                <h3 className="responsive-subheading text-gray-900 mb-2">
                   {event.title}
                 </h3>
                 
@@ -106,13 +106,13 @@ export const EventsPage = () => {
                 </p>
                 
                 <div className="space-y-2 mb-4">
-                  <div className="flex items-center text-sm text-gray-500">
+                  <div className="flex items-center responsive-text text-gray-500">
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     {event.time}
                   </div>
-                  <div className="flex items-center text-sm text-gray-500">
+                  <div className="flex items-center responsive-text text-gray-500">
                     <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -127,7 +127,7 @@ export const EventsPage = () => {
                       View Details
                     </button>
                   </Link>
-                  <button className="px-4 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50">
+                  <button className="responsive-button border border-gray-300 rounded-lg text-sm hover:bg-gray-50">
                     Save
                   </button>
                 </div>

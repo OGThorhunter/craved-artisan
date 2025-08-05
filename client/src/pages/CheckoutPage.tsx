@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useMutation } from '@tanstack/react-query';
 import { useCart } from '../contexts/CartContext';
@@ -120,14 +120,14 @@ const CheckoutPage = () => {
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="page-container bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <ShoppingCart className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Your cart is empty</h2>
+          <h2 className="responsive-subheading text-gray-900 mb-2">Your cart is empty</h2>
           <p className="text-gray-600 mb-6">Add some products to your cart to continue</p>
           <button
             onClick={() => setLocation('/')}
-            className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            className="responsive-button bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
           >
             Continue Shopping
           </button>
@@ -137,8 +137,8 @@ const CheckoutPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="page-container bg-gray-50">
+      <div className="container-responsive py-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-4">
@@ -150,7 +150,7 @@ const CheckoutPage = () => {
               Continue Shopping
             </button>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">Checkout</h1>
+          <h1 className="responsive-heading text-gray-900">Checkout</h1>
           <p className="text-gray-600 mt-2">Complete your purchase</p>
         </div>
 
@@ -158,7 +158,7 @@ const CheckoutPage = () => {
           {/* Cart Items */}
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
+              <h2 className="responsive-subheading text-gray-900 mb-6 flex items-center gap-2">
                 <ShoppingCart className="h-6 w-6" />
                 Order Items ({items.length})
               </h2>
@@ -184,7 +184,7 @@ const CheckoutPage = () => {
                     {/* Product Details */}
                     <div className="flex-1 min-w-0">
                       <h3 className="font-medium text-gray-900 truncate">{item.product.name}</h3>
-                      <p className="text-sm text-gray-600">${item.product.price.toFixed(2)} each</p>
+                      <p className="responsive-text text-gray-600">${item.product.price.toFixed(2)} each</p>
                     </div>
 
                                          {/* Quantity Controls */}
@@ -231,7 +231,7 @@ const CheckoutPage = () => {
           {/* Order Summary */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-sm p-6 sticky top-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Order Summary</h2>
+              <h2 className="responsive-subheading text-gray-900 mb-6">Order Summary</h2>
               
               {/* Price Breakdown */}
               <div className="space-y-3 mb-6">
@@ -275,7 +275,7 @@ const CheckoutPage = () => {
                         <Truck className="h-4 w-4 text-gray-600" />
                         <span className="font-medium">Standard Shipping</span>
                       </div>
-                      <p className="text-sm text-gray-600">3-5 business days</p>
+                      <p className="responsive-text text-gray-600">3-5 business days</p>
                     </div>
                   </label>
                   
@@ -293,7 +293,7 @@ const CheckoutPage = () => {
                         <Package className="h-4 w-4 text-gray-600" />
                         <span className="font-medium">Local Pickup</span>
                       </div>
-                      <p className="text-sm text-gray-600">Same day pickup available</p>
+                      <p className="responsive-text text-gray-600">Same day pickup available</p>
                     </div>
                   </label>
                 </div>
@@ -308,7 +308,7 @@ const CheckoutPage = () => {
                     placeholder="Enter ZIP code for accurate delivery estimate"
                     value={customerZip}
                     onChange={(e) => setCustomerZip(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full responsive-button border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     maxLength={5}
                   />
                   <p className="text-xs text-gray-600 mt-1">
@@ -322,7 +322,7 @@ const CheckoutPage = () => {
                 <div className="mb-6 p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-2">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                    <span className="text-sm text-gray-600">Calculating fulfillment time...</span>
+                    <span className="responsive-text text-gray-600">Calculating fulfillment time...</span>
                   </div>
                 </div>
               )}
@@ -344,7 +344,7 @@ const CheckoutPage = () => {
                     {prediction.prepTime > 0 && (
                       <p className="text-xs mt-1 text-blue-600">
                         Prep time: {prediction.prepTime} min
-                        {prediction.shippingTime > 0 && ` • Shipping: ${prediction.shippingTime} hrs`}
+                        {prediction.shippingTime > 0 && ` â€¢ Shipping: ${prediction.shippingTime} hrs`}
                       </p>
                     )}
                   </div>

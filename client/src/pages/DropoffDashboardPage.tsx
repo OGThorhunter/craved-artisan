@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Link } from 'wouter';
 import { 
   Package, 
@@ -83,18 +83,18 @@ export const DropoffDashboardPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="page-container bg-gray-50">
+      <div className="container-responsive py-8">
         {/* Header */}
         <div className="bg-white rounded-2xl shadow-sm p-6 mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Dropoff Dashboard</h1>
+              <h1 className="responsive-heading text-gray-900">Dropoff Dashboard</h1>
               <p className="text-gray-600 mt-1">Manage product dropoffs and deliveries</p>
             </div>
             <div className="flex items-center space-x-4">
               <Link href="/dashboard/dropoff/schedule">
-                <button className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
+                <button className="responsive-button bg-primary-600 text-white rounded-lg hover:bg-primary-700">
                   Schedule Dropoff
                 </button>
               </Link>
@@ -110,8 +110,8 @@ export const DropoffDashboardPage = () => {
                 <Package className="w-6 h-6 text-blue-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Dropoffs</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalDropoffs}</p>
+                <p className="responsive-text font-medium text-gray-600">Total Dropoffs</p>
+                <p className="responsive-heading text-gray-900">{stats.totalDropoffs}</p>
               </div>
             </div>
           </div>
@@ -122,8 +122,8 @@ export const DropoffDashboardPage = () => {
                 <Clock className="w-6 h-6 text-yellow-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Pending</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.pendingDropoffs}</p>
+                <p className="responsive-text font-medium text-gray-600">Pending</p>
+                <p className="responsive-heading text-gray-900">{stats.pendingDropoffs}</p>
               </div>
             </div>
           </div>
@@ -134,8 +134,8 @@ export const DropoffDashboardPage = () => {
                 <CheckCircle className="w-6 h-6 text-green-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Completed</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.completedDropoffs}</p>
+                <p className="responsive-text font-medium text-gray-600">Completed</p>
+                <p className="responsive-heading text-gray-900">{stats.completedDropoffs}</p>
               </div>
             </div>
           </div>
@@ -146,8 +146,8 @@ export const DropoffDashboardPage = () => {
                 <DollarSign className="w-6 h-6 text-purple-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                <p className="text-2xl font-bold text-gray-900">${stats.totalRevenue.toLocaleString()}</p>
+                <p className="responsive-text font-medium text-gray-600">Total Revenue</p>
+                <p className="responsive-heading text-gray-900">${stats.totalRevenue.toLocaleString()}</p>
               </div>
             </div>
           </div>
@@ -158,8 +158,8 @@ export const DropoffDashboardPage = () => {
                 <CheckCircle className="w-6 h-6 text-yellow-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Average Rating</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.averageRating}</p>
+                <p className="responsive-text font-medium text-gray-600">Average Rating</p>
+                <p className="responsive-heading text-gray-900">{stats.averageRating}</p>
               </div>
             </div>
           </div>
@@ -170,8 +170,8 @@ export const DropoffDashboardPage = () => {
                 <MapPin className="w-6 h-6 text-indigo-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Active Locations</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.activeLocations}</p>
+                <p className="responsive-text font-medium text-gray-600">Active Locations</p>
+                <p className="responsive-heading text-gray-900">{stats.activeLocations}</p>
               </div>
             </div>
           </div>
@@ -209,9 +209,9 @@ export const DropoffDashboardPage = () => {
                 {/* Pending Dropoffs */}
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-semibold text-gray-900">Pending Dropoffs</h2>
+                    <h2 className="responsive-subheading text-gray-900">Pending Dropoffs</h2>
                     <Link href="/dashboard/dropoff/dropoffs">
-                      <button className="text-primary-600 hover:text-primary-700 text-sm font-medium">
+                      <button className="text-primary-600 hover:text-primary-700 responsive-text font-medium">
                         View All Dropoffs
                       </button>
                     </Link>
@@ -224,8 +224,8 @@ export const DropoffDashboardPage = () => {
                             <h3 className="text-lg font-semibold text-gray-900">
                               Dropoff #{dropoff.id}
                             </h3>
-                            <p className="text-sm text-gray-500">
-                              {dropoff.vendor} → {dropoff.customer}
+                            <p className="responsive-text text-gray-500">
+                              {dropoff.vendor} â†’ {dropoff.customer}
                             </p>
                           </div>
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(dropoff.status)}`}>
@@ -236,23 +236,23 @@ export const DropoffDashboardPage = () => {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                           <div className="flex items-center space-x-2">
                             <Package className="w-4 h-4 text-gray-400" />
-                            <span className="text-sm text-gray-600">{dropoff.items} items</span>
+                            <span className="responsive-text text-gray-600">{dropoff.items} items</span>
                           </div>
                           <div className="flex items-center space-x-2">
                             <MapPin className="w-4 h-4 text-gray-400" />
-                            <span className="text-sm text-gray-600">{dropoff.location}</span>
+                            <span className="responsive-text text-gray-600">{dropoff.location}</span>
                           </div>
                           <div className="flex items-center space-x-2">
                             <Clock className="w-4 h-4 text-gray-400" />
-                            <span className="text-sm text-gray-600">{dropoff.scheduledTime}</span>
+                            <span className="responsive-text text-gray-600">{dropoff.scheduledTime}</span>
                           </div>
                         </div>
 
                         <div className="flex space-x-2">
-                          <button className="px-4 py-2 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700">
+                          <button className="responsive-button text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700">
                             Start Dropoff
                           </button>
-                          <button className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
+                          <button className="responsive-button text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
                             View Details
                           </button>
                         </div>
@@ -263,7 +263,7 @@ export const DropoffDashboardPage = () => {
 
                 {/* Recent Dropoffs */}
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Recent Dropoffs</h2>
+                  <h2 className="responsive-subheading text-gray-900 mb-4">Recent Dropoffs</h2>
                   <div className="space-y-4">
                     {recentDropoffs.map((dropoff) => (
                       <div key={dropoff.id} className="border border-gray-200 rounded-lg p-6">
@@ -272,8 +272,8 @@ export const DropoffDashboardPage = () => {
                             <h3 className="text-lg font-semibold text-gray-900">
                               Dropoff #{dropoff.id}
                             </h3>
-                            <p className="text-sm text-gray-500">
-                              {dropoff.vendor} → {dropoff.customer}
+                            <p className="responsive-text text-gray-500">
+                              {dropoff.vendor} â†’ {dropoff.customer}
                             </p>
                           </div>
                           <div className="text-right">
@@ -298,15 +298,15 @@ export const DropoffDashboardPage = () => {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div className="flex items-center space-x-2">
                             <Package className="w-4 h-4 text-gray-400" />
-                            <span className="text-sm text-gray-600">{dropoff.items} items</span>
+                            <span className="responsive-text text-gray-600">{dropoff.items} items</span>
                           </div>
                           <div className="flex items-center space-x-2">
                             <MapPin className="w-4 h-4 text-gray-400" />
-                            <span className="text-sm text-gray-600">{dropoff.location}</span>
+                            <span className="responsive-text text-gray-600">{dropoff.location}</span>
                           </div>
                           <div className="flex items-center space-x-2">
                             <Clock className="w-4 h-4 text-gray-400" />
-                            <span className="text-sm text-gray-600">{dropoff.completedTime}</span>
+                            <span className="responsive-text text-gray-600">{dropoff.completedTime}</span>
                           </div>
                         </div>
                       </div>
@@ -319,7 +319,7 @@ export const DropoffDashboardPage = () => {
             {activeTab === 'dropoffs' && (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold text-gray-900">All Dropoffs</h2>
+                  <h2 className="responsive-subheading text-gray-900">All Dropoffs</h2>
                   <div className="flex items-center space-x-2">
                     <select className="px-3 py-2 border border-gray-300 rounded-lg text-sm" aria-label="Filter by status">
                       <option>All Status</option>
@@ -334,7 +334,7 @@ export const DropoffDashboardPage = () => {
                 <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
                   <div className="px-6 py-4 border-b border-gray-200">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-medium text-gray-900">Dropoff Management</h3>
+                      <h3 className="responsive-subheading text-gray-900">Dropoff Management</h3>
                       <div className="flex items-center space-x-2">
                         <input
                           type="text"
@@ -357,8 +357,8 @@ export const DropoffDashboardPage = () => {
             {activeTab === 'locations' && (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold text-gray-900">Dropoff Locations</h2>
-                  <button className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
+                  <h2 className="responsive-subheading text-gray-900">Dropoff Locations</h2>
+                  <button className="responsive-button bg-primary-600 text-white rounded-lg hover:bg-primary-700">
                     Add Location
                   </button>
                 </div>
@@ -369,7 +369,7 @@ export const DropoffDashboardPage = () => {
                       <div className="flex items-center justify-between mb-4">
                         <div>
                           <h3 className="text-lg font-semibold text-gray-900">{location.name}</h3>
-                          <p className="text-sm text-gray-500">{location.address}</p>
+                          <p className="responsive-text text-gray-500">{location.address}</p>
                         </div>
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                           location.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
@@ -381,15 +381,15 @@ export const DropoffDashboardPage = () => {
                       <div className="mb-4">
                         <div className="flex items-center space-x-2">
                           <Package className="w-4 h-4 text-gray-400" />
-                          <span className="text-sm text-gray-600">{location.activeDropoffs} active dropoffs</span>
+                          <span className="responsive-text text-gray-600">{location.activeDropoffs} active dropoffs</span>
                         </div>
                       </div>
 
                       <div className="flex space-x-2">
-                        <button className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
+                        <button className="responsive-button text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
                           View Details
                         </button>
-                        <button className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
+                        <button className="responsive-button text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
                           Edit Location
                         </button>
                       </div>
@@ -402,8 +402,8 @@ export const DropoffDashboardPage = () => {
             {activeTab === 'schedule' && (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold text-gray-900">Dropoff Schedule</h2>
-                  <button className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
+                  <h2 className="responsive-subheading text-gray-900">Dropoff Schedule</h2>
+                  <button className="responsive-button bg-primary-600 text-white rounded-lg hover:bg-primary-700">
                     Schedule New Dropoff
                   </button>
                 </div>
@@ -411,7 +411,7 @@ export const DropoffDashboardPage = () => {
                 <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
                   <div className="px-6 py-4 border-b border-gray-200">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-medium text-gray-900">Calendar View</h3>
+                      <h3 className="responsive-subheading text-gray-900">Calendar View</h3>
                       <div className="flex items-center space-x-2">
                         <select className="px-3 py-2 border border-gray-300 rounded-lg text-sm" aria-label="Filter by location">
                           <option>All Locations</option>

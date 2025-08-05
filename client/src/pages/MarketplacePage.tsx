@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { Link } from 'wouter';
@@ -252,42 +252,42 @@ export const MarketplacePage = () => {
       {
         id: 'baked-goods',
         name: 'Baked Goods',
-        icon: '🥖',
+        icon: 'ðŸ¥–',
         count: 45,
         subcategories: ['Bread', 'Pastries', 'Cookies', 'Cakes']
       },
       {
         id: 'produce',
         name: 'Produce',
-        icon: '🥬',
+        icon: 'ðŸ¥¬',
         count: 67,
         subcategories: ['Vegetables', 'Fruits', 'Herbs', 'Mushrooms']
       },
       {
         id: 'dairy',
         name: 'Dairy & Eggs',
-        icon: '🥛',
+        icon: 'ðŸ¥›',
         count: 23,
         subcategories: ['Milk', 'Cheese', 'Yogurt', 'Eggs']
       },
       {
         id: 'pantry',
         name: 'Pantry',
-        icon: '🍯',
+        icon: 'ðŸ¯',
         count: 34,
         subcategories: ['Sweeteners', 'Oils', 'Grains', 'Preserves']
       },
       {
         id: 'meat',
         name: 'Meat & Seafood',
-        icon: '🥩',
+        icon: 'ðŸ¥©',
         count: 28,
         subcategories: ['Beef', 'Pork', 'Chicken', 'Fish']
       },
       {
         id: 'home-body',
         name: 'Home & Body',
-        icon: '🧼',
+        icon: 'ðŸ§¼',
         count: 19,
         subcategories: ['Soap', 'Candles', 'Skincare', 'Cleaning']
       }
@@ -470,7 +470,7 @@ export const MarketplacePage = () => {
           <h3 className="font-semibold text-gray-900 line-clamp-2">{product.name}</h3>
         </div>
 
-        <p className="text-sm text-gray-600 mb-3 line-clamp-2">{product.description}</p>
+        <p className="responsive-text text-gray-600 mb-3 line-clamp-2">{product.description}</p>
 
         <div className="flex items-center mb-2">
           <div className="flex items-center mr-2">
@@ -484,7 +484,7 @@ export const MarketplacePage = () => {
             {product.vendor.name}
           </Link>
           {product.vendor.verified && (
-            <span className="ml-1 text-blue-500 text-xs">✓</span>
+            <span className="ml-1 text-blue-500 text-xs">âœ“</span>
           )}
           <span className="text-xs text-gray-500 ml-2 flex items-center">
             <MapPin className="w-3 h-3 mr-1" />
@@ -496,7 +496,7 @@ export const MarketplacePage = () => {
           <div className="flex items-center">
             <span className="text-lg font-bold text-brand-maroon">${product.price.toFixed(2)}</span>
             {product.originalPrice && (
-              <span className="text-sm text-gray-500 line-through ml-2">${product.originalPrice.toFixed(2)}</span>
+              <span className="responsive-text text-gray-500 line-through ml-2">${product.originalPrice.toFixed(2)}</span>
             )}
           </div>
           <span className={`text-xs px-2 py-1 rounded ${product.inStock ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
@@ -516,14 +516,14 @@ export const MarketplacePage = () => {
           <button
             onClick={() => addToCart(product.id)}
             disabled={!product.inStock}
-            className="flex-1 bg-brand-green text-white py-2 px-3 rounded text-sm font-medium hover:bg-brand-green/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            className="flex-1 bg-brand-green text-white py-2 px-3 rounded responsive-text font-medium hover:bg-brand-green/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
           >
             <ShoppingCart className="w-4 h-4 mr-1" />
             Add to Cart
           </button>
           <Link
             href={`/product/${product.id}`}
-            className="bg-gray-100 text-gray-700 py-2 px-3 rounded text-sm font-medium hover:bg-gray-200 transition-colors"
+            className="bg-gray-100 text-gray-700 py-2 px-3 rounded responsive-text font-medium hover:bg-gray-200 transition-colors"
           >
             View
           </Link>
@@ -572,15 +572,15 @@ export const MarketplacePage = () => {
           <div className="flex items-center mb-3">
             <div className="flex items-center mr-4">
               {renderStars(product.rating)}
-              <span className="text-sm text-gray-500 ml-1">({product.reviewCount})</span>
+              <span className="responsive-text text-gray-500 ml-1">({product.reviewCount})</span>
             </div>
             <Link href={`/vendor/${product.vendor.id}`} className="text-sm text-brand-green hover:underline">
               {product.vendor.name}
             </Link>
             {product.vendor.verified && (
-              <span className="ml-1 text-blue-500 text-xs">✓</span>
+              <span className="ml-1 text-blue-500 text-xs">âœ“</span>
             )}
-            <span className="text-sm text-gray-500 ml-4 flex items-center">
+            <span className="responsive-text text-gray-500 ml-4 flex items-center">
               <MapPin className="w-4 h-4 mr-1" />
               {product.vendor.location}
             </span>
@@ -591,7 +591,7 @@ export const MarketplacePage = () => {
               <div className="flex items-center">
                 <span className="text-xl font-bold text-brand-maroon">${product.price.toFixed(2)}</span>
                 {product.originalPrice && (
-                  <span className="text-sm text-gray-500 line-through ml-2">${product.originalPrice.toFixed(2)}</span>
+                  <span className="responsive-text text-gray-500 line-through ml-2">${product.originalPrice.toFixed(2)}</span>
                 )}
               </div>
               <span className={`text-sm px-2 py-1 rounded ${product.inStock ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
@@ -622,13 +622,13 @@ export const MarketplacePage = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="page-container bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="container-responsive py-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Marketplace</h1>
+              <h1 className="responsive-heading text-gray-900">Marketplace</h1>
               <p className="text-gray-600 mt-1">Discover local artisans and their handcrafted products</p>
             </div>
             <div className="flex items-center gap-4">
@@ -644,7 +644,7 @@ export const MarketplacePage = () => {
               </div>
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center gap-2 bg-brand-green text-white px-4 py-2 rounded-lg hover:bg-brand-green/80 transition-colors"
+                className="flex items-center gap-2 bg-brand-green text-white responsive-button rounded-lg hover:bg-brand-green/80 transition-colors"
               >
                 <Filter className="w-4 h-4" />
                 Filters
@@ -663,7 +663,7 @@ export const MarketplacePage = () => {
                     ? prev.categories.filter(c => c !== category.name)
                     : [...prev.categories, category.name]
                 }))}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${
+                className={`flex items-center gap-2 responsive-button rounded-lg whitespace-nowrap transition-colors ${
                   filters.categories.includes(category.name)
                     ? 'bg-brand-green text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -678,7 +678,7 @@ export const MarketplacePage = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="container-responsive py-6">
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Filters Sidebar */}
           <AnimatePresence>
@@ -972,7 +972,7 @@ export const MarketplacePage = () => {
                   <div className="text-gray-400 mb-4">
                     <Search className="w-16 h-16 mx-auto" />
                   </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
+                  <h3 className="responsive-subheading text-gray-900 mb-2">No products found</h3>
                   <p className="text-gray-600 mb-6">Try adjusting your search or filters to find what you're looking for.</p>
                   <button
                     onClick={() => {

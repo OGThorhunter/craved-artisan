@@ -82,20 +82,20 @@ const DashboardPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+    <div className="page-container bg-gray-50">
+      <div className="container-responsive py-6">
         {/* Header */}
-        <div className="px-4 py-6 sm:px-0">
-          <div className="flex justify-between items-center">
+        <div className="responsive-padding py-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-              <p className="mt-1 text-sm text-gray-600">
+              <h1 className="responsive-heading text-gray-900">Dashboard</h1>
+              <p className="mt-1 responsive-text text-gray-600">
                 Welcome back, {user.profile?.firstName || user.email}
               </p>
             </div>
             <button
               onClick={handleLogout}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              className="responsive-button inline-flex items-center border border-transparent font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
             >
               <LogOut className="h-4 w-4 mr-2" />
               Logout
@@ -104,21 +104,21 @@ const DashboardPage: React.FC = () => {
         </div>
 
         {/* User Info Card */}
-        <div className="px-4 py-6 sm:px-0">
-          <div className="bg-white overflow-hidden shadow rounded-lg">
-            <div className="px-4 py-5 sm:p-6">
-              <div className="flex items-center">
+        <div className="responsive-padding py-6">
+          <div className="responsive-card">
+            <div className="dashboard-card-responsive">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 <div className="flex-shrink-0">
                   <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
                     {getRoleIcon(user.role)}
                   </div>
                 </div>
-                <div className="ml-4">
-                  <h3 className="text-lg font-medium text-gray-900">
+                <div className="sm:ml-4">
+                  <h3 className="responsive-subheading text-gray-900">
                     {user.profile?.firstName} {user.profile?.lastName}
                   </h3>
-                  <p className="text-sm text-gray-500">{user.email}</p>
-                  <p className="text-sm text-gray-500">
+                  <p className="responsive-text text-gray-500">{user.email}</p>
+                  <p className="responsive-text text-gray-500">
                     Role: {getRoleDisplayName(user.role)}
                   </p>
                 </div>
@@ -128,22 +128,22 @@ const DashboardPage: React.FC = () => {
         </div>
 
         {/* Navigation Cards */}
-        <div className="px-4 py-6 sm:px-0">
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="responsive-padding py-6">
+          <div className="dashboard-responsive">
             {/* Role-specific Dashboard */}
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
-                <div className="flex items-center">
+            <div className="responsive-card">
+              <div className="dashboard-card-responsive">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                   <div className="flex-shrink-0">
                     <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
                       {getRoleIcon(user.role)}
                     </div>
                   </div>
-                  <div className="ml-4">
-                    <h3 className="text-lg font-medium text-gray-900">
+                  <div className="sm:ml-4">
+                    <h3 className="responsive-subheading text-gray-900">
                       {getRoleDisplayName(user.role)} Dashboard
                     </h3>
-                    <p className="text-sm text-gray-500">
+                    <p className="responsive-text text-gray-500">
                       Access your role-specific features
                     </p>
                   </div>
@@ -151,7 +151,7 @@ const DashboardPage: React.FC = () => {
                 <div className="mt-4">
                   <button
                     onClick={() => setLocation(getDashboardLink())}
-                    className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    className="responsive-button w-full inline-flex justify-center items-center border border-transparent font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                   >
                     Go to Dashboard
                   </button>
@@ -160,17 +160,17 @@ const DashboardPage: React.FC = () => {
             </div>
 
             {/* Profile Settings */}
-            <div className="bg-white overflow-hidden shadow rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
-                <div className="flex items-center">
+            <div className="responsive-card">
+              <div className="dashboard-card-responsive">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                   <div className="flex-shrink-0">
                     <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
                       <User className="h-5 w-5 text-green-600" />
                     </div>
                   </div>
-                  <div className="ml-4">
-                    <h3 className="text-lg font-medium text-gray-900">Profile</h3>
-                    <p className="text-sm text-gray-500">
+                  <div className="sm:ml-4">
+                    <h3 className="responsive-subheading text-gray-900">Profile</h3>
+                    <p className="responsive-text text-gray-500">
                       Manage your account settings
                     </p>
                   </div>
@@ -178,7 +178,7 @@ const DashboardPage: React.FC = () => {
                 <div className="mt-4">
                   <button
                     onClick={() => setLocation('/profile')}
-                    className="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    className="responsive-button w-full inline-flex justify-center items-center border border-gray-300 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                   >
                     Edit Profile
                   </button>
@@ -188,17 +188,17 @@ const DashboardPage: React.FC = () => {
 
             {/* Admin Panel (if admin) */}
             {user.role === 'ADMIN' && (
-              <div className="bg-white overflow-hidden shadow rounded-lg">
-                <div className="px-4 py-5 sm:p-6">
-                  <div className="flex items-center">
+              <div className="responsive-card">
+                <div className="dashboard-card-responsive">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                     <div className="flex-shrink-0">
                       <div className="h-8 w-8 rounded-full bg-red-100 flex items-center justify-center">
                         <Users className="h-5 w-5 text-red-600" />
                       </div>
                     </div>
-                    <div className="ml-4">
-                      <h3 className="text-lg font-medium text-gray-900">Admin Panel</h3>
-                      <p className="text-sm text-gray-500">
+                    <div className="sm:ml-4">
+                      <h3 className="responsive-subheading text-gray-900">Admin Panel</h3>
+                      <p className="responsive-text text-gray-500">
                         Manage users and system settings
                       </p>
                     </div>
@@ -206,7 +206,7 @@ const DashboardPage: React.FC = () => {
                   <div className="mt-4">
                     <button
                       onClick={() => setLocation('/dashboard/admin')}
-                      className="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                      className="responsive-button w-full inline-flex justify-center items-center border border-transparent font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                     >
                       Access Admin Panel
                     </button>

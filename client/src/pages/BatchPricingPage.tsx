@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { 
@@ -109,25 +109,25 @@ const BatchPricingPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="page-container bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Batch Pricing Management</h1>
+              <h1 className="responsive-heading text-gray-900">Batch Pricing Management</h1>
               <p className="text-gray-600 mt-2">
                 Update pricing across your inventory based on target margins and ingredient cost changes
               </p>
             </div>
             <div className="flex items-center space-x-4">
               <div className="text-right">
-                <p className="text-sm text-gray-500">Target Margin</p>
+                <p className="responsive-text text-gray-500">Target Margin</p>
                 <p className="text-lg font-semibold text-gray-900">{targetMargin}%</p>
               </div>
               <button
                 onClick={() => setShowPreview(!showPreview)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                className="bg-blue-600 text-white responsive-button rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
               >
                 <Settings className="w-4 h-4" />
                 Configure
@@ -139,10 +139,10 @@ const BatchPricingPage: React.FC = () => {
         {/* Configuration Panel */}
         {showPreview && (
           <div className="bg-white rounded-2xl shadow-sm p-6 mb-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Pricing Configuration</h2>
+            <h2 className="responsive-subheading text-gray-900 mb-4">Pricing Configuration</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block responsive-text font-medium text-gray-700 mb-2">
                   Target Margin (%)
                 </label>
                 <input
@@ -156,12 +156,12 @@ const BatchPricingPage: React.FC = () => {
                   aria-label="Target margin percentage"
                   placeholder="35"
                 />
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="responsive-text text-gray-500 mt-1">
                   Set your desired profit margin percentage for all products
                 </p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block responsive-text font-medium text-gray-700 mb-2">
                   Update Scope
                 </label>
                 <div className="space-y-2">
@@ -203,8 +203,8 @@ const BatchPricingPage: React.FC = () => {
                 <Package className="w-6 h-6 text-blue-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Products</p>
-                <p className="text-2xl font-bold text-gray-900">{lowMarginData?.totalProducts || 0}</p>
+                <p className="responsive-text font-medium text-gray-600">Total Products</p>
+                <p className="responsive-heading text-gray-900">{lowMarginData?.totalProducts || 0}</p>
               </div>
             </div>
           </div>
@@ -215,8 +215,8 @@ const BatchPricingPage: React.FC = () => {
                 <AlertTriangle className="w-6 h-6 text-red-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Low Margin Items</p>
-                <p className="text-2xl font-bold text-red-600">{lowMarginData?.count || 0}</p>
+                <p className="responsive-text font-medium text-gray-600">Low Margin Items</p>
+                <p className="responsive-heading text-red-600">{lowMarginData?.count || 0}</p>
               </div>
             </div>
           </div>
@@ -227,8 +227,8 @@ const BatchPricingPage: React.FC = () => {
                 <TrendingDown className="w-6 h-6 text-orange-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Price Alerts</p>
-                <p className="text-2xl font-bold text-orange-600">{priceAlertsData?.count || 0}</p>
+                <p className="responsive-text font-medium text-gray-600">Price Alerts</p>
+                <p className="responsive-heading text-orange-600">{priceAlertsData?.count || 0}</p>
               </div>
             </div>
           </div>
@@ -239,8 +239,8 @@ const BatchPricingPage: React.FC = () => {
                 <Target className="w-6 h-6 text-green-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Target Margin</p>
-                <p className="text-2xl font-bold text-green-600">{targetMargin}%</p>
+                <p className="responsive-text font-medium text-gray-600">Target Margin</p>
+                <p className="responsive-heading text-green-600">{targetMargin}%</p>
               </div>
             </div>
           </div>
@@ -250,19 +250,19 @@ const BatchPricingPage: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-sm p-6 mb-8">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">Low Margin Products</h2>
+              <h2 className="responsive-subheading text-gray-900">Low Margin Products</h2>
               <p className="text-gray-600 mt-1">Products with margins below 35% that need attention</p>
             </div>
             <div className="flex items-center space-x-3">
               <button
                 onClick={handleSelectAll}
-                className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                className="text-blue-600 hover:text-blue-700 responsive-text font-medium"
               >
                 Select All
               </button>
               <button
                 onClick={handleDeselectAll}
-                className="text-gray-600 hover:text-gray-700 text-sm font-medium"
+                className="text-gray-600 hover:text-gray-700 responsive-text font-medium"
               >
                 Deselect All
               </button>
@@ -290,8 +290,8 @@ const BatchPricingPage: React.FC = () => {
                      />
                     <div>
                       <h3 className="font-medium text-gray-900">{product.name}</h3>
-                      <p className="text-sm text-gray-600">
-                        Current Price: {formatPrice(product.price)} • 
+                      <p className="responsive-text text-gray-600">
+                        Current Price: {formatPrice(product.price)} â€¢ 
                         Unit Cost: {formatPrice(product.marginAnalysis.unitCost)}
                       </p>
                     </div>
@@ -303,13 +303,13 @@ const BatchPricingPage: React.FC = () => {
                       }`}>
                         {product.marginAnalysis.currentMargin}%
                       </p>
-                      <p className="text-sm text-gray-500">Current Margin</p>
+                      <p className="responsive-text text-gray-500">Current Margin</p>
                     </div>
                     <div className="text-right">
                       <p className="text-lg font-semibold text-blue-600">
                         {formatPrice((product.marginAnalysis.unitCost / (1 - targetMargin / 100)))}
                       </p>
-                      <p className="text-sm text-gray-500">Suggested Price</p>
+                      <p className="responsive-text text-gray-500">Suggested Price</p>
                     </div>
                   </div>
                 </div>
@@ -318,7 +318,7 @@ const BatchPricingPage: React.FC = () => {
           ) : (
             <div className="text-center py-12">
               <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No Low Margin Products</h3>
+              <h3 className="responsive-subheading text-gray-900 mb-2">No Low Margin Products</h3>
               <p className="text-gray-600">All your products have healthy profit margins!</p>
             </div>
           )}
@@ -327,19 +327,19 @@ const BatchPricingPage: React.FC = () => {
         {/* Price Alerts */}
         {priceAlertsData?.alerts?.length > 0 && (
           <div className="bg-white rounded-2xl shadow-sm p-6 mb-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Ingredient Price Alerts</h2>
+            <h2 className="responsive-subheading text-gray-900 mb-4">Ingredient Price Alerts</h2>
             <div className="space-y-4">
               {priceAlertsData.alerts.map((alert: any, index: number) => (
                 <div key={index} className="flex items-center justify-between p-4 bg-orange-50 rounded-lg border border-orange-200">
                   <div>
                     <h3 className="font-medium text-gray-900">{alert.ingredientName}</h3>
-                    <p className="text-sm text-gray-600">
-                      Used in: {alert.productName} • 
+                    <p className="responsive-text text-gray-600">
+                      Used in: {alert.productName} â€¢ 
                       Price increase: +{alert.priceIncrease}%
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-medium text-orange-600">
+                    <p className="responsive-text font-medium text-orange-600">
                       ${alert.currentCost} (was ${alert.previousCost})
                     </p>
                     <p className="text-xs text-gray-500">
@@ -356,7 +356,7 @@ const BatchPricingPage: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-sm p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">Batch Update Actions</h2>
+              <h2 className="responsive-subheading text-gray-900">Batch Update Actions</h2>
               <p className="text-gray-600 mt-1">
                 {selectedProducts.length > 0 
                   ? `Update ${selectedProducts.length} selected products to ${targetMargin}% margin`

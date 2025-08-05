@@ -187,9 +187,9 @@ export default function Home() {
   }, [events.length]);
 
   return (
-    <div className="min-h-screen overflow-y-scroll scroll-smooth snap-y snap-mandatory">
+    <div className="min-h-screen overflow-y-auto scroll-smooth snap-y snap-mandatory">
              {/* Section 1: Hero */}
-               <section className="snap-start h-screen w-full relative overflow-hidden">
+               <section className="snap-start min-h-screen w-full relative overflow-hidden flex flex-col">
           <img
             src="/images/Banner1.1-jcN30aow.png"
             alt="Craved Artisan Hero"
@@ -197,89 +197,89 @@ export default function Home() {
           />
           <div className="absolute inset-0 bg-black/20" />
           
-          {/* Logo at top center */}
-          <div className="absolute top-24 left-1/2 transform -translate-x-1/2 z-20">
-            <img
-              src="/images/logonobg.png"
-              alt="Craved Artisan Logo"
-              className="h-64 md:h-80 lg:h-96 w-auto drop-shadow-lg"
-            />
-          </div>
+                                {/* Logo at top center */}
+            <div className="absolute top-16 sm:top-20 md:top-24 lg:top-28 left-1/2 transform -translate-x-1/2 z-20">
+              <img
+                src="/images/logonobg.png"
+                alt="Craved Artisan Logo"
+                className="h-20 sm:h-24 md:h-32 lg:h-40 xl:h-48 w-auto drop-shadow-lg"
+              />
+            </div>
           
-          <div className="relative z-10 flex flex-col justify-center items-center text-center px-4 h-full">
-           <motion.div
-             className="max-w-4xl mx-auto"
-             initial={{ opacity: 0, y: 20 }}
-             animate={{ opacity: 1, y: 0 }}
-           >
-             <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4 drop-shadow-lg">
-               Welcome to Craved Artisan — a new kind of marketplace.
-             </h1>
-             <p className="text-white/90 mb-6 text-lg drop-shadow">We're connecting farmers, bakers, makers, and neighbors through a local-first platform built for transparency, trust, and real human connection.</p>
-             <div className="flex gap-4 justify-center">
-               <Link
-                 href="/join"
-                 onClick={() => storeCTA('join')}
-                 className="bg-brand-maroon text-white px-6 py-2 rounded-lg hover:bg-[#681b24] transition shadow"
-               >
-                 Join the Movement
-               </Link>
-                               <Link
-                  href="/products"
-                  onClick={() => storeCTA('marketplace')}
-                  className="bg-white/20 backdrop-blur-sm text-white px-6 py-2 rounded-lg hover:bg-white/30 transition border border-white/30"
+                                                                 <div className="relative z-10 flex flex-col justify-center items-center text-center px-4 flex-1 py-12 sm:py-16 md:py-20">
+            <motion.div
+              className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+                             <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-8 sm:mb-10 drop-shadow-lg">
+                 Welcome to Craved Artisan — a new kind of marketplace.
+               </h1>
+               <p className="text-white/90 mb-10 sm:mb-12 text-sm sm:text-base md:text-lg drop-shadow">We're connecting farmers, bakers, makers, and neighbors through a local-first platform built for transparency, trust, and real human connection.</p>
+                            <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center w-full sm:w-auto mt-6 sm:mt-8">
+                <Link
+                  href="/join"
+                  onClick={() => storeCTA('join')}
+                  className="bg-brand-maroon text-white px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base rounded-lg hover:bg-[#681b24] transition shadow w-full sm:w-auto text-center font-medium"
                 >
-                  View Marketplace
+                  Join the Movement
                 </Link>
-                           </div>
+                                <Link
+                   href="/products"
+                   onClick={() => storeCTA('marketplace')}
+                   className="bg-white/20 backdrop-blur-sm text-white px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base rounded-lg hover:bg-white/30 transition border border-white/30 w-full sm:w-auto text-center font-medium"
+                 >
+                   View Marketplace
+                 </Link>
+                            </div>
             </motion.div>
             
                                        {/* Customer Review Widget */}
-              <motion.div
-                className="absolute left-4 right-4 bottom-20 md:bottom-24 lg:bottom-32"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5, duration: 0.5 }}
-              >
-                <div className="bg-white/15 backdrop-blur-lg border border-white/30 rounded-2xl p-6 md:p-8 text-white shadow-2xl">
-                  {/* Header with rating and review count */}
-                  <div className="flex items-center justify-between mb-4">
+                                                           <motion.div
+                  className="absolute left-4 right-4 bottom-4 sm:bottom-6 md:bottom-8 lg:bottom-12"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5, duration: 0.5 }}
+                >
+                                   <div className="bg-white/15 backdrop-blur-lg border border-white/30 rounded-2xl p-3 sm:p-4 md:p-6 lg:p-8 text-white shadow-2xl">
+                                     {/* Header with rating and review count */}
+                                       <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-1">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} className="h-5 w-5 md:h-6 md:w-6 fill-yellow-400 text-yellow-400" />
-                        ))}
-                      </div>
+                                             <div className="flex items-center gap-1">
+                         {[...Array(5)].map((_, i) => (
+                           <Star key={i} className="h-4 w-4 md:h-5 md:w-5 fill-yellow-400 text-yellow-400" />
+                         ))}
+                       </div>
                       <div className="flex flex-col">
-                        <span className="text-lg md:text-xl font-bold">5.0</span>
-                        <span className="text-xs md:text-sm opacity-75">Based on 1,247 reviews</span>
+                                                 <span className="text-base md:text-lg font-bold">5.0</span>
+                         <span className="text-xs opacity-75">Based on 1,247 reviews</span>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-xs md:text-sm opacity-75">Featured Review</div>
-                      <div className="text-xs opacity-60">Updated daily</div>
-                    </div>
+                                         <div className="text-right">
+                       <div className="text-xs opacity-75">Featured Review</div>
+                       <div className="text-xs opacity-60">Updated daily</div>
+                     </div>
                   </div>
                   
-                  {/* Review content */}
-                  <div className="mb-4">
-                    <p className="text-base md:text-lg italic leading-relaxed mb-3">"{mockReviews[currentReview].text}"</p>
+                                     {/* Review content */}
+                   <div className="mb-4">
+                                         <p className="text-sm md:text-base italic leading-relaxed mb-3">"{mockReviews[currentReview].text}"</p>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 md:w-10 md:h-10 bg-white/20 rounded-full flex items-center justify-center">
-                          <span className="text-sm md:text-base font-semibold">
-                            {mockReviews[currentReview].name.charAt(0)}
-                          </span>
-                        </div>
-                        <div>
-                          <div className="font-medium text-sm md:text-base">{mockReviews[currentReview].name}</div>
-                          <div className="text-xs md:text-sm opacity-75">Verified Customer</div>
-                        </div>
+                                               <div className="w-6 h-6 md:w-8 md:h-8 bg-white/20 rounded-full flex items-center justify-center">
+                         <span className="text-xs md:text-sm font-semibold">
+                           {mockReviews[currentReview].name.charAt(0)}
+                         </span>
+                       </div>
+                                                 <div>
+                           <div className="font-medium text-xs md:text-sm">{mockReviews[currentReview].name}</div>
+                           <div className="text-xs opacity-75">Verified Customer</div>
+                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-xs md:text-sm opacity-75">{mockReviews[currentReview].time}</div>
-                        <div className="text-xs opacity-60">Local Community</div>
-                      </div>
+                                             <div className="text-right">
+                         <div className="text-xs opacity-75">{mockReviews[currentReview].time}</div>
+                         <div className="text-xs opacity-60">Local Community</div>
+                       </div>
                     </div>
                   </div>
                   
@@ -292,14 +292,14 @@ export default function Home() {
                 </div>
               </motion.div>
           </div>
-          <ArrowDown className="absolute bottom-4 left-1/2 transform -translate-x-1/2 animate-bounce text-white" />
+                     <ArrowDown className="absolute bottom-1 sm:bottom-2 left-1/2 transform -translate-x-1/2 animate-bounce text-white" />
        </section>
 
              {/* Section 2: Local Buzz */}
-       <section
-         className="relative snap-start h-screen w-full bg-cover bg-center px-6 py-10 flex flex-col justify-center items-center text-center"
-         style={{ backgroundImage: `url('/images/bepartofit_1750623784608.png')` }}
-       >
+               <section
+          className="relative snap-start min-h-screen w-full bg-cover bg-center px-4 sm:px-6 py-8 sm:py-10 flex flex-col justify-center items-center text-center"
+          style={{ backgroundImage: `url('/images/bepartofit_1750623784608.png')` }}
+        >
          <div className="absolute inset-0 bg-[#F7F2EC]/50 backdrop-blur-sm" />
          <motion.div
            className="relative z-10 max-w-6xl w-full"
@@ -538,14 +538,14 @@ export default function Home() {
         </section>
 
                            {/* Section 3: Who We Are */}
-        <section className="snap-start h-screen w-full relative overflow-hidden">
+                 <section className="snap-start min-h-screen w-full relative overflow-hidden flex flex-col">
                     <img
              src="/images/Untitled design (9)_1750654286460.png"
              alt="Who We Are"
              className="absolute inset-0 w-full h-full object-cover"
            />
           <div className="absolute inset-0 bg-black/30" />
-          <div className="relative z-10 flex flex-col justify-center items-center text-center px-4 h-full">
+                     <div className="relative z-10 flex flex-col justify-center items-center text-center px-4 flex-1">
             <motion.div
               className="max-w-4xl mx-auto"
               initial={{ opacity: 0, y: 20 }}
@@ -597,8 +597,8 @@ export default function Home() {
         </section>
 
                      {/* Section 4: Join Us Cards */}
-        <section 
-          className="snap-start h-screen w-full bg-brand-cream px-6 py-12 flex flex-col justify-center items-center relative"
+                 <section 
+           className="snap-start min-h-screen w-full bg-brand-cream px-4 sm:px-6 py-8 sm:py-12 flex flex-col justify-center items-center relative"
           style={{ 
             backgroundImage: `url('/images/Banner5.png')`,
             backgroundSize: 'cover',

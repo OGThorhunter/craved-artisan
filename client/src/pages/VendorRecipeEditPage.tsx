@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm, Controller } from 'react-hook-form';
@@ -240,7 +240,7 @@ const VendorRecipeEditPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
+      <div className="page-container bg-gray-50 p-6">
         <div className="max-w-7xl mx-auto">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
@@ -256,12 +256,12 @@ const VendorRecipeEditPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
+      <div className="page-container bg-gray-50 p-6">
         <div className="max-w-7xl mx-auto">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6">
             <div className="flex items-center">
               <AlertTriangle className="h-6 w-6 text-red-400 mr-3" />
-              <h3 className="text-lg font-medium text-red-800">Error Loading Recipe</h3>
+              <h3 className="responsive-subheading text-red-800">Error Loading Recipe</h3>
             </div>
             <p className="mt-2 text-red-700">Failed to load recipe data. Please try again.</p>
           </div>
@@ -271,7 +271,7 @@ const VendorRecipeEditPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="page-container bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
@@ -282,7 +282,7 @@ const VendorRecipeEditPage: React.FC = () => {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Recipe
           </button>
-          <h1 className="text-3xl font-bold text-gray-900">Edit Recipe</h1>
+          <h1 className="responsive-heading text-gray-900">Edit Recipe</h1>
           <p className="text-gray-600 mt-2">
             Update recipe details and ingredients
           </p>
@@ -297,7 +297,7 @@ const VendorRecipeEditPage: React.FC = () => {
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 {/* Name */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block responsive-text font-medium text-gray-700 mb-1">
                     Recipe Name *
                   </label>
                   <Controller
@@ -320,7 +320,7 @@ const VendorRecipeEditPage: React.FC = () => {
 
                 {/* Description */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block responsive-text font-medium text-gray-700 mb-1">
                     Description
                   </label>
                   <Controller
@@ -340,7 +340,7 @@ const VendorRecipeEditPage: React.FC = () => {
                 {/* Yield */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block responsive-text font-medium text-gray-700 mb-1">
                       Yield *
                     </label>
                     <Controller
@@ -361,7 +361,7 @@ const VendorRecipeEditPage: React.FC = () => {
                     )}
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block responsive-text font-medium text-gray-700 mb-1">
                       Unit *
                     </label>
                     <Controller
@@ -386,7 +386,7 @@ const VendorRecipeEditPage: React.FC = () => {
                 {/* Timing */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block responsive-text font-medium text-gray-700 mb-1">
                       Prep Time (minutes)
                     </label>
                     <Controller
@@ -403,7 +403,7 @@ const VendorRecipeEditPage: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block responsive-text font-medium text-gray-700 mb-1">
                       Cook Time (minutes)
                     </label>
                     <Controller
@@ -423,7 +423,7 @@ const VendorRecipeEditPage: React.FC = () => {
 
                 {/* Difficulty */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block responsive-text font-medium text-gray-700 mb-1">
                     Difficulty
                   </label>
                   <Controller
@@ -445,7 +445,7 @@ const VendorRecipeEditPage: React.FC = () => {
 
                 {/* Linked Product */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block responsive-text font-medium text-gray-700 mb-1">
                     Linked Product
                   </label>
                   <Controller
@@ -469,7 +469,7 @@ const VendorRecipeEditPage: React.FC = () => {
 
                 {/* Instructions */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block responsive-text font-medium text-gray-700 mb-1">
                     Instructions
                   </label>
                   <Controller
@@ -536,7 +536,7 @@ const VendorRecipeEditPage: React.FC = () => {
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                       {/* Ingredient Selection */}
                       <div className="md:col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block responsive-text font-medium text-gray-700 mb-1">
                           Ingredient
                         </label>
                         <select
@@ -555,7 +555,7 @@ const VendorRecipeEditPage: React.FC = () => {
 
                       {/* Quantity */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block responsive-text font-medium text-gray-700 mb-1">
                           Quantity
                         </label>
                         <input
@@ -570,7 +570,7 @@ const VendorRecipeEditPage: React.FC = () => {
 
                       {/* Unit */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block responsive-text font-medium text-gray-700 mb-1">
                           Unit
                         </label>
                         <input
@@ -584,7 +584,7 @@ const VendorRecipeEditPage: React.FC = () => {
 
                     {/* Notes */}
                     <div className="mt-3">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block responsive-text font-medium text-gray-700 mb-1">
                         Notes
                       </label>
                       <input

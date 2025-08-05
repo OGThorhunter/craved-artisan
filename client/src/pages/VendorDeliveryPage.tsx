@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useLocation } from 'wouter';
 import { 
@@ -104,7 +104,7 @@ const VendorDeliveryPage: React.FC = () => {
         // In a real app, you would upload to a cloud storage service
         // For now, we'll create a mock URL
         photoUrl = `https://example.com/delivery-photos/${orderId}-${Date.now()}.jpg`;
-        console.log('📸 Photo uploaded:', photoUrl);
+        console.log('ðŸ“¸ Photo uploaded:', photoUrl);
       }
 
       const res = await fetch(`/api/orders/${orderId}/confirm-delivery`, {
@@ -250,7 +250,7 @@ const VendorDeliveryPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="page-container bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b sticky top-0 z-10">
         <div className="p-4">
@@ -265,10 +265,10 @@ const VendorDeliveryPage: React.FC = () => {
             </button>
             <div className="flex-1">
               <h1 className="text-lg font-bold text-gray-900">Delivery Route</h1>
-              <p className="text-sm text-gray-600">Batch {batch.batchId}</p>
+              <p className="responsive-text text-gray-600">Batch {batch.batchId}</p>
             </div>
             <div className="text-right">
-              <div className="text-sm font-medium text-gray-900">
+              <div className="responsive-text font-medium text-gray-900">
                 {batch.summary.deliveredOrders}/{batch.summary.totalOrders}
               </div>
               <div className="text-xs text-gray-500">Completed</div>
@@ -292,8 +292,8 @@ const VendorDeliveryPage: React.FC = () => {
         <div className="flex items-center gap-3">
           <Truck className="h-5 w-5 text-blue-600" />
           <div className="flex-1">
-            <p className="text-sm font-medium text-blue-900">{batch.driverInfo.assignedDriver}</p>
-            <p className="text-xs text-blue-700">Vehicle: {batch.driverInfo.vehicleId} • Route: {batch.driverInfo.routeNumber}</p>
+            <p className="responsive-text font-medium text-blue-900">{batch.driverInfo.assignedDriver}</p>
+            <p className="text-xs text-blue-700">Vehicle: {batch.driverInfo.vehicleId} â€¢ Route: {batch.driverInfo.routeNumber}</p>
           </div>
         </div>
       </div>
@@ -304,14 +304,14 @@ const VendorDeliveryPage: React.FC = () => {
           <div className="flex items-center gap-3">
             <Route className="h-5 w-5 text-green-600" />
             <div>
-              <p className="text-sm font-medium text-gray-900">Route Optimization</p>
+              <p className="responsive-text font-medium text-gray-900">Route Optimization</p>
               <p className="text-xs text-gray-600">Optimize delivery order for efficiency</p>
             </div>
           </div>
           <button
             onClick={handleRouteOptimization}
             disabled={optimizeRouteMutation.isPending}
-            className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg responsive-text font-medium transition-colors ${
               optimizeRoute
                 ? 'bg-green-100 text-green-700 hover:bg-green-200'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -379,7 +379,7 @@ const VendorDeliveryPage: React.FC = () => {
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
                       <h3 className="text-lg font-bold text-gray-900">{order.customerName}</h3>
-                      <p className="text-sm text-gray-600">Order #{order.orderNumber}</p>
+                      <p className="responsive-text text-gray-600">Order #{order.orderNumber}</p>
                     </div>
                     {order.deliveredAt && (
                       <div className="flex items-center gap-1 text-green-600">
@@ -392,7 +392,7 @@ const VendorDeliveryPage: React.FC = () => {
                   {/* Address */}
                   <div className="mb-3">
                     <p className="text-sm text-gray-700">{order.shippingAddress}</p>
-                    <p className="text-sm text-gray-600">{order.shippingCity}, {order.shippingState} {order.shippingZip}</p>
+                    <p className="responsive-text text-gray-600">{order.shippingCity}, {order.shippingState} {order.shippingZip}</p>
                   </div>
 
                   {/* Contact Info */}
@@ -419,15 +419,15 @@ const VendorDeliveryPage: React.FC = () => {
                   <div className="mb-3">
                     <div className="flex items-center gap-2 mb-2">
                       <Package className="h-4 w-4 text-gray-500" />
-                      <span className="text-sm font-medium text-gray-700">
+                      <span className="responsive-text font-medium text-gray-700">
                         {order.items.reduce((sum, item) => sum + item.quantity, 0)} items
                       </span>
                     </div>
-                    <ul className="text-sm text-gray-600 space-y-1">
+                    <ul className="responsive-text text-gray-600 space-y-1">
                       {order.items.map((item) => (
                         <li key={item.id} className="flex items-center gap-2">
                           <span className="w-2 h-2 bg-gray-400 rounded-full"></span>
-                          {item.productName} × {item.quantity}
+                          {item.productName} Ã— {item.quantity}
                         </li>
                       ))}
                     </ul>
@@ -435,7 +435,7 @@ const VendorDeliveryPage: React.FC = () => {
 
                   {/* Order Total */}
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm text-gray-600">Total:</span>
+                    <span className="responsive-text text-gray-600">Total:</span>
                     <span className="text-lg font-bold text-gray-900">${order.total.toFixed(2)}</span>
                   </div>
 
@@ -457,7 +457,7 @@ const VendorDeliveryPage: React.FC = () => {
                     <div className="bg-green-100 border border-green-200 rounded-lg p-3">
                       <div className="flex items-center gap-2 text-green-800">
                         <CheckCircle className="h-4 w-4" />
-                        <span className="text-sm font-medium">Delivered at {new Date(order.deliveredAt).toLocaleTimeString()}</span>
+                        <span className="responsive-text font-medium">Delivered at {new Date(order.deliveredAt).toLocaleTimeString()}</span>
                       </div>
                       {order.deliveryNotes && (
                         <p className="text-xs text-green-700 mt-1">"{order.deliveryNotes}"</p>
@@ -482,7 +482,7 @@ const VendorDeliveryPage: React.FC = () => {
                   onClick={() => setShowDeliveryModal(false)}
                   className="text-gray-400 hover:text-gray-600"
                 >
-                  ✕
+                  âœ•
                 </button>
               </div>
 
@@ -490,12 +490,12 @@ const VendorDeliveryPage: React.FC = () => {
                 {/* Customer Info */}
                 <div className="bg-gray-50 rounded-lg p-3">
                   <p className="font-medium text-gray-900">{selectedOrder.customerName}</p>
-                  <p className="text-sm text-gray-600">{selectedOrder.shippingAddress}</p>
+                  <p className="responsive-text text-gray-600">{selectedOrder.shippingAddress}</p>
                 </div>
 
                 {/* Photo Upload */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block responsive-text font-medium text-gray-700 mb-2">
                     <Camera className="h-4 w-4 inline mr-1" />
                     Delivery Photo (Optional)
                   </label>
@@ -504,18 +504,18 @@ const VendorDeliveryPage: React.FC = () => {
                      accept="image/*"
                      capture="environment"
                      onChange={handlePhotoCapture}
-                     className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                     className="w-full responsive-text text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                      aria-label="Upload delivery photo"
                      title="Upload delivery photo"
                    />
                   {deliveryPhoto && (
-                    <p className="text-xs text-green-600 mt-1">✓ Photo selected</p>
+                    <p className="text-xs text-green-600 mt-1">âœ“ Photo selected</p>
                   )}
                 </div>
 
                 {/* Notes */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block responsive-text font-medium text-gray-700 mb-2">
                     Delivery Notes (Optional)
                   </label>
                   <textarea
@@ -531,7 +531,7 @@ const VendorDeliveryPage: React.FC = () => {
                 <div className="flex gap-3 pt-4">
                   <button
                     onClick={() => setShowDeliveryModal(false)}
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                    className="flex-1 responsive-button border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
                   >
                     Cancel
                   </button>

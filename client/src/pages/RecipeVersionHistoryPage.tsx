@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
@@ -158,7 +158,7 @@ const RecipeVersionHistoryPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
+      <div className="page-container bg-gray-50 p-6">
         <div className="max-w-7xl mx-auto">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
@@ -178,12 +178,12 @@ const RecipeVersionHistoryPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
+      <div className="page-container bg-gray-50 p-6">
         <div className="max-w-7xl mx-auto">
           <div className="bg-red-50 border border-red-200 rounded-lg p-6">
             <div className="flex items-center">
               <AlertTriangle className="h-6 w-6 text-red-400 mr-3" />
-              <h3 className="text-lg font-medium text-red-800">Error Loading Version History</h3>
+              <h3 className="responsive-subheading text-red-800">Error Loading Version History</h3>
             </div>
             <p className="mt-2 text-red-700">Failed to load recipe versions. Please try again.</p>
           </div>
@@ -197,7 +197,7 @@ const RecipeVersionHistoryPage: React.FC = () => {
   const previousVersion = versions.find((v: RecipeVersion) => v.version === (currentVersion?.version || 0) - 1);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="page-container bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
@@ -210,14 +210,14 @@ const RecipeVersionHistoryPage: React.FC = () => {
           </button>
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Version History</h1>
+              <h1 className="responsive-heading text-gray-900">Version History</h1>
               <p className="text-gray-600 mt-2">
                 Track changes and costs across recipe versions
               </p>
             </div>
             <button
               onClick={() => setShowCreateModal(true)}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="inline-flex items-center responsive-button border border-transparent responsive-text font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
               <Plus className="h-4 w-4 mr-2" />
               Create Version
@@ -231,7 +231,7 @@ const RecipeVersionHistoryPage: React.FC = () => {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
               <div className="p-6 border-b border-gray-200">
                 <h2 className="text-lg font-semibold text-gray-900">Versions</h2>
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="responsive-text text-gray-600 mt-1">
                   {versions.length} version{versions.length !== 1 ? 's' : ''} total
                 </p>
               </div>
@@ -261,13 +261,13 @@ const RecipeVersionHistoryPage: React.FC = () => {
                       
                       {/* Editor Info */}
                       {version.editor && (
-                        <div className="flex items-center text-sm text-gray-600 mb-2">
+                        <div className="flex items-center responsive-text text-gray-600 mb-2">
                           <User className="h-4 w-4 mr-1" />
                           {version.editor.name || version.editor.email}
                         </div>
                       )}
                       
-                      <div className="flex items-center text-sm text-gray-600 mb-2">
+                      <div className="flex items-center responsive-text text-gray-600 mb-2">
                         <Calendar className="h-4 w-4 mr-1" />
                         {new Date(version.createdAt).toLocaleDateString()}
                       </div>
@@ -322,21 +322,21 @@ const RecipeVersionHistoryPage: React.FC = () => {
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h2 className="text-xl font-semibold text-gray-900">
+                      <h2 className="responsive-subheading text-gray-900">
                         {currentVersion.name}
                       </h2>
                       <p className="text-gray-600 mt-1">
-                        Version {currentVersion.version} • {new Date(currentVersion.createdAt).toLocaleDateString()}
+                        Version {currentVersion.version} â€¢ {new Date(currentVersion.createdAt).toLocaleDateString()}
                       </p>
                       {currentVersion.editor && (
-                        <p className="text-sm text-gray-500 mt-1">
+                        <p className="responsive-text text-gray-500 mt-1">
                           Created by {currentVersion.editor.name || currentVersion.editor.email}
                         </p>
                       )}
                     </div>
                     <div className="flex items-center space-x-3">
                       <div className="text-right">
-                        <div className="text-sm text-gray-600">Total Cost</div>
+                        <div className="responsive-text text-gray-600">Total Cost</div>
                         <div className="text-xl font-bold text-gray-900">
                           ${currentVersion.totalCost.toFixed(2)}
                         </div>
@@ -352,7 +352,7 @@ const RecipeVersionHistoryPage: React.FC = () => {
                       <div className="flex space-x-2">
                         <button
                           onClick={() => setShowDiff(!showDiff)}
-                          className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          className="inline-flex items-center px-3 py-2 border border-gray-300 responsive-text font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                         >
                           <GitCompare className="h-4 w-4 mr-2" />
                           {showDiff ? 'Hide' : 'Show'} Diff
@@ -360,7 +360,7 @@ const RecipeVersionHistoryPage: React.FC = () => {
                         <button
                           onClick={() => rollbackMutation.mutate(currentVersion.id)}
                           disabled={rollbackMutation.isPending}
-                          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+                          className="inline-flex items-center responsive-button border border-transparent responsive-text font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
                         >
                           <RotateCcw className="h-4 w-4 mr-2" />
                           {rollbackMutation.isPending ? 'Loading...' : 'Rollback'}
@@ -375,7 +375,7 @@ const RecipeVersionHistoryPage: React.FC = () => {
                       <div className="flex items-start">
                         <FileText className="h-4 w-4 text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
                         <div>
-                          <div className="text-sm font-medium text-blue-900 mb-1">Version Notes</div>
+                          <div className="responsive-text font-medium text-blue-900 mb-1">Version Notes</div>
                           <div className="text-sm text-blue-800">{currentVersion.notes}</div>
                         </div>
                       </div>
@@ -396,14 +396,14 @@ const RecipeVersionHistoryPage: React.FC = () => {
                   {/* Recipe Info */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                     <div className="text-center p-3 bg-gray-50 rounded-lg">
-                      <div className="text-sm text-gray-600">Yield</div>
+                      <div className="responsive-text text-gray-600">Yield</div>
                       <div className="text-lg font-semibold text-gray-900">
                         {currentVersion.yield} {currentVersion.yieldUnit}
                       </div>
                     </div>
                     {currentVersion.prepTime && (
                       <div className="text-center p-3 bg-gray-50 rounded-lg">
-                        <div className="text-sm text-gray-600">Prep Time</div>
+                        <div className="responsive-text text-gray-600">Prep Time</div>
                         <div className="text-lg font-semibold text-gray-900">
                           {currentVersion.prepTime} min
                         </div>
@@ -411,7 +411,7 @@ const RecipeVersionHistoryPage: React.FC = () => {
                     )}
                     {currentVersion.cookTime && (
                       <div className="text-center p-3 bg-gray-50 rounded-lg">
-                        <div className="text-sm text-gray-600">Cook Time</div>
+                        <div className="responsive-text text-gray-600">Cook Time</div>
                         <div className="text-lg font-semibold text-gray-900">
                           {currentVersion.cookTime} min
                         </div>
@@ -419,7 +419,7 @@ const RecipeVersionHistoryPage: React.FC = () => {
                     )}
                     {currentVersion.difficulty && (
                       <div className="text-center p-3 bg-gray-50 rounded-lg">
-                        <div className="text-sm text-gray-600">Difficulty</div>
+                        <div className="responsive-text text-gray-600">Difficulty</div>
                         <div className="text-lg font-semibold text-gray-900">
                           {currentVersion.difficulty}
                         </div>
@@ -434,19 +434,19 @@ const RecipeVersionHistoryPage: React.FC = () => {
                       <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                           <tr>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="responsive-button text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                               Ingredient
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="responsive-button text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                               Quantity
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="responsive-button text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                               Price/Unit
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="responsive-button text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                               Total Cost
                             </th>
-                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <th className="responsive-button text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                               Price Change
                             </th>
                           </tr>
@@ -461,11 +461,11 @@ const RecipeVersionHistoryPage: React.FC = () => {
                               <tr key={ingredient.id} className="hover:bg-gray-50">
                                 <td className="px-6 py-4 whitespace-nowrap">
                                   <div>
-                                    <div className="text-sm font-medium text-gray-900">
+                                    <div className="responsive-text font-medium text-gray-900">
                                       {ingredient.ingredient.name}
                                     </div>
                                     {ingredient.notes && (
-                                      <div className="text-sm text-gray-500">
+                                      <div className="responsive-text text-gray-500">
                                         {ingredient.notes}
                                       </div>
                                     )}
@@ -477,7 +477,7 @@ const RecipeVersionHistoryPage: React.FC = () => {
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                   ${ingredient.pricePerUnit.toFixed(2)}/{ingredient.ingredient.unit}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                <td className="px-6 py-4 whitespace-nowrap responsive-text font-medium text-gray-900">
                                   ${ingredient.totalCost.toFixed(2)}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
@@ -498,7 +498,7 @@ const RecipeVersionHistoryPage: React.FC = () => {
                                       </span>
                                     </div>
                                   ) : (
-                                    <span className="text-sm text-gray-500">No previous data</span>
+                                    <span className="responsive-text text-gray-500">No previous data</span>
                                   )}
                                 </td>
                               </tr>

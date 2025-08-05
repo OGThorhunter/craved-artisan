@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'wouter';
@@ -287,7 +287,7 @@ Perfect for sandwiches, toast, or simply enjoyed with butter and honey.`,
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="page-container bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-green mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading product...</p>
@@ -298,9 +298,9 @@ Perfect for sandwiches, toast, or simply enjoyed with butter and honey.`,
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="page-container bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Product not found</h2>
+          <h2 className="responsive-heading text-gray-900 mb-2">Product not found</h2>
           <p className="text-gray-600 mb-4">The product you're looking for doesn't exist.</p>
           <Link href="/marketplace" className="bg-brand-green text-white px-6 py-2 rounded-lg hover:bg-brand-green/80 transition-colors">
             Back to Marketplace
@@ -311,11 +311,11 @@ Perfect for sandwiches, toast, or simply enjoyed with butter and honey.`,
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="page-container bg-gray-50">
       {/* Breadcrumb Navigation */}
       <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center gap-2 text-sm text-gray-600">
+        <div className="container-responsive py-4">
+          <div className="flex items-center gap-2 responsive-text text-gray-600">
             <Link href="/marketplace" className="hover:text-brand-green">Marketplace</Link>
             <span>/</span>
             <Link href={`/marketplace?category=${product.category}`} className="hover:text-brand-green">{product.category}</Link>
@@ -325,7 +325,7 @@ Perfect for sandwiches, toast, or simply enjoyed with butter and honey.`,
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="container-responsive py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Product Images */}
           <div className="space-y-4">
@@ -406,11 +406,11 @@ Perfect for sandwiches, toast, or simply enjoyed with butter and honey.`,
           {/* Product Info */}
           <div className="space-y-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
+              <h1 className="responsive-heading text-gray-900 mb-2">{product.name}</h1>
               <div className="flex items-center gap-4 mb-4">
                 <div className="flex items-center">
                   {renderStars(product.rating)}
-                  <span className="ml-2 text-sm text-gray-600">({product.reviewCount} reviews)</span>
+                  <span className="ml-2 responsive-text text-gray-600">({product.reviewCount} reviews)</span>
                 </div>
                 <Link 
                   href={`/vendor/${product.vendor.id}`} 
@@ -426,12 +426,12 @@ Perfect for sandwiches, toast, or simply enjoyed with butter and honey.`,
             {/* Price and Stock */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <span className="text-3xl font-bold text-brand-maroon">${product.price.toFixed(2)}</span>
+                <span className="responsive-heading text-brand-maroon">${product.price.toFixed(2)}</span>
                 {product.originalPrice && (
                   <span className="text-lg text-gray-500 line-through">${product.originalPrice.toFixed(2)}</span>
                 )}
               </div>
-              <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+              <span className={`px-3 py-1 rounded-full responsive-text font-medium ${
                 product.inStock ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
               }`}>
                 {product.inStock ? 'In Stock' : 'Out of Stock'}
@@ -458,7 +458,7 @@ Perfect for sandwiches, toast, or simply enjoyed with butter and honey.`,
                   >
                     <Minus className="w-4 h-4" />
                   </button>
-                  <span className="px-4 py-2 text-lg font-medium">{quantity}</span>
+                  <span className="responsive-button responsive-subheading">{quantity}</span>
                   <button
                     onClick={() => setQuantity(quantity + 1)}
                     className="p-2 hover:bg-gray-50"
@@ -507,10 +507,10 @@ Perfect for sandwiches, toast, or simply enjoyed with butter and honey.`,
                 </Link>
                 <div className="flex items-center gap-1">
                   {renderStars(product.vendor.rating)}
-                  <span className="text-sm text-gray-600">({product.vendor.reviewCount})</span>
+                  <span className="responsive-text text-gray-600">({product.vendor.reviewCount})</span>
                 </div>
               </div>
-              <div className="flex items-center gap-4 text-sm text-gray-600">
+              <div className="flex items-center gap-4 responsive-text text-gray-600">
                 <div className="flex items-center gap-1">
                   <MapPin className="w-4 h-4" />
                   {product.vendor.location}
@@ -625,7 +625,7 @@ Perfect for sandwiches, toast, or simply enjoyed with butter and honey.`,
                       </div>
                       <span className="text-gray-600">({product.reviewCount} reviews)</span>
                     </div>
-                    <button className="bg-brand-green text-white px-4 py-2 rounded-lg hover:bg-brand-green/80 transition-colors">
+                    <button className="bg-brand-green text-white responsive-button rounded-lg hover:bg-brand-green/80 transition-colors">
                       Write a Review
                     </button>
                   </div>
@@ -655,7 +655,7 @@ Perfect for sandwiches, toast, or simply enjoyed with butter and honey.`,
                     <div className="bg-white border rounded-lg p-6 max-w-md">
                       <div className="border-b border-gray-200 pb-2 mb-4">
                         <h4 className="font-semibold">Nutrition Facts</h4>
-                        <p className="text-sm text-gray-600">Serving Size: 1 slice (30g)</p>
+                        <p className="responsive-text text-gray-600">Serving Size: 1 slice (30g)</p>
                       </div>
                       <div className="space-y-2">
                         <div className="flex justify-between">
@@ -721,18 +721,18 @@ Perfect for sandwiches, toast, or simply enjoyed with butter and honey.`,
                       <div className="w-16 h-16 bg-gray-200 rounded-full flex-shrink-0"></div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <h3 className="text-xl font-semibold">{product.vendor.name}</h3>
+                          <h3 className="responsive-subheading">{product.vendor.name}</h3>
                           {product.vendor.verified && <CheckCircle className="w-5 h-5 text-blue-500" />}
                         </div>
                         <p className="text-gray-600 mb-3">{product.vendor.description}</p>
-                        <div className="flex items-center gap-4 text-sm text-gray-500">
+                        <div className="flex items-center gap-4 responsive-text text-gray-500">
                           <div className="flex items-center gap-1">
                             {renderStars(product.vendor.rating)}
                             <span>({product.vendor.reviewCount})</span>
                           </div>
-                          <span>•</span>
+                          <span>â€¢</span>
                           <span>{product.vendor.totalProducts} products</span>
-                          <span>•</span>
+                          <span>â€¢</span>
                           <span>Member since {new Date(product.vendor.joinedDate).getFullYear()}</span>
                         </div>
                       </div>
@@ -741,11 +741,11 @@ Perfect for sandwiches, toast, or simply enjoyed with butter and honey.`,
                     <div className="flex gap-3 mt-6">
                       <Link
                         href={`/vendor/${product.vendor.id}`}
-                        className="bg-brand-green text-white px-4 py-2 rounded-lg hover:bg-brand-green/80 transition-colors"
+                        className="bg-brand-green text-white responsive-button rounded-lg hover:bg-brand-green/80 transition-colors"
                       >
                         View Store
                       </Link>
-                      <button className="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors">
+                      <button className="bg-gray-100 text-gray-700 responsive-button rounded-lg hover:bg-gray-200 transition-colors">
                         Contact Vendor
                       </button>
                     </div>
@@ -759,7 +759,7 @@ Perfect for sandwiches, toast, or simply enjoyed with butter and honey.`,
         {/* Related Products */}
         {relatedProducts.length > 0 && (
           <div className="mt-12">
-            <h3 className="text-2xl font-bold text-gray-900 mb-6">You Might Also Like</h3>
+            <h3 className="responsive-heading text-gray-900 mb-6">You Might Also Like</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {relatedProducts.map(relatedProduct => (
                 <div key={relatedProduct.id} className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -770,7 +770,7 @@ Perfect for sandwiches, toast, or simply enjoyed with butter and honey.`,
                   />
                   <div className="p-4">
                     <h4 className="font-semibold text-gray-900 mb-2">{relatedProduct.name}</h4>
-                    <p className="text-sm text-gray-600 mb-3">{relatedProduct.description}</p>
+                    <p className="responsive-text text-gray-600 mb-3">{relatedProduct.description}</p>
                     <div className="flex items-center justify-between">
                       <span className="text-lg font-bold text-brand-maroon">${relatedProduct.price.toFixed(2)}</span>
                       <Link
@@ -838,7 +838,7 @@ Perfect for sandwiches, toast, or simply enjoyed with butter and honey.`,
                 className="w-full h-auto max-h-[80vh] object-contain"
               />
               
-              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/50 text-white px-4 py-2 rounded-full text-sm">
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/50 text-white responsive-button rounded-full text-sm">
                 {currentImageIndex + 1} of {product.images.length}
               </div>
             </motion.div>

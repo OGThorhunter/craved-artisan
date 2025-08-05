@@ -1,4 +1,4 @@
-
+﻿
 import { useRoute } from 'wouter';
 import { Link } from 'wouter';
 
@@ -25,17 +25,17 @@ export const EventDetailPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="page-container bg-gray-50">
       {/* Hero Section */}
       <div className="bg-white shadow-sm">
         <div className="max-w-4xl mx-auto px-6 py-12">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <span className="px-3 py-1 bg-primary-100 text-primary-800 text-sm font-medium rounded-full">
+                <span className="px-3 py-1 bg-primary-100 text-primary-800 responsive-text font-medium rounded-full">
                   {event.category}
                 </span>
-                <span className="text-sm text-gray-500">
+                <span className="responsive-text text-gray-500">
                   {new Date(event.date).toLocaleDateString()}
                 </span>
               </div>
@@ -66,7 +66,7 @@ export const EventDetailPage = () => {
                   <svg className="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
-                  {event.attendees} attending • {event.maxAttendees} max
+                  {event.attendees} attending â€¢ {event.maxAttendees} max
                 </div>
               </div>
               
@@ -87,7 +87,7 @@ export const EventDetailPage = () => {
           <div className="lg:col-span-2 space-y-8">
             {/* About Section */}
             <div className="bg-white rounded-lg p-8 shadow-sm">
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">About This Event</h2>
+              <h2 className="responsive-heading text-gray-900 mb-4">About This Event</h2>
               <p className="text-gray-600 leading-relaxed">
                 {event.longDescription}
               </p>
@@ -95,17 +95,17 @@ export const EventDetailPage = () => {
 
             {/* Participating Artisans */}
             <div className="bg-white rounded-lg p-8 shadow-sm">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Participating Artisans</h2>
+              <h2 className="responsive-heading text-gray-900 mb-6">Participating Artisans</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {[1, 2, 3, 4].map((i) => (
                   <div key={i} className="flex items-center space-x-4">
                     <div className="w-16 h-16 bg-gray-200 rounded-full"></div>
                     <div>
                       <h3 className="font-semibold text-gray-900">Artisan {i}</h3>
-                      <p className="text-sm text-gray-600">Jewelry & Accessories</p>
+                      <p className="responsive-text text-gray-600">Jewelry & Accessories</p>
                       <Link href={`/vendor/${i}`}>
-                        <button className="text-primary-600 hover:text-primary-700 text-sm font-medium">
-                          View Profile →
+                        <button className="text-primary-600 hover:text-primary-700 responsive-text font-medium">
+                          View Profile â†’
                         </button>
                       </Link>
                     </div>
@@ -116,34 +116,34 @@ export const EventDetailPage = () => {
 
             {/* Event Schedule */}
             <div className="bg-white rounded-lg p-8 shadow-sm">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Event Schedule</h2>
+              <h2 className="responsive-heading text-gray-900 mb-6">Event Schedule</h2>
               <div className="space-y-4">
                 <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
-                  <div className="text-sm font-medium text-gray-900 w-20">10:00 AM</div>
+                  <div className="responsive-text font-medium text-gray-900 w-20">10:00 AM</div>
                   <div>
                     <h3 className="font-semibold text-gray-900">Market Opens</h3>
-                    <p className="text-sm text-gray-600">All vendors ready for business</p>
+                    <p className="responsive-text text-gray-600">All vendors ready for business</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
-                  <div className="text-sm font-medium text-gray-900 w-20">2:00 PM</div>
+                  <div className="responsive-text font-medium text-gray-900 w-20">2:00 PM</div>
                   <div>
                     <h3 className="font-semibold text-gray-900">Live Pottery Demo</h3>
-                    <p className="text-sm text-gray-600">Watch artisans at work</p>
+                    <p className="responsive-text text-gray-600">Watch artisans at work</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
-                  <div className="text-sm font-medium text-gray-900 w-20">4:00 PM</div>
+                  <div className="responsive-text font-medium text-gray-900 w-20">4:00 PM</div>
                   <div>
                     <h3 className="font-semibold text-gray-900">Meet & Greet</h3>
-                    <p className="text-sm text-gray-600">Connect with artisans</p>
+                    <p className="responsive-text text-gray-600">Connect with artisans</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
-                  <div className="text-sm font-medium text-gray-900 w-20">6:00 PM</div>
+                  <div className="responsive-text font-medium text-gray-900 w-20">6:00 PM</div>
                   <div>
                     <h3 className="font-semibold text-gray-900">Market Closes</h3>
-                    <p className="text-sm text-gray-600">Thank you for visiting!</p>
+                    <p className="responsive-text text-gray-600">Thank you for visiting!</p>
                   </div>
                 </div>
               </div>
@@ -177,7 +177,7 @@ export const EventDetailPage = () => {
             <div className="bg-white rounded-lg p-6 shadow-sm">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Location</h3>
               <div className="w-full h-48 bg-gray-200 rounded-lg mb-4"></div>
-              <p className="text-sm text-gray-600">{event.location}</p>
+              <p className="responsive-text text-gray-600">{event.location}</p>
             </div>
 
             {/* Share */}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
@@ -117,7 +117,7 @@ export const VendorSettingsPage = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="page-container bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading profile...</p>
@@ -127,8 +127,8 @@ export const VendorSettingsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="page-container bg-gray-50">
+      <div className="max-w-4xl mx-auto responsive-padding py-8">
         {/* Header */}
         <div className="bg-white rounded-2xl shadow-sm p-6 mb-8">
           <div className="flex items-center space-x-4">
@@ -136,7 +136,7 @@ export const VendorSettingsPage = () => {
               <Store className="w-8 h-8 text-primary-600" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Store Settings</h1>
+              <h1 className="responsive-heading text-gray-900">Store Settings</h1>
               <p className="text-gray-600 mt-1">
                 Manage your store profile and branding
               </p>
@@ -148,13 +148,13 @@ export const VendorSettingsPage = () => {
         <div className="bg-white rounded-2xl shadow-sm p-8">
           <div className="flex items-center space-x-3 mb-6">
             <Edit3 className="w-6 h-6 text-gray-600" />
-            <h2 className="text-xl font-semibold text-gray-900">Store Profile</h2>
+            <h2 className="responsive-subheading text-gray-900">Store Profile</h2>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Store Name */}
             <div>
-              <label htmlFor="storeName" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="storeName" className="block responsive-text font-medium text-gray-700 mb-2">
                 Store Name *
               </label>
               <input
@@ -180,7 +180,7 @@ export const VendorSettingsPage = () => {
                 <p className="mt-1 text-sm text-red-600">{errors.storeName.message}</p>
               )}
               {profile?.slug && (
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="mt-1 responsive-text text-gray-500">
                   Store URL: <span className="font-mono">/store/{profile.slug}</span>
                 </p>
               )}
@@ -188,7 +188,7 @@ export const VendorSettingsPage = () => {
 
             {/* Bio */}
             <div>
-              <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="bio" className="block responsive-text font-medium text-gray-700 mb-2">
                 Store Bio
               </label>
               <textarea
@@ -208,14 +208,14 @@ export const VendorSettingsPage = () => {
               {errors.bio && (
                 <p className="mt-1 text-sm text-red-600">{errors.bio.message}</p>
               )}
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-1 responsive-text text-gray-500">
                 Optional. Help customers understand what makes your store unique.
               </p>
             </div>
 
             {/* Image URL */}
             <div>
-              <label htmlFor="imageUrl" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="imageUrl" className="block responsive-text font-medium text-gray-700 mb-2">
                 Store Image URL
               </label>
               <div className="flex space-x-4">
@@ -248,7 +248,7 @@ export const VendorSettingsPage = () => {
                   </button>
                 </div>
               </div>
-              <p className="mt-1 text-sm text-gray-500">
+              <p className="mt-1 responsive-text text-gray-500">
                 Optional. This will be displayed as your store's main image.
               </p>
             </div>
@@ -256,7 +256,7 @@ export const VendorSettingsPage = () => {
             {/* Image Preview */}
             {profile?.imageUrl && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block responsive-text font-medium text-gray-700 mb-2">
                   Current Store Image
                 </label>
                 <div className="flex items-center space-x-4">
@@ -274,7 +274,7 @@ export const VendorSettingsPage = () => {
                       <ImageIcon className="w-8 h-8 text-gray-400" />
                     </div>
                   </div>
-                  <div className="text-sm text-gray-600">
+                  <div className="responsive-text text-gray-600">
                     <p>Current store image</p>
                     <p className="text-gray-500">Update the URL above to change</p>
                   </div>
@@ -284,8 +284,8 @@ export const VendorSettingsPage = () => {
 
             {/* Form Actions */}
             <div className="flex items-center justify-between pt-6 border-t border-gray-200">
-              <div className="text-sm text-gray-600">
-                {isDirty && <span className="text-orange-600">• You have unsaved changes</span>}
+              <div className="responsive-text text-gray-600">
+                {isDirty && <span className="text-orange-600">â€¢ You have unsaved changes</span>}
               </div>
               <div className="flex space-x-4">
                 <button
@@ -298,7 +298,7 @@ export const VendorSettingsPage = () => {
                       reset();
                     }
                   }}
-                  className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                  className="responsive-button border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
                   disabled={!isDirty}
                 >
                   Reset
@@ -306,7 +306,7 @@ export const VendorSettingsPage = () => {
                 <button
                   type="submit"
                   disabled={isSaving || !isDirty}
-                  className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+                  className="responsive-button bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
                 >
                   {isSaving ? (
                     <>
@@ -327,11 +327,11 @@ export const VendorSettingsPage = () => {
 
         {/* Additional Settings Section */}
         <div className="mt-8 bg-white rounded-2xl shadow-sm p-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-6">Additional Settings</h2>
+          <h2 className="responsive-subheading text-gray-900 mb-6">Additional Settings</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="p-4 border border-gray-200 rounded-lg">
               <h3 className="font-medium text-gray-900 mb-2">Store Status</h3>
-              <p className="text-sm text-gray-600 mb-3">Control whether your store is visible to customers</p>
+              <p className="responsive-text text-gray-600 mb-3">Control whether your store is visible to customers</p>
               <div className="flex items-center space-x-2">
                 <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                 <span className="text-sm text-gray-700">Active</span>
@@ -340,7 +340,7 @@ export const VendorSettingsPage = () => {
             
             <div className="p-4 border border-gray-200 rounded-lg">
               <h3 className="font-medium text-gray-900 mb-2">Store Slug</h3>
-              <p className="text-sm text-gray-600 mb-3">Your store's unique URL identifier</p>
+              <p className="responsive-text text-gray-600 mb-3">Your store's unique URL identifier</p>
               <p className="text-sm font-mono text-gray-700">
                 {profile?.slug || 'Will be generated from store name'}
               </p>

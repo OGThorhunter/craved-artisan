@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+﻿import React, { useState, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Package, Clock, CheckCircle, Truck, AlertCircle, Eye, Download, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import axios from 'axios';
@@ -165,13 +165,13 @@ const OrderDetailModal = ({ order, isOpen, onClose }: { order: Order | null; isO
         {/* Modal Header */}
         <div className="p-6 border-b border-gray-200 flex justify-between items-start">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Order Details</h2>
+            <h2 className="responsive-heading text-gray-900">Order Details</h2>
             <p className="text-gray-600">Order #{order.orderNumber}</p>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => generateInvoicePDF(order)}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+              className="flex items-center gap-2 responsive-button bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
               title="Download Invoice"
             >
               <Download className="h-4 w-4" />
@@ -192,14 +192,14 @@ const OrderDetailModal = ({ order, isOpen, onClose }: { order: Order | null; isO
           {/* Order Status */}
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600">Order Status</p>
-              <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${statusBgColor} ${statusColor}`}>
+              <p className="responsive-text text-gray-600">Order Status</p>
+              <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full responsive-text font-medium ${statusBgColor} ${statusColor}`}>
                 <StatusIcon className="h-4 w-4" />
                 {order.fulfillment?.status || 'PENDING'}
               </span>
             </div>
             <div className="text-right">
-              <p className="text-sm text-gray-600">Order Date</p>
+              <p className="responsive-text text-gray-600">Order Date</p>
               <p className="font-medium">{formatDate(order.createdAt)}</p>
             </div>
           </div>
@@ -241,8 +241,8 @@ const OrderDetailModal = ({ order, isOpen, onClose }: { order: Order | null; isO
                   </div>
                   <div className="flex-1">
                     <h4 className="font-medium text-gray-900">{item.product.name}</h4>
-                    <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
-                    <p className="text-sm text-gray-600">Price: ${item.price.toFixed(2)} each</p>
+                    <p className="responsive-text text-gray-600">Quantity: {item.quantity}</p>
+                    <p className="responsive-text text-gray-600">Price: ${item.price.toFixed(2)} each</p>
                   </div>
                   <div className="text-right">
                     <p className="font-semibold text-gray-900">${item.total.toFixed(2)}</p>
@@ -312,7 +312,7 @@ const OrderDetailModal = ({ order, isOpen, onClose }: { order: Order | null; isO
           <div className="flex justify-end">
             <button
               onClick={onClose}
-              className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+              className="responsive-button bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
             >
               Close
             </button>
@@ -361,7 +361,7 @@ const CustomerOrdersPage = () => {
       <div className="max-w-4xl mx-auto p-6">
         <div className="text-center">
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Orders</h2>
+          <h2 className="responsive-subheading text-gray-900 mb-2">Error Loading Orders</h2>
           <p className="text-gray-600">Unable to load your order history. Please try again later.</p>
         </div>
       </div>
@@ -387,18 +387,18 @@ const CustomerOrdersPage = () => {
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">My Orders</h1>
+        <h1 className="responsive-heading text-gray-900 mb-2">My Orders</h1>
         <p className="text-gray-600">View your order history and track your purchases</p>
       </div>
 
       {orders.length === 0 ? (
         <div className="text-center py-12">
           <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">No Orders Yet</h2>
+          <h2 className="responsive-subheading text-gray-900 mb-2">No Orders Yet</h2>
           <p className="text-gray-600 mb-6">You haven't placed any orders yet.</p>
           <a
             href="/"
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center responsive-button bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
           >
             Start Shopping
           </a>
@@ -418,7 +418,7 @@ const CustomerOrdersPage = () => {
                        <h3 className="text-lg font-semibold text-gray-900">
                          Order #{order.orderNumber}
                        </h3>
-                       <p className="text-sm text-gray-600">
+                       <p className="responsive-text text-gray-600">
                          Placed on {formatDate(order.createdAt)}
                        </p>
                        {order.fulfillment?.trackingNumber && (
@@ -429,7 +429,7 @@ const CustomerOrdersPage = () => {
                        )}
                      </div>
                      <div className="text-right">
-                       <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${statusBgColor} ${statusColor}`}>
+                       <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full responsive-text font-medium ${statusBgColor} ${statusColor}`}>
                          <StatusIcon className="h-4 w-4" />
                          {order.fulfillment?.status || 'PENDING'}
                        </span>
@@ -460,7 +460,7 @@ const CustomerOrdersPage = () => {
                        </div>
                      ))}
                      {order.items.length > 3 && (
-                       <p className="text-sm text-gray-500 text-center">
+                       <p className="responsive-text text-gray-500 text-center">
                          +{order.items.length - 3} more items
                        </p>
                      )}
@@ -489,10 +489,10 @@ const CustomerOrdersPage = () => {
                          className="text-sm text-green-600 underline"
                          title="Download receipt"
                        >
-                         🧾 Download Receipt
+                         ðŸ§¾ Download Receipt
                        </a>
                      </div>
-                     <div className="text-sm text-gray-600">
+                     <div className="responsive-text text-gray-600">
                        {order.items.length} {order.items.length === 1 ? 'item' : 'items'}
                      </div>
                    </div>
@@ -504,7 +504,7 @@ const CustomerOrdersPage = () => {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="mt-8 flex items-center justify-between">
-              <div className="text-sm text-gray-600">
+              <div className="responsive-text text-gray-600">
                 Showing {startIndex + 1} to {Math.min(endIndex, orders.length)} of {orders.length} orders
               </div>
               <div className="flex items-center gap-2">

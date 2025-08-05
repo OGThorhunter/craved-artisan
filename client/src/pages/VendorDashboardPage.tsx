@@ -1,4 +1,4 @@
-import { Link } from 'wouter';
+﻿import { Link } from 'wouter';
 import { useAuth } from '../contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
@@ -120,14 +120,13 @@ export const VendorDashboardPage = () => {
     return <OnboardingPrompt />;
   }
 
-  // Dashboard cards configuration
-  const dashboardCards = [
+  // Store overview cards configuration
+  const storeOverviewCards = [
     {
       id: 'products',
-      title: 'Products',
+      title: 'Product Catalog',
       description: 'Manage your product catalog, add new items, and track inventory',
       icon: Package,
-      color: 'bg-blue-500',
       iconColor: 'text-blue-600',
       bgColor: 'bg-blue-50',
       link: '/dashboard/vendor/products',
@@ -137,10 +136,9 @@ export const VendorDashboardPage = () => {
     },
     {
       id: 'analytics',
-      title: 'Analytics',
+      title: 'Analytics & Reports',
       description: 'View sales reports, customer insights, and performance metrics',
       icon: BarChart3,
-      color: 'bg-green-500',
       iconColor: 'text-green-600',
       bgColor: 'bg-green-50',
       link: '/dashboard/vendor/analytics',
@@ -150,95 +148,16 @@ export const VendorDashboardPage = () => {
     },
     {
       id: 'customers',
-      title: 'Customers',
+      title: 'Customer Management',
       description: 'Manage customer relationships, view orders, and track loyalty',
       icon: Users,
-      color: 'bg-purple-500',
       iconColor: 'text-purple-600',
       bgColor: 'bg-purple-50',
-      link: '/dashboard/vendor/customers',
-      stats: `${stats.totalCustomers} total customers`,
-      action: 'View Customers',
-      actionLink: '/dashboard/vendor/customers'
-    },
-    {
-      id: 'inventory',
-      title: 'Inventory',
-      description: 'Track stock levels, manage suppliers, and handle restocking',
-      icon: ShoppingCart,
-      color: 'bg-orange-500',
-      iconColor: 'text-orange-600',
-      bgColor: 'bg-orange-50',
-      link: '/dashboard/vendor/inventory',
-      stats: `${stats.lowStockItems} items low in stock`,
-      action: 'Manage Stock',
-      actionLink: '/dashboard/vendor/inventory'
-    },
-    {
-      id: 'site-settings',
-      title: 'Site Settings',
-      description: 'Configure your store profile, branding, and business settings',
-      icon: Settings,
-      color: 'bg-gray-500',
-      iconColor: 'text-gray-600',
-      bgColor: 'bg-gray-50',
-      link: '/dashboard/vendor/site-settings',
-      stats: 'Store configuration',
-      action: 'Configure',
-      actionLink: '/dashboard/vendor/site-settings'
-    },
-    {
-      id: 'orders',
-      title: 'Orders',
-      description: 'Process orders, manage shipping, and handle customer service',
-      icon: FileText,
-      color: 'bg-indigo-500',
-      iconColor: 'text-indigo-600',
-      bgColor: 'bg-indigo-50',
       link: '/dashboard/vendor/orders',
-      stats: `${stats.totalOrders} total orders`,
+      stats: `${stats.totalCustomers} total customers`,
       action: 'View Orders',
       actionLink: '/dashboard/vendor/orders'
-    },
-    {
-      id: 'financials',
-      title: 'Financials',
-      description: 'Track revenue, profits, cash flow, and financial health',
-      icon: DollarSign,
-      color: 'bg-emerald-500',
-      iconColor: 'text-emerald-600',
-      bgColor: 'bg-emerald-50',
-      link: '/vendor/financial',
-      stats: 'Financial tracking & reporting',
-      action: 'View Financials',
-      actionLink: '/vendor/financial'
-    },
-              {
-            id: 'watchlist',
-            title: 'Product Watchlist',
-            description: 'Monitor products with price volatility and margin issues',
-            icon: Eye,
-            color: 'bg-yellow-500',
-            iconColor: 'text-yellow-600',
-            bgColor: 'bg-yellow-50',
-            link: '/dashboard/watchlist',
-            stats: `${stats.watchlistItems} items on watchlist`,
-            action: 'View Watchlist',
-            actionLink: '/dashboard/watchlist'
-          },
-          {
-            id: 'orders',
-            title: 'Order Fulfillment',
-            description: 'Manage and track customer orders',
-            icon: Package,
-            color: 'bg-blue-500',
-            iconColor: 'text-blue-600',
-            bgColor: 'bg-blue-50',
-            link: '/dashboard/orders',
-            stats: `${stats.totalOrders || 0} total orders`,
-            action: 'Manage Orders',
-            actionLink: '/dashboard/orders'
-          }
+    }
   ];
 
   // Quick action cards for common tasks
@@ -318,31 +237,89 @@ export const VendorDashboardPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="page-container bg-gray-50">
+      <div className="container-responsive py-8">
         {/* Header */}
-        <div className="bg-white rounded-2xl shadow-sm p-6 mb-8">
+        <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Vendor Dashboard</h1>
+              <h1 className="responsive-heading text-gray-900">Vendor Dashboard</h1>
               <p className="text-gray-600 mt-1">
                 Welcome back, {user?.profile?.firstName || user?.email || 'Vendor'}!
               </p>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="responsive-text text-gray-500 mt-1">
                 Manage your store, products, and customer relationships
               </p>
             </div>
             <div className="flex items-center space-x-4">
-              <Link href="/dashboard/vendor/products">
-                <button className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2">
-                  <Package className="w-5 h-5" />
-                  Manage Products
-                </button>
-              </Link>
               <div className="text-right">
-                <p className="text-sm text-gray-500">Store Status</p>
+                <p className="responsive-text text-gray-500">Store Status</p>
                 <p className="text-green-600 font-medium">Active</p>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Horizontal Navigation */}
+        <div className="bg-white rounded-2xl shadow-sm p-4 mb-8">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <Link href="/dashboard/vendor/products">
+                <button className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors font-medium responsive-text">
+                  <Package className="w-5 h-5" />
+                  Products
+                </button>
+              </Link>
+              <Link href="/dashboard/vendor/orders">
+                <button className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors font-medium responsive-text">
+                  <FileText className="w-5 h-5" />
+                  Orders
+                </button>
+              </Link>
+              <Link href="/dashboard/vendor/analytics">
+                <button className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors font-medium responsive-text">
+                  <BarChart3 className="w-5 h-5" />
+                  Analytics
+                </button>
+              </Link>
+              <Link href="/dashboard/vendor/inventory">
+                <button className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors font-medium responsive-text">
+                  <ShoppingCart className="w-5 h-5" />
+                  Inventory
+                </button>
+              </Link>
+              <Link href="/vendor/financial">
+                <button className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors font-medium responsive-text">
+                  <DollarSign className="w-5 h-5" />
+                  Financials
+                </button>
+              </Link>
+              <Link href="/dashboard/vendor/delivery-batching">
+                <button className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors font-medium responsive-text">
+                  <Calendar className="w-5 h-5" />
+                  Delivery
+                </button>
+              </Link>
+              <Link href="/dashboard/watchlist">
+                <button className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors font-medium responsive-text">
+                  <Eye className="w-5 h-5" />
+                  Watchlist
+                </button>
+              </Link>
+            </div>
+            <div className="flex items-center gap-2">
+              <Link href="/dashboard/vendor/site-settings">
+                <button className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors font-medium responsive-text">
+                  <Settings className="w-5 h-5" />
+                  Settings
+                </button>
+              </Link>
+              <Link href="/dashboard/vendor/products">
+                <button className="bg-blue-600 text-white responsive-button rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2">
+                  <Plus className="w-5 h-5" />
+                  Add Product
+                </button>
+              </Link>
             </div>
           </div>
         </div>
@@ -355,8 +332,8 @@ export const VendorDashboardPage = () => {
                 <DollarSign className="w-6 h-6 text-green-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Sales</p>
-                <p className="text-2xl font-bold text-gray-900">${stats.totalSales.toLocaleString()}</p>
+                <p className="responsive-text font-medium text-gray-600">Total Sales</p>
+                <p className="responsive-heading text-gray-900">${stats.totalSales.toLocaleString()}</p>
               </div>
             </div>
             <div className="mt-4 flex items-center text-sm">
@@ -372,8 +349,8 @@ export const VendorDashboardPage = () => {
                 <FileText className="w-6 h-6 text-blue-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Orders</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalOrders}</p>
+                <p className="responsive-text font-medium text-gray-600">Total Orders</p>
+                <p className="responsive-heading text-gray-900">{stats.totalOrders}</p>
               </div>
             </div>
             <div className="mt-4 flex items-center text-sm">
@@ -389,8 +366,8 @@ export const VendorDashboardPage = () => {
                 <Package className="w-6 h-6 text-purple-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Active Products</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalProducts}</p>
+                <p className="responsive-text font-medium text-gray-600">Active Products</p>
+                <p className="responsive-heading text-gray-900">{stats.totalProducts}</p>
               </div>
             </div>
             <div className="mt-4 flex items-center text-sm">
@@ -404,8 +381,8 @@ export const VendorDashboardPage = () => {
                 <Star className="w-6 h-6 text-yellow-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Average Rating</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.averageRating}</p>
+                <p className="responsive-text font-medium text-gray-600">Average Rating</p>
+                <p className="responsive-heading text-gray-900">{stats.averageRating}</p>
               </div>
             </div>
             <div className="mt-4 flex items-center text-sm">
@@ -428,7 +405,7 @@ export const VendorDashboardPage = () => {
         {/* Tax Forecast Section */}
         {user && (
           <div className="mb-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Tax Forecast & Obligations</h2>
+            <h2 className="responsive-subheading text-gray-900 mb-4">Tax Forecast & Obligations</h2>
             <TaxForecastCard vendorId={user.id} />
           </div>
         )}
@@ -444,12 +421,12 @@ export const VendorDashboardPage = () => {
                 </div>
                 <div className="ml-3">
                   <h3 className="text-lg font-semibold text-gray-900">Low Margin Products</h3>
-                  <p className="text-sm text-gray-600">Products with margins below 35%</p>
+                  <p className="responsive-text text-gray-600">Products with margins below 35%</p>
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-bold text-red-600">{stats.lowMarginItems}</p>
-                <p className="text-sm text-gray-500">items need attention</p>
+                <p className="responsive-heading text-red-600">{stats.lowMarginItems}</p>
+                <p className="responsive-text text-gray-500">items need attention</p>
               </div>
             </div>
             
@@ -465,7 +442,7 @@ export const VendorDashboardPage = () => {
                   <div key={product.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                     <div>
                       <p className="font-medium text-gray-900">{product.name}</p>
-                      <p className="text-sm text-gray-600">
+                      <p className="responsive-text text-gray-600">
                         Margin: <span className={`font-medium ${
                           product.marginAnalysis.status === 'danger' ? 'text-red-600' : 'text-yellow-600'
                         }`}>
@@ -474,8 +451,8 @@ export const VendorDashboardPage = () => {
                       </p>
                     </div>
                     <Link href="/dashboard/vendor/products">
-                      <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                        Review →
+                      <button className="text-blue-600 hover:text-blue-700 responsive-text font-medium">
+                        Review â†’
                       </button>
                     </Link>
                   </div>
@@ -483,8 +460,8 @@ export const VendorDashboardPage = () => {
                 {lowMarginData.lowMarginProducts.length > 3 && (
                   <div className="text-center pt-2">
                     <Link href="/dashboard/vendor/products">
-                      <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                        View all {lowMarginData.lowMarginProducts.length} items →
+                      <button className="text-blue-600 hover:text-blue-700 responsive-text font-medium">
+                        View all {lowMarginData.lowMarginProducts.length} items â†’
                       </button>
                     </Link>
                   </div>
@@ -507,12 +484,12 @@ export const VendorDashboardPage = () => {
                 </div>
                 <div className="ml-3">
                   <h3 className="text-lg font-semibold text-gray-900">Price Alerts</h3>
-                  <p className="text-sm text-gray-600">Ingredient price increases detected</p>
+                  <p className="responsive-text text-gray-600">Ingredient price increases detected</p>
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-bold text-orange-600">{stats.priceAlerts}</p>
-                <p className="text-sm text-gray-500">price changes</p>
+                <p className="responsive-heading text-orange-600">{stats.priceAlerts}</p>
+                <p className="responsive-text text-gray-500">price changes</p>
               </div>
             </div>
             
@@ -528,12 +505,12 @@ export const VendorDashboardPage = () => {
                   <div key={index} className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
                     <div>
                       <p className="font-medium text-gray-900">{alert.ingredientName}</p>
-                      <p className="text-sm text-gray-600">
-                        +{alert.priceIncrease}% • {alert.productName}
+                      <p className="responsive-text text-gray-600">
+                        +{alert.priceIncrease}% â€¢ {alert.productName}
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-medium text-orange-600">
+                      <p className="responsive-text font-medium text-orange-600">
                         ${alert.currentCost}
                       </p>
                       <p className="text-xs text-gray-500">
@@ -547,9 +524,9 @@ export const VendorDashboardPage = () => {
                     <button 
                       onClick={() => batchUpdateMutation.mutate({ targetMargin: 35 })}
                       disabled={batchUpdateMutation.isPending}
-                      className="text-blue-600 hover:text-blue-700 text-sm font-medium disabled:opacity-50"
+                      className="text-blue-600 hover:text-blue-700 responsive-text font-medium disabled:opacity-50"
                     >
-                      {batchUpdateMutation.isPending ? 'Updating...' : 'Update All Prices →'}
+                      {batchUpdateMutation.isPending ? 'Updating...' : 'Update All Prices â†’'}
                     </button>
                   </div>
                 )}
@@ -565,23 +542,47 @@ export const VendorDashboardPage = () => {
 
         {/* Quick Actions */}
         <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {quickActions.map((action) => (
-              <Link key={action.id} href={action.link}>
-                <div className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow cursor-pointer border border-gray-100">
-                  <div className="flex items-center">
-                    <div className={`p-3 rounded-lg ${action.color} bg-opacity-10`}>
-                      <action.icon className={`w-6 h-6 ${action.color.replace('bg-', 'text-')}`} />
-                    </div>
-                    <div className="ml-4">
-                      <h3 className="font-semibold text-gray-900">{action.title}</h3>
-                      <p className="text-sm text-gray-600">{action.description}</p>
-                    </div>
+          <h2 className="responsive-subheading text-gray-900 mb-4">Quick Actions</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <Link href="/dashboard/vendor/products">
+              <div className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow cursor-pointer border border-gray-100">
+                <div className="flex items-center">
+                  <div className="p-3 rounded-lg bg-blue-500 bg-opacity-10">
+                    <Plus className="w-6 h-6 text-blue-500" />
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="font-semibold text-gray-900">Add New Product</h3>
+                    <p className="responsive-text text-gray-600">Create a new product listing</p>
                   </div>
                 </div>
-              </Link>
-            ))}
+              </div>
+            </Link>
+            <Link href="/dashboard/vendor/batch-pricing">
+              <div className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow cursor-pointer border border-gray-100">
+                <div className="flex items-center">
+                  <div className="p-3 rounded-lg bg-emerald-500 bg-opacity-10">
+                    <DollarSign className="w-6 h-6 text-emerald-500" />
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="font-semibold text-gray-900">Batch Pricing</h3>
+                    <p className="responsive-text text-gray-600">Update pricing across products</p>
+                  </div>
+                </div>
+              </div>
+            </Link>
+            <Link href="/dashboard/vendor/analytics">
+              <div className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow cursor-pointer border border-gray-100">
+                <div className="flex items-center">
+                  <div className="p-3 rounded-lg bg-cyan-500 bg-opacity-10">
+                    <TrendingUp className="w-6 h-6 text-cyan-500" />
+                  </div>
+                  <div className="ml-4">
+                    <h3 className="font-semibold text-gray-900">View Analytics</h3>
+                    <p className="responsive-text text-gray-600">Check performance metrics</p>
+                  </div>
+                </div>
+              </div>
+            </Link>
           </div>
         </div>
 
@@ -590,16 +591,16 @@ export const VendorDashboardPage = () => {
           <div className="bg-white rounded-2xl shadow-sm p-6">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">Batch Pricing Update</h2>
+                <h2 className="responsive-subheading text-gray-900">Batch Pricing Update</h2>
                 <p className="text-gray-600 mt-1">Update pricing across your inventory based on target margins</p>
               </div>
               <div className="flex items-center space-x-3">
                 <div className="text-right">
-                  <p className="text-sm text-gray-500">Target Margin</p>
+                  <p className="responsive-text text-gray-500">Target Margin</p>
                   <p className="text-lg font-semibold text-gray-900">35%</p>
                 </div>
                 <Link href="/dashboard/vendor/batch-pricing">
-                  <button className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2">
+                  <button className="bg-blue-600 text-white responsive-button rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2">
                     <DollarSign className="w-5 h-5" />
                     Manage Pricing
                   </button>
@@ -614,8 +615,8 @@ export const VendorDashboardPage = () => {
                     <Package className="w-5 h-5 text-blue-600" />
                   </div>
                   <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-900">Total Products</p>
-                    <p className="text-2xl font-bold text-gray-900">{stats.totalProducts}</p>
+                    <p className="responsive-text font-medium text-gray-900">Total Products</p>
+                    <p className="responsive-heading text-gray-900">{stats.totalProducts}</p>
                   </div>
                 </div>
               </div>
@@ -626,8 +627,8 @@ export const VendorDashboardPage = () => {
                     <AlertTriangle className="w-5 h-5 text-orange-600" />
                   </div>
                   <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-900">Low Margin Items</p>
-                    <p className="text-2xl font-bold text-orange-600">{stats.lowMarginItems}</p>
+                    <p className="responsive-text font-medium text-gray-900">Low Margin Items</p>
+                    <p className="responsive-heading text-orange-600">{stats.lowMarginItems}</p>
                   </div>
                 </div>
               </div>
@@ -638,8 +639,8 @@ export const VendorDashboardPage = () => {
                     <CheckCircle className="w-5 h-5 text-green-600" />
                   </div>
                   <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-900">Healthy Margins</p>
-                    <p className="text-2xl font-bold text-green-600">{stats.totalProducts - stats.lowMarginItems}</p>
+                    <p className="responsive-text font-medium text-gray-900">Healthy Margins</p>
+                    <p className="responsive-heading text-green-600">{stats.totalProducts - stats.lowMarginItems}</p>
                   </div>
                 </div>
               </div>
@@ -651,7 +652,7 @@ export const VendorDashboardPage = () => {
                   <Target className="w-4 h-4 text-blue-600" />
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm font-medium text-blue-900">How it works</p>
+                  <p className="responsive-text font-medium text-blue-900">How it works</p>
                   <p className="text-sm text-blue-700 mt-1">
                     The system will calculate new prices for all products with recipes, ensuring they meet your 35% target margin. 
                     Only products with significant price changes (&gt;5%) will be updated.
@@ -662,32 +663,32 @@ export const VendorDashboardPage = () => {
           </div>
         </div>
 
-        {/* Main Dashboard Cards */}
+        {/* Store Overview Cards */}
         <div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Manage Your Store</h2>
+          <h2 className="responsive-subheading text-gray-900 mb-4">Store Overview</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {dashboardCards.map((card) => (
+            {storeOverviewCards.map((card) => (
               <div key={card.id} className="bg-white rounded-2xl shadow-sm p-6 hover:shadow-md transition-shadow border border-gray-100">
                 <div className="flex items-start justify-between mb-4">
                   <div className={`p-3 rounded-xl ${card.bgColor}`}>
                     <card.icon className={`w-8 h-8 ${card.iconColor}`} />
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-gray-500">{card.stats}</p>
+                    <p className="responsive-text text-gray-500">{card.stats}</p>
                   </div>
                 </div>
                 
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">{card.title}</h3>
+                <h3 className="responsive-subheading text-gray-900 mb-2">{card.title}</h3>
                 <p className="text-gray-600 mb-6 leading-relaxed">{card.description}</p>
                 
                 <div className="flex items-center justify-between">
                   <Link href={card.link}>
                     <button className="text-primary-600 hover:text-primary-700 font-medium text-sm">
-                      View Details →
+                      View Details â†’
                     </button>
                   </Link>
                   <Link href={card.actionLink}>
-                    <button className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm font-medium transition-colors">
+                    <button className="responsive-button bg-primary-600 text-white rounded-lg hover:bg-primary-700 responsive-text font-medium transition-colors">
                       {card.action}
                     </button>
                   </Link>
@@ -700,7 +701,7 @@ export const VendorDashboardPage = () => {
         {/* Recent Activity */}
         <div className="mt-8">
           <div className="bg-white rounded-2xl shadow-sm p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Recent Activity</h2>
+            <h2 className="responsive-subheading text-gray-900 mb-4">Recent Activity</h2>
             <div className="space-y-4">
               <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
                 <div className="p-2 bg-green-100 rounded-lg">
@@ -708,9 +709,9 @@ export const VendorDashboardPage = () => {
                 </div>
                 <div className="flex-1">
                   <p className="font-medium text-gray-900">New order received</p>
-                  <p className="text-sm text-gray-600">Order #ORD-2024-003 for $89.99</p>
+                  <p className="responsive-text text-gray-600">Order #ORD-2024-003 for $89.99</p>
                 </div>
-                <span className="text-sm text-gray-500">2 hours ago</span>
+                <span className="responsive-text text-gray-500">2 hours ago</span>
               </div>
               
               {priceAlertsData?.alerts?.length > 0 && (
@@ -720,11 +721,11 @@ export const VendorDashboardPage = () => {
                   </div>
                   <div className="flex-1">
                     <p className="font-medium text-gray-900">Ingredient price increase detected</p>
-                    <p className="text-sm text-gray-600">
+                    <p className="responsive-text text-gray-600">
                       {priceAlertsData.alerts[0].ingredientName} increased by {priceAlertsData.alerts[0].priceIncrease}%
                     </p>
                   </div>
-                  <span className="text-sm text-gray-500">1 hour ago</span>
+                  <span className="responsive-text text-gray-500">1 hour ago</span>
                 </div>
               )}
               
@@ -735,11 +736,11 @@ export const VendorDashboardPage = () => {
                   </div>
                   <div className="flex-1">
                     <p className="font-medium text-gray-900">Low margin products detected</p>
-                    <p className="text-sm text-gray-600">
+                    <p className="responsive-text text-gray-600">
                       {lowMarginData.lowMarginProducts.length} products have margins below 35%
                     </p>
                   </div>
-                  <span className="text-sm text-gray-500">3 hours ago</span>
+                  <span className="responsive-text text-gray-500">3 hours ago</span>
                 </div>
               )}
               
@@ -749,9 +750,9 @@ export const VendorDashboardPage = () => {
                 </div>
                 <div className="flex-1">
                   <p className="font-medium text-gray-900">New review received</p>
-                  <p className="text-sm text-gray-600">5-star review for "Handcrafted Ceramic Mug Set"</p>
+                  <p className="responsive-text text-gray-600">5-star review for "Handcrafted Ceramic Mug Set"</p>
                 </div>
-                <span className="text-sm text-gray-500">1 day ago</span>
+                <span className="responsive-text text-gray-500">1 day ago</span>
               </div>
               
               <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
@@ -760,9 +761,9 @@ export const VendorDashboardPage = () => {
                 </div>
                 <div className="flex-1">
                   <p className="font-medium text-gray-900">Low stock alert</p>
-                  <p className="text-sm text-gray-600">"Artisan Soap Collection" is running low</p>
+                  <p className="responsive-text text-gray-600">"Artisan Soap Collection" is running low</p>
                 </div>
-                <span className="text-sm text-gray-500">2 days ago</span>
+                <span className="responsive-text text-gray-500">2 days ago</span>
               </div>
             </div>
           </div>

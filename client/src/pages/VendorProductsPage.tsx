@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
@@ -374,92 +374,97 @@ const VendorProductsPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="bg-white rounded-lg shadow p-6">
-                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/2 mb-2"></div>
-                  <div className="h-3 bg-gray-200 rounded w-2/3"></div>
-                </div>
-              ))}
+      <VendorDashboardLayout>
+        <div className="p-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="animate-pulse">
+              <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="bg-white rounded-lg shadow p-6">
+                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+                    <div className="h-3 bg-gray-200 rounded w-1/2 mb-2"></div>
+                    <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </VendorDashboardLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-            <Package className="h-12 w-12 text-red-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-red-800 mb-2">Error Loading Products</h3>
-            <p className="text-red-600 mb-4">
-              {error instanceof Error ? error.message : 'Failed to load products'}
-            </p>
-            <button
-              onClick={() => refetch()}
-              className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
-            >
-              Try Again
-            </button>
+      <VendorDashboardLayout>
+        <div className="p-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+              <Package className="h-12 w-12 text-red-400 mx-auto mb-4" />
+              <h3 className="responsive-subheading text-red-800 mb-2">Error Loading Products</h3>
+              <p className="text-red-600 mb-4">
+                {error instanceof Error ? error.message : 'Failed to load products'}
+              </p>
+              <button
+                onClick={() => refetch()}
+                className="bg-red-600 text-white responsive-button rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Try Again
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      </VendorDashboardLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
+    <VendorDashboardLayout>
+      <div className="p-6">
+        <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Products</h1>
+              <h1 className="responsive-heading text-gray-900">Products</h1>
               <p className="text-gray-600 mt-2">
                 Manage your artisan products and inventory
               </p>
             </div>
-                         <button
-               onClick={() => {
-                 setShowAddForm(!showAddForm);
-                 if (!showAddForm) {
-                   setEditing(null);
-                   reset();
-                   setTags([]);
-                   setImagePreview('');
-                   setTagInput('');
-                   setMarginData(null);
-                   setShowMarginAnalysis(false);
-                   setAiSuggestionData(null);
-                   setShowAiSuggestionModal(false);
-                 }
-               }}
-               className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-             >
-               <Plus className="h-4 w-4" />
-               Add Product
-             </button>
+            <button
+              onClick={() => {
+                setShowAddForm(!showAddForm);
+                if (!showAddForm) {
+                  setEditing(null);
+                  reset();
+                  setTags([]);
+                  setImagePreview('');
+                  setTagInput('');
+                  setMarginData(null);
+                  setShowMarginAnalysis(false);
+                  setAiSuggestionData(null);
+                  setShowAiSuggestionModal(false);
+                }
+              }}
+              className="bg-blue-600 text-white responsive-button rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Add Product
+            </button>
           </div>
         </div>
 
         {/* Add/Edit Product Form */}
         {showAddForm && (
           <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            <h2 className="responsive-subheading text-gray-900 mb-4">
               {editing ? 'Edit Product' : 'Add New Product'}
             </h2>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block responsive-text font-medium text-gray-700 mb-1">
                     Product Name *
                   </label>
                   <input
@@ -478,7 +483,7 @@ const VendorProductsPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block responsive-text font-medium text-gray-700 mb-1">
                     Price *
                   </label>
                   <input
@@ -498,7 +503,7 @@ const VendorProductsPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block responsive-text font-medium text-gray-700 mb-1">
                     Stock Quantity
                   </label>
                   <input
@@ -516,7 +521,7 @@ const VendorProductsPage: React.FC = () => {
                 </div>
 
                                  <div>
-                   <label className="block text-sm font-medium text-gray-700 mb-1">
+                   <label className="block responsive-text font-medium text-gray-700 mb-1">
                      Image URL
                    </label>
                    <input
@@ -538,7 +543,7 @@ const VendorProductsPage: React.FC = () => {
                    {/* Image Preview */}
                    {imagePreview && (
                      <div className="mt-3">
-                       <label className="block text-sm font-medium text-gray-700 mb-2">Preview:</label>
+                       <label className="block responsive-text font-medium text-gray-700 mb-2">Preview:</label>
                        <div className="relative inline-block">
                          <img
                            src={imagePreview}
@@ -559,7 +564,7 @@ const VendorProductsPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block responsive-text font-medium text-gray-700 mb-1">
                   Description
                 </label>
                 <textarea
@@ -571,7 +576,7 @@ const VendorProductsPage: React.FC = () => {
               </div>
 
                              <div>
-                 <label className="block text-sm font-medium text-gray-700 mb-1">
+                 <label className="block responsive-text font-medium text-gray-700 mb-1">
                    Tags
                  </label>
                  
@@ -588,7 +593,7 @@ const VendorProductsPage: React.FC = () => {
                    <button
                      type="button"
                      onClick={addTag}
-                     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                     className="responsive-button bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                    >
                      Add
                    </button>
@@ -624,7 +629,7 @@ const VendorProductsPage: React.FC = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block responsive-text font-medium text-gray-700 mb-1">
                     Target Margin (%)
                   </label>
                   <input
@@ -648,7 +653,7 @@ const VendorProductsPage: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block responsive-text font-medium text-gray-700 mb-1">
                     Recipe ID (Optional)
                   </label>
                   <input
@@ -669,7 +674,7 @@ const VendorProductsPage: React.FC = () => {
                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <AlertTriangle className="h-5 w-5 text-yellow-600" />
-                      <h4 className="text-sm font-medium text-yellow-800">Product on Watchlist</h4>
+                      <h4 className="responsive-text font-medium text-yellow-800">Product on Watchlist</h4>
                     </div>
                     <p className="text-yellow-700 text-sm">
                       This product is being monitored due to price volatility, low confidence in AI suggestions, or significant price differences.
@@ -687,7 +692,7 @@ const VendorProductsPage: React.FC = () => {
               {editing && (
                 <div className="border-t pt-4">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-medium text-gray-900">AI Price Suggestion</h3>
+                    <h3 className="responsive-subheading text-gray-900">AI Price Suggestion</h3>
                     <button
                       type="button"
                       onClick={() => aiSuggestionMutation.mutate(editing.id)}
@@ -712,7 +717,7 @@ const VendorProductsPage: React.FC = () => {
                     <div className="bg-purple-50 rounded-lg p-4 space-y-3">
                       <div className="flex items-center gap-2">
                         <Brain className="h-4 w-4 text-purple-600" />
-                        <h4 className="text-sm font-medium text-purple-900">Last AI Suggestion</h4>
+                        <h4 className="responsive-text font-medium text-purple-900">Last AI Suggestion</h4>
                       </div>
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
@@ -745,7 +750,7 @@ const VendorProductsPage: React.FC = () => {
               {editing && (
                 <div className="border-t pt-4">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-medium text-gray-900">Margin Analysis</h3>
+                    <h3 className="responsive-subheading text-gray-900">Margin Analysis</h3>
                     <button
                       type="button"
                       onClick={() => marginAnalysisMutation.mutate(editing.id)}
@@ -770,7 +775,7 @@ const VendorProductsPage: React.FC = () => {
                     <div className="bg-gray-50 rounded-lg p-4 space-y-4">
                       {/* Cost Analysis */}
                       <div>
-                        <h4 className="text-sm font-medium text-gray-900 mb-2">Cost Analysis</h4>
+                        <h4 className="responsive-text font-medium text-gray-900 mb-2">Cost Analysis</h4>
                         <div className="grid grid-cols-2 gap-4 text-sm">
                           <div>
                             <span className="text-gray-600">Unit Cost:</span>
@@ -791,7 +796,7 @@ const VendorProductsPage: React.FC = () => {
 
                       {/* Margin Analysis */}
                       <div>
-                        <h4 className="text-sm font-medium text-gray-900 mb-2">Margin Analysis</h4>
+                        <h4 className="responsive-text font-medium text-gray-900 mb-2">Margin Analysis</h4>
                         <div className="grid grid-cols-2 gap-4 text-sm">
                           <div>
                             <span className="text-gray-600">Current Margin:</span>
@@ -900,12 +905,12 @@ const VendorProductsPage: React.FC = () => {
         <div className="bg-white rounded-lg shadow-md">
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-900">
+              <h2 className="responsive-subheading text-gray-900">
                 Your Products ({productsData?.count || 0})
               </h2>
               <button
                 onClick={() => refetch()}
-                className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                className="text-blue-600 hover:text-blue-700 responsive-text font-medium"
               >
                 Refresh
               </button>
@@ -915,7 +920,7 @@ const VendorProductsPage: React.FC = () => {
           {productsData?.products.length === 0 ? (
             <div className="p-12 text-center">
               <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No products yet</h3>
+              <h3 className="responsive-subheading text-gray-900 mb-2">No products yet</h3>
               <p className="text-gray-600 mb-4">
                 Start by adding your first artisan product to showcase your work.
               </p>
@@ -932,7 +937,7 @@ const VendorProductsPage: React.FC = () => {
                    setAiSuggestionData(null);
                    setShowAiSuggestionModal(false);
                  }}
-                 className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                 className="bg-blue-600 text-white responsive-button rounded-lg hover:bg-blue-700 transition-colors"
                >
                  Add Your First Product
                </button>
@@ -968,7 +973,7 @@ const VendorProductsPage: React.FC = () => {
                             </span>
                           </div>
                           
-                          <div className="flex items-center gap-6 text-sm text-gray-600 mb-2">
+                          <div className="flex items-center gap-6 responsive-text text-gray-600 mb-2">
                             <div className="flex items-center gap-1">
                               <DollarSign className="h-4 w-4" />
                               <span className="font-medium">{formatPrice(product.price)}</span>
@@ -1017,7 +1022,7 @@ const VendorProductsPage: React.FC = () => {
                           )}
 
                                                      <div className="text-xs text-gray-500">
-                             Created: {formatDate(product.createdAt)} • 
+                             Created: {formatDate(product.createdAt)} â€¢ 
                              Updated: {formatDate(product.updatedAt)}
                            </div>
                            
@@ -1114,14 +1119,14 @@ const VendorProductsPage: React.FC = () => {
             <div className="flex gap-3 justify-end">
               <button
                 onClick={cancelDelete}
-                className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
+                className="responsive-button text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmDelete}
                 disabled={deleteProductMutation.isPending}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="responsive-button bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {deleteProductMutation.isPending ? (
                   <>
@@ -1166,7 +1171,7 @@ const VendorProductsPage: React.FC = () => {
             <div className="space-y-6">
               {/* Product Info */}
               <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="text-sm font-medium text-gray-900 mb-2">Product Information</h4>
+                <h4 className="responsive-text font-medium text-gray-900 mb-2">Product Information</h4>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="text-gray-600">Name:</span>
@@ -1187,7 +1192,7 @@ const VendorProductsPage: React.FC = () => {
 
               {/* Cost Analysis */}
               <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="text-sm font-medium text-gray-900 mb-2">Cost Analysis</h4>
+                <h4 className="responsive-text font-medium text-gray-900 mb-2">Cost Analysis</h4>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="text-gray-600">Unit Cost:</span>
@@ -1208,7 +1213,7 @@ const VendorProductsPage: React.FC = () => {
 
               {/* Margin Analysis */}
               <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="text-sm font-medium text-gray-900 mb-2">Margin Analysis</h4>
+                <h4 className="responsive-text font-medium text-gray-900 mb-2">Margin Analysis</h4>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="text-gray-600">Current Margin:</span>
@@ -1222,7 +1227,7 @@ const VendorProductsPage: React.FC = () => {
                   </div>
                   <div>
                     <span className="text-gray-600">Status:</span>
-                    <span className={`ml-2 px-3 py-1 text-sm font-medium rounded-full ${
+                    <span className={`ml-2 px-3 py-1 responsive-text font-medium rounded-full ${
                       marginData.marginAnalysis.status === 'danger' ? 'bg-red-100 text-red-800' :
                       marginData.marginAnalysis.status === 'warning' ? 'bg-yellow-100 text-yellow-800' :
                       'bg-green-100 text-green-800'
@@ -1249,7 +1254,7 @@ const VendorProductsPage: React.FC = () => {
                   setShowMarginAnalysis(false);
                   setMarginData(null);
                 }}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+                className="responsive-button bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
               >
                 Close
               </button>
@@ -1284,7 +1289,7 @@ const VendorProductsPage: React.FC = () => {
             <div className="space-y-6">
               {/* Product Info */}
               <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="text-sm font-medium text-gray-900 mb-2">Product Information</h4>
+                <h4 className="responsive-text font-medium text-gray-900 mb-2">Product Information</h4>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="text-gray-600">Name:</span>
@@ -1303,9 +1308,9 @@ const VendorProductsPage: React.FC = () => {
                 </div>
               </div>
 
-                             {/* Cost Analysis */}
-               <div className="bg-gray-50 rounded-lg p-4">
-                 <h4 className="text-sm font-medium text-gray-900 mb-2">Cost Analysis</h4>
+              {/* Cost Analysis */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                 <h4 className="responsive-text font-medium text-gray-900 mb-2">Cost Analysis</h4>
                  <div className="grid grid-cols-2 gap-4 text-sm">
                    <div>
                      <span className="text-gray-600">Unit Cost:</span>
@@ -1322,7 +1327,7 @@ const VendorProductsPage: React.FC = () => {
 
               {/* AI Suggestion */}
               <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="text-sm font-medium text-gray-900 mb-2">AI Suggestion</h4>
+                <h4 className="responsive-text font-medium text-gray-900 mb-2">AI Suggestion</h4>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="text-gray-600">Suggested Price:</span>
@@ -1359,7 +1364,7 @@ const VendorProductsPage: React.FC = () => {
 
               {/* Watchlist Update */}
               <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="text-sm font-medium text-gray-900 mb-2">Watchlist Update</h4>
+                <h4 className="responsive-text font-medium text-gray-900 mb-2">Watchlist Update</h4>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="text-gray-600">Added to Watchlist:</span>
@@ -1383,7 +1388,7 @@ const VendorProductsPage: React.FC = () => {
                   setShowAiSuggestionModal(false);
                   setAiSuggestionData(null);
                 }}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
+                className="responsive-button bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors"
               >
                 Close
               </button>

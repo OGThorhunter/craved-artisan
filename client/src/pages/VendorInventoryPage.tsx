@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
@@ -151,48 +151,53 @@ export default function VendorInventoryPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading inventory...</p>
+      <VendorDashboardLayout>
+        <div className="flex items-center justify-center p-6">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading inventory...</p>
+          </div>
         </div>
-      </div>
+      </VendorDashboardLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Inventory</h2>
-          <p className="text-gray-600">Failed to load your ingredients. Please try again.</p>
+      <VendorDashboardLayout>
+        <div className="flex items-center justify-center p-6">
+          <div className="text-center">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h2 className="responsive-subheading text-gray-900 mb-2">Error Loading Inventory</h2>
+            <p className="text-gray-600">Failed to load your ingredients. Please try again.</p>
+          </div>
         </div>
-      </div>
+      </VendorDashboardLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <VendorDashboardLayout>
+      <div className="py-8">
+        <div className="container-responsive">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Inventory Management</h1>
+              <h1 className="responsive-heading text-gray-900">Inventory Management</h1>
               <p className="mt-2 text-gray-600">Manage your ingredients, track stock levels, and create recipes</p>
             </div>
             <div className="flex gap-3">
               <Link 
                 to="/dashboard/vendor/recipes/create"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                className="inline-flex items-center gap-2 responsive-button bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
               >
                 <PlusCircle className="w-4 h-4" />
                 Create Recipe
               </Link>
               <button
                 onClick={() => setShowAddForm(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center gap-2 responsive-button bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 Add Ingredient
@@ -209,8 +214,8 @@ export default function VendorInventoryPage() {
                 <Package className="w-6 h-6 text-blue-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Ingredients</p>
-                <p className="text-2xl font-bold text-gray-900">{totalIngredients}</p>
+                <p className="responsive-text font-medium text-gray-600">Total Ingredients</p>
+                <p className="responsive-heading text-gray-900">{totalIngredients}</p>
               </div>
             </div>
           </div>
@@ -221,8 +226,8 @@ export default function VendorInventoryPage() {
                 <CheckCircle className="w-6 h-6 text-green-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Available</p>
-                <p className="text-2xl font-bold text-gray-900">{availableIngredients}</p>
+                <p className="responsive-text font-medium text-gray-600">Available</p>
+                <p className="responsive-heading text-gray-900">{availableIngredients}</p>
               </div>
             </div>
           </div>
@@ -233,8 +238,8 @@ export default function VendorInventoryPage() {
                 <AlertTriangle className="w-6 h-6 text-orange-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Low Stock</p>
-                <p className="text-2xl font-bold text-gray-900">{lowStockIngredients}</p>
+                <p className="responsive-text font-medium text-gray-600">Low Stock</p>
+                <p className="responsive-heading text-gray-900">{lowStockIngredients}</p>
               </div>
             </div>
           </div>
@@ -245,8 +250,8 @@ export default function VendorInventoryPage() {
                 <TrendingUp className="w-6 h-6 text-purple-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Value</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="responsive-text font-medium text-gray-600">Total Value</p>
+                <p className="responsive-heading text-gray-900">
                   ${ingredients.reduce((sum, i) => sum + i.costPerUnit, 0).toFixed(2)}
                 </p>
               </div>
@@ -258,14 +263,14 @@ export default function VendorInventoryPage() {
         {showAddForm && (
           <div className="bg-white rounded-lg shadow mb-8">
             <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">
+              <h3 className="responsive-subheading text-gray-900">
                 {editingIngredient ? 'Edit Ingredient' : 'Add New Ingredient'}
               </h3>
             </div>
             <form onSubmit={handleSubmit(onSubmit)} className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block responsive-text font-medium text-gray-700 mb-2">
                     Name *
                   </label>
                   <input
@@ -280,7 +285,7 @@ export default function VendorInventoryPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block responsive-text font-medium text-gray-700 mb-2">
                     Unit *
                   </label>
                   <select
@@ -305,7 +310,7 @@ export default function VendorInventoryPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block responsive-text font-medium text-gray-700 mb-2">
                     Cost per Unit *
                   </label>
                   <input
@@ -325,7 +330,7 @@ export default function VendorInventoryPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block responsive-text font-medium text-gray-700 mb-2">
                     Supplier
                   </label>
                   <input
@@ -337,7 +342,7 @@ export default function VendorInventoryPage() {
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block responsive-text font-medium text-gray-700 mb-2">
                     Description
                   </label>
                   <textarea
@@ -353,7 +358,7 @@ export default function VendorInventoryPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  className="responsive-button bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
                   {isSubmitting ? (
                     <>
@@ -370,7 +375,7 @@ export default function VendorInventoryPage() {
                 <button
                   type="button"
                   onClick={handleCancel}
-                  className="px-4 py-2 text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
+                  className="responsive-button text-gray-700 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
                 >
                   Cancel
                 </button>
@@ -382,17 +387,17 @@ export default function VendorInventoryPage() {
         {/* Ingredients List */}
         <div className="bg-white rounded-lg shadow">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900">Ingredients</h3>
+            <h3 className="responsive-subheading text-gray-900">Ingredients</h3>
           </div>
           
           {ingredients.length === 0 ? (
             <div className="p-8 text-center">
               <Package2 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No ingredients yet</h3>
+              <h3 className="responsive-subheading text-gray-900 mb-2">No ingredients yet</h3>
               <p className="text-gray-600 mb-4">Start building your inventory by adding your first ingredient.</p>
               <button
                 onClick={() => setShowAddForm(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center gap-2 responsive-button bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
               >
                 <Plus className="w-4 h-4" />
                 Add First Ingredient
@@ -403,22 +408,22 @@ export default function VendorInventoryPage() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="responsive-button text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Ingredient
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="responsive-button text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Unit
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="responsive-button text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Cost
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="responsive-button text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Supplier
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="responsive-button text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="responsive-button text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Actions
                     </th>
                   </tr>
@@ -428,11 +433,11 @@ export default function VendorInventoryPage() {
                     <tr key={ingredient.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="responsive-text font-medium text-gray-900">
                             {ingredient.name}
                           </div>
                           {ingredient.description && (
-                            <div className="text-sm text-gray-500">
+                            <div className="responsive-text text-gray-500">
                               {ingredient.description}
                             </div>
                           )}
@@ -444,7 +449,7 @@ export default function VendorInventoryPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         ${ingredient.costPerUnit.toFixed(2)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4 whitespace-nowrap responsive-text text-gray-500">
                         {ingredient.supplier || '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -456,7 +461,7 @@ export default function VendorInventoryPage() {
                           {ingredient.isAvailable ? 'Available' : 'Low Stock'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <td className="px-6 py-4 whitespace-nowrap responsive-text font-medium">
                         <div className="flex gap-2">
                           <button
                             onClick={() => handleEdit(ingredient)}
@@ -488,7 +493,7 @@ export default function VendorInventoryPage() {
             <div className="flex items-center">
               <AlertTriangle className="w-5 h-5 text-orange-600 mr-3" />
               <div>
-                <h4 className="text-sm font-medium text-orange-800">
+                <h4 className="responsive-text font-medium text-orange-800">
                   Low Stock Alert
                 </h4>
                 <p className="text-sm text-orange-700 mt-1">

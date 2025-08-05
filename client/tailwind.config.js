@@ -48,6 +48,7 @@ export default {
           cream: '#F7F2EC',
           beige: '#E8CBAE',
           green: '#5B6E02',
+          'green-hover': '#4A5A01', // Darker shade for hover
           maroon: '#7F232E',
           charcoal: '#333333',
           grey: '#777777',

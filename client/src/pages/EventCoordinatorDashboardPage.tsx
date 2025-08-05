@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { Link } from 'wouter';
 import { 
   Calendar, 
@@ -86,18 +86,18 @@ export const EventCoordinatorDashboardPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="page-container bg-gray-50">
+      <div className="container-responsive py-8">
         {/* Header */}
         <div className="bg-white rounded-2xl shadow-sm p-6 mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Event Coordinator Dashboard</h1>
+              <h1 className="responsive-heading text-gray-900">Event Coordinator Dashboard</h1>
               <p className="text-gray-600 mt-1">Manage events and coordinate vendors</p>
             </div>
             <div className="flex items-center space-x-4">
               <Link href="/dashboard/event-coordinator/events/new">
-                <button className="flex items-center space-x-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
+                <button className="flex items-center space-x-2 responsive-button bg-primary-600 text-white rounded-lg hover:bg-primary-700">
                   <Plus className="w-5 h-5" />
                   <span>Create Event</span>
                 </button>
@@ -114,8 +114,8 @@ export const EventCoordinatorDashboardPage = () => {
                 <Calendar className="w-6 h-6 text-blue-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Events</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalEvents}</p>
+                <p className="responsive-text font-medium text-gray-600">Total Events</p>
+                <p className="responsive-heading text-gray-900">{stats.totalEvents}</p>
               </div>
             </div>
           </div>
@@ -126,8 +126,8 @@ export const EventCoordinatorDashboardPage = () => {
                 <Calendar className="w-6 h-6 text-green-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Active Events</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.activeEvents}</p>
+                <p className="responsive-text font-medium text-gray-600">Active Events</p>
+                <p className="responsive-heading text-gray-900">{stats.activeEvents}</p>
               </div>
             </div>
           </div>
@@ -138,8 +138,8 @@ export const EventCoordinatorDashboardPage = () => {
                 <Users className="w-6 h-6 text-purple-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Vendors</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalVendors}</p>
+                <p className="responsive-text font-medium text-gray-600">Total Vendors</p>
+                <p className="responsive-heading text-gray-900">{stats.totalVendors}</p>
               </div>
             </div>
           </div>
@@ -150,8 +150,8 @@ export const EventCoordinatorDashboardPage = () => {
                 <Users className="w-6 h-6 text-yellow-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Attendees</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalAttendees.toLocaleString()}</p>
+                <p className="responsive-text font-medium text-gray-600">Total Attendees</p>
+                <p className="responsive-heading text-gray-900">{stats.totalAttendees.toLocaleString()}</p>
               </div>
             </div>
           </div>
@@ -162,8 +162,8 @@ export const EventCoordinatorDashboardPage = () => {
                 <Clock className="w-6 h-6 text-indigo-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Upcoming Events</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.upcomingEvents}</p>
+                <p className="responsive-text font-medium text-gray-600">Upcoming Events</p>
+                <p className="responsive-heading text-gray-900">{stats.upcomingEvents}</p>
               </div>
             </div>
           </div>
@@ -174,8 +174,8 @@ export const EventCoordinatorDashboardPage = () => {
                 <CheckCircle className="w-6 h-6 text-gray-600" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Completed Events</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.completedEvents}</p>
+                <p className="responsive-text font-medium text-gray-600">Completed Events</p>
+                <p className="responsive-heading text-gray-900">{stats.completedEvents}</p>
               </div>
             </div>
           </div>
@@ -214,9 +214,9 @@ export const EventCoordinatorDashboardPage = () => {
                 {/* Upcoming Events */}
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-semibold text-gray-900">Upcoming Events</h2>
+                    <h2 className="responsive-subheading text-gray-900">Upcoming Events</h2>
                     <Link href="/dashboard/event-coordinator/events">
-                      <button className="text-primary-600 hover:text-primary-700 text-sm font-medium">
+                      <button className="text-primary-600 hover:text-primary-700 responsive-text font-medium">
                         View All Events
                       </button>
                     </Link>
@@ -227,7 +227,7 @@ export const EventCoordinatorDashboardPage = () => {
                         <div className="flex items-center justify-between mb-4">
                           <div>
                             <h3 className="text-lg font-semibold text-gray-900">{event.name}</h3>
-                            <div className="flex items-center space-x-4 text-sm text-gray-500 mt-1">
+                            <div className="flex items-center space-x-4 responsive-text text-gray-500 mt-1">
                               <div className="flex items-center">
                                 <Calendar className="w-4 h-4 mr-1" />
                                 {event.date}
@@ -245,23 +245,23 @@ export const EventCoordinatorDashboardPage = () => {
 
                         <div className="grid grid-cols-2 gap-4 mb-4">
                           <div className="text-center p-3 bg-gray-50 rounded-lg">
-                            <p className="text-2xl font-bold text-gray-900">{event.vendors}</p>
-                            <p className="text-sm text-gray-500">Vendors</p>
+                            <p className="responsive-heading text-gray-900">{event.vendors}</p>
+                            <p className="responsive-text text-gray-500">Vendors</p>
                           </div>
                           <div className="text-center p-3 bg-gray-50 rounded-lg">
-                            <p className="text-2xl font-bold text-gray-900">{event.attendees}</p>
-                            <p className="text-sm text-gray-500">Expected Attendees</p>
+                            <p className="responsive-heading text-gray-900">{event.attendees}</p>
+                            <p className="responsive-text text-gray-500">Expected Attendees</p>
                           </div>
                         </div>
 
                         <div className="flex space-x-2">
                           <Link href={`/dashboard/event-coordinator/events/${event.id}`}>
-                            <button className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
+                            <button className="responsive-button text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
                               View Details
                             </button>
                           </Link>
                           <Link href={`/dashboard/event-coordinator/events/${event.id}/edit`}>
-                            <button className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
+                            <button className="responsive-button text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
                               Edit Event
                             </button>
                           </Link>
@@ -273,14 +273,14 @@ export const EventCoordinatorDashboardPage = () => {
 
                 {/* Recent Events */}
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Recent Events</h2>
+                  <h2 className="responsive-subheading text-gray-900 mb-4">Recent Events</h2>
                   <div className="space-y-4">
                     {recentEvents.map((event) => (
                       <div key={event.id} className="border border-gray-200 rounded-lg p-6">
                         <div className="flex items-center justify-between mb-4">
                           <div>
                             <h3 className="text-lg font-semibold text-gray-900">{event.name}</h3>
-                            <div className="flex items-center space-x-4 text-sm text-gray-500 mt-1">
+                            <div className="flex items-center space-x-4 responsive-text text-gray-500 mt-1">
                               <div className="flex items-center">
                                 <Calendar className="w-4 h-4 mr-1" />
                                 {event.date}
@@ -302,15 +302,15 @@ export const EventCoordinatorDashboardPage = () => {
                         <div className="grid grid-cols-3 gap-4">
                           <div className="text-center">
                             <p className="text-lg font-semibold text-gray-900">{event.vendors}</p>
-                            <p className="text-sm text-gray-500">Vendors</p>
+                            <p className="responsive-text text-gray-500">Vendors</p>
                           </div>
                           <div className="text-center">
                             <p className="text-lg font-semibold text-gray-900">{event.attendees}</p>
-                            <p className="text-sm text-gray-500">Attendees</p>
+                            <p className="responsive-text text-gray-500">Attendees</p>
                           </div>
                           <div className="text-center">
                             <p className="text-lg font-semibold text-gray-900">${event.revenue?.toLocaleString()}</p>
-                            <p className="text-sm text-gray-500">Revenue</p>
+                            <p className="responsive-text text-gray-500">Revenue</p>
                           </div>
                         </div>
                       </div>
@@ -323,9 +323,9 @@ export const EventCoordinatorDashboardPage = () => {
             {activeTab === 'events' && (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold text-gray-900">All Events</h2>
+                  <h2 className="responsive-subheading text-gray-900">All Events</h2>
                   <Link href="/dashboard/event-coordinator/events/new">
-                    <button className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
+                    <button className="responsive-button bg-primary-600 text-white rounded-lg hover:bg-primary-700">
                       Create New Event
                     </button>
                   </Link>
@@ -334,7 +334,7 @@ export const EventCoordinatorDashboardPage = () => {
                 <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
                   <div className="px-6 py-4 border-b border-gray-200">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-medium text-gray-900">Event Management</h3>
+                      <h3 className="responsive-subheading text-gray-900">Event Management</h3>
                       <div className="flex items-center space-x-2">
                         <input
                           type="text"
@@ -364,8 +364,8 @@ export const EventCoordinatorDashboardPage = () => {
             {activeTab === 'vendors' && (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold text-gray-900">Vendor Management</h2>
-                  <button className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
+                  <h2 className="responsive-subheading text-gray-900">Vendor Management</h2>
+                  <button className="responsive-button bg-primary-600 text-white rounded-lg hover:bg-primary-700">
                     Add Vendor
                   </button>
                 </div>
@@ -373,7 +373,7 @@ export const EventCoordinatorDashboardPage = () => {
                 <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
                   <div className="px-6 py-4 border-b border-gray-200">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-medium text-gray-900">All Vendors</h3>
+                      <h3 className="responsive-subheading text-gray-900">All Vendors</h3>
                       <div className="flex items-center space-x-2">
                         <input
                           type="text"
@@ -403,7 +403,7 @@ export const EventCoordinatorDashboardPage = () => {
             {activeTab === 'applications' && (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold text-gray-900">Vendor Applications</h2>
+                  <h2 className="responsive-subheading text-gray-900">Vendor Applications</h2>
                   <div className="flex items-center space-x-2">
                     <select className="px-3 py-2 border border-gray-300 rounded-lg text-sm" aria-label="Filter by status">
                       <option>All Status</option>
@@ -420,8 +420,8 @@ export const EventCoordinatorDashboardPage = () => {
                       <div className="flex items-center justify-between mb-4">
                         <div>
                           <h3 className="text-lg font-semibold text-gray-900">{application.vendor}</h3>
-                          <p className="text-sm text-gray-500">Event: {application.event}</p>
-                          <p className="text-sm text-gray-500">Category: {application.category}</p>
+                          <p className="responsive-text text-gray-500">Event: {application.event}</p>
+                          <p className="responsive-text text-gray-500">Category: {application.category}</p>
                         </div>
                         <div className="text-right">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -433,20 +433,20 @@ export const EventCoordinatorDashboardPage = () => {
                           }`}>
                             {application.status}
                           </span>
-                          <p className="text-sm text-gray-500 mt-1">Submitted {application.submitted}</p>
+                          <p className="responsive-text text-gray-500 mt-1">Submitted {application.submitted}</p>
                         </div>
                       </div>
 
                       <div className="flex space-x-2">
-                        <button className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
+                        <button className="responsive-button text-sm border border-gray-300 rounded-lg hover:bg-gray-50">
                           View Application
                         </button>
                         {application.status === 'pending' && (
                           <>
-                            <button className="px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700">
+                            <button className="responsive-button text-sm bg-green-600 text-white rounded-lg hover:bg-green-700">
                               Approve
                             </button>
-                            <button className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700">
+                            <button className="responsive-button text-sm bg-red-600 text-white rounded-lg hover:bg-red-700">
                               Reject
                             </button>
                           </>
@@ -460,7 +460,7 @@ export const EventCoordinatorDashboardPage = () => {
 
             {activeTab === 'analytics' && (
               <div className="space-y-6">
-                <h2 className="text-xl font-semibold text-gray-900">Event Analytics</h2>
+                <h2 className="responsive-subheading text-gray-900">Event Analytics</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="bg-white border border-gray-200 rounded-lg p-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Event Performance</h3>

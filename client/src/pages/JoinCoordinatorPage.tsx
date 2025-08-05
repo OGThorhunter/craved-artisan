@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { CheckCircle, Calendar, Users, MapPin, Megaphone, TrendingUp, Award } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -21,7 +21,7 @@ export const JoinCoordinatorPage = () => {
 
       {/* Benefits */}
       <div className="max-w-6xl mx-auto py-16 px-6">
-        <h2 className="text-2xl font-bold mb-6">Why Event Coordinators Choose Craved Artisan</h2>
+        <h2 className="responsive-heading mb-6">Why Event Coordinators Choose Craved Artisan</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
             { icon: <Calendar />, label: 'Event Management Tools' },
@@ -45,7 +45,7 @@ export const JoinCoordinatorPage = () => {
       {/* Requirements */}
       <div className="bg-gray-50 py-12 px-6">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-xl font-semibold mb-4">What You'll Need</h2>
+          <h2 className="responsive-subheading mb-4">What You'll Need</h2>
           <ul className="flex flex-wrap gap-4 justify-center text-sm">
             <li className="bg-white border border-gray-300 px-3 py-2 rounded shadow">Event Planning Experience</li>
             <li className="bg-white border border-gray-300 px-3 py-2 rounded shadow">Venue Access or Permits</li>
@@ -57,7 +57,7 @@ export const JoinCoordinatorPage = () => {
 
       {/* Onboarding Checklist */}
       <div className="max-w-4xl mx-auto py-16 px-6">
-        <h2 className="text-xl font-semibold mb-6 text-center">Get Started in 5 Simple Steps</h2>
+        <h2 className="responsive-subheading mb-6 text-center">Get Started in 5 Simple Steps</h2>
         <ul className="space-y-4">
           {[
             'Create your coordinator account',
@@ -82,7 +82,7 @@ export const JoinCoordinatorPage = () => {
 
       {/* Social Proof */}
       <div className="bg-brand-cream py-12 px-6 text-center">
-        <h2 className="text-xl font-semibold mb-4">What Event Coordinators Are Saying</h2>
+        <h2 className="responsive-subheading mb-4">What Event Coordinators Are Saying</h2>
         <div className="max-w-3xl mx-auto space-y-6 text-sm italic">
           <p>"Craved Artisan made it so easy to connect with local vendors and customers for my farmers market."</p>
           <p>"The platform handles all the logistics so I can focus on creating amazing community events."</p>
@@ -91,7 +91,7 @@ export const JoinCoordinatorPage = () => {
 
       {/* Event Types */}
       <div className="max-w-5xl mx-auto py-16 px-6">
-        <h2 className="text-xl font-semibold mb-4 text-center">Types of Events You Can Host</h2>
+        <h2 className="responsive-subheading mb-4 text-center">Types of Events You Can Host</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[
             { title: 'Farmers Markets', description: 'Weekly or monthly markets featuring local produce and goods' },
@@ -108,7 +108,7 @@ export const JoinCoordinatorPage = () => {
               transition={{ duration: 0.2 }}
             >
               <h3 className="text-lg font-semibold text-brand-charcoal mb-2">{event.title}</h3>
-              <p className="text-sm text-gray-600">{event.description}</p>
+              <p className="responsive-text text-gray-600">{event.description}</p>
             </motion.div>
           ))}
         </div>
@@ -117,23 +117,23 @@ export const JoinCoordinatorPage = () => {
       {/* FAQ Section */}
       <div className="bg-gray-50 py-12 px-6">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-xl font-semibold mb-6">Frequently Asked Questions</h2>
+          <h2 className="responsive-subheading mb-6">Frequently Asked Questions</h2>
           <div className="space-y-4">
             <details className="bg-white p-4 rounded shadow">
               <summary className="cursor-pointer font-medium">How do I get paid for hosting events?</summary>
-              <p className="mt-2 text-sm text-gray-600">You earn a percentage of vendor fees and can set your own event entry fees.</p>
+              <p className="mt-2 responsive-text text-gray-600">You earn a percentage of vendor fees and can set your own event entry fees.</p>
             </details>
             <details className="bg-white p-4 rounded shadow">
               <summary className="cursor-pointer font-medium">What support does Craved Artisan provide?</summary>
-              <p className="mt-2 text-sm text-gray-600">Marketing tools, vendor connections, payment processing, and event management software.</p>
+              <p className="mt-2 responsive-text text-gray-600">Marketing tools, vendor connections, payment processing, and event management software.</p>
             </details>
             <details className="bg-white p-4 rounded shadow">
               <summary className="cursor-pointer font-medium">Do I need insurance for events?</summary>
-              <p className="mt-2 text-sm text-gray-600">We provide basic coverage, but you may need additional insurance depending on your event type.</p>
+              <p className="mt-2 responsive-text text-gray-600">We provide basic coverage, but you may need additional insurance depending on your event type.</p>
             </details>
             <details className="bg-white p-4 rounded shadow">
               <summary className="cursor-pointer font-medium">How do I find vendors for my events?</summary>
-              <p className="mt-2 text-sm text-gray-600">Our platform connects you with local vendors who are looking for events to participate in.</p>
+              <p className="mt-2 responsive-text text-gray-600">Our platform connects you with local vendors who are looking for events to participate in.</p>
             </details>
           </div>
         </div>
@@ -141,7 +141,7 @@ export const JoinCoordinatorPage = () => {
 
       {/* Role Suggestions */}
       <div className="text-center py-12 px-6">
-        <p className="text-sm text-gray-600 mb-4">Not quite what you're looking for?</p>
+        <p className="responsive-text text-gray-600 mb-4">Not quite what you're looking for?</p>
         <div className="flex flex-wrap gap-4 justify-center">
           <Link href="/join/vendor" className="underline text-brand-green">Join as a Vendor</Link>
           <Link href="/join" className="underline text-brand-green">View All Roles</Link>
@@ -155,7 +155,7 @@ export const JoinCoordinatorPage = () => {
         <div className="flex gap-4">
           <Link
             href="/join"
-            className="bg-white text-brand-green px-4 py-2 rounded shadow hover:bg-gray-100 transition"
+            className="bg-white text-brand-green responsive-button rounded shadow hover:bg-gray-100 transition"
           >
             Get Started
           </Link>

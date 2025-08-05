@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'wouter';
 import { 
@@ -111,7 +111,7 @@ const VendorWatchlistPage = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="page-container bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading watchlist...</p>
@@ -122,14 +122,14 @@ const VendorWatchlistPage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="page-container bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Watchlist</h2>
+          <h2 className="responsive-subheading text-gray-900 mb-2">Error Loading Watchlist</h2>
           <p className="text-gray-600 mb-4">Failed to load products on watchlist</p>
           <button
             onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            className="responsive-button bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
           >
             Try Again
           </button>
@@ -139,8 +139,8 @@ const VendorWatchlistPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="page-container bg-gray-50">
+      <div className="container-responsive py-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-4">
@@ -156,7 +156,7 @@ const VendorWatchlistPage = () => {
               <Eye className="h-8 w-8 text-yellow-600" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Product Watchlist</h1>
+              <h1 className="responsive-heading text-gray-900">Product Watchlist</h1>
               <p className="text-gray-600">
                 Monitoring {products?.length || 0} products for price volatility and margin issues
               </p>
@@ -172,8 +172,8 @@ const VendorWatchlistPage = () => {
                 <Package className="h-6 w-6 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Watchlist Items</p>
-                <p className="text-2xl font-bold text-gray-900">{products?.length || 0}</p>
+                <p className="responsive-text font-medium text-gray-600">Total Watchlist Items</p>
+                <p className="responsive-heading text-gray-900">{products?.length || 0}</p>
               </div>
             </div>
           </div>
@@ -184,8 +184,8 @@ const VendorWatchlistPage = () => {
                 <AlertTriangle className="h-6 w-6 text-red-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-600">High Risk Items</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="responsive-text font-medium text-gray-600">High Risk Items</p>
+                <p className="responsive-heading text-gray-900">
                   {products?.filter(p => p.lastAiSuggestion && 
                     Math.abs(p.lastAiSuggestion - p.price) / p.price > 0.15).length || 0}
                 </p>
@@ -199,8 +199,8 @@ const VendorWatchlistPage = () => {
                 <Brain className="h-6 w-6 text-green-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-600">AI Suggestions</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="responsive-text font-medium text-gray-600">AI Suggestions</p>
+                <p className="responsive-heading text-gray-900">
                   {products?.filter(p => p.lastAiSuggestion).length || 0}
                 </p>
               </div>
@@ -243,7 +243,7 @@ const VendorWatchlistPage = () => {
                       </h3>
                       <div className="flex items-center gap-1">
                         <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                        <span className="text-yellow-600 text-sm font-medium">Watchlist</span>
+                        <span className="text-yellow-600 responsive-text font-medium">Watchlist</span>
                       </div>
                     </div>
 
@@ -311,7 +311,7 @@ const VendorWatchlistPage = () => {
                         <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                           <div className="flex items-center gap-2">
                             <AlertTriangle className="h-4 w-4 text-red-600" />
-                            <span className="text-sm font-medium text-red-800">
+                            <span className="responsive-text font-medium text-red-800">
                               High Price Volatility Detected
                             </span>
                           </div>
@@ -324,7 +324,7 @@ const VendorWatchlistPage = () => {
                       <button
                         onClick={() => aiSuggestionMutation.mutate(product.id)}
                         disabled={aiSuggestionMutation.isPending}
-                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 flex items-center justify-center gap-2 responsive-button bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {aiSuggestionMutation.isPending ? (
                           <>
@@ -340,7 +340,7 @@ const VendorWatchlistPage = () => {
                       </button>
                       
                       <Link href={`/dashboard/vendor/products`}>
-                        <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors">
+                        <button className="responsive-button border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors">
                           Edit
                         </button>
                       </Link>
@@ -353,13 +353,13 @@ const VendorWatchlistPage = () => {
         ) : (
           <div className="bg-white rounded-lg shadow p-12 text-center">
             <Eye className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No Products on Watchlist</h3>
+            <h3 className="responsive-subheading text-gray-900 mb-2">No Products on Watchlist</h3>
             <p className="text-gray-600 mb-6">
               Products will be automatically added to the watchlist when AI detects price volatility, 
               low confidence in suggestions, or significant price differences.
             </p>
             <Link href="/dashboard/vendor/products">
-              <button className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+              <button className="responsive-button bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
                 Manage Products
               </button>
             </Link>

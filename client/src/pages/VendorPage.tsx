@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'wouter';
@@ -147,7 +147,7 @@ Every loaf is hand-shaped, every ingredient carefully sourced, and every custome
       totalProducts: 24,
       followers: 342,
       joinedDate: '2018-03-15',
-      nextPickup: 'Friday 3–5PM',
+      nextPickup: 'Friday 3â€“5PM',
       pickupLocation: 'Locust Grove Farmers Market',
       deliveryAreas: ['Locust Grove', 'McDonough', 'Hampton', 'Stockbridge'],
       contact: {
@@ -397,7 +397,7 @@ Every loaf is hand-shaped, every ingredient carefully sourced, and every custome
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="page-container bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-green mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading vendor...</p>
@@ -408,9 +408,9 @@ Every loaf is hand-shaped, every ingredient carefully sourced, and every custome
 
   if (!vendor) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="page-container bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Vendor not found</h2>
+          <h2 className="responsive-heading text-gray-900 mb-2">Vendor not found</h2>
           <p className="text-gray-600 mb-4">The vendor you're looking for doesn't exist.</p>
           <Link href="/marketplace" className="bg-brand-green text-white px-6 py-2 rounded-lg hover:bg-brand-green/80 transition-colors">
             Back to Marketplace
@@ -475,7 +475,7 @@ Every loaf is hand-shaped, every ingredient carefully sourced, and every custome
           <h3 className="font-semibold text-gray-900 line-clamp-2">{product.name}</h3>
         </div>
 
-        <p className="text-sm text-gray-600 mb-3 line-clamp-2">{product.description}</p>
+        <p className="responsive-text text-gray-600 mb-3 line-clamp-2">{product.description}</p>
 
         <div className="flex items-center mb-2">
           <div className="flex items-center mr-2">
@@ -488,7 +488,7 @@ Every loaf is hand-shaped, every ingredient carefully sourced, and every custome
           <div className="flex items-center">
             <span className="text-lg font-bold text-brand-maroon">${product.price.toFixed(2)}</span>
             {product.originalPrice && (
-              <span className="text-sm text-gray-500 line-through ml-2">${product.originalPrice.toFixed(2)}</span>
+              <span className="responsive-text text-gray-500 line-through ml-2">${product.originalPrice.toFixed(2)}</span>
             )}
           </div>
           <span className={`text-xs px-2 py-1 rounded ${product.inStock ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
@@ -508,14 +508,14 @@ Every loaf is hand-shaped, every ingredient carefully sourced, and every custome
           <button
             onClick={() => addToCart(product.id)}
             disabled={!product.inStock}
-            className="flex-1 bg-brand-green text-white py-2 px-3 rounded text-sm font-medium hover:bg-brand-green/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            className="flex-1 bg-brand-green text-white py-2 px-3 rounded responsive-text font-medium hover:bg-brand-green/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
           >
             <ShoppingCart className="w-4 h-4 mr-1" />
             Add to Cart
           </button>
           <Link
             href={`/product/${product.id}`}
-            className="bg-gray-100 text-gray-700 py-2 px-3 rounded text-sm font-medium hover:bg-gray-200 transition-colors"
+            className="bg-gray-100 text-gray-700 py-2 px-3 rounded responsive-text font-medium hover:bg-gray-200 transition-colors"
           >
             View
           </Link>
@@ -525,12 +525,12 @@ Every loaf is hand-shaped, every ingredient carefully sourced, and every custome
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="page-container bg-gray-50">
       {/* Vacation Overlay */}
       {vendor.isOnVacation && (
         <div className="fixed inset-0 bg-brand-beige/90 z-50 flex items-center justify-center">
           <div className="bg-white p-8 rounded-lg shadow-lg text-center max-w-md">
-            <h2 className="text-2xl font-bold text-brand-maroon mb-4">On Vacation</h2>
+            <h2 className="responsive-heading text-brand-maroon mb-4">On Vacation</h2>
             <p className="text-gray-700 mb-4">{vendor.vacationMessage || 'We\'re taking a break and will be back soon!'}</p>
             <Link href="/marketplace" className="bg-brand-green text-white px-6 py-2 rounded-lg hover:bg-brand-green/80 transition-colors">
               Browse Other Vendors
@@ -559,13 +559,13 @@ Every loaf is hand-shaped, every ingredient carefully sourced, and every custome
               />
               <div className="mb-2">
                 <div className="flex items-center gap-2 mb-1">
-                  <h1 className="text-3xl font-bold text-gray-900">{vendor.name}</h1>
+                  <h1 className="responsive-heading text-gray-900">{vendor.name}</h1>
                   {vendor.isVerified && (
                     <CheckCircle className="h-6 w-6 text-blue-500" title="Verified Vendor" />
                   )}
                 </div>
                 <p className="text-lg text-gray-600 mb-2">{vendor.tagline}</p>
-                <div className="flex items-center gap-4 text-sm text-gray-500">
+                <div className="flex items-center gap-4 responsive-text text-gray-500">
                   <div className="flex items-center gap-1">
                     <MapPin className="w-4 h-4" />
                     {vendor.location}
@@ -574,9 +574,9 @@ Every loaf is hand-shaped, every ingredient carefully sourced, and every custome
                     {renderStars(vendor.rating)}
                     <span>({vendor.reviewCount})</span>
                   </div>
-                  <span>•</span>
+                  <span>â€¢</span>
                   <span>{vendor.totalProducts} products</span>
-                  <span>•</span>
+                  <span>â€¢</span>
                   <span>{vendor.followers} followers</span>
                 </div>
               </div>
@@ -585,14 +585,14 @@ Every loaf is hand-shaped, every ingredient carefully sourced, and every custome
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setShowContactModal(true)}
-                className="flex items-center gap-2 bg-brand-green text-white px-4 py-2 rounded-lg hover:bg-brand-green/80 transition-colors"
+                className="flex items-center gap-2 bg-brand-green text-white responsive-button rounded-lg hover:bg-brand-green/80 transition-colors"
               >
                 <MessageCircle className="w-4 h-4" />
                 Contact
               </button>
               <button
                 onClick={toggleFollow}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-colors ${
+                className={`flex items-center gap-2 responsive-button rounded-lg border transition-colors ${
                   isFollowing 
                     ? 'bg-brand-maroon text-white border-brand-maroon' 
                     : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
@@ -614,7 +614,7 @@ Every loaf is hand-shaped, every ingredient carefully sourced, and every custome
         <div className="max-w-6xl mx-auto py-8 px-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
-              <h2 className="text-xl font-semibold mb-4">Our Story</h2>
+              <h2 className="responsive-subheading mb-4">Our Story</h2>
               <p className="text-gray-700 leading-relaxed mb-4">{vendor.description}</p>
             </div>
             
@@ -643,7 +643,7 @@ Every loaf is hand-shaped, every ingredient carefully sourced, and every custome
       <div className="bg-gray-50 py-8">
         <div className="max-w-6xl mx-auto px-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Our Products</h2>
+            <h2 className="responsive-heading text-gray-900">Our Products</h2>
             <div className="flex items-center gap-4">
               {/* Category Filter */}
               <select
@@ -715,7 +715,7 @@ Every loaf is hand-shaped, every ingredient carefully sourced, and every custome
                 <div className="text-gray-400 mb-4">
                   <Store className="w-16 h-16 mx-auto" />
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
+                <h3 className="responsive-subheading text-gray-900 mb-2">No products found</h3>
                 <p className="text-gray-600">Try adjusting your filters to see more products.</p>
               </motion.div>
             )}
@@ -726,7 +726,7 @@ Every loaf is hand-shaped, every ingredient carefully sourced, and every custome
       {/* Fulfillment Info */}
       <div className="bg-white py-8">
         <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Fulfillment Details</h2>
+          <h2 className="responsive-heading text-gray-900 mb-6">Fulfillment Details</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div className="bg-gray-50 p-4 rounded-lg">
               <div className="flex items-center gap-2 mb-2">
@@ -764,7 +764,7 @@ Every loaf is hand-shaped, every ingredient carefully sourced, and every custome
       <div className="bg-gray-50 py-8">
         <div className="max-w-6xl mx-auto px-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Customer Reviews</h2>
+            <h2 className="responsive-heading text-gray-900">Customer Reviews</h2>
             <div className="flex items-center gap-2">
               <div className="flex items-center">
                 {renderStars(vendor.rating)}
@@ -781,7 +781,7 @@ Every loaf is hand-shaped, every ingredient carefully sourced, and every custome
                   <div className="flex items-center">
                     {renderStars(review.rating)}
                   </div>
-                  <span className="text-sm text-gray-500">{review.date}</span>
+                  <span className="responsive-text text-gray-500">{review.date}</span>
                 </div>
                 <h4 className="font-semibold text-gray-900 mb-1">{review.title}</h4>
                 <p className="text-gray-700 text-sm mb-2">{review.comment}</p>
@@ -789,7 +789,7 @@ Every loaf is hand-shaped, every ingredient carefully sourced, and every custome
                   <p className="text-xs text-brand-green">Review for: {review.productName}</p>
                 )}
                 <div className="flex items-center justify-between mt-3">
-                  <span className="text-sm text-gray-500">- {review.userName}</span>
+                  <span className="responsive-text text-gray-500">- {review.userName}</span>
                   <button className="text-xs text-gray-500 hover:text-gray-700">
                     Helpful ({review.helpful})
                   </button>

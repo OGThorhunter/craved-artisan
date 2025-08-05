@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import axios from 'axios';
@@ -49,8 +49,8 @@ const VendorAnalyticsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="page-container bg-gray-50 py-8">
+        <div className="container-responsive">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
             <p className="mt-4 text-gray-600">Loading delivery analytics...</p>
@@ -62,14 +62,14 @@ const VendorAnalyticsPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="page-container bg-gray-50 py-8">
+        <div className="container-responsive">
           <div className="text-center">
             <div className="bg-red-50 border border-red-200 rounded-md p-4">
               <p className="text-red-800">{error}</p>
               <button
                 onClick={() => window.location.reload()}
-                className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                className="mt-2 responsive-button bg-red-600 text-white rounded hover:bg-red-700"
               >
                 Retry
               </button>
@@ -82,8 +82,8 @@ const VendorAnalyticsPage: React.FC = () => {
 
   if (!metrics) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="page-container bg-gray-50 py-8">
+        <div className="container-responsive">
           <div className="text-center">
             <p className="text-gray-600">No delivery data available</p>
           </div>
@@ -107,11 +107,11 @@ const VendorAnalyticsPage: React.FC = () => {
   }));
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="page-container bg-gray-50 py-8">
+      <div className="container-responsive">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Delivery Analytics</h1>
+          <h1 className="responsive-heading text-gray-900">Delivery Analytics</h1>
           <p className="mt-2 text-gray-600">
             Track your delivery performance across different ZIP codes and time periods
           </p>
@@ -123,12 +123,12 @@ const VendorAnalyticsPage: React.FC = () => {
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  <span className="text-blue-600 font-semibold">📦</span>
+                  <span className="text-blue-600 font-semibold">ðŸ“¦</span>
                 </div>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Total Orders</p>
-                <p className="text-2xl font-bold text-gray-900">{metrics.totalOrders}</p>
+                <p className="responsive-text font-medium text-gray-500">Total Orders</p>
+                <p className="responsive-heading text-gray-900">{metrics.totalOrders}</p>
               </div>
             </div>
           </div>
@@ -137,12 +137,12 @@ const VendorAnalyticsPage: React.FC = () => {
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                  <span className="text-green-600 font-semibold">✅</span>
+                  <span className="text-green-600 font-semibold">âœ…</span>
                 </div>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Delivered</p>
-                <p className="text-2xl font-bold text-gray-900">{metrics.totalDelivered}</p>
+                <p className="responsive-text font-medium text-gray-500">Delivered</p>
+                <p className="responsive-heading text-gray-900">{metrics.totalDelivered}</p>
               </div>
             </div>
           </div>
@@ -151,12 +151,12 @@ const VendorAnalyticsPage: React.FC = () => {
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
-                  <span className="text-yellow-600 font-semibold">⏰</span>
+                  <span className="text-yellow-600 font-semibold">â°</span>
                 </div>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">On-Time Rate</p>
-                <p className="text-2xl font-bold text-gray-900">{(metrics.onTimeRate * 100).toFixed(1)}%</p>
+                <p className="responsive-text font-medium text-gray-500">On-Time Rate</p>
+                <p className="responsive-heading text-gray-900">{(metrics.onTimeRate * 100).toFixed(1)}%</p>
               </div>
             </div>
           </div>
@@ -165,12 +165,12 @@ const VendorAnalyticsPage: React.FC = () => {
             <div className="flex items-center">
               <div className="flex-shrink-0">
                 <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                  <span className="text-purple-600 font-semibold">🕒</span>
+                  <span className="text-purple-600 font-semibold">ðŸ•’</span>
                 </div>
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Avg Delivery Time</p>
-                <p className="text-2xl font-bold text-gray-900">{metrics.avgTimeToDeliver}</p>
+                <p className="responsive-text font-medium text-gray-500">Avg Delivery Time</p>
+                <p className="responsive-heading text-gray-900">{metrics.avgTimeToDeliver}</p>
               </div>
             </div>
           </div>
@@ -229,19 +229,19 @@ const VendorAnalyticsPage: React.FC = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="responsive-button text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     ZIP Code
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="responsive-button text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     On-Time Deliveries
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="responsive-button text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Delayed Deliveries
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="responsive-button text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Total Orders
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="responsive-button text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Success Rate
                   </th>
                 </tr>
@@ -253,7 +253,7 @@ const VendorAnalyticsPage: React.FC = () => {
                   
                   return (
                     <tr key={stat.zip}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap responsive-text font-medium text-gray-900">
                         {stat.zip}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

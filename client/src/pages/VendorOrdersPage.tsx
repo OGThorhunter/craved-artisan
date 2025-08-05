@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
 import {
@@ -47,7 +47,7 @@ interface Fulfillment {
   estimatedDelivery?: string;
   actualDelivery?: string;
   notes?: string;
-  etaLabel?: string; // AI-generated label (e.g., "⚡ Fast Fulfillment", "📦 Standard")
+  etaLabel?: string; // AI-generated label (e.g., "âš¡ Fast Fulfillment", "ðŸ“¦ Standard")
   predictedHours?: number; // AI prediction raw hours
 }
 
@@ -226,7 +226,7 @@ const VendorOrdersPage = () => {
 
   if (ordersLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="page-container bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <RefreshCw className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
           <p className="text-gray-600">Loading orders...</p>
@@ -236,8 +236,8 @@ const VendorOrdersPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="page-container bg-gray-50">
+      <div className="container-responsive py-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-4">
@@ -249,7 +249,7 @@ const VendorOrdersPage = () => {
               Back to Dashboard
             </button>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">Order Fulfillment</h1>
+          <h1 className="responsive-heading text-gray-900">Order Fulfillment</h1>
           <p className="text-gray-600 mt-2">Manage and track your product orders</p>
         </div>
 
@@ -261,8 +261,8 @@ const VendorOrdersPage = () => {
                 <ShoppingBag className="h-6 w-6 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Orders</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.totalOrders}</p>
+                <p className="responsive-text font-medium text-gray-600">Total Orders</p>
+                <p className="responsive-heading text-gray-900">{stats.totalOrders}</p>
               </div>
             </div>
           </div>
@@ -273,8 +273,8 @@ const VendorOrdersPage = () => {
                 <Clock className="h-6 w-6 text-yellow-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-600">Pending</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.pendingOrders}</p>
+                <p className="responsive-text font-medium text-gray-600">Pending</p>
+                <p className="responsive-heading text-gray-900">{stats.pendingOrders}</p>
               </div>
             </div>
           </div>
@@ -285,8 +285,8 @@ const VendorOrdersPage = () => {
                 <Truck className="h-6 w-6 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-600">In Progress</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.inProgressOrders}</p>
+                <p className="responsive-text font-medium text-gray-600">In Progress</p>
+                <p className="responsive-heading text-gray-900">{stats.inProgressOrders}</p>
               </div>
             </div>
           </div>
@@ -297,8 +297,8 @@ const VendorOrdersPage = () => {
                 <CheckCircle className="h-6 w-6 text-green-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-600">Completed</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.completedOrders}</p>
+                <p className="responsive-text font-medium text-gray-600">Completed</p>
+                <p className="responsive-heading text-gray-900">{stats.completedOrders}</p>
               </div>
             </div>
           </div>
@@ -309,8 +309,8 @@ const VendorOrdersPage = () => {
                 <DollarSign className="h-6 w-6 text-green-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                <p className="text-2xl font-bold text-gray-900">${stats.totalRevenue.toFixed(2)}</p>
+                <p className="responsive-text font-medium text-gray-600">Total Revenue</p>
+                <p className="responsive-heading text-gray-900">${stats.totalRevenue.toFixed(2)}</p>
               </div>
             </div>
           </div>
@@ -335,7 +335,7 @@ const VendorOrdersPage = () => {
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="responsive-button border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 title="Filter by fulfillment status"
               >
                 <option value="all">All Status</option>
@@ -348,13 +348,13 @@ const VendorOrdersPage = () => {
               <select
                 value={filterLabel}
                 onChange={(e) => setFilterLabel(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="responsive-button border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 title="Filter by fulfillment label"
               >
                 <option value="all">All Labels</option>
-                <option value="⚡ Fast Fulfillment">⚡ Fast Fulfillment</option>
-                <option value="📦 Standard">📦 Standard</option>
-                <option value="⏳ Delayed">⏳ Delayed</option>
+                <option value="âš¡ Fast Fulfillment">âš¡ Fast Fulfillment</option>
+                <option value="ðŸ“¦ Standard">ðŸ“¦ Standard</option>
+                <option value="â³ Delayed">â³ Delayed</option>
               </select>
             </div>
           </div>
@@ -365,7 +365,7 @@ const VendorOrdersPage = () => {
           {filteredOrders.length === 0 ? (
             <div className="bg-white rounded-lg shadow-sm p-12 text-center">
               <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No orders found</h3>
+              <h3 className="responsive-subheading text-gray-900 mb-2">No orders found</h3>
               <p className="text-gray-600">
                 {orders.length === 0 
                   ? "You don't have any orders yet. Orders will appear here when customers purchase your products."
@@ -396,7 +396,7 @@ const VendorOrdersPage = () => {
                         )}
                       </div>
                       
-                      <div className="flex items-center gap-6 text-sm text-gray-600">
+                      <div className="flex items-center gap-6 responsive-text text-gray-600">
                         <div className="flex items-center gap-1">
                           <User className="h-4 w-4" />
                           {order.customer.name}
@@ -450,19 +450,19 @@ const VendorOrdersPage = () => {
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="font-medium text-gray-900 truncate">{item.product.name}</p>
-                              <p className="text-gray-600">Qty: {item.quantity} × ${item.price}</p>
+                              <p className="text-gray-600">Qty: {item.quantity} Ã— ${item.price}</p>
                             </div>
                           </div>
                         ))}
                         {order.items.length > 2 && (
-                          <p className="text-sm text-gray-500">+{order.items.length - 2} more items</p>
+                          <p className="responsive-text text-gray-500">+{order.items.length - 2} more items</p>
                         )}
                       </div>
                     </div>
 
                     <div>
                       <h4 className="font-medium text-gray-900 mb-2">Shipping Address</h4>
-                      <div className="text-sm text-gray-600">
+                      <div className="responsive-text text-gray-600">
                         <div className="flex items-start gap-1 mb-1">
                           <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
                           <div>
@@ -484,7 +484,7 @@ const VendorOrdersPage = () => {
                         <span className="text-blue-700">{order.fulfillment.trackingNumber}</span>
                         {order.fulfillment.carrier && (
                           <>
-                            <span className="text-blue-600">•</span>
+                            <span className="text-blue-600">â€¢</span>
                             <span className="text-blue-700">{order.fulfillment.carrier}</span>
                           </>
                         )}
@@ -504,7 +504,7 @@ const VendorOrdersPage = () => {
           <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-gray-900">Order Details</h2>
+                <h2 className="responsive-subheading text-gray-900">Order Details</h2>
                 <button
                   onClick={() => setSelectedOrder(null)}
                   className="text-gray-400 hover:text-gray-600"
@@ -521,14 +521,14 @@ const VendorOrdersPage = () => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {/* Order Info */}
                 <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Order Information</h3>
+                  <h3 className="responsive-subheading text-gray-900 mb-4">Order Information</h3>
                   <div className="space-y-3">
                     <div>
-                      <span className="text-sm font-medium text-gray-600">Order Number:</span>
+                      <span className="responsive-text font-medium text-gray-600">Order Number:</span>
                       <p className="text-gray-900">{selectedOrder.orderNumber}</p>
                     </div>
                     <div>
-                      <span className="text-sm font-medium text-gray-600">Status:</span>
+                      <span className="responsive-text font-medium text-gray-600">Status:</span>
                       <div className="flex items-center gap-2 mt-1">
                         <span className={`px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(selectedOrder.fulfillment.status)}`}>
                           <div className="flex items-center gap-1">
@@ -539,11 +539,11 @@ const VendorOrdersPage = () => {
                       </div>
                     </div>
                     <div>
-                      <span className="text-sm font-medium text-gray-600">Order Date:</span>
+                      <span className="responsive-text font-medium text-gray-600">Order Date:</span>
                       <p className="text-gray-900">{new Date(selectedOrder.createdAt).toLocaleString()}</p>
                     </div>
                     <div>
-                      <span className="text-sm font-medium text-gray-600">Subtotal:</span>
+                      <span className="responsive-text font-medium text-gray-600">Subtotal:</span>
                       <p className="text-gray-900">${selectedOrder.subtotal.toFixed(2)}</p>
                     </div>
                   </div>
@@ -551,14 +551,14 @@ const VendorOrdersPage = () => {
 
                 {/* Customer Info */}
                 <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Customer Information</h3>
+                  <h3 className="responsive-subheading text-gray-900 mb-4">Customer Information</h3>
                   <div className="space-y-3">
                     <div>
-                      <span className="text-sm font-medium text-gray-600">Name:</span>
+                      <span className="responsive-text font-medium text-gray-600">Name:</span>
                       <p className="text-gray-900">{selectedOrder.customer.name}</p>
                     </div>
                     <div>
-                      <span className="text-sm font-medium text-gray-600">Email:</span>
+                      <span className="responsive-text font-medium text-gray-600">Email:</span>
                       <div className="flex items-center gap-2">
                         <Mail className="h-4 w-4 text-gray-400" />
                         <p className="text-gray-900">{selectedOrder.customer.email}</p>
@@ -566,7 +566,7 @@ const VendorOrdersPage = () => {
                     </div>
                     {selectedOrder.customer.phone && (
                       <div>
-                        <span className="text-sm font-medium text-gray-600">Phone:</span>
+                        <span className="responsive-text font-medium text-gray-600">Phone:</span>
                         <div className="flex items-center gap-2">
                           <Phone className="h-4 w-4 text-gray-400" />
                           <p className="text-gray-900">{selectedOrder.customer.phone}</p>
@@ -579,7 +579,7 @@ const VendorOrdersPage = () => {
 
               {/* Order Items */}
               <div className="mt-8">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Order Items</h3>
+                <h3 className="responsive-subheading text-gray-900 mb-4">Order Items</h3>
                 <div className="space-y-3">
                   {selectedOrder.items.map((item) => (
                     <div key={item.id} className="flex items-center gap-4 p-3 border border-gray-200 rounded-lg">
@@ -596,11 +596,11 @@ const VendorOrdersPage = () => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="font-medium text-gray-900">{item.product.name}</h4>
-                        <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
+                        <p className="responsive-text text-gray-600">Quantity: {item.quantity}</p>
                       </div>
                       <div className="text-right">
                         <p className="font-medium text-gray-900">${item.price.toFixed(2)} each</p>
-                        <p className="text-sm text-gray-600">Total: ${item.total.toFixed(2)}</p>
+                        <p className="responsive-text text-gray-600">Total: ${item.total.toFixed(2)}</p>
                       </div>
                     </div>
                   ))}
@@ -609,7 +609,7 @@ const VendorOrdersPage = () => {
 
               {/* Shipping Address */}
               <div className="mt-8">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Shipping Address</h3>
+                <h3 className="responsive-subheading text-gray-900 mb-4">Shipping Address</h3>
                 <div className="p-4 border border-gray-200 rounded-lg">
                   <div className="flex items-start gap-2">
                     <MapPin className="h-5 w-5 text-gray-400 mt-0.5 flex-shrink-0" />
@@ -631,11 +631,11 @@ const VendorOrdersPage = () => {
 
               {/* Fulfillment Details */}
               <div className="mt-8">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Fulfillment Details</h3>
+                <h3 className="responsive-subheading text-gray-900 mb-4">Fulfillment Details</h3>
                 <div className="p-4 border border-gray-200 rounded-lg">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <span className="text-sm font-medium text-gray-600">Status:</span>
+                      <span className="responsive-text font-medium text-gray-600">Status:</span>
                       <div className="flex items-center gap-2 mt-1">
                         <span className={`px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(selectedOrder.fulfillment.status)}`}>
                           <div className="flex items-center gap-1">
@@ -646,24 +646,24 @@ const VendorOrdersPage = () => {
                       </div>
                     </div>
                     <div>
-                      <span className="text-sm font-medium text-gray-600">Type:</span>
+                      <span className="responsive-text font-medium text-gray-600">Type:</span>
                       <p className="text-gray-900">{selectedOrder.fulfillment.type}</p>
                     </div>
                     {selectedOrder.fulfillment.trackingNumber && (
                       <div>
-                        <span className="text-sm font-medium text-gray-600">Tracking Number:</span>
+                        <span className="responsive-text font-medium text-gray-600">Tracking Number:</span>
                         <p className="text-gray-900">{selectedOrder.fulfillment.trackingNumber}</p>
                       </div>
                     )}
                     {selectedOrder.fulfillment.carrier && (
                       <div>
-                        <span className="text-sm font-medium text-gray-600">Carrier:</span>
+                        <span className="responsive-text font-medium text-gray-600">Carrier:</span>
                         <p className="text-gray-900">{selectedOrder.fulfillment.carrier}</p>
                       </div>
                     )}
                     {selectedOrder.fulfillment.estimatedDelivery && (
                       <div>
-                        <span className="text-sm font-medium text-gray-600">Estimated Delivery:</span>
+                        <span className="responsive-text font-medium text-gray-600">Estimated Delivery:</span>
                         <p className="text-gray-900">
                           {new Date(selectedOrder.fulfillment.estimatedDelivery).toLocaleDateString()}
                         </p>
@@ -671,7 +671,7 @@ const VendorOrdersPage = () => {
                     )}
                     {selectedOrder.fulfillment.actualDelivery && (
                       <div>
-                        <span className="text-sm font-medium text-gray-600">Actual Delivery:</span>
+                        <span className="responsive-text font-medium text-gray-600">Actual Delivery:</span>
                         <p className="text-gray-900">
                           {new Date(selectedOrder.fulfillment.actualDelivery).toLocaleDateString()}
                         </p>
@@ -680,7 +680,7 @@ const VendorOrdersPage = () => {
                   </div>
                   {selectedOrder.fulfillment.notes && (
                     <div className="mt-4">
-                      <span className="text-sm font-medium text-gray-600">Notes:</span>
+                      <span className="responsive-text font-medium text-gray-600">Notes:</span>
                       <p className="text-gray-900 mt-1">{selectedOrder.fulfillment.notes}</p>
                     </div>
                   )}
@@ -692,13 +692,13 @@ const VendorOrdersPage = () => {
               <div className="flex justify-end gap-3">
                 <button
                   onClick={() => setSelectedOrder(null)}
-                  className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                  className="responsive-button text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
                 >
                   Close
                 </button>
                 <button
                   onClick={() => handleUpdateFulfillment(selectedOrder)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  className="responsive-button bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                 >
                   Update Status
                 </button>
@@ -713,13 +713,13 @@ const VendorOrdersPage = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-md w-full">
             <div className="p-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">Update Fulfillment Status</h2>
+              <h2 className="responsive-subheading text-gray-900">Update Fulfillment Status</h2>
               <p className="text-gray-600 mt-1">Order: {selectedOrder.orderNumber}</p>
             </div>
 
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block responsive-text font-medium text-gray-700 mb-2">
                   Status
                 </label>
                                  <select
@@ -737,7 +737,7 @@ const VendorOrdersPage = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block responsive-text font-medium text-gray-700 mb-2">
                   Tracking Number
                 </label>
                 <input
@@ -750,7 +750,7 @@ const VendorOrdersPage = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block responsive-text font-medium text-gray-700 mb-2">
                   Carrier
                 </label>
                 <input
@@ -763,7 +763,7 @@ const VendorOrdersPage = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block responsive-text font-medium text-gray-700 mb-2">
                   Estimated Delivery
                 </label>
                                  <input
@@ -776,7 +776,7 @@ const VendorOrdersPage = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block responsive-text font-medium text-gray-700 mb-2">
                   Notes
                 </label>
                 <textarea
@@ -793,14 +793,14 @@ const VendorOrdersPage = () => {
               <div className="flex justify-end gap-3">
                 <button
                   onClick={() => setIsUpdateModalOpen(false)}
-                  className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                  className="responsive-button text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSubmitUpdate}
                   disabled={updateFulfillmentMutation.isPending}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="responsive-button bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {updateFulfillmentMutation.isPending ? 'Updating...' : 'Update Status'}
                 </button>

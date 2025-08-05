@@ -5,6 +5,23 @@ export { default as ReviewBlock } from './ReviewBlock';
 export { default as FulfillmentInfo } from './FulfillmentInfo';
 export { default as ContactModal } from './ContactModal';
 
+// Analytics components
+export { KpiCard } from './analytics/KpiCard';
+export { KpiCardTest } from './analytics/KpiCardTest';
+export { TrendChart } from './analytics/TrendChart';
+export { PerformanceKpis } from './analytics/PerformanceKpis';
+export { TopProducts } from './analytics/TopProducts';
+export { AiInsights } from './analytics/AiInsights';
+export { ConversionFunnel } from './analytics/ConversionFunnel';
+export { BestSellers } from './analytics/BestSellers';
+export { CustomerInsights } from './analytics/CustomerInsights';
+export { ProfitLossStatement } from './analytics/ProfitLossStatement';
+export { CashFlowChart } from './analytics/CashFlowChart';
+export { BalanceSheet } from './analytics/BalanceSheet';
+export { StorefrontSnapshot } from './analytics/StorefrontSnapshot';
+export { PriceOptimizer } from './analytics/PriceOptimizer';
+export { TaxSummary } from './analytics/TaxSummary';
+
 // Re-export types for convenience
 export type { Vendor } from './VendorHeader';
 export type { Product } from './ProductCard';

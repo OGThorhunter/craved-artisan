@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { CheckCircle, MapPin, Package, Clock, Users, TrendingUp, Shield } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -21,7 +21,7 @@ export const JoinDropoffPage = () => {
 
       {/* Benefits */}
       <div className="max-w-6xl mx-auto py-16 px-6">
-        <h2 className="text-2xl font-bold mb-6">Why Drop-Off Locations Choose Craved Artisan</h2>
+        <h2 className="responsive-heading mb-6">Why Drop-Off Locations Choose Craved Artisan</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
             { icon: <MapPin />, label: 'Community Hub' },
@@ -45,7 +45,7 @@ export const JoinDropoffPage = () => {
       {/* Requirements */}
       <div className="bg-gray-50 py-12 px-6">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-xl font-semibold mb-4">What You'll Need</h2>
+          <h2 className="responsive-subheading mb-4">What You'll Need</h2>
           <ul className="flex flex-wrap gap-4 justify-center text-sm">
             <li className="bg-white border border-gray-300 px-3 py-2 rounded shadow">Accessible Location</li>
             <li className="bg-white border border-gray-300 px-3 py-2 rounded shadow">Secure Storage Space</li>
@@ -57,7 +57,7 @@ export const JoinDropoffPage = () => {
 
       {/* Onboarding Checklist */}
       <div className="max-w-4xl mx-auto py-16 px-6">
-        <h2 className="text-xl font-semibold mb-6 text-center">Get Started in 5 Simple Steps</h2>
+        <h2 className="responsive-subheading mb-6 text-center">Get Started in 5 Simple Steps</h2>
         <ul className="space-y-4">
           {[
             'Create your drop-off location account',
@@ -82,7 +82,7 @@ export const JoinDropoffPage = () => {
 
       {/* Social Proof */}
       <div className="bg-brand-cream py-12 px-6 text-center">
-        <h2 className="text-xl font-semibold mb-4">What Drop-Off Locations Are Saying</h2>
+        <h2 className="responsive-subheading mb-4">What Drop-Off Locations Are Saying</h2>
         <div className="max-w-3xl mx-auto space-y-6 text-sm italic">
           <p>"It's a great way to bring more foot traffic to our store and help the local community."</p>
           <p>"The system is so easy to use and the extra income really helps our business."</p>
@@ -91,7 +91,7 @@ export const JoinDropoffPage = () => {
 
       {/* Location Types */}
       <div className="max-w-5xl mx-auto py-16 px-6">
-        <h2 className="text-xl font-semibold mb-4 text-center">Perfect Locations for Drop-Off Services</h2>
+        <h2 className="responsive-subheading mb-4 text-center">Perfect Locations for Drop-Off Services</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[
             { title: 'Coffee Shops', description: 'High foot traffic, comfortable waiting areas' },
@@ -108,7 +108,7 @@ export const JoinDropoffPage = () => {
               transition={{ duration: 0.2 }}
             >
               <h3 className="text-lg font-semibold text-brand-charcoal mb-2">{location.title}</h3>
-              <p className="text-sm text-gray-600">{location.description}</p>
+              <p className="responsive-text text-gray-600">{location.description}</p>
             </motion.div>
           ))}
         </div>
@@ -117,28 +117,28 @@ export const JoinDropoffPage = () => {
       {/* How It Works */}
       <div className="bg-gray-50 py-12 px-6">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-xl font-semibold mb-6 text-center">How the Drop-Off System Works</h2>
+          <h2 className="responsive-subheading mb-6 text-center">How the Drop-Off System Works</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="text-center">
               <div className="bg-brand-green/10 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
                 <Package className="w-8 h-8 text-brand-green" />
               </div>
               <h3 className="font-semibold mb-2">1. Receive Packages</h3>
-              <p className="text-sm text-gray-600">Vendors deliver packages to your location during your business hours</p>
+              <p className="responsive-text text-gray-600">Vendors deliver packages to your location during your business hours</p>
             </div>
             <div className="text-center">
               <div className="bg-brand-green/10 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
                 <Users className="w-8 h-8 text-brand-green" />
               </div>
               <h3 className="font-semibold mb-2">2. Customer Pickup</h3>
-              <p className="text-sm text-gray-600">Customers pick up their orders using our secure verification system</p>
+              <p className="responsive-text text-gray-600">Customers pick up their orders using our secure verification system</p>
             </div>
             <div className="text-center">
               <div className="bg-brand-green/10 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
                 <TrendingUp className="w-8 h-8 text-brand-green" />
               </div>
               <h3 className="font-semibold mb-2">3. Earn Revenue</h3>
-              <p className="text-sm text-gray-600">You earn a fee for each successful pickup at your location</p>
+              <p className="responsive-text text-gray-600">You earn a fee for each successful pickup at your location</p>
             </div>
           </div>
         </div>
@@ -147,23 +147,23 @@ export const JoinDropoffPage = () => {
       {/* FAQ Section */}
       <div className="bg-gray-50 py-12 px-6">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-xl font-semibold mb-6">Frequently Asked Questions</h2>
+          <h2 className="responsive-subheading mb-6">Frequently Asked Questions</h2>
           <div className="space-y-4">
             <details className="bg-white p-4 rounded shadow">
               <summary className="cursor-pointer font-medium">How much space do I need?</summary>
-              <p className="mt-2 text-sm text-gray-600">A small secure area for package storage is sufficient. We provide storage solutions.</p>
+              <p className="mt-2 responsive-text text-gray-600">A small secure area for package storage is sufficient. We provide storage solutions.</p>
             </details>
             <details className="bg-white p-4 rounded shadow">
               <summary className="cursor-pointer font-medium">How do I get paid?</summary>
-              <p className="mt-2 text-sm text-gray-600">You earn a fee for each package picked up at your location, paid monthly via Stripe.</p>
+              <p className="mt-2 responsive-text text-gray-600">You earn a fee for each package picked up at your location, paid monthly via Stripe.</p>
             </details>
             <details className="bg-white p-4 rounded shadow">
               <summary className="cursor-pointer font-medium">What if packages aren't picked up?</summary>
-              <p className="mt-2 text-sm text-gray-600">We have a 48-hour pickup policy. After that, packages are returned to vendors.</p>
+              <p className="mt-2 responsive-text text-gray-600">We have a 48-hour pickup policy. After that, packages are returned to vendors.</p>
             </details>
             <details className="bg-white p-4 rounded shadow">
               <summary className="cursor-pointer font-medium">Do I need special insurance?</summary>
-              <p className="mt-2 text-sm text-gray-600">We provide basic coverage for packages in your care during pickup hours.</p>
+              <p className="mt-2 responsive-text text-gray-600">We provide basic coverage for packages in your care during pickup hours.</p>
             </details>
           </div>
         </div>
@@ -171,7 +171,7 @@ export const JoinDropoffPage = () => {
 
       {/* Role Suggestions */}
       <div className="text-center py-12 px-6">
-        <p className="text-sm text-gray-600 mb-4">Not quite what you're looking for?</p>
+        <p className="responsive-text text-gray-600 mb-4">Not quite what you're looking for?</p>
         <div className="flex flex-wrap gap-4 justify-center">
           <Link href="/join/vendor" className="underline text-brand-green">Join as a Vendor</Link>
           <Link href="/join" className="underline text-brand-green">View All Roles</Link>
@@ -185,7 +185,7 @@ export const JoinDropoffPage = () => {
         <div className="flex gap-4">
           <Link
             href="/join"
-            className="bg-white text-brand-green px-4 py-2 rounded shadow hover:bg-gray-100 transition"
+            className="bg-white text-brand-green responsive-button rounded shadow hover:bg-gray-100 transition"
           >
             Get Started
           </Link>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { CheckCircle, LayoutDashboard, Store, Users, MessageSquareText, Package, Truck, TrendingUp } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -21,7 +21,7 @@ export const JoinB2BPage = () => {
 
       {/* Benefits */}
       <div className="max-w-6xl mx-auto py-16 px-6">
-        <h2 className="text-2xl font-bold mb-6">Why B2B Vendors Choose Craved Artisan</h2>
+        <h2 className="responsive-heading mb-6">Why B2B Vendors Choose Craved Artisan</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
             { icon: <Package />, label: 'Bulk Order Management' },
@@ -45,7 +45,7 @@ export const JoinB2BPage = () => {
       {/* Requirements */}
       <div className="bg-gray-50 py-12 px-6">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-xl font-semibold mb-4">What You'll Need</h2>
+          <h2 className="responsive-subheading mb-4">What You'll Need</h2>
           <ul className="flex flex-wrap gap-4 justify-center text-sm">
             <li className="bg-white border border-gray-300 px-3 py-2 rounded shadow">Wholesale Business License</li>
             <li className="bg-white border border-gray-300 px-3 py-2 rounded shadow">Quality Ingredients/Materials</li>
@@ -57,7 +57,7 @@ export const JoinB2BPage = () => {
 
       {/* Onboarding Checklist */}
       <div className="max-w-4xl mx-auto py-16 px-6">
-        <h2 className="text-xl font-semibold mb-6 text-center">Get Started in 5 Simple Steps</h2>
+        <h2 className="responsive-subheading mb-6 text-center">Get Started in 5 Simple Steps</h2>
         <ul className="space-y-4">
           {[
             'Create your B2B account',
@@ -82,7 +82,7 @@ export const JoinB2BPage = () => {
 
       {/* Social Proof */}
       <div className="bg-brand-cream py-12 px-6 text-center">
-        <h2 className="text-xl font-semibold mb-4">What B2B Vendors Are Saying</h2>
+        <h2 className="responsive-subheading mb-4">What B2B Vendors Are Saying</h2>
         <div className="max-w-3xl mx-auto space-y-6 text-sm italic">
           <p>"The local artisan community is my best customer base. They appreciate quality and pay fair prices."</p>
           <p>"Craved Artisan helped me connect with vendors I never would have found otherwise."</p>
@@ -91,12 +91,12 @@ export const JoinB2BPage = () => {
 
       {/* Dashboard Preview */}
       <div className="max-w-5xl mx-auto py-16 px-6">
-        <h2 className="text-xl font-semibold mb-4 text-center">What Your B2B Dashboard Looks Like</h2>
+        <h2 className="responsive-subheading mb-4 text-center">What Your B2B Dashboard Looks Like</h2>
         <div className="bg-white rounded-lg shadow-lg p-8">
           <div className="bg-gray-100 rounded-lg p-6 text-center">
             <LayoutDashboard className="w-16 h-16 mx-auto text-gray-400 mb-4" />
             <p className="text-gray-600">B2B Vendor Dashboard Preview</p>
-            <p className="text-sm text-gray-500 mt-2">Complete with order management, inventory tracking, and vendor analytics</p>
+            <p className="responsive-text text-gray-500 mt-2">Complete with order management, inventory tracking, and vendor analytics</p>
           </div>
         </div>
       </div>
@@ -104,23 +104,23 @@ export const JoinB2BPage = () => {
       {/* FAQ Section */}
       <div className="bg-gray-50 py-12 px-6">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-xl font-semibold mb-6">Frequently Asked Questions</h2>
+          <h2 className="responsive-subheading mb-6">Frequently Asked Questions</h2>
           <div className="space-y-4">
             <details className="bg-white p-4 rounded shadow">
               <summary className="cursor-pointer font-medium">What types of products can I supply?</summary>
-              <p className="mt-2 text-sm text-gray-600">Ingredients, raw materials, packaging, tools, and supplies that local artisans need for their crafts.</p>
+              <p className="mt-2 responsive-text text-gray-600">Ingredients, raw materials, packaging, tools, and supplies that local artisans need for their crafts.</p>
             </details>
             <details className="bg-white p-4 rounded shadow">
               <summary className="cursor-pointer font-medium">How do I handle delivery?</summary>
-              <p className="mt-2 text-sm text-gray-600">You can offer local delivery, pickup at your location, or use our drop-off network.</p>
+              <p className="mt-2 responsive-text text-gray-600">You can offer local delivery, pickup at your location, or use our drop-off network.</p>
             </details>
             <details className="bg-white p-4 rounded shadow">
               <summary className="cursor-pointer font-medium">What are the minimum order requirements?</summary>
-              <p className="mt-2 text-sm text-gray-600">You set your own minimums and pricing structure for your products.</p>
+              <p className="mt-2 responsive-text text-gray-600">You set your own minimums and pricing structure for your products.</p>
             </details>
             <details className="bg-white p-4 rounded shadow">
               <summary className="cursor-pointer font-medium">How do I get paid?</summary>
-              <p className="mt-2 text-sm text-gray-600">Secure payments via Stripe with instant payouts once orders are fulfilled.</p>
+              <p className="mt-2 responsive-text text-gray-600">Secure payments via Stripe with instant payouts once orders are fulfilled.</p>
             </details>
           </div>
         </div>
@@ -128,7 +128,7 @@ export const JoinB2BPage = () => {
 
       {/* Role Suggestions */}
       <div className="text-center py-12 px-6">
-        <p className="text-sm text-gray-600 mb-4">Not quite what you're looking for?</p>
+        <p className="responsive-text text-gray-600 mb-4">Not quite what you're looking for?</p>
         <div className="flex flex-wrap gap-4 justify-center">
           <Link href="/join/vendor" className="underline text-brand-green">Join as a Vendor</Link>
           <Link href="/join" className="underline text-brand-green">View All Roles</Link>
@@ -142,7 +142,7 @@ export const JoinB2BPage = () => {
         <div className="flex gap-4">
           <Link
             href="/join"
-            className="bg-white text-brand-green px-4 py-2 rounded shadow hover:bg-gray-100 transition"
+            className="bg-white text-brand-green responsive-button rounded shadow hover:bg-gray-100 transition"
           >
             Get Started
           </Link>

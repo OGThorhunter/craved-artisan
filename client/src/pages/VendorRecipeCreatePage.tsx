@@ -1,4 +1,4 @@
-import { useState } from 'react';
+﻿import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
@@ -151,7 +151,7 @@ export default function VendorRecipeCreatePage() {
 
   if (ingredientsLoading || productsLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="page-container bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading ingredients and products...</p>
@@ -161,8 +161,8 @@ export default function VendorRecipeCreatePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="page-container bg-gray-50 py-8">
+      <div className="max-w-4xl mx-auto responsive-padding">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
@@ -171,11 +171,11 @@ export default function VendorRecipeCreatePage() {
                 <ArrowLeft className="h-6 w-6" />
               </Link>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Create New Recipe</h1>
+                <h1 className="responsive-heading text-gray-900">Create New Recipe</h1>
                 <p className="text-gray-600 mt-1">Add a new recipe to your collection</p>
               </div>
             </div>
-            <div className="flex items-center space-x-2 text-sm text-gray-500">
+            <div className="flex items-center space-x-2 responsive-text text-gray-500">
               <ChefHat className="h-4 w-4" />
               <span>Recipe Builder</span>
             </div>
@@ -188,7 +188,7 @@ export default function VendorRecipeCreatePage() {
             {/* Basic Recipe Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="name" className="block responsive-text font-medium text-gray-700 mb-2">
                   Recipe Name *
                 </label>
                 <input
@@ -204,7 +204,7 @@ export default function VendorRecipeCreatePage() {
               </div>
 
               <div>
-                <label htmlFor="productId" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="productId" className="block responsive-text font-medium text-gray-700 mb-2">
                   Linked Product (Optional)
                 </label>
                 <select
@@ -223,7 +223,7 @@ export default function VendorRecipeCreatePage() {
             </div>
 
             <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="description" className="block responsive-text font-medium text-gray-700 mb-2">
                 Description
               </label>
               <textarea
@@ -238,7 +238,7 @@ export default function VendorRecipeCreatePage() {
             {/* Yield and Timing */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <div>
-                <label htmlFor="yield" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="yield" className="block responsive-text font-medium text-gray-700 mb-2">
                   Yield Quantity *
                 </label>
                 <input
@@ -257,7 +257,7 @@ export default function VendorRecipeCreatePage() {
               </div>
 
               <div>
-                <label htmlFor="yieldUnit" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="yieldUnit" className="block responsive-text font-medium text-gray-700 mb-2">
                   Yield Unit *
                 </label>
                 <select
@@ -277,7 +277,7 @@ export default function VendorRecipeCreatePage() {
               </div>
 
               <div>
-                <label htmlFor="prepTime" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="prepTime" className="block responsive-text font-medium text-gray-700 mb-2">
                   Prep Time (minutes)
                 </label>
                 <input
@@ -290,7 +290,7 @@ export default function VendorRecipeCreatePage() {
               </div>
 
               <div>
-                <label htmlFor="cookTime" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="cookTime" className="block responsive-text font-medium text-gray-700 mb-2">
                   Cook Time (minutes)
                 </label>
                 <input
@@ -304,7 +304,7 @@ export default function VendorRecipeCreatePage() {
             </div>
 
             <div>
-              <label htmlFor="difficulty" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="difficulty" className="block responsive-text font-medium text-gray-700 mb-2">
                 Difficulty Level
               </label>
               <select
@@ -322,7 +322,7 @@ export default function VendorRecipeCreatePage() {
 
             {/* Instructions */}
             <div>
-              <label htmlFor="instructions" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="instructions" className="block responsive-text font-medium text-gray-700 mb-2">
                 Instructions
               </label>
               <textarea
@@ -337,7 +337,7 @@ export default function VendorRecipeCreatePage() {
             {/* Ingredients Section */}
             <div className="border-t border-gray-200 pt-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-900">Ingredients</h3>
+                <h3 className="responsive-subheading text-gray-900">Ingredients</h3>
                 <button
                   type="button"
                   onClick={addIngredient}
@@ -360,7 +360,7 @@ export default function VendorRecipeCreatePage() {
                     <div key={field.id} className="bg-gray-50 rounded-lg p-4">
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block responsive-text font-medium text-gray-700 mb-1">
                             Ingredient *
                           </label>
                           <select
@@ -379,7 +379,7 @@ export default function VendorRecipeCreatePage() {
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block responsive-text font-medium text-gray-700 mb-1">
                             Quantity *
                           </label>
                           <input
@@ -395,7 +395,7 @@ export default function VendorRecipeCreatePage() {
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                          <label className="block responsive-text font-medium text-gray-700 mb-1">
                             Unit *
                           </label>
                           <input
@@ -421,7 +421,7 @@ export default function VendorRecipeCreatePage() {
                       </div>
 
                       <div className="mt-3">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block responsive-text font-medium text-gray-700 mb-1">
                           Notes (Optional)
                         </label>
                         <input
@@ -441,7 +441,7 @@ export default function VendorRecipeCreatePage() {
             <div className="flex items-center justify-between pt-6 border-t border-gray-200">
               <Link
                 href="/dashboard/vendor/inventory"
-                className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="inline-flex items-center responsive-button border border-gray-300 responsive-text font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Cancel
@@ -450,7 +450,7 @@ export default function VendorRecipeCreatePage() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center responsive-button border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? (
                   <>

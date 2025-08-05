@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
@@ -94,10 +94,10 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="min-h-screen bg-brand-cream">
+    <div className="page-container bg-brand-cream">
       {/* Hero Section */}
       <div className="bg-brand-maroon text-white py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div className="container-responsive text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -113,7 +113,7 @@ export default function ContactPage() {
 
       {/* Contact Methods */}
       <div className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-responsive">
           <div className="grid md:grid-cols-3 gap-8">
             {contactMethods.map((method, index) => (
               <motion.div
@@ -126,7 +126,7 @@ export default function ContactPage() {
                 <div className="flex justify-center mb-4">
                   <method.icon className="h-12 w-12 text-brand-maroon" />
                 </div>
-                <h3 className="text-xl font-semibold text-brand-charcoal mb-2">{method.title}</h3>
+                <h3 className="responsive-subheading text-brand-charcoal mb-2">{method.title}</h3>
                 <p className="text-brand-grey mb-4">{method.description}</p>
                 <p className="text-brand-maroon font-medium mb-4">{method.contact}</p>
                 <button className="bg-brand-maroon text-white px-6 py-2 rounded-lg hover:bg-[#681b24] transition-colors">
@@ -140,7 +140,7 @@ export default function ContactPage() {
 
       {/* Contact Form and Office Locations */}
       <div className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="container-responsive">
           <div className="grid lg:grid-cols-2 gap-12">
             {/* Contact Form */}
             <motion.div
@@ -148,11 +148,11 @@ export default function ContactPage() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <h2 className="text-3xl font-bold text-brand-charcoal mb-6">Send us a Message</h2>
+              <h2 className="responsive-heading text-brand-charcoal mb-6">Send us a Message</h2>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-brand-charcoal mb-2">
+                    <label htmlFor="name" className="block responsive-text font-medium text-brand-charcoal mb-2">
                       Name *
                     </label>
                     <input
@@ -166,7 +166,7 @@ export default function ContactPage() {
                     />
                   </div>
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-brand-charcoal mb-2">
+                    <label htmlFor="email" className="block responsive-text font-medium text-brand-charcoal mb-2">
                       Email *
                     </label>
                     <input
@@ -182,7 +182,7 @@ export default function ContactPage() {
                 </div>
                 
                 <div>
-                  <label htmlFor="subject" className="block text-sm font-medium text-brand-charcoal mb-2">
+                  <label htmlFor="subject" className="block responsive-text font-medium text-brand-charcoal mb-2">
                     Subject *
                   </label>
                   <select
@@ -204,7 +204,7 @@ export default function ContactPage() {
                 </div>
                 
                 <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-brand-charcoal mb-2">
+                  <label htmlFor="message" className="block responsive-text font-medium text-brand-charcoal mb-2">
                     Message *
                   </label>
                   <textarea
@@ -236,11 +236,11 @@ export default function ContactPage() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              <h2 className="text-3xl font-bold text-brand-charcoal mb-6">Our Offices</h2>
+              <h2 className="responsive-heading text-brand-charcoal mb-6">Our Offices</h2>
               <div className="space-y-6">
                 {officeLocations.map((office, index) => (
                   <div key={office.city} className="bg-white p-6 rounded-lg shadow-md">
-                    <h3 className="text-xl font-semibold text-brand-charcoal mb-4">{office.city}</h3>
+                    <h3 className="responsive-subheading text-brand-charcoal mb-4">{office.city}</h3>
                     <div className="space-y-3">
                       <div className="flex items-start gap-3">
                         <MapPin className="h-5 w-5 text-brand-maroon mt-0.5" />
@@ -265,14 +265,14 @@ export default function ContactPage() {
 
       {/* FAQ Section */}
       <div className="py-20 bg-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto responsive-padding">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             className="text-center mb-16"
           >
-            <h2 className="text-3xl font-bold text-brand-charcoal mb-6">Frequently Asked Questions</h2>
+            <h2 className="responsive-heading text-brand-charcoal mb-6">Frequently Asked Questions</h2>
             <p className="text-xl text-brand-grey">
               Find quick answers to common questions about Craved Artisan.
             </p>
@@ -297,7 +297,7 @@ export default function ContactPage() {
 
       {/* CTA Section */}
       <div className="py-20 bg-brand-green text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div className="container-responsive text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

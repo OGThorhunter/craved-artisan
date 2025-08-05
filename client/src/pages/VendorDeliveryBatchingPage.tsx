@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Calendar, MapPin, Package, User, DollarSign, Clock, Filter, Route, FileText, Truck, CheckCircle, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -623,7 +623,7 @@ const VendorDeliveryBatchingPage: React.FC = () => {
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-4">
           <Calendar className="h-8 w-8 text-blue-600" />
-          <h1 className="text-3xl font-bold text-gray-900">Delivery Batching Dashboard</h1>
+          <h1 className="responsive-heading text-gray-900">Delivery Batching Dashboard</h1>
         </div>
         <p className="text-gray-600">
           Organize and manage orders by delivery day for efficient fulfillment
@@ -640,17 +640,17 @@ const VendorDeliveryBatchingPage: React.FC = () => {
             onChange={(e) => setOptimizeRoutes(e.target.checked)}
             className="rounded border-gray-300"
           />
-          <label htmlFor="optimize-routes" className="text-sm font-medium text-gray-700">
+          <label htmlFor="optimize-routes" className="responsive-text font-medium text-gray-700">
             <Route className="h-4 w-4 inline mr-1" />
             AI Route Optimization
           </label>
         </div>
         
         {batchedOrders.optimization && (
-          <div className="flex items-center gap-4 text-sm text-gray-600">
-            <span>📏 {batchedOrders.optimization.totalDistance} miles</span>
-            <span>⏱️ {Math.round(batchedOrders.optimization.totalTime / 60)} hours</span>
-            <span>⛽ ${batchedOrders.optimization.totalFuelCost}</span>
+          <div className="flex items-center gap-4 responsive-text text-gray-600">
+            <span>ðŸ“ {batchedOrders.optimization.totalDistance} miles</span>
+            <span>â±ï¸ {Math.round(batchedOrders.optimization.totalTime / 60)} hours</span>
+            <span>â›½ ${batchedOrders.optimization.totalFuelCost}</span>
           </div>
         )}
       </div>
@@ -661,8 +661,8 @@ const VendorDeliveryBatchingPage: React.FC = () => {
           <div className="flex items-center gap-3">
             <Package className="h-6 w-6 text-blue-600" />
             <div>
-              <p className="text-sm text-gray-600">Total Orders</p>
-              <p className="text-2xl font-bold text-gray-900">{batchedOrders.totalOrders}</p>
+              <p className="responsive-text text-gray-600">Total Orders</p>
+              <p className="responsive-heading text-gray-900">{batchedOrders.totalOrders}</p>
             </div>
           </div>
         </div>
@@ -670,8 +670,8 @@ const VendorDeliveryBatchingPage: React.FC = () => {
           <div className="flex items-center gap-3">
             <Calendar className="h-6 w-6 text-green-600" />
             <div>
-              <p className="text-sm text-gray-600">Delivery Days</p>
-              <p className="text-2xl font-bold text-gray-900">{batchedOrders.totalBatches}</p>
+              <p className="responsive-text text-gray-600">Delivery Days</p>
+              <p className="responsive-heading text-gray-900">{batchedOrders.totalBatches}</p>
             </div>
           </div>
         </div>
@@ -679,8 +679,8 @@ const VendorDeliveryBatchingPage: React.FC = () => {
           <div className="flex items-center gap-3">
             <DollarSign className="h-6 w-6 text-purple-600" />
             <div>
-              <p className="text-sm text-gray-600">Total Value</p>
-              <p className="text-2xl font-bold text-gray-900">
+              <p className="responsive-text text-gray-600">Total Value</p>
+              <p className="responsive-heading text-gray-900">
                 ${Object.values(batchedOrders.batches)
                   .flat()
                   .reduce((sum, order) => sum + order.total, 0)
@@ -695,7 +695,7 @@ const VendorDeliveryBatchingPage: React.FC = () => {
       <div className="bg-white rounded-lg border p-6 mb-8">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
-            <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="search" className="block responsive-text font-medium text-gray-700 mb-2">
               Search Orders
             </label>
             <div className="relative">
@@ -711,7 +711,7 @@ const VendorDeliveryBatchingPage: React.FC = () => {
             </div>
           </div>
           <div className="md:w-48">
-            <label htmlFor="day-filter" className="block text-sm font-medium text-gray-700 mb-2">
+            <label htmlFor="day-filter" className="block responsive-text font-medium text-gray-700 mb-2">
               Filter by Day
             </label>
             <select
@@ -749,11 +749,11 @@ const VendorDeliveryBatchingPage: React.FC = () => {
                   <div className="flex items-center gap-3">
                     <Calendar className="h-5 w-5 text-gray-600" />
                     <h3 className="text-lg font-semibold text-gray-900">{day}</h3>
-                    <span className="bg-blue-100 text-blue-800 text-sm font-medium px-2.5 py-0.5 rounded-full">
+                    <span className="bg-blue-100 text-blue-800 responsive-text font-medium px-2.5 py-0.5 rounded-full">
                       {orders.length} orders
                     </span>
                   </div>
-                                       <div className="text-sm text-gray-600">
+                                       <div className="responsive-text text-gray-600">
                        Total: ${orders.reduce((sum, order) => sum + order.total, 0).toFixed(2)}
                      </div>
                    </div>
@@ -832,7 +832,7 @@ const VendorDeliveryBatchingPage: React.FC = () => {
                           )}
                         </div>
                         
-                        <div className="flex items-center gap-4 text-sm text-gray-600 mb-2">
+                        <div className="flex items-center gap-4 responsive-text text-gray-600 mb-2">
                           <div className="flex items-center gap-1">
                             <User className="h-4 w-4" />
                             <span>{order.customerName}</span>
@@ -847,7 +847,7 @@ const VendorDeliveryBatchingPage: React.FC = () => {
                           </div>
                         </div>
                         
-                        <div className="flex items-center gap-4 text-sm text-gray-600">
+                        <div className="flex items-center gap-4 responsive-text text-gray-600">
                           <div className="flex items-center gap-1">
                             <DollarSign className="h-4 w-4" />
                             <span className="font-medium">${order.total.toFixed(2)}</span>
@@ -862,9 +862,9 @@ const VendorDeliveryBatchingPage: React.FC = () => {
                       <div className="ml-4">
                         <button
                           onClick={() => window.open(`/dashboard/vendor/orders/${order.id}`, '_blank')}
-                          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                          className="text-blue-600 hover:text-blue-800 responsive-text font-medium"
                         >
-                          View Details →
+                          View Details â†’
                         </button>
                       </div>
                     </div>
@@ -900,13 +900,13 @@ const VendorDeliveryBatchingPage: React.FC = () => {
                 onClick={() => setShowStatusModal(false)}
                 className="text-gray-400 hover:text-gray-600"
               >
-                ✕
+                âœ•
               </button>
             </div>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block responsive-text font-medium text-gray-700 mb-2">
                   Batch: {selectedBatchDay}
                 </label>
                 
