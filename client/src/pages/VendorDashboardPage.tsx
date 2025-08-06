@@ -1,10 +1,12 @@
-﻿import { Link } from 'wouter';
+﻿import { useState } from 'react';
+import { Link } from 'wouter';
 import { useAuth } from '../contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import OnboardingPrompt from '../components/OnboardingPrompt';
 import TaxForecastCard from '../components/TaxForecastCard';
+import VendorDashboardLayout from '../layouts/VendorDashboardLayout';
 import { 
   Package, 
   TrendingUp, 
@@ -30,12 +32,27 @@ import {
   TrendingDown,
   RefreshCw,
   CheckCircle,
-  XCircle
+  XCircle,
+  ExternalLink,
+  Edit,
+  Globe,
+  Power,
+  PowerOff
 } from 'lucide-react';
 
 export const VendorDashboardPage = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  
+  // Site status state - in real app this would come from API
+  const [siteIsLive, setSiteIsLive] = useState(true);
+  
+  // Handle site status toggle
+  const handleSiteToggle = () => {
+    const newStatus = !siteIsLive;
+    setSiteIsLive(newStatus);
+    toast.success(newStatus ? 'Storefront is now live!' : 'Storefront taken offline');
+  };
 
   // API functions
   const fetchVendorProfile = async () => {
@@ -237,10 +254,80 @@ export const VendorDashboardPage = () => {
   ];
 
   return (
-    <div className="page-container bg-gray-50">
-      <div className="container-responsive py-8">
+    <VendorDashboardLayout>
+      <div className="page-container bg-white min-h-screen">
+        <div className="container-responsive py-8">
+        
+        {/* Storefront Management Bar */}
+        <div className="bg-[#F7F2EC] rounded-2xl shadow-sm p-4 mb-6 border border-gray-100">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-2">
+                <Globe className="w-5 h-5 text-gray-600" />
+                <span className="font-medium text-gray-900">Your Storefront:</span>
+                <a 
+                  href={`https://cravedartisan.com/vendor/${user?.id || 'your-store'}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 hover:underline"
+                >
+                  cravedartisan.com/vendor/{user?.profile?.businessName?.toLowerCase().replace(/\s+/g, '-') || 'your-store'}
+                  <ExternalLink className="w-4 h-4" />
+                </a>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <span className="text-gray-600">Status:</span>
+                <div className="flex items-center gap-2">
+                  {siteIsLive ? (
+                    <div className="flex items-center gap-1 text-green-600">
+                      <Power className="w-4 h-4" />
+                      <span className="font-medium">Live</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1 text-red-600">
+                      <PowerOff className="w-4 h-4" />
+                      <span className="font-medium">Offline</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleSiteToggle}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
+                  siteIsLive 
+                    ? 'bg-red-100 text-red-700 hover:bg-red-200' 
+                    : 'bg-green-100 text-green-700 hover:bg-green-200'
+                }`}
+              >
+                {siteIsLive ? (
+                  <>
+                    <PowerOff className="w-4 h-4" />
+                    Take Offline
+                  </>
+                ) : (
+                  <>
+                    <Power className="w-4 h-4" />
+                    Go Live
+                  </>
+                )}
+              </button>
+              
+              <Link href="/dashboard/vendor/site-settings">
+                <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2 text-sm">
+                  <Edit className="w-4 h-4" />
+                  Edit Site
+                </button>
+              </Link>
+            </div>
+          </div>
+        </div>
+        
         {/* Header */}
-        <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
+        <div className="bg-[#F7F2EC] rounded-2xl shadow-sm p-6 mb-6 border border-gray-100">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="responsive-heading text-gray-900">Vendor Dashboard</h1>
@@ -261,7 +348,7 @@ export const VendorDashboardPage = () => {
         </div>
 
         {/* Horizontal Navigation */}
-        <div className="bg-white rounded-2xl shadow-sm p-4 mb-8">
+        <div className="bg-[#F7F2EC] rounded-2xl shadow-sm p-4 mb-8 border border-gray-100">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex flex-wrap items-center gap-2">
               <Link href="/dashboard/vendor/products">
@@ -326,7 +413,7 @@ export const VendorDashboardPage = () => {
 
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-2xl shadow-sm p-6">
+          <div className="bg-[#F7F2EC] rounded-2xl shadow-sm p-6 border border-gray-100">
             <div className="flex items-center">
               <div className="p-2 bg-green-100 rounded-lg">
                 <DollarSign className="w-6 h-6 text-green-600" />
@@ -343,7 +430,7 @@ export const VendorDashboardPage = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm p-6">
+          <div className="bg-[#F7F2EC] rounded-2xl shadow-sm p-6 border border-gray-100">
             <div className="flex items-center">
               <div className="p-2 bg-blue-100 rounded-lg">
                 <FileText className="w-6 h-6 text-blue-600" />
@@ -360,7 +447,7 @@ export const VendorDashboardPage = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm p-6">
+          <div className="bg-[#F7F2EC] rounded-2xl shadow-sm p-6 border border-gray-100">
             <div className="flex items-center">
               <div className="p-2 bg-purple-100 rounded-lg">
                 <Package className="w-6 h-6 text-purple-600" />
@@ -375,7 +462,7 @@ export const VendorDashboardPage = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm p-6">
+          <div className="bg-[#F7F2EC] rounded-2xl shadow-sm p-6 border border-gray-100">
             <div className="flex items-center">
               <div className="p-2 bg-yellow-100 rounded-lg">
                 <Star className="w-6 h-6 text-yellow-600" />
@@ -413,7 +500,7 @@ export const VendorDashboardPage = () => {
         {/* Margin Alerts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Low Margin Products Alert */}
-          <div className="bg-white rounded-2xl shadow-sm p-6">
+          <div className="bg-[#F7F2EC] rounded-2xl shadow-sm p-6 border border-gray-100">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center">
                 <div className="p-2 bg-red-100 rounded-lg">
@@ -476,7 +563,7 @@ export const VendorDashboardPage = () => {
           </div>
 
           {/* Ingredient Price Alerts */}
-          <div className="bg-white rounded-2xl shadow-sm p-6">
+          <div className="bg-[#F7F2EC] rounded-2xl shadow-sm p-6 border border-gray-100">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center">
                 <div className="p-2 bg-orange-100 rounded-lg">
@@ -545,7 +632,7 @@ export const VendorDashboardPage = () => {
           <h2 className="responsive-subheading text-gray-900 mb-4">Quick Actions</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <Link href="/dashboard/vendor/products">
-              <div className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow cursor-pointer border border-gray-100">
+              <div className="bg-[#F7F2EC] rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow cursor-pointer border border-gray-100">
                 <div className="flex items-center">
                   <div className="p-3 rounded-lg bg-blue-500 bg-opacity-10">
                     <Plus className="w-6 h-6 text-blue-500" />
@@ -558,7 +645,7 @@ export const VendorDashboardPage = () => {
               </div>
             </Link>
             <Link href="/dashboard/vendor/batch-pricing">
-              <div className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow cursor-pointer border border-gray-100">
+              <div className="bg-[#F7F2EC] rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow cursor-pointer border border-gray-100">
                 <div className="flex items-center">
                   <div className="p-3 rounded-lg bg-emerald-500 bg-opacity-10">
                     <DollarSign className="w-6 h-6 text-emerald-500" />
@@ -571,7 +658,7 @@ export const VendorDashboardPage = () => {
               </div>
             </Link>
             <Link href="/dashboard/vendor/analytics">
-              <div className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow cursor-pointer border border-gray-100">
+              <div className="bg-[#F7F2EC] rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow cursor-pointer border border-gray-100">
                 <div className="flex items-center">
                   <div className="p-3 rounded-lg bg-cyan-500 bg-opacity-10">
                     <TrendingUp className="w-6 h-6 text-cyan-500" />
@@ -588,7 +675,7 @@ export const VendorDashboardPage = () => {
 
         {/* Batch Pricing Update Section */}
         <div className="mb-8">
-          <div className="bg-white rounded-2xl shadow-sm p-6">
+          <div className="bg-[#F7F2EC] rounded-2xl shadow-sm p-6 border border-gray-100">
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="responsive-subheading text-gray-900">Batch Pricing Update</h2>
@@ -668,7 +755,7 @@ export const VendorDashboardPage = () => {
           <h2 className="responsive-subheading text-gray-900 mb-4">Store Overview</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {storeOverviewCards.map((card) => (
-              <div key={card.id} className="bg-white rounded-2xl shadow-sm p-6 hover:shadow-md transition-shadow border border-gray-100">
+              <div key={card.id} className="bg-[#F7F2EC] rounded-2xl shadow-sm p-6 hover:shadow-md transition-shadow border border-gray-100">
                 <div className="flex items-start justify-between mb-4">
                   <div className={`p-3 rounded-xl ${card.bgColor}`}>
                     <card.icon className={`w-8 h-8 ${card.iconColor}`} />
@@ -700,7 +787,7 @@ export const VendorDashboardPage = () => {
 
         {/* Recent Activity */}
         <div className="mt-8">
-          <div className="bg-white rounded-2xl shadow-sm p-6">
+          <div className="bg-[#F7F2EC] rounded-2xl shadow-sm p-6 border border-gray-100">
             <h2 className="responsive-subheading text-gray-900 mb-4">Recent Activity</h2>
             <div className="space-y-4">
               <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
@@ -769,6 +856,6 @@ export const VendorDashboardPage = () => {
           </div>
         </div>
       </div>
-    </div>
+    </VendorDashboardLayout>
   );
 }; 

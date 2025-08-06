@@ -65,7 +65,7 @@ export function CustomerInsights() {
   };
 
   return (
-    <div className="bg-white rounded-2xl p-4 shadow-md">
+    <div className="bg-[#F7F2EC] rounded-2xl p-4 shadow-md border border-gray-100">
       <div className="flex items-center gap-2 mb-6">
         <Users size={20} className="text-[#5B6E02]" />
         <h2 className="text-xl font-semibold text-gray-800">Customer Insights</h2>

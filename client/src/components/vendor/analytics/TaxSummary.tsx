@@ -132,7 +132,7 @@ export function TaxSummary() {
   const currentQuarterEstimate = quarterlyEstimates.find(q => q.status === "upcoming");
 
   return (
-    <div className="bg-white rounded-2xl p-4 shadow-md">
+    <div className="bg-[#F7F2EC] rounded-2xl p-4 shadow-md border border-gray-100">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <FileText size={20} className="text-[#5B6E02]" />

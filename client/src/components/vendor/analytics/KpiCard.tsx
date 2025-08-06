@@ -13,7 +13,7 @@ export const KpiCard: FC<Props> = ({ label, value, delta, icon }) => {
   const isPositive = delta >= 0;
 
   return (
-    <div className="bg-white shadow-md rounded-2xl p-4 w-full max-w-sm">
+    <div className="bg-[#F7F2EC] shadow-md rounded-2xl p-4 w-full max-w-sm border border-gray-100">
       <div className="flex items-center justify-between mb-2">
         <p className="text-sm text-gray-600">{label}</p>
         {icon && <div className="text-gray-400">{icon}</div>}

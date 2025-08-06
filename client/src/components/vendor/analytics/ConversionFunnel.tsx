@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { TrendingUp, TrendingDown, Target, Zap, AlertTriangle, CheckCircle } from "lucide-react";
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell } from "recharts";
 import { mockFunnelData } from "@/mock/analyticsData";
 
 const COLORS = ["#C5C5C5", "#A67F5B", "#5B6E02", "#7F232E"];
@@ -84,7 +84,7 @@ export function ConversionFunnel() {
   };
 
   return (
-    <div className="bg-white rounded-2xl p-4 shadow-md">
+    <div className="bg-[#F7F2EC] rounded-2xl p-4 shadow-md border border-gray-100">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <Target size={20} className="text-[#5B6E02]" />

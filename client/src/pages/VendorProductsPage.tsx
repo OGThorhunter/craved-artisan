@@ -863,39 +863,39 @@ const VendorProductsPage: React.FC = () => {
                     </>
                   )}
                 </button>
-                                 {editing && (
-                   <button
-                     type="button"
-                     onClick={() => {
-                       setEditing(null);
-                       reset();
-                       setTags([]);
-                       setImagePreview('');
-                       setTagInput('');
-                     }}
-                     className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition-colors"
-                   >
-                     Cancel Edit
-                   </button>
-                 )}
-                                 <button
-                   type="button"
-                   onClick={() => {
-                     setShowAddForm(false);
-                     setEditing(null);
-                     reset();
-                     setTags([]);
-                     setImagePreview('');
-                     setTagInput('');
-                     setMarginData(null);
-                     setShowMarginAnalysis(false);
-                     setAiSuggestionData(null);
-                     setShowAiSuggestionModal(false);
-                   }}
-                   className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition-colors"
-                 >
-                   Cancel
-                 </button>
+                {editing && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditing(null);
+                      reset();
+                      setTags([]);
+                      setImagePreview('');
+                      setTagInput('');
+                    }}
+                    className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition-colors"
+                  >
+                    Cancel Edit
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowAddForm(false);
+                    setEditing(null);
+                    reset();
+                    setTags([]);
+                    setImagePreview('');
+                    setTagInput('');
+                    setMarginData(null);
+                    setShowMarginAnalysis(false);
+                    setAiSuggestionData(null);
+                    setShowAiSuggestionModal(false);
+                  }}
+                  className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition-colors"
+                >
+                  Cancel
+                </button>
               </div>
             </form>
           </div>
@@ -1097,6 +1097,7 @@ const VendorProductsPage: React.FC = () => {
               ))}
             </div>
           )}
+        </div>
         </div>
       </div>
 
@@ -1396,7 +1397,7 @@ const VendorProductsPage: React.FC = () => {
           </div>
         </div>
       )}
-    </div>
+    </VendorDashboardLayout>
   );
 };
 

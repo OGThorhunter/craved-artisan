@@ -32,7 +32,7 @@ const performanceData = [
 
 export function PerformanceKpis() {
   return (
-    <div className="bg-white rounded-2xl p-4 shadow-md">
+    <div className="bg-[#F7F2EC] rounded-2xl p-4 shadow-md border border-gray-100">
       <h2 className="text-xl font-semibold text-gray-800 mb-4">Performance Metrics</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {performanceData.map((kpi, idx) => (

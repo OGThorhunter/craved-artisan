@@ -108,7 +108,7 @@ export function PriceOptimizer() {
   const optimizationOpportunity = pricingSimulations.reduce((sum, sim) => sum + sim.expectedRevenueChange, 0);
 
   return (
-    <div className="bg-white rounded-2xl p-4 shadow-md">
+    <div className="bg-[#F7F2EC] rounded-2xl p-4 shadow-md border border-gray-100">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <Calculator size={20} className="text-[#5B6E02]" />

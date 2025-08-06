@@ -503,7 +503,8 @@ export default function VendorInventoryPage() {
             </div>
           </div>
         )}
+        </div>
       </div>
-    </div>
+    </VendorDashboardLayout>
   );
 } 
