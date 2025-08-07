@@ -31,6 +31,7 @@ import payoutReportsRoutes from './routes/payout-reports';
 import taxReportsRoutes from './routes/tax-reports';
 import marginManagementRoutes from './routes/margin-management';
 import taxProjectionRoutes from './routes/tax-projection';
+import analyticsRoutes from './routes/analyticsRoutes';
 import { initializeTaxReminderCron } from './services/taxReminderCron';
 
 // Load environment variables
@@ -170,6 +171,7 @@ app.use('/api/payout-reports', payoutReportsRoutes);
 app.use('/api/tax-reports', taxReportsRoutes);
 app.use('/api/margin-management', marginManagementRoutes);
 app.use('/api/tax-projection', taxProjectionRoutes);
+app.use('/api', analyticsRoutes);
 
 app.use('/api/products', (req, res) => {
   res.json({ message: 'Product routes - to be implemented' });

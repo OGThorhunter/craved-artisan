@@ -30,48 +30,76 @@ export const Header = () => {
 
   return (
     <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-      isScrolled ? 'bg-white/95 backdrop-blur-sm shadow-lg' : 'bg-white'
+      isScrolled 
+        ? 'bg-white/95 backdrop-blur-sm shadow-lg border-b border-gray-200' 
+        : 'bg-transparent'
     }`}>
       <div className="container-responsive">
-        <div className="flex items-center justify-between h-14 sm:h-16">
+        <div className="flex items-center justify-between h-16 sm:h-20">
           {/* Logo */}
           <Link href="/">
-            <div className="flex items-center space-x-2 cursor-pointer">
-              <div className="w-8 h-8 bg-brand-green rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-                </svg>
-              </div>
-              <span className="text-xl font-bold text-gray-900">Craved Artisan</span>
+            <div className="flex items-center space-x-3 cursor-pointer">
+              {isScrolled ? (
+                // Scrolled state - show compact logo with text
+                <>
+                  <div className="w-10 h-10 bg-brand-green rounded-xl flex items-center justify-center shadow-lg">
+                    <img
+                      src="/images/logonobg.png"
+                      alt="Craved Artisan Logo"
+                      className="w-6 h-6 object-contain"
+                    />
+                  </div>
+                  <span className="text-xl font-bold text-brand-charcoal">
+                    Craved Artisan
+                  </span>
+                </>
+              ) : (
+                // Transparent state - show just the logo (hero page has its own logo)
+                <div className="w-10 h-10 bg-brand-green rounded-xl flex items-center justify-center shadow-lg">
+                  <img
+                    src="/images/logonobg.png"
+                    alt="Craved Artisan Logo"
+                    className="w-6 h-6 object-contain"
+                  />
+                </div>
+              )}
             </div>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center space-x-2 lg:space-x-4 xl:space-x-8">
+          <nav className="hidden md:flex items-center space-x-6 lg:space-x-8">
             <Link href="/products">
               <span className={`text-sm font-medium transition-colors cursor-pointer ${
-                isActive('/products') ? 'text-primary-600' : 'text-gray-700 hover:text-primary-600'
+                isActive('/products') 
+                  ? (isScrolled ? 'text-brand-green' : 'text-white') 
+                  : (isScrolled ? 'text-brand-charcoal hover:text-brand-green' : 'text-white/90 hover:text-white')
               }`}>
                 Products
               </span>
             </Link>
             <Link href="/artisans">
               <span className={`text-sm font-medium transition-colors cursor-pointer ${
-                isActive('/artisans') ? 'text-primary-600' : 'text-gray-700 hover:text-primary-600'
+                isActive('/artisans') 
+                  ? (isScrolled ? 'text-brand-green' : 'text-white') 
+                  : (isScrolled ? 'text-brand-charcoal hover:text-brand-green' : 'text-white/90 hover:text-white')
               }`}>
                 Artisans
               </span>
             </Link>
             <Link href="/events">
               <span className={`text-sm font-medium transition-colors cursor-pointer ${
-                isActive('/events') ? 'text-primary-600' : 'text-gray-700 hover:text-primary-600'
+                isActive('/events') 
+                  ? (isScrolled ? 'text-brand-green' : 'text-white') 
+                  : (isScrolled ? 'text-brand-charcoal hover:text-brand-green' : 'text-white/90 hover:text-white')
               }`}>
                 Events
               </span>
             </Link>
             <Link href="/about">
               <span className={`text-sm font-medium transition-colors cursor-pointer ${
-                isActive('/about') ? 'text-primary-600' : 'text-gray-700 hover:text-primary-600'
+                isActive('/about') 
+                  ? (isScrolled ? 'text-brand-green' : 'text-white') 
+                  : (isScrolled ? 'text-brand-charcoal hover:text-brand-green' : 'text-white/90 hover:text-white')
               }`}>
                 About
               </span>
@@ -79,33 +107,37 @@ export const Header = () => {
           </nav>
 
           {/* Desktop Actions */}
-          <div className="hidden md:flex items-center space-x-2 lg:space-x-4">
+          <div className="hidden md:flex items-center space-x-4">
             {isAuthenticated ? (
               <div className="relative">
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center space-x-2 text-sm font-medium text-gray-700 hover:text-primary-600 transition-colors"
+                  className={`flex items-center space-x-2 text-sm font-medium transition-colors ${
+                    isScrolled 
+                      ? 'text-brand-charcoal hover:text-brand-green' 
+                      : 'text-white/90 hover:text-white'
+                  }`}
                 >
                   <User className="w-5 h-5" />
                   <span>{user?.profile?.firstName || user?.email}</span>
                 </button>
                 
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                    <div className="px-4 py-2 text-sm text-gray-700 border-b">
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl py-2 z-50 border border-gray-200">
+                    <div className="px-4 py-3 text-sm text-brand-charcoal border-b border-gray-200 bg-brand-cream/50">
                       <div className="font-medium">{user?.profile?.firstName} {user?.profile?.lastName}</div>
-                      <div className="text-gray-500">{user?.email}</div>
+                      <div className="text-brand-grey">{user?.email}</div>
                     </div>
                     
                     <Link href="/dashboard">
-                      <span className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
+                      <span className="block px-4 py-2 text-sm text-brand-charcoal hover:bg-brand-cream cursor-pointer transition-colors">
                         Dashboard
                       </span>
                     </Link>
                     
                     {user?.role === 'CUSTOMER' && (
                       <Link href="/dashboard/customer">
-                        <span className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
+                        <span className="flex items-center px-4 py-2 text-sm text-brand-charcoal hover:bg-brand-cream cursor-pointer transition-colors">
                           <ShoppingBag className="w-4 h-4 mr-2" />
                           My Orders
                         </span>
@@ -115,13 +147,13 @@ export const Header = () => {
                     {user?.role === 'VENDOR' && (
                       <>
                         <Link href="/dashboard/vendor">
-                          <span className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
+                          <span className="flex items-center px-4 py-2 text-sm text-brand-charcoal hover:bg-brand-cream cursor-pointer transition-colors">
                             <Store className="w-4 h-4 mr-2" />
                             My Store
                           </span>
                         </Link>
                         <Link href="/dashboard/vendor/products">
-                          <span className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer">
+                          <span className="flex items-center px-4 py-2 text-sm text-brand-charcoal hover:bg-brand-cream cursor-pointer transition-colors">
                             <ShoppingBag className="w-4 h-4 mr-2" />
                             Manage Products
                           </span>
@@ -131,7 +163,7 @@ export const Header = () => {
                     
                     <button
                       onClick={logout}
-                      className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
                     >
                       <LogOut className="w-4 h-4 mr-2" />
                       Sign Out
@@ -142,15 +174,31 @@ export const Header = () => {
             ) : (
               <>
                 <Link href="/join">
-                  <button className="text-sm font-medium text-gray-700 hover:text-primary-600 transition-colors">
+                  <button className={`text-sm font-medium transition-colors ${
+                    isScrolled 
+                      ? 'text-brand-charcoal hover:text-brand-green' 
+                      : 'text-white/90 hover:text-white'
+                  }`}>
                     Join as Artisan
                   </button>
                 </Link>
                 <Link href="/login">
-                  <button className="btn-secondary text-sm">Sign In</button>
+                  <button className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                    isScrolled 
+                      ? 'bg-brand-cream text-brand-charcoal hover:bg-brand-beige' 
+                      : 'bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 border border-white/30'
+                  }`}>
+                    Sign In
+                  </button>
                 </Link>
                 <Link href="/signup">
-                  <button className="btn-primary text-sm">Sign Up</button>
+                  <button className={`px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                    isScrolled 
+                      ? 'bg-brand-green text-white hover:bg-brand-green-hover' 
+                      : 'bg-brand-maroon text-white hover:bg-[#681b24]'
+                  }`}>
+                    Sign Up
+                  </button>
                 </Link>
               </>
             )}
@@ -158,7 +206,11 @@ export const Header = () => {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden p-2 rounded-lg text-gray-700 hover:bg-gray-100"
+            className={`md:hidden p-2 rounded-lg transition-colors ${
+              isScrolled 
+                ? 'text-brand-charcoal hover:bg-brand-cream' 
+                : 'text-white hover:bg-white/20'
+            }`}
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label="Toggle mobile menu"
           >
@@ -174,58 +226,84 @@ export const Header = () => {
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-gray-200 bg-white">
+          <div className={`md:hidden border-t ${
+            isScrolled ? 'border-gray-200 bg-white' : 'border-white/20 bg-black/20 backdrop-blur-lg'
+          }`}>
             <div className="px-6 py-4 space-y-4">
               <Link href="/products">
                 <span className={`block text-sm font-medium transition-colors cursor-pointer ${
-                  isActive('/products') ? 'text-primary-600' : 'text-gray-700 hover:text-primary-600'
+                  isActive('/products') 
+                    ? (isScrolled ? 'text-brand-green' : 'text-white') 
+                    : (isScrolled ? 'text-brand-charcoal hover:text-brand-green' : 'text-white/90 hover:text-white')
                 }`}>
                   Products
                 </span>
               </Link>
               <Link href="/artisans">
                 <span className={`block text-sm font-medium transition-colors cursor-pointer ${
-                  isActive('/artisans') ? 'text-primary-600' : 'text-gray-700 hover:text-primary-600'
+                  isActive('/artisans') 
+                    ? (isScrolled ? 'text-brand-green' : 'text-white') 
+                    : (isScrolled ? 'text-brand-charcoal hover:text-brand-green' : 'text-white/90 hover:text-white')
                 }`}>
                   Artisans
                 </span>
               </Link>
               <Link href="/events">
                 <span className={`block text-sm font-medium transition-colors cursor-pointer ${
-                  isActive('/events') ? 'text-primary-600' : 'text-gray-700 hover:text-primary-600'
+                  isActive('/events') 
+                    ? (isScrolled ? 'text-brand-green' : 'text-white') 
+                    : (isScrolled ? 'text-brand-charcoal hover:text-brand-green' : 'text-white/90 hover:text-white')
                 }`}>
                   Events
                 </span>
               </Link>
               <Link href="/about">
                 <span className={`block text-sm font-medium transition-colors cursor-pointer ${
-                  isActive('/about') ? 'text-primary-600' : 'text-gray-700 hover:text-primary-600'
+                  isActive('/about') 
+                    ? (isScrolled ? 'text-brand-green' : 'text-white') 
+                    : (isScrolled ? 'text-brand-charcoal hover:text-brand-green' : 'text-white/90 hover:text-white')
                 }`}>
                   About
                 </span>
               </Link>
               
-              <div className="pt-4 border-t border-gray-200 space-y-3">
+              <div className={`pt-4 border-t ${
+                isScrolled ? 'border-gray-200' : 'border-white/20'
+              } space-y-3`}>
                 {isAuthenticated ? (
                   <>
-                    <div className="px-2 py-2 text-sm text-gray-700">
+                    <div className={`px-2 py-2 text-sm ${
+                      isScrolled ? 'text-brand-charcoal' : 'text-white'
+                    }`}>
                       <div className="font-medium">{user?.profile?.firstName} {user?.profile?.lastName}</div>
-                      <div className="text-gray-500">{user?.email}</div>
+                      <div className={isScrolled ? 'text-brand-grey' : 'text-white/75'}>{user?.email}</div>
                     </div>
                     <Link href="/dashboard">
-                      <button className="w-full text-left text-sm font-medium text-gray-700 hover:text-primary-600 transition-colors">
+                      <button className={`w-full text-left text-sm font-medium transition-colors ${
+                        isScrolled 
+                          ? 'text-brand-charcoal hover:text-brand-green' 
+                          : 'text-white/90 hover:text-white'
+                      }`}>
                         Dashboard
                       </button>
                     </Link>
                     {user?.role === 'VENDOR' && (
                       <>
                         <Link href="/dashboard/vendor">
-                          <button className="w-full text-left text-sm font-medium text-gray-700 hover:text-primary-600 transition-colors">
+                          <button className={`w-full text-left text-sm font-medium transition-colors ${
+                            isScrolled 
+                              ? 'text-brand-charcoal hover:text-brand-green' 
+                              : 'text-white/90 hover:text-white'
+                          }`}>
                             My Store
                           </button>
                         </Link>
                         <Link href="/dashboard/vendor/products">
-                          <button className="w-full text-left text-sm font-medium text-gray-700 hover:text-primary-600 transition-colors">
+                          <button className={`w-full text-left text-sm font-medium transition-colors ${
+                            isScrolled 
+                              ? 'text-brand-charcoal hover:text-brand-green' 
+                              : 'text-white/90 hover:text-white'
+                          }`}>
                             Manage Products
                           </button>
                         </Link>
@@ -233,7 +311,7 @@ export const Header = () => {
                     )}
                     <button
                       onClick={logout}
-                      className="w-full text-left text-sm font-medium text-red-600 hover:text-red-700 transition-colors"
+                      className="w-full text-left text-sm font-medium text-red-400 hover:text-red-300 transition-colors"
                     >
                       Sign Out
                     </button>
@@ -241,15 +319,31 @@ export const Header = () => {
                 ) : (
                   <>
                     <Link href="/join">
-                      <button className="w-full text-left text-sm font-medium text-gray-700 hover:text-primary-600 transition-colors">
+                      <button className={`w-full text-left text-sm font-medium transition-colors ${
+                        isScrolled 
+                          ? 'text-brand-charcoal hover:text-brand-green' 
+                          : 'text-white/90 hover:text-white'
+                      }`}>
                         Join as Artisan
                       </button>
                     </Link>
                     <Link href="/login">
-                      <button className="w-full btn-secondary text-sm">Sign In</button>
+                      <button className={`w-full px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                        isScrolled 
+                          ? 'bg-brand-cream text-brand-charcoal hover:bg-brand-beige' 
+                          : 'bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 border border-white/30'
+                      }`}>
+                        Sign In
+                      </button>
                     </Link>
                     <Link href="/signup">
-                      <button className="w-full btn-primary text-sm">Sign Up</button>
+                      <button className={`w-full px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
+                        isScrolled 
+                          ? 'bg-brand-green text-white hover:bg-brand-green-hover' 
+                          : 'bg-brand-maroon text-white hover:bg-[#681b24]'
+                      }`}>
+                        Sign Up
+                      </button>
                     </Link>
                   </>
                 )}

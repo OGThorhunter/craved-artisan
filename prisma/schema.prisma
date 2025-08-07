@@ -11,549 +11,103 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  name      String? // Optional name field
-  role      Role     @default(CUSTOMER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             String   @id @default(cuid())
+  email          String   @unique
+  password       String
+  name           String?
+  zip_code       String?
+  loyalty_member Boolean  @default(false)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
 
   // Relations
-  profile       Profile?
-  vendorProfile VendorProfile?
-  orders        Order[]
-  recipeVersions RecipeVersion[] // Versions created by this user
-  reviews       Review[]
-  favorites     Favorite[]
-  addresses     Address[]
-
-  @@map("users")
-}
-
-model Profile {
-  id          String   @id @default(uuid())
-  firstName   String
-  lastName    String
-  phone       String?
-  avatar      String?
-  bio         String?
-  website     String?
-  socialLinks Json? // Store social media links as JSON
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("profiles")
+  orders         Order[]
+  analyticsEvents AnalyticsEvent[]
+  vendorProfile  VendorProfile?
 }
 
 model VendorProfile {
-  id        String   @id @default(uuid())
-  userId    String   @unique
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  storeName String
-  slug      String   @unique
-  bio       String?
-  imageUrl  String?
-  // Stripe Connect fields
-  stripeAccountId String? // Stripe Connect account ID
-  stripeAccountStatus String? // 'pending', 'active', 'restricted', 'disabled'
-  stripeOnboardingUrl String? // URL for vendor onboarding
-  // Margin management
-  minMarginPercent Float? // Minimum allowed margin percentage (e.g., 30.0)
-  marginOverrideEnabled Boolean @default(false) // Allow vendor to override minimum margin
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(cuid())
+  user_id     String   @unique
+  business_name String
+  description String?
+  category    String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
 
   // Relations
+  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
   products    Product[]
-  ingredients Ingredient[]
-  recipes     Recipe[]
-  financialSnapshots FinancialSnapshot[]
-  payouts     Payout[]
-  taxAlerts   TaxAlert[]
-  wallet      Wallet?
-  walletTransactions WalletTransaction[]
-  labelPrints LabelPrint[]
-
-  @@map("vendor_profiles")
-}
-
-model Address {
-  id         String      @id @default(uuid())
-  type       AddressType
-  firstName  String
-  lastName   String
-  company    String?
-  address1   String
-  address2   String?
-  city       String
-  state      String
-  postalCode String
-  country    String
-  phone      String?
-  isDefault  Boolean     @default(false)
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
-
-  // Relations
-  userId String
-  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  orders Order[]
-
-  @@map("addresses")
+  orders      Order[]
+  analyticsEvents AnalyticsEvent[]
 }
 
 model Product {
-  id          String   @id @default(uuid())
-  name        String
-  description String?
-  price       Decimal
-  cost        Float?   // Cost field for margin calculations
-  imageUrl    String?
-  tags        String[] // Array of tags
-  stock       Int      @default(0)
-  isAvailable Boolean  @default(true)
-  targetMargin Float?  // Target profit margin as a percentage
-  marginAlert  Boolean @default(false) // Smart margin alert trigger
-  alertNote    String? // Note about the margin alert
-  recipeId    String?  // Optional reference to the recipe that produces this product
-  onWatchlist Boolean  @default(false) // Whether the product is on watchlist for monitoring
-  lastAiSuggestion Float? // Last AI-suggested price
-  aiSuggestionNote String? // Note about the AI suggestion
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String   @id @default(cuid())
+  vendor_id      String
+  name           String
+  description    String?
+  price          Decimal  @db.Decimal(10, 2)
+  category       String?
+  stock_quantity Int      @default(0)
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
 
   // Relations
-  vendorProfileId String
-  vendorProfile   VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
-  recipe          Recipe?       @relation("ProductRecipe", fields: [recipeId], references: [id], onDelete: SetNull)
-  recipes         Recipe[]      // Recipes that produce this product
-  orderItems      OrderItem[]
-  reviews         Review[]
-  favorites       Favorite[]
-
-  @@map("products")
+  vendor        VendorProfile @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
+  orderItems    OrderItem[]
+  analyticsEvents AnalyticsEvent[]
 }
 
 model Order {
-  id             String      @id @default(uuid())
-  orderNumber    String      @unique
-  status         OrderStatus @default(PENDING)
-  subtotal       Decimal
-  tax            Decimal     @default(0)
-  shipping       Decimal     @default(0)
-  total          Decimal
-  notes          String?
-  trackingNumber String?
-  shippedAt      DateTime?
-  deliveredAt    DateTime?
-  shippingZip    String
-  deliveryDay    String?     // Mon, Tue, etc.
-  deliveryStatus String      @default("pending")
-  deliveryTimestamp DateTime?
-  deliveryPhotoUrl String?
-  // Stripe payment fields
-  stripePaymentIntentId String? // Stripe Payment Intent ID
-  stripeTransferId String? // Stripe Transfer ID for vendor payout
-  commissionAmount Decimal @default(0) // 2% commission amount
-  vendorPayoutAmount Decimal @default(0) // Amount sent to vendor (98%)
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  id           String   @id @default(cuid())
+  user_id      String
+  vendor_id    String
+  total_amount Decimal  @db.Decimal(10, 2)
+  status       String   @default("pending") // pending, completed, delivered, cancelled
+  order_date   DateTime @default(now())
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
 
   // Relations
-  userId            String
-  user              User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  shippingAddressId String
-  shippingAddress   Address     @relation(fields: [shippingAddressId], references: [id])
-  orderItems        OrderItem[]
-  fulfillments      Fulfillment[]
-  deliveryBatchId   String?
-  deliveryBatch     DeliveryBatch? @relation(fields: [deliveryBatchId], references: [id])
-
-  @@map("orders")
+  user         User       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  vendor       VendorProfile @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
+  orderItems   OrderItem[]
+  analyticsEvents AnalyticsEvent[]
 }
 
 model OrderItem {
-  id       String  @id @default(uuid())
-  quantity Int
-  price    Decimal
-  total    Decimal
+  id         String  @id @default(cuid())
+  order_id   String
+  product_id String
+  quantity   Int
+  price      Decimal @db.Decimal(10, 2)
+  created_at DateTime @default(now())
 
   // Relations
-  orderId   String
-  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  productId String
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-
-  @@map("order_items")
+  order      Order   @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  product    Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
 }
 
-model Fulfillment {
-  id              String            @id @default(uuid())
-  fulfillmentType FulfillmentType
-  status          FulfillmentStatus @default(PENDING)
-  trackingNumber  String?
-  carrier         String? // e.g., "UPS", "FedEx", "USPS"
-  estimatedDelivery DateTime?
-  actualDelivery   DateTime?
-  notes            String?
-  etaLabel         String? // AI-generated label (e.g., "⚡ Fast Fulfillment", "📦 Standard")
-  predictedHours   Int?    // AI prediction raw hours
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-
-  // Relations
-  orderId String
-  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-
-  @@map("fulfillments")
-}
-
-model DeliveryBatch {
-  id          String   @id @default(uuid())
-  batchId     String   @unique
-  deliveryDay String
-  status      BatchStatus @default(PENDING)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  // Batch tracking
-  packedAt    DateTime?
-  loadedAt    DateTime?
-  outForDeliveryAt DateTime?
-  completedAt DateTime?
-  
-  // Driver info
-  assignedDriver String?
-  driverPhone    String?
-  vehicleId      String?
-  
-  // Route optimization
-  totalDistance  Float?
-  estimatedTime  Int?
-  fuelCost       Float?
-  
-  // Orders in this batch
-  orders         Order[]
-  
-  @@map("delivery_batches")
-}
-
-model Review {
-  id         String   @id @default(uuid())
-  rating     Int
-  title      String?
-  comment    String?
-  isVerified Boolean  @default(false)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  // Relations
-  userId    String
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  productId String
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-
-  @@map("reviews")
-}
-
-model Favorite {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
-
-  // Relations
-  userId    String
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  productId String
-  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, productId])
-  @@map("favorites")
-}
-
-model Ingredient {
-  id          String   @id @default(uuid())
-  name        String
-  description String?
-  unit        String // e.g., "grams", "ounces", "cups"
-  costPerUnit Decimal  @default(0)
-  supplier    String? // Optional supplier information
-  isAvailable Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  vendorProfileId   String
-  vendorProfile     VendorProfile      @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
-  recipeIngredients RecipeIngredient[]
-  recipeIngredientVersions RecipeIngredientVersion[]
-
-  @@map("ingredients")
-}
-
-model Recipe {
-  id           String   @id @default(uuid())
-  name         String
-  description  String?
-  instructions String? // Step-by-step instructions
-  yield        Int // Number of units produced
-  yieldUnit    String // e.g., "pieces", "servings", "batches"
-  prepTime     Int? // Preparation time in minutes
-  cookTime     Int? // Cooking time in minutes
-  difficulty   String? // e.g., "Easy", "Medium", "Hard"
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  // Relations
-  vendorProfileId   String
-  vendorProfile     VendorProfile      @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
-  productId         String? // Optional: recipe can produce a product
-  product           Product?           @relation(fields: [productId], references: [id], onDelete: SetNull)
-  products          Product[]          @relation("ProductRecipe") // Products that reference this recipe
-  recipeIngredients RecipeIngredient[]
-  recipeVersions    RecipeVersion[]
-
-  @@map("recipes")
-}
-
-model RecipeIngredient {
-  id        String   @id @default(uuid())
-  quantity  Decimal // Amount of ingredient needed
-  unit      String // Unit of measurement
-  notes     String? // Optional notes about this ingredient in the recipe
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  // Relations
-  recipeId     String
-  recipe       Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
-  ingredientId String
-  ingredient   Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
-
-  @@unique([recipeId, ingredientId]) // Prevent duplicate ingredients in same recipe
-  @@map("recipe_ingredients")
-}
-
-model RecipeVersion {
-  id           String   @id @default(uuid())
-  version      Int      // Version number (1, 2, 3, etc.)
-  name         String
-  description  String?
-  instructions String? // Step-by-step instructions
-  yield        Int // Number of units produced
-  yieldUnit    String // e.g., "pieces", "servings", "batches"
-  prepTime     Int? // Preparation time in minutes
-  cookTime     Int? // Cooking time in minutes
-  difficulty   String? // e.g., "Easy", "Medium", "Hard"
-  totalCost    Decimal @default(0) // Total cost of all ingredients at save time
-  notes        String? // Version notes (e.g., "Switched to organic sugar")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  // Relations
-  recipeId         String
-  recipe           Recipe                @relation(fields: [recipeId], references: [id], onDelete: Cascade)
-  editorId         String // User who created this version
-  editor           User                  @relation(fields: [editorId], references: [id], onDelete: Cascade)
-  recipeIngredientVersions RecipeIngredientVersion[]
-
-  @@unique([recipeId, version]) // Ensure unique version per recipe
-  @@map("recipe_versions")
-}
-
-model RecipeIngredientVersion {
-  id           String   @id @default(uuid())
-  quantity     Decimal // Amount of ingredient needed
-  unit         String // Unit of measurement
-  pricePerUnit Decimal @default(0) // Price per unit at save time
-  totalCost    Decimal @default(0) // Total cost for this ingredient (quantity * pricePerUnit)
-  notes        String? // Optional notes about this ingredient in the recipe
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  // Relations
-  recipeVersionId String
-  recipeVersion   RecipeVersion @relation(fields: [recipeVersionId], references: [id], onDelete: Cascade)
-  ingredientId    String
-  ingredient      Ingredient    @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
-
-  @@unique([recipeVersionId, ingredientId]) // Prevent duplicate ingredients in same recipe version
-  @@map("recipe_ingredient_versions")
-}
-
-model FinancialSnapshot {
-  id         String   @id @default(uuid())
-  vendorId   String
-  date       DateTime @default(now())
-  revenue    Float
-  cogs       Float
-  opex       Float
-  netProfit  Float
-  assets     Float
-  liabilities Float
-  equity     Float
-  cashIn     Float
-  cashOut    Float
-  notes      String?
-  
-  // Relations
-  vendor     VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
-  
-  @@index([vendorId, date])
-}
-
-model Payout {
-  id           String   @id @default(cuid())
-  vendorId     String
-  amount       Float
-  platformFee  Float
-  date         DateTime
-  method       String // 'stripe' | 'paypal'
-  referenceId  String
-  createdAt    DateTime @default(now())
-  
-  // Relations
-  vendor       VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
-  
-  @@index([vendorId, date])
-  @@map("payouts")
-}
-
-model SystemSettings {
-  id                String   @id @default(uuid())
-  key               String   @unique
-  value             String
-  description       String?
-  isActive          Boolean  @default(true)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-
-  @@map("system_settings")
-}
-
-model TaxAlert {
-  id              String   @id @default(uuid())
-  vendorId        String
-  quarter         String   // Q1, Q2, Q3, Q4
-  year            Int
-  estimatedAmount Float
-  dueDate         DateTime
-  alertType       String   // 'reminder', 'overdue', 'payment_confirmed'
-  status          String   @default("pending") // 'pending', 'sent', 'failed'
-  sentAt          DateTime?
-  createdAt       DateTime @default(now())
-
-  // Relations
-  vendor          VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
-
-  @@index([vendorId, quarter, year])
-  @@index([status, alertType])
-  @@map("tax_alerts")
-}
-
-model Wallet {
-  id          String   @id @default(uuid())
-  vendorId    String   @unique
-  balance     Float    @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  vendor      VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
-  transactions WalletTransaction[]
-
-  @@map("wallets")
-}
-
-model WalletTransaction {
+// New Analytics Event Model for Conversion Funnel Tracking
+model AnalyticsEvent {
   id          String   @id @default(cuid())
-  vendorId    String
-  type        String   // "debit" | "credit"
-  source      String   // "Label Print", "Payout", "Manual Adjustment", etc.
-  amount      Float
-  description String?
-  referenceId String?  // Reference to related entity (order, label, etc.)
-  metadata    Json?    // Additional data as JSON
-  createdAt   DateTime @default(now())
+  vendor_id   String
+  user_id     String?
+  product_id  String?
+  order_id    String?
+  event_type  String   // page_view, add_to_cart, checkout_started, purchase_completed, cart_abandoned
+  event_data  Json?    // Additional event-specific data
+  session_id  String?  // To track user sessions
+  created_at  DateTime @default(now())
 
   // Relations
-  vendor      VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
-  wallet      Wallet?       @relation(fields: [walletId], references: [id], onDelete: Cascade)
-  walletId    String?
+  vendor      VendorProfile @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
+  user        User?         @relation(fields: [user_id], references: [id], onDelete: SetNull)
+  product     Product?      @relation(fields: [product_id], references: [id], onDelete: SetNull)
+  order       Order?        @relation(fields: [order_id], references: [id], onDelete: SetNull)
 
-  @@index([vendorId, type, source])
-  @@index([vendorId, createdAt])
-  @@map("wallet_transactions")
-}
-
-model LabelPrint {
-  id          String   @id @default(uuid())
-  vendorId    String
-  type        String   // "shipping", "inventory", "tax_doc", "custom"
-  quantity    Int      @default(1)
-  cost        Float
-  status      String   @default("pending") // "pending", "processing", "completed", "failed"
-  fileUrl     String?  // URL to generated label file
-  metadata    Json?    // Additional label data
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // Relations
-  vendor      VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
-
-  @@index([vendorId, type, status])
-  @@index([vendorId, createdAt])
-  @@map("label_prints")
-}
-
-enum Role {
-  CUSTOMER
-  VENDOR
-  ADMIN
-  SUPPLIER
-  EVENT_COORDINATOR
-  DROPOFF
-}
-
-enum AddressType {
-  SHIPPING
-  BILLING
-}
-
-enum OrderStatus {
-  PENDING
-  CONFIRMED
-  PROCESSING
-  SHIPPED
-  DELIVERED
-  CANCELLED
-  REFUNDED
-}
-
-enum FulfillmentStatus {
-  PENDING
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
-  FAILED
-}
-
-enum FulfillmentType {
-  SHIPPING
-  PICKUP
-  DELIVERY
-}
-
-enum BatchStatus {
-  PENDING
-  PACKED
-  LOADED
-  OUT_FOR_DELIVERY
-  COMPLETED
-  CANCELLED
+  @@index([vendor_id, event_type, created_at])
+  @@index([session_id])
+  @@index([created_at])
 }

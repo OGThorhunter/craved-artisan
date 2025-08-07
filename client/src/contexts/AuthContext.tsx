@@ -15,6 +15,7 @@ export interface User {
     phone?: string;
     bio?: string;
     website?: string;
+    businessName?: string;
   } | null;
 }
 

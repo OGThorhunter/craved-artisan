@@ -7,6 +7,7 @@ import axios from 'axios';
 import OnboardingPrompt from '../components/OnboardingPrompt';
 import TaxForecastCard from '../components/TaxForecastCard';
 import VendorDashboardLayout from '../layouts/VendorDashboardLayout';
+import InspirationalQuote from '../components/InspirationalQuote';
 import { 
   Package, 
   TrendingUp, 
@@ -255,96 +256,116 @@ export const VendorDashboardPage = () => {
 
   return (
     <VendorDashboardLayout>
-      <div className="page-container bg-white min-h-screen">
-        <div className="container-responsive py-8">
+      <div className="container-responsive py-8">
         
         {/* Storefront Management Bar */}
-        <div className="bg-[#F7F2EC] rounded-2xl shadow-sm p-4 mb-6 border border-gray-100">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Globe className="w-5 h-5 text-gray-600" />
-                <span className="font-medium text-gray-900">Your Storefront:</span>
-                <a 
-                  href={`https://cravedartisan.com/vendor/${user?.id || 'your-store'}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 hover:underline"
-                >
-                  cravedartisan.com/vendor/{user?.profile?.businessName?.toLowerCase().replace(/\s+/g, '-') || 'your-store'}
-                  <ExternalLink className="w-4 h-4" />
-                </a>
+        <div className="bg-gradient-to-r from-[#F7F2EC] to-[#E8CBAE] rounded-2xl shadow-lg p-6 mb-6 border-2 border-[#5B6E02] relative overflow-hidden">
+          {/* Background pattern */}
+          <div className="absolute inset-0 opacity-5">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[#5B6E02] rounded-full -translate-y-16 translate-x-16"></div>
+            <div className="absolute bottom-0 left-0 w-24 h-24 bg-[#5B6E02] rounded-full translate-y-12 -translate-x-12"></div>
+          </div>
+          
+          <div className="relative z-10">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Globe className="w-6 h-6 text-[#5B6E02]" />
+                  <span className="font-bold text-[#333] text-lg">Your Storefront:</span>
+                  <a 
+                    href={`https://cravedartisan.com/vendor/${user?.id || 'your-store'}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-700 font-bold flex items-center gap-1 hover:underline text-lg"
+                  >
+                    cravedartisan.com/vendor/{user?.profile?.businessName?.toLowerCase().replace(/\s+/g, '-') || user?.profile?.firstName?.toLowerCase() || 'your-store'}
+                    <ExternalLink className="w-5 h-5" />
+                  </a>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <span className="text-[#333] font-medium">Status:</span>
+                  <div className="flex items-center gap-2">
+                    {siteIsLive ? (
+                      <div className="flex items-center gap-1 text-green-600 bg-green-100 px-3 py-1 rounded-full">
+                        <Power className="w-4 h-4" />
+                        <span className="font-bold">LIVE</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1 text-red-600 bg-red-100 px-3 py-1 rounded-full">
+                        <PowerOff className="w-4 h-4" />
+                        <span className="font-bold">OFFLINE</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
               
-              <div className="flex items-center gap-2">
-                <span className="text-gray-600">Status:</span>
-                <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleSiteToggle}
+                  className={`px-6 py-3 rounded-lg text-sm font-bold transition-all duration-200 flex items-center gap-2 shadow-md hover:shadow-lg transform hover:scale-105 ${
+                    siteIsLive 
+                      ? 'bg-red-500 text-white hover:bg-red-600' 
+                      : 'bg-green-500 text-white hover:bg-green-600'
+                  }`}
+                >
                   {siteIsLive ? (
-                    <div className="flex items-center gap-1 text-green-600">
-                      <Power className="w-4 h-4" />
-                      <span className="font-medium">Live</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-1 text-red-600">
+                    <>
                       <PowerOff className="w-4 h-4" />
-                      <span className="font-medium">Offline</span>
-                    </div>
+                      Take Offline
+                    </>
+                  ) : (
+                    <>
+                      <Power className="w-4 h-4" />
+                      Go Live
+                    </>
                   )}
-                </div>
+                </button>
+                
+                <Link href="/dashboard/vendor/site-settings">
+                  <button className="bg-[#5B6E02] text-white px-6 py-3 rounded-lg hover:bg-[#4A5A01] transition-all duration-200 font-bold flex items-center gap-2 text-sm shadow-md hover:shadow-lg transform hover:scale-105">
+                    <Edit className="w-4 h-4" />
+                    Edit Site
+                  </button>
+                </Link>
               </div>
             </div>
             
-            <div className="flex items-center gap-3">
-              <button
-                onClick={handleSiteToggle}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
-                  siteIsLive 
-                    ? 'bg-red-100 text-red-700 hover:bg-red-200' 
-                    : 'bg-green-100 text-green-700 hover:bg-green-200'
-                }`}
-              >
-                {siteIsLive ? (
-                  <>
-                    <PowerOff className="w-4 h-4" />
-                    Take Offline
-                  </>
-                ) : (
-                  <>
-                    <Power className="w-4 h-4" />
-                    Go Live
-                  </>
-                )}
-              </button>
-              
-              <Link href="/dashboard/vendor/site-settings">
-                <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2 text-sm">
-                  <Edit className="w-4 h-4" />
-                  Edit Site
-                </button>
-              </Link>
-            </div>
+            {/* Debug info - remove in production */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="mt-4 pt-4 border-t border-[#5B6E02] text-xs text-[#333] bg-white/50 rounded-lg p-3">
+                <div className="font-bold mb-2">🔍 Debug Info:</div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>User ID: <span className="font-mono">{user?.id || 'No user ID'}</span></div>
+                  <div>User Email: <span className="font-mono">{user?.email || 'No email'}</span></div>
+                  <div>Business Name: <span className="font-mono">{user?.profile?.businessName || 'No business name'}</span></div>
+                  <div>First Name: <span className="font-mono">{user?.profile?.firstName || 'No first name'}</span></div>
+                  <div>Site Status: <span className="font-mono">{siteIsLive ? 'Live' : 'Offline'}</span></div>
+                  <div>Role: <span className="font-mono">{user?.role || 'No role'}</span></div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
         
-        {/* Header */}
+        {/* Page Header */}
         <div className="bg-[#F7F2EC] rounded-2xl shadow-sm p-6 mb-6 border border-gray-100">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="responsive-heading text-gray-900">Vendor Dashboard</h1>
+              <h1 className="text-2xl font-bold text-gray-900">Vendor Dashboard</h1>
               <p className="text-gray-600 mt-1">
                 Welcome back, {user?.profile?.firstName || user?.email || 'Vendor'}!
-              </p>
-              <p className="responsive-text text-gray-500 mt-1">
-                Manage your store, products, and customer relationships
               </p>
             </div>
             <div className="flex items-center space-x-4">
               <div className="text-right">
-                <p className="responsive-text text-gray-500">Store Status</p>
+                <p className="text-gray-500">Store Status</p>
                 <p className="text-green-600 font-medium">Active</p>
               </div>
             </div>
           </div>
+          <InspirationalQuote />
         </div>
 
         {/* Horizontal Navigation */}

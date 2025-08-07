@@ -63,9 +63,20 @@ interface Vendor {
   };
 }
 
+interface AnalyticsTrend {
+  date: string;
+  revenue: number;
+  orders: number;
+}
+
 // Zod validation schema
 const vendorIdSchema = z.object({
   vendorId: z.string().min(1, 'Vendor ID is required')
+});
+
+const analyticsTrendsSchema = z.object({
+  vendorId: z.string().min(1, 'Vendor ID is required'),
+  range: z.enum(['daily', 'weekly', 'monthly']).default('daily')
 });
 
 // Mock data
@@ -520,6 +531,117 @@ router.delete('/:vendorId/follow', async (req, res) => {
     }
 
     console.error('Error unfollowing vendor:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Internal server error'
+    });
+  }
+});
+
+// GET /api/vendor/:vendorId/analytics/trends?range=daily|weekly|monthly
+router.get('/:vendorId/analytics/trends', async (req, res) => {
+  try {
+    const { vendorId, range } = analyticsTrendsSchema.parse({
+      vendorId: req.params.vendorId,
+      range: req.query.range || 'daily'
+    });
+    
+    const vendor = mockVendors[vendorId];
+    
+    if (!vendor) {
+      return res.status(404).json({
+        success: false,
+        error: 'Vendor not found'
+      });
+    }
+
+    // Generate mock analytics data based on range
+    const generateMockTrends = (range: 'daily' | 'weekly' | 'monthly'): AnalyticsTrend[] => {
+      const trends: AnalyticsTrend[] = [];
+      const now = new Date();
+      
+      let dataPoints: number;
+      let dateFormat: string;
+      let dateStep: number;
+      
+      switch (range) {
+        case 'daily':
+          dataPoints = 30; // Last 30 days
+          dateFormat = 'MMM d';
+          dateStep = 1;
+          break;
+        case 'weekly':
+          dataPoints = 12; // Last 12 weeks
+          dateFormat = 'MMM d';
+          dateStep = 7;
+          break;
+        case 'monthly':
+          dataPoints = 12; // Last 12 months
+          dateFormat = 'MMM yyyy';
+          dateStep = 30;
+          break;
+        default:
+          dataPoints = 30;
+          dateFormat = 'MMM d';
+          dateStep = 1;
+      }
+      
+      for (let i = dataPoints - 1; i >= 0; i--) {
+        const date = new Date(now);
+        date.setDate(date.getDate() - (i * dateStep));
+        
+        // Generate realistic mock data with some variation
+        const baseRevenue = 800 + Math.random() * 400; // $800-$1200 base
+        const baseOrders = 15 + Math.random() * 10; // 15-25 base orders
+        
+        // Add some seasonal/weekend variation
+        const dayOfWeek = date.getDay();
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+        const weekendMultiplier = isWeekend ? 1.2 : 1.0;
+        
+        // Add some random variation
+        const randomVariation = 0.8 + Math.random() * 0.4; // 0.8-1.2
+        
+        const revenue = Math.round(baseRevenue * weekendMultiplier * randomVariation);
+        const orders = Math.round(baseOrders * weekendMultiplier * randomVariation);
+        
+        trends.push({
+          date: date.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: range === 'monthly' ? undefined : 'numeric',
+            year: range === 'monthly' ? 'numeric' : undefined
+          }),
+          revenue,
+          orders
+        });
+      }
+      
+      return trends;
+    };
+
+    const trends = generateMockTrends(range);
+
+    res.json({
+      success: true,
+      data: trends,
+      meta: {
+        vendorId,
+        range,
+        dataPoints: trends.length,
+        generatedAt: new Date().toISOString()
+      }
+    });
+
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation error',
+        details: error.errors
+      });
+    }
+
+    console.error('Error fetching analytics trends:', error);
     res.status(500).json({
       success: false,
       error: 'Internal server error'
