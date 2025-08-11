@@ -90,11 +90,14 @@ model OrderItem {
   product_id String
   quantity   Int
   price      Decimal @db.Decimal(10, 2)
+  cogsUnit   Decimal? @db.Decimal(10, 4) // COGS snapshot at sale time
   created_at DateTime @default(now())
 
   // Relations
   order      Order   @relation(fields: [order_id], references: [id], onDelete: Cascade)
   product    Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
+
+  @@index([product_id])
 }
 
 // New Analytics Event Model for Conversion Funnel Tracking

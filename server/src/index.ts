@@ -36,6 +36,8 @@ import marginManagementRoutes from './routes/margin-management';
 import taxProjectionRoutes from './routes/tax-projection';
 import analyticsRoutes from './routes/analyticsRoutes';
 import analyticsRouter from './routes/analytics.routes';
+import financialsRouter from './routes/financials.routes';
+import productAnalyticsRouter from './routes/product-analytics.routes';
 import debugRoutes from './routes/debug';
 import vendorRouter from './routes/vendor.routes';
 import productRouter from './routes/product.routes';
@@ -208,6 +210,8 @@ app.use('/api/margin-management', marginManagementRoutes);
 app.use('/api/tax-projection', taxProjectionRoutes);
 app.use('/api', analyticsRoutes);
 app.use('/api/analytics', analyticsRouter);
+app.use('/api/financials', financialsRouter);
+app.use('/api/analytics', productAnalyticsRouter);
 
 // Debug routes (development only)
 if (env.NODE_ENV === 'development') {

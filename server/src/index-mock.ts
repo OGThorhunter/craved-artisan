@@ -335,6 +335,166 @@ app.get("/api/analytics/vendor/:vendorId/best-sellers", (req, res) => {
   });
 });
 
+// Financials endpoints for the live financials feature
+app.get("/api/financials/vendor/:vendorId/pnl", (req, res) => {
+  const from = req.query.from ? new Date(req.query.from as string) : undefined;
+  const to = req.query.to ? new Date(req.query.to as string) : undefined;
+  
+  // Generate mock P&L data
+  const revenue = Math.floor(Math.random() * 10000) + 2000;
+  const cogs = Math.floor(revenue * 0.6);
+  const platformFees = Math.floor(revenue * 0.01);
+  const stripeFees = Math.floor(revenue * 0.029) + 30;
+  const totalFees = platformFees + stripeFees;
+  const grossProfit = revenue - cogs;
+  const netIncome = grossProfit - totalFees;
+  
+  const fromDate = from || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const toDate = to || new Date();
+  
+  res.json({
+    period: { from: fromDate, to: toDate },
+    revenue, cogs, 
+    fees: { platform: platformFees, stripe: stripeFees, total: totalFees },
+    grossProfit, expenses: totalFees, netIncome
+  });
+});
+
+app.get("/api/financials/vendor/:vendorId/cash-flow", (req, res) => {
+  const from = req.query.from ? new Date(req.query.from as string) : undefined;
+  const to = req.query.to ? new Date(req.query.to as string) : undefined;
+  const method = req.query.method || 'direct';
+  
+  const fromDate = from || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const toDate = to || new Date();
+  
+  if (method === 'direct') {
+    const sales = Math.floor(Math.random() * 10000) + 2000;
+    const cogs = Math.floor(sales * 0.6);
+    const fees = Math.floor(sales * 0.039) + 30;
+    const net = sales - cogs - fees;
+    
+    res.json({
+      period: { from: fromDate, to: toDate },
+      method: 'direct',
+      inflows: { sales },
+      outflows: { cogs, fees },
+      net
+    });
+  } else {
+    const netIncome = Math.floor(Math.random() * 3000) + 500;
+    const deltaWorkingCapital = Math.floor(Math.random() * 1000) - 500;
+    const net = netIncome + deltaWorkingCapital;
+    
+    res.json({
+      period: { from: fromDate, to: toDate },
+      method: 'indirect',
+      netIncome,
+      adjustments: { deltaWorkingCapital },
+      net
+    });
+  }
+});
+
+app.get("/api/financials/vendor/:vendorId/balance-sheet", (req, res) => {
+  const asOf = req.query.asOf ? new Date(req.query.asOf as string) : new Date();
+  
+  const cash = Math.floor(Math.random() * 5000) + 1000;
+  const inventory = Math.floor(Math.random() * 3000) + 500;
+  const payables = Math.floor(Math.random() * 2000) + 200;
+  const taxesPayable = Math.floor(Math.random() * 1000) + 100;
+  const equity = cash + inventory - payables - taxesPayable;
+  
+  res.json({
+    asOf,
+    assets: { cash, inventory },
+    liabilities: { payables, taxesPayable },
+    equity
+  });
+});
+
+app.get("/api/financials/vendor/:vendorId/pnl.csv", (req, res) => {
+  const from = req.query.from ? new Date(req.query.from as string) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const to = req.query.to ? new Date(req.query.to as string) : new Date();
+  
+  const revenue = Math.floor(Math.random() * 10000) + 2000;
+  const cogs = Math.floor(revenue * 0.6);
+  const platformFees = Math.floor(revenue * 0.01);
+  const stripeFees = Math.floor(revenue * 0.029) + 30;
+  const totalFees = platformFees + stripeFees;
+  const grossProfit = revenue - cogs;
+  const netIncome = grossProfit - totalFees;
+  
+  const csv = `Period From,Period To,Revenue,COGS,Platform Fees,Stripe Fees,Total Fees,Gross Profit,Total Expenses,Net Income\n"${from.toISOString().split('T')[0]}","${to.toISOString().split('T')[0]}",${revenue},${cogs},${platformFees},${stripeFees},${totalFees},${grossProfit},${totalFees},${netIncome}`;
+  
+  res.setHeader("Content-Type", "text/csv");
+  res.setHeader("Content-Disposition", `attachment; filename=pnl-${req.params.vendorId}-${new Date().toISOString().split('T')[0]}.csv`);
+  res.send(csv);
+});
+
+app.get("/api/financials/vendor/:vendorId/cash-flow.csv", (req, res) => {
+  const from = req.query.from ? new Date(req.query.from as string) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const to = req.query.to ? new Date(req.query.to as string) : new Date();
+  const method = req.query.method || 'direct';
+  
+  let csv;
+  if (method === 'direct') {
+    const sales = Math.floor(Math.random() * 10000) + 2000;
+    const cogs = Math.floor(sales * 0.6);
+    const fees = Math.floor(sales * 0.039) + 30;
+    const net = sales - cogs - fees;
+    
+    csv = `Period From,Period To,Sales Inflows,COGS Outflows,Fees Outflows,Net Cash Flow\n"${from.toISOString().split('T')[0]}","${to.toISOString().split('T')[0]}",${sales},${cogs},${fees},${net}`;
+  } else {
+    const netIncome = Math.floor(Math.random() * 3000) + 500;
+    const deltaWorkingCapital = Math.floor(Math.random() * 1000) - 500;
+    const net = netIncome + deltaWorkingCapital;
+    
+    csv = `Period From,Period To,Net Income,Working Capital Change,Net Cash Flow\n"${from.toISOString().split('T')[0]}","${to.toISOString().split('T')[0]}",${netIncome},${deltaWorkingCapital},${net}`;
+  }
+  
+  res.setHeader("Content-Type", "text/csv");
+  res.setHeader("Content-Disposition", `attachment; filename=cashflow-${req.params.vendorId}-${new Date().toISOString().split('T')[0]}.csv`);
+  res.send(csv);
+});
+
+// Product analytics endpoints for the live product analytics feature
+app.get("/api/analytics/vendor/:vendorId/product/:productId/overview", (req, res) => {
+  const from = req.query.from ? new Date(req.query.from as string) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const to = req.query.to ? new Date(req.query.to as string) : new Date();
+  
+  // Generate mock product overview data
+  const days = Math.ceil((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24));
+  const series = [];
+  
+  for (let i = 0; i < days; i++) {
+    const date = new Date(from.getTime() + i * 24 * 60 * 60 * 1000);
+    series.push({
+      date: date.toISOString().slice(0, 10),
+      revenue: Math.floor(Math.random() * 500) + 50,
+      qty: Math.floor(Math.random() * 20) + 1
+    });
+  }
+  
+  const totals = series.reduce((acc, item) => ({
+    revenue: acc.revenue + item.revenue,
+    qtySold: acc.qtySold + item.qty,
+    orders: acc.orders + Math.floor(item.qty / 3) + 1
+  }), { revenue: 0, qtySold: 0, orders: 0 });
+  
+  // Generate mock price history
+  const priceHistory = series.slice(0, 5).map((item, index) => ({
+    date: item.date,
+    price: Math.floor(Math.random() * 50) + 10 + index
+  }));
+  
+  res.json({
+    totals,
+    series,
+    priceHistory
+  });
+});
+
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   logger.error('Unhandled error:', err);

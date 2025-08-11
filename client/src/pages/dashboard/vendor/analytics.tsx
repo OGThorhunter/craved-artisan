@@ -31,12 +31,16 @@ import {
   useMockVendorOverview,
   useMockVendorBestSellers 
 } from "@/hooks/analytics";
+import FinancialsTab from "@/pages/vendor/FinancialsTab";
+import ProductDeepDiveModal from "@/components/ProductDeepDiveModal";
 
 type TabType = 'insights' | 'financials' | 'taxes' | 'pricing' | 'portfolio';
 
 export default function VendorAnalyticsPage() {
   const [location] = useLocation();
   const [activeTab, setActiveTab] = useState<TabType>('insights');
+  const [selectedProduct, setSelectedProduct] = useState<{ id: string; name: string } | null>(null);
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   
   // Use real vendor ID from context or mock for development
   const vendorId = 'dev-user-id'; // This should come from auth context in production
@@ -158,7 +162,12 @@ export default function VendorAnalyticsPage() {
             <ConversionFunnel />
             
             {/* Enhanced Best Sellers with Filters */}
-            <EnhancedBestSellers />
+            <EnhancedBestSellers 
+              onProductClick={(product) => {
+                setSelectedProduct({ id: product.productId, name: product.name });
+                setIsProductModalOpen(true);
+              }}
+            />
             
             {/* Product Performance */}
             <PerformanceKpis />
@@ -169,21 +178,7 @@ export default function VendorAnalyticsPage() {
         );
       
       case 'financials':
-        return (
-          <div className="space-y-8">
-            {/* Interactive Cash Flow */}
-            <InteractiveCashFlow />
-            
-            {/* Profit Loss Statement */}
-            <EnhancedProfitLoss />
-            
-            {/* Cash Flow Chart */}
-            <CashFlowChart />
-            
-            {/* Balance Sheet */}
-            <BalanceSheet />
-          </div>
-        );
+        return <FinancialsTab vendorId={vendorId} />;
       
       case 'taxes':
         return (
@@ -276,6 +271,20 @@ export default function VendorAnalyticsPage() {
           </div>
         </div>
       </div>
+      
+      {/* Product Deep Dive Modal */}
+      {selectedProduct && (
+        <ProductDeepDiveModal
+          isOpen={isProductModalOpen}
+          onClose={() => {
+            setIsProductModalOpen(false);
+            setSelectedProduct(null);
+          }}
+          vendorId={vendorId}
+          productId={selectedProduct.id}
+          productName={selectedProduct.name}
+        />
+      )}
     </VendorDashboardLayout>
   );
 } 

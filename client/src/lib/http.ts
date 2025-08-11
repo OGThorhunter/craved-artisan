@@ -42,3 +42,36 @@ export async function http(path: string, init?: RequestInit): Promise<Response> 
   
   return response;
 }
+
+// API object that wraps the http function
+export const api = {
+  async get(path: string): Promise<{ data: any }> {
+    const response = await http(path, { method: 'GET' });
+    const data = await response.json();
+    return { data };
+  },
+  
+  async post(path: string, body?: any): Promise<{ data: any }> {
+    const response = await http(path, { 
+      method: 'POST', 
+      body: body ? JSON.stringify(body) : undefined 
+    });
+    const data = await response.json();
+    return { data };
+  },
+  
+  async put(path: string, body?: any): Promise<{ data: any }> {
+    const response = await http(path, { 
+      method: 'PUT', 
+      body: body ? JSON.stringify(body) : undefined 
+    });
+    const data = await response.json();
+    return { data };
+  },
+  
+  async delete(path: string): Promise<{ data: any }> {
+    const response = await http(path, { method: 'DELETE' });
+    const data = await response.json();
+    return { data };
+  }
+};
