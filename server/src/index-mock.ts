@@ -724,6 +724,229 @@ app.post("/api/restock/vendor/:vendorId/purchase-order", (req, res) => {
   res.status(201).json(purchaseOrder);
 });
 
+// Messaging endpoints for the live messaging feature
+app.get("/api/messages/conversations", (req, res) => {
+  const { vendorId, status, q } = req.query;
+  
+  // Generate mock conversations
+  const conversations = [
+    {
+      id: "conv-1",
+      vendorId: vendorId || "dev-user-id",
+      customerId: "customer-1",
+      subject: "Order #12345 - Missing item",
+      status: status || "awaiting_vendor",
+      tags: ["urgent", "missing-item"],
+      lastMessageAt: new Date().toISOString(),
+      createdAt: new Date(Date.now() - 86400000).toISOString(),
+      updatedAt: new Date().toISOString(),
+      messages: [
+        {
+          id: "msg-1",
+          conversationId: "conv-1",
+          senderRole: "customer",
+          senderId: "customer-1",
+          body: "Hi, I received my order but the sourdough bread was missing. Can you help?",
+          attachments: [],
+          createdAt: new Date(Date.now() - 3600000).toISOString(),
+          readBy: [],
+          sentiment: "neutral"
+        }
+      ]
+    },
+    {
+      id: "conv-2",
+      vendorId: vendorId || "dev-user-id",
+      customerId: "customer-2",
+      subject: "Question about ingredients",
+      status: "open",
+      tags: ["question"],
+      lastMessageAt: new Date(Date.now() - 7200000).toISOString(),
+      createdAt: new Date(Date.now() - 172800000).toISOString(),
+      updatedAt: new Date(Date.now() - 7200000).toISOString(),
+      messages: [
+        {
+          id: "msg-2",
+          conversationId: "conv-2",
+          senderRole: "customer",
+          senderId: "customer-2",
+          body: "Do you use organic flour in your bread?",
+          attachments: [],
+          createdAt: new Date(Date.now() - 7200000).toISOString(),
+          readBy: [],
+          sentiment: "positive"
+        }
+      ]
+    }
+  ];
+  
+  res.json(conversations);
+});
+
+app.post("/api/messages/conversations", (req, res) => {
+  const { vendorId, customerId, subject } = req.body;
+  
+  const conversation = {
+    id: `conv-${Date.now()}`,
+    vendorId,
+    customerId,
+    subject: subject || `Conversation with ${customerId}`,
+    status: "open",
+    tags: [],
+    lastMessageAt: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+  
+  res.status(201).json(conversation);
+});
+
+app.get("/api/messages/conversations/:id", (req, res) => {
+  const { id } = req.params;
+  
+  const conversation = {
+    id,
+    vendorId: "dev-user-id",
+    customerId: "customer-1",
+    subject: "Order #12345 - Missing item",
+    status: "awaiting_vendor",
+    tags: ["urgent", "missing-item"],
+    lastMessageAt: new Date().toISOString(),
+    createdAt: new Date(Date.now() - 86400000).toISOString(),
+    updatedAt: new Date().toISOString(),
+    messages: [
+      {
+        id: "msg-1",
+        conversationId: id,
+        senderRole: "customer",
+        senderId: "customer-1",
+        body: "Hi, I received my order but the sourdough bread was missing. Can you help?",
+        attachments: [],
+        createdAt: new Date(Date.now() - 3600000).toISOString(),
+        readBy: [],
+        sentiment: "neutral"
+      },
+      {
+        id: "msg-2",
+        conversationId: id,
+        senderRole: "vendor",
+        senderId: "dev-user-id",
+        body: "I'm so sorry about that! Let me check your order and get back to you right away.",
+        attachments: [],
+        createdAt: new Date(Date.now() - 1800000).toISOString(),
+        readBy: ["customer-1"],
+        sentiment: "positive"
+      }
+    ],
+    issues: []
+  };
+  
+  res.json(conversation);
+});
+
+app.post("/api/messages/conversations/:id/message", (req, res) => {
+  const { id } = req.params;
+  const { body, attachments } = req.body;
+  
+  const message = {
+    id: `msg-${Date.now()}`,
+    conversationId: id,
+    senderRole: "vendor",
+    senderId: "dev-user-id",
+    body,
+    attachments: attachments || [],
+    createdAt: new Date().toISOString(),
+    readBy: [],
+    sentiment: "neutral"
+  };
+  
+  res.status(201).json(message);
+});
+
+app.patch("/api/messages/conversations/:id/read", (req, res) => {
+  res.json({ success: true });
+});
+
+// Issues endpoints
+app.post("/api/issues", (req, res) => {
+  const { conversationId, orderId, type, notes } = req.body;
+  
+  const issue = {
+    id: `issue-${Date.now()}`,
+    conversationId,
+    orderId,
+    type,
+    status: "open",
+    notes,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+  
+  res.status(201).json(issue);
+});
+
+app.patch("/api/issues/:id", (req, res) => {
+  const { id } = req.params;
+  const { status, notes } = req.body;
+  
+  const issue = {
+    id,
+    conversationId: "conv-1",
+    orderId: "order-123",
+    type: "missing",
+    status,
+    notes,
+    createdAt: new Date(Date.now() - 3600000).toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+  
+  res.json(issue);
+});
+
+// Discounts endpoints
+app.post("/api/discounts/quick", (req, res) => {
+  const { vendorId, type, amount, ttlHours = 168, maxUses } = req.body;
+  
+  const code = `APOL-${Math.random().toString(36).substr(2, 8).toUpperCase()}`;
+  const expiresAt = new Date();
+  expiresAt.setHours(expiresAt.getHours() + ttlHours);
+  
+  res.status(201).json({
+    code,
+    display: `${type === 'percent' ? amount + '%' : '$' + amount} off`,
+    expiresAt,
+    maxUses
+  });
+});
+
+// Stripe Connect endpoints
+app.post("/api/stripe/connect/onboard", (req, res) => {
+  res.json({
+    url: "https://connect.stripe.com/setup/s/test-account-link"
+  });
+});
+
+app.get("/api/stripe/connect/status/:vendorId", (req, res) => {
+  res.json({
+    connected: true,
+    charges_enabled: true,
+    payouts_enabled: true,
+    details_submitted: true
+  });
+});
+
+// Checkout endpoints
+app.post("/api/checkout/create-intent", (req, res) => {
+  res.json({
+    clientSecret: "pi_test_client_secret_" + Math.random().toString(36).substr(2, 8),
+    orderId: "order_" + Math.random().toString(36).substr(2, 8)
+  });
+});
+
+app.post("/api/checkout/webhook", (req, res) => {
+  res.json({ received: true });
+});
+
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   logger.error('Unhandled error:', err);

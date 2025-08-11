@@ -40,6 +40,11 @@ import financialsRouter from './routes/financials.routes';
 import productAnalyticsRouter from './routes/product-analytics.routes';
 import inventoryRouter from './routes/inventory.routes';
 import restockRouter from './routes/restock.routes';
+import messagesRouter from './routes/messages.routes';
+import issuesRouter from './routes/issues.routes';
+import discountsRouter from './routes/discounts.routes';
+import stripeRouter from './routes/stripe.routes';
+import checkoutRouter from './routes/checkout.routes';
 import debugRoutes from './routes/debug';
 import vendorRouter from './routes/vendor.routes';
 import productRouter from './routes/product.routes';
@@ -216,6 +221,11 @@ app.use('/api/financials', financialsRouter);
 app.use('/api/analytics', productAnalyticsRouter);
 app.use('/api/inventory', inventoryRouter);
 app.use('/api/restock', restockRouter);
+app.use('/api/messages', messagesRouter);
+app.use('/api/issues', issuesRouter);
+app.use('/api/discounts', discountsRouter);
+app.use('/api/stripe', stripeRouter);
+app.use('/api/checkout', checkoutRouter);
 
 // Debug routes (development only)
 if (env.NODE_ENV === 'development') {

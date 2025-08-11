@@ -43,6 +43,8 @@ import VendorDeliveryBatchingPage from './pages/VendorDeliveryBatchingPage';
 import VendorDeliveryPage from './pages/VendorDeliveryPage';
 import CustomerOrdersPage from './pages/CustomerOrdersPage';
 import CheckoutPage from './pages/CheckoutPage';
+import CartPage from './pages/CartPage';
+import CheckoutSuccessPage from './pages/CheckoutSuccessPage';
 import VendorAnalyticsPage from './pages/VendorAnalyticsPage';
 import VendorAnalyticsKpiPage from './pages/dashboard/vendor/analytics';
 import { VendorFinancialPage } from './pages/VendorFinancialPage';
@@ -73,6 +75,8 @@ function App() {
             <Route path="/vendors/:vendorId" component={VendorStorefrontPage} />
             <Route path="/product/:productId" component={ProductDetailPage} />
             <Route path="/checkout" component={CheckoutPage} />
+            <Route path="/cart" component={CartPage} />
+            <Route path="/checkout/success" component={CheckoutSuccessPage} />
             
             {/* Public Pages */}
             <Route path="/marketplace" component={MarketplacePage} />

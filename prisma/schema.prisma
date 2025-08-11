@@ -40,7 +40,6 @@ model VendorProfile {
   // Relations
   user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
   products    Product[]
-  orders      Order[]
   analyticsEvents AnalyticsEvent[]
 }
 
@@ -58,6 +57,7 @@ model Product {
   // Relations
   vendor        VendorProfile @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
   orderItems    OrderItem[]
+  cartItems     CartItem[]
   analyticsEvents AnalyticsEvent[]
   recipeId      String?      // link to Recipe
   recipe        Recipe?      @relation(fields: [recipeId], references: [id])
@@ -67,23 +67,22 @@ model Product {
 }
 
 model Order {
-  id           String   @id @default(cuid())
-  user_id      String
-  vendor_id    String
-  total_amount Decimal  @db.Decimal(10, 2)
-  status       String   @default("pending") // pending, completed, delivered, cancelled
-  order_date   DateTime @default(now())
-  created_at   DateTime @default(now())
-  updated_at   DateTime @updatedAt
+  id              String   @id @default(cuid())
+  customerId      String
+  zip             String?
+  status          String   @default("pending") // pending|paid|failed|refunded|cancelled
+  paymentIntentId String?  // pi_*
+  transferGroup   String?  // order_<id>
+  total           Decimal  @db.Decimal(10, 2) @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   // Relations
-  user         User       @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  vendor       VendorProfile @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [customerId], references: [id], onDelete: Cascade)
   orderItems   OrderItem[]
   analyticsEvents AnalyticsEvent[]
 
-  @@index([vendor_id, created_at])
-  @@index([user_id])
+  @@index([customerId, createdAt])
 }
 
 // Inventory and Recipe Models
@@ -101,7 +100,7 @@ model Ingredient {
   updatedAt   DateTime @updatedAt
 
   // Relations
-  inventory   IngredientInventory?
+  inventory   IngredientInventory[]
   transactions InventoryTx[]
   recipeItems RecipeItem[]
   preferredSupplier Supplier? @relation("PreferredSupplier", fields: [preferredSupplierId], references: [id])
@@ -117,7 +116,7 @@ model IngredientInventory {
   costBasis   Decimal   @db.Decimal(10, 4) // weighted avg cost per unit
   updatedAt   DateTime @updatedAt
 
-  ingredient  Ingredient @relation(fields: [ingredientId], references: [id])
+  ingredient  Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
 
   @@unique([vendorId, ingredientId])
   @@index([vendorId, ingredientId])
@@ -133,7 +132,7 @@ model InventoryTx {
   note        String?
   createdAt   DateTime @default(now())
 
-  ingredient  Ingredient @relation(fields: [ingredientId], references: [id])
+  ingredient  Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
   @@index([vendorId, ingredientId, type, createdAt])
 }
 
@@ -166,18 +165,22 @@ model RecipeItem {
 
 model OrderItem {
   id         String  @id @default(cuid())
-  order_id   String
-  product_id String
+  orderId    String
+  productId  String
+  vendorId   String
   quantity   Int
-  price      Decimal @db.Decimal(10, 2)
+  unitPrice  Decimal @db.Decimal(10, 2)
   cogsUnit   Decimal? @db.Decimal(10, 4) // COGS snapshot at sale time
-  created_at DateTime @default(now())
+  subtotal   Decimal @db.Decimal(10, 2)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   // Relations
-  order      Order   @relation(fields: [order_id], references: [id], onDelete: Cascade)
-  product    Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  order      Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product    Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  @@index([product_id])
+  @@index([orderId])
+  @@index([vendorId])
 }
 
 // New Analytics Event Model for Conversion Funnel Tracking
@@ -201,4 +204,117 @@ model AnalyticsEvent {
   @@index([vendor_id, event_type, created_at])
   @@index([session_id])
   @@index([created_at])
+}
+
+// Messaging & Customer Service Models
+model Conversation {
+  id            String   @id @default(cuid())
+  vendorId      String
+  customerId    String
+  subject       String?
+  status        String   @default("open") // open|awaiting_customer|awaiting_vendor|resolved|archived
+  tags          String[] @default([])
+  lastMessageAt DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  messages      Message[]
+  issues        OrderIssue[]
+
+  @@index([vendorId, status, lastMessageAt])
+  @@index([customerId, lastMessageAt])
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  senderRole     String   // vendor|customer|system
+  senderId       String
+  body           String
+  attachments    String[] @default([])
+  createdAt      DateTime @default(now())
+  readBy         String[] @default([]) // user ids who have read
+  sentiment      String?  // optional: positive|neutral|negative
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  @@index([conversationId, createdAt])
+}
+
+model OrderIssue {
+  id             String   @id @default(cuid())
+  conversationId String
+  orderId        String
+  type           String // refund|return|missing|damaged|delay|question
+  status         String @default("open") // open|needs_info|resolved|rejected
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  @@index([orderId, status])
+}
+
+model DiscountCode {
+  id          String   @id @default(cuid())
+  vendorId    String
+  code        String   @unique
+  amountType  String   // percent|fixed
+  amount      Decimal  @db.Decimal(10, 2)
+  expiresAt   DateTime?
+  maxUses     Int?
+  uses        Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([vendorId, code])
+}
+
+model Supplier {
+  id        String   @id @default(cuid())
+  vendorId  String
+  name      String
+  contact   String?
+  createdAt DateTime @default(now())
+  
+  // Relations
+  preferredIngredients Ingredient[] @relation("PreferredSupplier")
+
+  @@index([vendorId, name])
+}
+
+// Checkout and Payment Models
+model VendorStripeAccount {
+  vendorId        String   @id
+  accountId       String   @unique       // acct_*
+  chargesEnabled  Boolean  @default(false)
+  payoutsEnabled  Boolean  @default(false)
+  detailsSubmitted Boolean @default(false)
+  updatedAt       DateTime @updatedAt
+}
+
+model Cart {
+  id         String  @id @default(cuid())
+  customerId String
+  zip        String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  items      CartItem[]
+
+  @@index([customerId])
+}
+
+model CartItem {
+  id        String  @id @default(cuid())
+  cartId    String
+  productId String
+  vendorId  String
+  qty       Int
+  unitPrice Decimal @db.Decimal(10, 2)
+  note      String?
+
+  cart   Cart    @relation(fields: [cartId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@index([cartId])
+  @@index([vendorId])
 }
