@@ -41,7 +41,7 @@ export function useVendorOverview(vendorId: string, options: AnalyticsOptions = 
       if (to) params.append('to', to);
       params.append('interval', interval);
       
-      const response = await api.get(`/analytics/vendor/${vendorId}/overview?${params.toString()}`);
+      const response = await api.get(`/api/analytics/vendor/${vendorId}/overview?${params.toString()}`);
       return response.data;
     },
     enabled: !!vendorId,
@@ -61,7 +61,7 @@ export function useVendorBestSellers(vendorId: string, options: AnalyticsOptions
       if (to) params.append('to', to);
       params.append('limit', limit.toString());
       
-      const response = await api.get(`/analytics/vendor/${vendorId}/best-sellers?${params.toString()}`);
+      const response = await api.get(`/api/analytics/vendor/${vendorId}/best-sellers?${params.toString()}`);
       return response.data;
     },
     enabled: !!vendorId,

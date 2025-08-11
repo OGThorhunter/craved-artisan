@@ -38,6 +38,8 @@ import analyticsRoutes from './routes/analyticsRoutes';
 import analyticsRouter from './routes/analytics.routes';
 import financialsRouter from './routes/financials.routes';
 import productAnalyticsRouter from './routes/product-analytics.routes';
+import inventoryRouter from './routes/inventory.routes';
+import restockRouter from './routes/restock.routes';
 import debugRoutes from './routes/debug';
 import vendorRouter from './routes/vendor.routes';
 import productRouter from './routes/product.routes';
@@ -212,6 +214,8 @@ app.use('/api', analyticsRoutes);
 app.use('/api/analytics', analyticsRouter);
 app.use('/api/financials', financialsRouter);
 app.use('/api/analytics', productAnalyticsRouter);
+app.use('/api/inventory', inventoryRouter);
+app.use('/api/restock', restockRouter);
 
 // Debug routes (development only)
 if (env.NODE_ENV === 'development') {

@@ -27,9 +27,10 @@ export async function pnl(vendorId: string, range: Range) {
     // @ts-ignore - check if prisma.orderItem exists
     if ((prisma as any).orderItem) {
       const rows = await prisma.$queryRawUnsafe<any[]>(`
-        SELECT SUM(oi."price" * oi."quantity")::numeric AS revenue,
-               SUM(oi."price" * oi."quantity" * 0.6)::numeric AS cogs,
-               COUNT(DISTINCT oi."order_id") AS orders
+        SELECT
+          SUM(oi."price" * oi."quantity")::numeric AS revenue,
+          SUM(COALESCE(oi."cogsUnit", 0) * oi."quantity")::numeric AS cogs,
+          COUNT(DISTINCT oi."order_id") AS orders
         FROM "OrderItem" oi
         JOIN "Product" p ON p.id = oi."product_id"
         WHERE p."vendor_id" = $1

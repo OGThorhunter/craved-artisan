@@ -36,17 +36,17 @@
     "gen:validators": "tsx scripts/generateValidators.ts"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.23",
+    "@types/express-rate-limit": "^6.0.0",
+    "@types/morgan": "^1.9.9",
+    "@types/supertest": "^6.0.2",
     "concurrently": "^8.2.2",
+    "express-rate-limit": "^7.3.1",
     "openapi-typescript": "^7.0.0",
     "openapi-zod-client": "^1.18.3",
     "supertest": "^7.0.0",
-    "vitest": "^2.0.0",
-    "express-rate-limit": "^7.3.1",
-    "@types/express-rate-limit": "^6.0.0",
-    "@types/supertest": "^6.0.2",
-    "@types/express": "^4.17.23",
-    "@types/cors": "^2.8.17",
-    "@types/morgan": "^1.9.9"
+    "vitest": "^2.0.0"
   },
   "keywords": [
     "artisan",
@@ -65,6 +65,7 @@
     "@types/json2csv": "^5.0.7",
     "@types/pdfkit": "^0.17.2",
     "csv-parse": "^6.1.0",
+    "dayjs": "^1.11.13",
     "json2csv": "^6.0.0-alpha.2",
     "multer": "^2.0.2",
     "openai": "^5.11.0",

@@ -3,5 +3,7 @@ export const flags = {
   LIVE_ANALYTICS: import.meta.env.VITE_FEATURE_LIVE_ANALYTICS === 'true',
   FINANCIALS: import.meta.env.VITE_FEATURE_FINANCIALS === 'true',
   PRODUCT_ANALYTICS: import.meta.env.VITE_FEATURE_PRODUCT_ANALYTICS === 'true',
+  INVENTORY: import.meta.env.VITE_FEATURE_INVENTORY === 'true',
+  SMART_RESTOCK: import.meta.env.VITE_FEATURE_SMART_RESTOCK === 'true',
   CHECKOUT: import.meta.env.VITE_FEATURE_CHECKOUT === 'true',
 };

@@ -33,7 +33,7 @@ export function useProductOverview(vendorId: string, productId: string, options:
       if (from) params.append('from', from);
       if (to) params.append('to', to);
       
-      const response = await api.get(`/analytics/vendor/${vendorId}/product/${productId}/overview?${params.toString()}`);
+      const response = await api.get(`/api/analytics/vendor/${vendorId}/product/${productId}/overview?${params.toString()}`);
       return response.data;
     },
     enabled: !!vendorId && !!productId,

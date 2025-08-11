@@ -68,7 +68,7 @@ export function useVendorPNL(vendorId: string, options: FinancialsOptions = {}) 
       if (from) params.append('from', from);
       if (to) params.append('to', to);
       
-      const response = await api.get(`/financials/vendor/${vendorId}/pnl?${params.toString()}`);
+      const response = await api.get(`/api/financials/vendor/${vendorId}/pnl?${params.toString()}`);
       return response.data;
     },
     enabled: !!vendorId,
@@ -88,7 +88,7 @@ export function useVendorCashFlow(vendorId: string, options: FinancialsOptions =
       if (to) params.append('to', to);
       params.append('method', method);
       
-      const response = await api.get(`/financials/vendor/${vendorId}/cash-flow?${params.toString()}`);
+      const response = await api.get(`/api/financials/vendor/${vendorId}/cash-flow?${params.toString()}`);
       return response.data;
     },
     enabled: !!vendorId,
@@ -106,7 +106,7 @@ export function useVendorBalanceSheet(vendorId: string, options: FinancialsOptio
       const params = new URLSearchParams();
       if (asOf) params.append('asOf', asOf);
       
-      const response = await api.get(`/financials/vendor/${vendorId}/balance-sheet?${params.toString()}`);
+      const response = await api.get(`/api/financials/vendor/${vendorId}/balance-sheet?${params.toString()}`);
       return response.data;
     },
     enabled: !!vendorId,

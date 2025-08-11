@@ -59,6 +59,8 @@ model Product {
   vendor        VendorProfile @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
   orderItems    OrderItem[]
   analyticsEvents AnalyticsEvent[]
+  recipeId      String?      // link to Recipe
+  recipe        Recipe?      @relation(fields: [recipeId], references: [id])
 
   @@index([vendor_id])
   @@index([created_at])
@@ -82,6 +84,84 @@ model Order {
 
   @@index([vendor_id, created_at])
   @@index([user_id])
+}
+
+// Inventory and Recipe Models
+model Ingredient {
+  id          String   @id @default(cuid())
+  vendorId    String
+  name        String
+  unit        String        // "g","kg","ml","l","unit"
+  costPerUnit Decimal       @db.Decimal(10, 4) // cost per 1 unit
+  tags        String[]      @default([])
+  preferredSupplierId String?
+  leadTimeDays       Int?      // default null -> use global
+  minOrderQty        Decimal?  @db.Decimal(10, 4) // optional MOQ
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  inventory   IngredientInventory?
+  transactions InventoryTx[]
+  recipeItems RecipeItem[]
+  preferredSupplier Supplier? @relation("PreferredSupplier", fields: [preferredSupplierId], references: [id])
+
+  @@index([vendorId, name])
+}
+
+model IngredientInventory {
+  id          String   @id @default(cuid())
+  vendorId    String
+  ingredientId String
+  quantity    Decimal   @db.Decimal(10, 4) // current on-hand in 'unit'
+  costBasis   Decimal   @db.Decimal(10, 4) // weighted avg cost per unit
+  updatedAt   DateTime @updatedAt
+
+  ingredient  Ingredient @relation(fields: [ingredientId], references: [id])
+
+  @@unique([vendorId, ingredientId])
+  @@index([vendorId, ingredientId])
+}
+
+model InventoryTx {
+  id          String   @id @default(cuid())
+  vendorId    String
+  ingredientId String
+  type        String   // "purchase" | "sale" | "adjustment" | "waste"
+  quantity    Decimal  @db.Decimal(10, 4) // + for purchase/adjustment; - for sale/waste
+  unitCost    Decimal  @db.Decimal(10, 4) // cost per unit at time of tx
+  note        String?
+  createdAt   DateTime @default(now())
+
+  ingredient  Ingredient @relation(fields: [ingredientId], references: [id])
+  @@index([vendorId, ingredientId, type, createdAt])
+}
+
+model Recipe {
+  id        String   @id @default(cuid())
+  vendorId  String
+  name      String
+  yieldQty  Decimal   @db.Decimal(10, 4) // how many "units" of finished product per batch
+  unit      String    // finished unit label ("loaf","bar","jar")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  items     RecipeItem[]
+  products  Product[] // if Product already exists; else use relation field below
+  @@index([vendorId, name])
+}
+
+model RecipeItem {
+  id           String   @id @default(cuid())
+  recipeId     String
+  ingredientId String
+  qtyPerBatch  Decimal   @db.Decimal(10, 4) // in Ingredient.unit
+  wastePct     Decimal   @default(0) @db.Decimal(5, 4) // 0..1
+
+  recipe     Recipe     @relation(fields: [recipeId], references: [id])
+  ingredient Ingredient @relation(fields: [ingredientId], references: [id])
+
+  @@index([recipeId, ingredientId])
 }
 
 model OrderItem {

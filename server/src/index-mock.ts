@@ -495,6 +495,235 @@ app.get("/api/analytics/vendor/:vendorId/product/:productId/overview", (req, res
   });
 });
 
+// Inventory endpoints for the live inventory feature
+app.get("/api/inventory/vendor/:vendorId/ingredients", (req, res) => {
+  const { vendorId } = req.params;
+  
+  // Generate mock ingredients with inventory
+  const ingredients = [
+    {
+      id: "ing-1",
+      vendorId,
+      name: "Organic Flour",
+      unit: "kg",
+      costPerUnit: 2.50,
+      tags: ["organic", "baking"],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      inventory: {
+        id: "inv-1",
+        quantity: 25.5,
+        costBasis: 2.45,
+        updatedAt: new Date().toISOString()
+      }
+    },
+    {
+      id: "ing-2", 
+      vendorId,
+      name: "Fresh Eggs",
+      unit: "unit",
+      costPerUnit: 0.35,
+      tags: ["organic", "fresh"],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      inventory: {
+        id: "inv-2",
+        quantity: 120,
+        costBasis: 0.33,
+        updatedAt: new Date().toISOString()
+      }
+    },
+    {
+      id: "ing-3",
+      vendorId, 
+      name: "Butter",
+      unit: "kg",
+      costPerUnit: 8.00,
+      tags: ["dairy", "premium"],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      inventory: {
+        id: "inv-3",
+        quantity: 5.2,
+        costBasis: 7.85,
+        updatedAt: new Date().toISOString()
+      }
+    }
+  ];
+  
+  res.json(ingredients);
+});
+
+app.post("/api/inventory/vendor/:vendorId/ingredients", (req, res) => {
+  const { vendorId } = req.params;
+  const { name, unit, costPerUnit, tags } = req.body;
+  
+  const ingredient = {
+    id: `ing-${Date.now()}`,
+    vendorId,
+    name,
+    unit,
+    costPerUnit,
+    tags: tags || [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+  
+  res.status(201).json(ingredient);
+});
+
+app.post("/api/inventory/vendor/:vendorId/purchase", (req, res) => {
+  const { vendorId } = req.params;
+  const { ingredientId, quantity, unitCost } = req.body;
+  
+  // Mock purchase result
+  const result = {
+    quantity: Math.random() * 100 + 50,
+    costBasis: unitCost + (Math.random() * 0.5)
+  };
+  
+  res.json(result);
+});
+
+app.get("/api/inventory/vendor/:vendorId/transactions", (req, res) => {
+  const { vendorId } = req.params;
+  const { type } = req.query;
+  
+  // Generate mock transactions
+  const transactions = [
+    {
+      id: "tx-1",
+      vendorId,
+      ingredientId: "ing-1",
+      type: "purchase",
+      quantity: 50,
+      unitCost: 2.45,
+      createdAt: new Date().toISOString(),
+      ingredient: {
+        id: "ing-1",
+        name: "Organic Flour",
+        unit: "kg"
+      }
+    },
+    {
+      id: "tx-2",
+      vendorId,
+      ingredientId: "ing-2", 
+      type: "purchase",
+      quantity: 200,
+      unitCost: 0.33,
+      createdAt: new Date(Date.now() - 86400000).toISOString(),
+      ingredient: {
+        id: "ing-2",
+        name: "Fresh Eggs",
+        unit: "unit"
+      }
+    },
+    {
+      id: "tx-3",
+      vendorId,
+      ingredientId: "ing-1",
+      type: "sale",
+      quantity: -5,
+      unitCost: 2.45,
+      createdAt: new Date(Date.now() - 172800000).toISOString(),
+      ingredient: {
+        id: "ing-1",
+        name: "Organic Flour", 
+        unit: "kg"
+      }
+    }
+  ];
+  
+  // Filter by type if specified
+  const filteredTransactions = type && type !== 'all' 
+    ? transactions.filter(tx => tx.type === type)
+    : transactions;
+  
+  res.json(filteredTransactions);
+});
+
+app.post("/api/inventory/vendor/:vendorId/link-recipe", (req, res) => {
+  const { vendorId } = req.params;
+  const { productId, recipeId } = req.body;
+  
+  // Mock product update
+  const updatedProduct = {
+    id: productId,
+    vendor_id: vendorId,
+    name: "Sample Product",
+    recipeId,
+    // ... other product fields
+  };
+  
+  res.json(updatedProduct);
+});
+
+// Restock endpoints for the live restock feature
+app.get("/api/restock/vendor/:vendorId/suggestions", (req, res) => {
+  const { vendorId } = req.params;
+  const lookbackDays = parseInt(req.query.lookbackDays as string) || 30;
+  
+  // Generate mock restock suggestions based on inventory data
+  const suggestions = [
+    {
+      ingredientId: "ing-1",
+      name: "Organic Flour",
+      onHand: 5.5,
+      dailyVelocity: 2.3,
+      leadTimeDays: 5,
+      reorderPoint: 17.25,
+      suggestedQty: 20.0,
+      preferredSupplierId: null
+    },
+    {
+      ingredientId: "ing-2",
+      name: "Fresh Eggs",
+      onHand: 45,
+      dailyVelocity: 8.5,
+      leadTimeDays: 3,
+      reorderPoint: 38.25,
+      suggestedQty: 50.0,
+      preferredSupplierId: null
+    },
+    {
+      ingredientId: "ing-3",
+      name: "Butter",
+      onHand: 1.2,
+      dailyVelocity: 0.8,
+      leadTimeDays: 7,
+      reorderPoint: 10.8,
+      suggestedQty: 15.0,
+      preferredSupplierId: null
+    }
+  ];
+  
+  res.json(suggestions);
+});
+
+app.post("/api/restock/vendor/:vendorId/purchase-order", (req, res) => {
+  const { vendorId } = req.params;
+  const { supplierId, lines } = req.body;
+  
+  // Generate a mock PO number
+  const poNumber = `PO-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
+  
+  // Calculate total amount
+  const totalAmount = lines?.reduce((sum: number, line: any) => sum + (line.quantity * line.unitCost), 0) || 0;
+  
+  const purchaseOrder = {
+    poNumber,
+    vendorId,
+    supplierId: supplierId || null,
+    lines: lines || [],
+    status: 'draft',
+    createdAt: new Date().toISOString(),
+    totalAmount
+  };
+  
+  res.status(201).json(purchaseOrder);
+});
+
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   logger.error('Unhandled error:', err);
