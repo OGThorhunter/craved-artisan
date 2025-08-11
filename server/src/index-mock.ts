@@ -5,7 +5,7 @@ import cors from 'cors';
 import morgan from 'morgan';
 import { createLogger, format, transports } from 'winston';
 import dotenv from 'dotenv';
-import { logCors, corsWithLogging } from './middleware/logCors';
+import { logCors, corsWithLogging, getCorsConfigForSession } from './middleware/logCors';
 import { devHelmetConfig } from './middleware/helmetConfig';
 
 // Import mock routes only
@@ -24,6 +24,7 @@ import financialRoutes from './routes/financial-mock';
 // import inventoryDeductionRoutes from './routes/inventory-deduction-mock';
 // import supplierMarketplaceRoutes from './routes/supplier-marketplace-mock';
 import debugRoutes from './routes/debug';
+import { vendors, products } from './mocks/fixtures';
 
 // Load environment variables
 dotenv.config();
@@ -89,10 +90,8 @@ app.use(session({
   resave: true,
   saveUninitialized: true,
   cookie: {
-    secure: false, // Set to false for development
-    httpOnly: true,
+    ...getCorsConfigForSession(),
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    sameSite: 'lax',
   },
 }));
 
@@ -105,16 +104,7 @@ app.use(morgan('combined', {
   }
 }));
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  logger.info('Health check requested');
-  res.status(200).json({ 
-    status: 'OK', 
-    timestamp: new Date().toISOString(),
-    service: 'craved-artisan-server',
-    mode: 'MOCK'
-  });
-});
+
 
 // API routes
 app.use('/api/auth', authRoutes);
@@ -137,6 +127,51 @@ app.use('/api/financial', financialRoutes); // Keep for backward compatibility
 // Debug routes (development only)
 app.use('/api/_debug', debugRoutes);
 
+const router = express.Router();
+
+// Health (already works)
+router.get("/health", (req,res) => {
+  res.json({ status: "OK", timestamp: new Date().toISOString(), service: "craved-artisan-server", mode: "MOCK" });
+});
+
+// GET /products
+router.get("/products", (req, res) => {
+  const limit = Math.min(parseInt(String(req.query.limit ?? "20"), 10) || 20, 100);
+  const offset = parseInt(String(req.query.offset ?? "0"), 10) || 0;
+  const slice = products.slice(offset, offset + limit);
+  res.json({
+    data: slice,
+    meta: { total: products.length, limit, offset }
+  });
+});
+
+// GET /products/:productId
+router.get("/products/:productId", (req, res) => {
+  const p = products.find(x => x.id === req.params.productId);
+  if (!p) return res.status(404).json({ error: "Not found", message: `Product ${req.params.productId} not found` });
+  res.json(p);
+});
+
+// GET /vendors/:vendorId
+router.get("/vendors/:vendorId", (req, res) => {
+  const v = vendors.find(x => x.id === req.params.vendorId);
+  if (!v) return res.status(404).json({ error: "Not found", message: `Vendor ${req.params.vendorId} not found` });
+  res.json(v);
+});
+
+// GET /vendors/:vendorId/products
+router.get("/vendors/:vendorId/products", (req, res) => {
+  const v = vendors.find(x => x.id === req.params.vendorId);
+  if (!v) return res.status(404).json({ error: "Not found", message: `Vendor ${req.params.vendorId} not found` });
+  const list = products.filter(p => p.vendorId === v.id);
+  res.json({
+    data: list,
+    meta: { total: list.length }
+  });
+});
+
+app.use(router);
+
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   logger.error('Unhandled error:', err);
@@ -146,22 +181,20 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   });
 });
 
-// 404 handler
-app.use('*', (req, res) => {
-  res.status(404).json({
-    error: 'Not found',
-    message: `Route ${req.originalUrl} not found`
-  });
+// Keep your 404 handler LAST:
+app.use((req, res) => {
+  res.status(404).json({ error: "Not found", message: `Route ${req.path} not found` });
 });
 
 // Start server
 app.listen(PORT, () => {
   logger.info(`🚀 Server running in MOCK MODE on port ${PORT}`);
   logger.info(`📊 Health check: http://localhost:${PORT}/health`);
+  logger.info(`📦 Products: http://localhost:${PORT}/products`);
+  logger.info(`🏪 Vendors: http://localhost:${PORT}/vendors/:vendorId`);
   logger.info(`🔐 Auth endpoints: http://localhost:${PORT}/api/auth`);
   logger.info(`🛡️ Protected endpoints: http://localhost:${PORT}/api/protected`);
   logger.info(`🏪 Vendor endpoints: http://localhost:${PORT}/api/vendor`);
-  logger.info(`📦 Product endpoints: http://localhost:${PORT}/api/vendor/products`);
   logger.info(`🥘 Ingredient endpoints: http://localhost:${PORT}/api/ingredients`);
   logger.info(`👨‍🍳 Recipe endpoints: http://localhost:${PORT}/api/recipes`);
   logger.info(`🛒 Order endpoints: http://localhost:${PORT}/api/orders`);

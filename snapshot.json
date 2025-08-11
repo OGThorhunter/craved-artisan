@@ -1,0 +1,2823 @@
+{
+  "generatedAt": "2025-08-11T14:59:43.027Z",
+  "tree": [
+    {
+      "path": ".env",
+      "type": "file",
+      "size": 744
+    },
+    {
+      "path": ".env.example",
+      "type": "file",
+      "size": 783
+    },
+    {
+      "path": ".gitignore",
+      "type": "file",
+      "size": 1373
+    },
+    {
+      "path": ".kiro",
+      "type": "dir"
+    },
+    {
+      "path": ".kiro\\specs",
+      "type": "dir"
+    },
+    {
+      "path": ".kiro\\specs\\analytics-bestsellers-verification",
+      "type": "dir"
+    },
+    {
+      "path": ".kiro\\specs\\analytics-bestsellers-verification\\design.md",
+      "type": "file",
+      "size": 8634
+    },
+    {
+      "path": ".kiro\\specs\\analytics-bestsellers-verification\\requirements.md",
+      "type": "file",
+      "size": 3611
+    },
+    {
+      "path": ".kiro\\specs\\analytics-bestsellers-verification\\tasks.md",
+      "type": "file",
+      "size": 3867
+    },
+    {
+      "path": ".kiro\\steering",
+      "type": "dir"
+    },
+    {
+      "path": "1099_PDF_GENERATION_IMPLEMENTATION.md",
+      "type": "file",
+      "size": 12734
+    },
+    {
+      "path": "ADDON_FEATURES_IMPLEMENTATION.md",
+      "type": "file",
+      "size": 13753
+    },
+    {
+      "path": "AI_FINANCIAL_FORECAST_IMPLEMENTATION.md",
+      "type": "file",
+      "size": 15044
+    },
+    {
+      "path": "AI_FORECAST_WIDGET_DOCUMENTATION.md",
+      "type": "file",
+      "size": 10914
+    },
+    {
+      "path": "AI_PRICE_SUGGESTION_FEATURE_DOCUMENTATION.md",
+      "type": "file",
+      "size": 6443
+    },
+    {
+      "path": "AI_SUGGESTION_IMPLEMENTATION_SUMMARY.md",
+      "type": "file",
+      "size": 6063
+    },
+    {
+      "path": "ANALYTICS_API_DOCUMENTATION.md",
+      "type": "file",
+      "size": 9555
+    },
+    {
+      "path": "api-endpoints-documentation.md",
+      "type": "file",
+      "size": 12095
+    },
+    {
+      "path": "AUTHENTICATION.md",
+      "type": "file",
+      "size": 8752
+    },
+    {
+      "path": "BACKEND_DATABASE_FIX.md",
+      "type": "file",
+      "size": 2815
+    },
+    {
+      "path": "BACKEND_FIX_COMPLETE.md",
+      "type": "file",
+      "size": 2684
+    },
+    {
+      "path": "CHECKOUT_SESSION_IMPLEMENTATION.md",
+      "type": "file",
+      "size": 11483
+    },
+    {
+      "path": "client",
+      "type": "dir"
+    },
+    {
+      "path": "client\\.env",
+      "type": "file",
+      "size": 109
+    },
+    {
+      "path": "client\\.gitignore",
+      "type": "file",
+      "size": 253
+    },
+    {
+      "path": "client\\eslint.config.js",
+      "type": "file",
+      "size": 610
+    },
+    {
+      "path": "client\\index.html",
+      "type": "file",
+      "size": 366
+    },
+    {
+      "path": "client\\package.json",
+      "type": "file",
+      "size": 1650
+    },
+    {
+      "path": "client\\postcss.config.cjs",
+      "type": "file",
+      "size": 88
+    },
+    {
+      "path": "client\\public",
+      "type": "dir"
+    },
+    {
+      "path": "client\\public\\assets",
+      "type": "dir"
+    },
+    {
+      "path": "client\\public\\assets\\home",
+      "type": "dir"
+    },
+    {
+      "path": "client\\public\\assets\\home\\banner1.1.png",
+      "type": "file",
+      "size": 28
+    },
+    {
+      "path": "client\\public\\assets\\home\\bepartofit_1750623784608.png",
+      "type": "file",
+      "size": 28
+    },
+    {
+      "path": "client\\public\\assets\\home\\DoL1_1750622113754.png",
+      "type": "file",
+      "size": 28
+    },
+    {
+      "path": "client\\public\\assets\\home\\Event coordinator_1750627631683.png",
+      "type": "file",
+      "size": 28
+    },
+    {
+      "path": "client\\public\\assets\\home\\README.md",
+      "type": "file",
+      "size": 967
+    },
+    {
+      "path": "client\\public\\assets\\home\\supplier_1750627234352.png",
+      "type": "file",
+      "size": 28
+    },
+    {
+      "path": "client\\public\\assets\\home\\vendor_1750622113753.png",
+      "type": "file",
+      "size": 28
+    },
+    {
+      "path": "client\\public\\assets\\home\\welcome.mp4",
+      "type": "file",
+      "size": 28
+    },
+    {
+      "path": "client\\public\\assets\\home\\winecheese_1750622113753.png",
+      "type": "file",
+      "size": 28
+    },
+    {
+      "path": "client\\public\\images",
+      "type": "dir"
+    },
+    {
+      "path": "client\\public\\images\\browser-ponyfill-ACYuIwBi.js",
+      "type": "file",
+      "size": 10290
+    },
+    {
+      "path": "client\\public\\images\\error logo.png",
+      "type": "file",
+      "size": 126232
+    },
+    {
+      "path": "client\\public\\images\\favicon.svg",
+      "type": "file",
+      "size": 281
+    },
+    {
+      "path": "client\\public\\images\\file.svg",
+      "type": "file",
+      "size": 391
+    },
+    {
+      "path": "client\\public\\images\\globe.svg",
+      "type": "file",
+      "size": 1035
+    },
+    {
+      "path": "client\\public\\images\\image_1750551982979.png",
+      "type": "file",
+      "size": 20438
+    },
+    {
+      "path": "client\\public\\images\\image_1750552614146.png",
+      "type": "file",
+      "size": 5667
+    },
+    {
+      "path": "client\\public\\images\\image_1750627035903.png",
+      "type": "file",
+      "size": 32029
+    },
+    {
+      "path": "client\\public\\images\\image_1750628710804.png",
+      "type": "file",
+      "size": 39990
+    },
+    {
+      "path": "client\\public\\images\\image_1750628831190.png",
+      "type": "file",
+      "size": 66967
+    },
+    {
+      "path": "client\\public\\images\\image_1750629450253.png",
+      "type": "file",
+      "size": 28154
+    },
+    {
+      "path": "client\\public\\images\\image_1750629709133.png",
+      "type": "file",
+      "size": 28090
+    },
+    {
+      "path": "client\\public\\images\\image_1750629740303.png",
+      "type": "file",
+      "size": 12861
+    },
+    {
+      "path": "client\\public\\images\\image_1750629876091.png",
+      "type": "file",
+      "size": 12861
+    },
+    {
+      "path": "client\\public\\images\\image_1750630064075.png",
+      "type": "file",
+      "size": 71232
+    },
+    {
+      "path": "client\\public\\images\\image_1750630189759.png",
+      "type": "file",
+      "size": 26710
+    },
+    {
+      "path": "client\\public\\images\\image_1750697766605.png",
+      "type": "file",
+      "size": 123206
+    },
+    {
+      "path": "client\\public\\images\\image_1750724451013.png",
+      "type": "file",
+      "size": 64341
+    },
+    {
+      "path": "client\\public\\images\\image_1750729393804.png",
+      "type": "file",
+      "size": 27311
+    },
+    {
+      "path": "client\\public\\images\\image_1750730011202.png",
+      "type": "file",
+      "size": 42053
+    },
+    {
+      "path": "client\\public\\images\\image_1750730244166.png",
+      "type": "file",
+      "size": 63534
+    },
+    {
+      "path": "client\\public\\images\\index-yxKA5hRB.css",
+      "type": "file",
+      "size": 127425
+    },
+    {
+      "path": "client\\public\\images\\index.html",
+      "type": "file",
+      "size": 784
+    },
+    {
+      "path": "client\\public\\images\\manifest.json",
+      "type": "file",
+      "size": 3650
+    },
+    {
+      "path": "client\\public\\images\\next.svg",
+      "type": "file",
+      "size": 1375
+    },
+    {
+      "path": "client\\public\\images\\Pasted--PHASE-1-PROJECT-SETUP-STEP-1-Create-Two-Repls-We-need-two-separate-Replit-projects-fronten-1750545962779_1750545962779.txt",
+      "type": "file",
+      "size": 3120
+    },
+    {
+      "path": "client\\public\\images\\Pasted--TASK-Build-and-integrate-a-new-landing-page-called-Join-the-Movement-1-Create-a-new-pa-1750555104395_1750555104395.txt",
+      "type": "file",
+      "size": 3737
+    },
+    {
+      "path": "client\\public\\images\\Pasted--TASK-Implement-Responsive-Hamburger-Menu-for-Navigation-Desktop-Mobile-1-Update-or-1750555316875_1750555316875.txt",
+      "type": "file",
+      "size": 3456
+    },
+    {
+      "path": "client\\public\\images\\Pasted--TASK-Rebuild-the-Header-Navigation-for-Full-Responsive-Support-with-Hamburger-Menu-1--1750555498434_1750555498435.txt",
+      "type": "file",
+      "size": 4041
+    },
+    {
+      "path": "client\\public\\images\\Pasted-Build-All-Role-Based-Dashboards-Following-Vendor-Template-General-Notes-All-dashboards-should-r-1750698990229_1750698990230.txt",
+      "type": "file",
+      "size": 2759
+    },
+    {
+      "path": "client\\public\\images\\Pasted-Build-Full-Drop-Off-Fulfillment-System-BACKEND-CHANGES-Express-DB-1-Update-Product-Model-Ad-1750722329230_1750722329231.txt",
+      "type": "file",
+      "size": 2602
+    },
+    {
+      "path": "client\\public\\images\\Pasted-Expand-the-Vendor-Admin-Dashboard-with-the-following-advanced-features-Location-client-src-p-1750633092321_1750633092321.txt",
+      "type": "file",
+      "size": 2631
+    },
+    {
+      "path": "client\\public\\images\\Pasted-I-need-to-build-a-fully-modular-Super-Admin-Dashboard-for-my-platform-Craved-Artisan-This-dashboar-1750717799659_1750717799659.txt",
+      "type": "file",
+      "size": 2847
+    },
+    {
+      "path": "client\\public\\images\\Pasted-Implement-Hamburger-Menu-for-Mobile-tsx-Copy-Edit-In-header-tsx-import-useMobile-from-ho-1750555779387_1750555779387.txt",
+      "type": "file",
+      "size": 2265
+    },
+    {
+      "path": "client\\public\\images\\Pasted-INSTRUCTIONS-FOR-dropoff-location-html-1-TOP-HERO-SECTION-html-Copy-Edit-section-class-section-1750630166459_1750630166459.txt",
+      "type": "file",
+      "size": 3370
+    },
+    {
+      "path": "client\\public\\images\\Pasted-INSTRUCTIONS-FOR-supplier-html-1-ENSURE-TEXT-IS-DARK-AND-READABLE-Use-this-global-style-fix-alr-1750629421681_1750629421682.txt",
+      "type": "file",
+      "size": 5157
+    },
+    {
+      "path": "client\\public\\images\\Pasted-INSTRUCTIONS-FOR-vendor-html-1-FIX-WHITE-TEXT-ISSUE-Make-Text-Visible-In-style-css-or-scope-1750628506496_1750628506496.txt",
+      "type": "file",
+      "size": 4183
+    },
+    {
+      "path": "client\\public\\images\\Pasted-Let-s-build-the-Customer-Dashboard-using-the-existing-dashboard-layout-This-dashboard-should-be-str-1750718519316_1750718519316.txt",
+      "type": "file",
+      "size": 2153
+    },
+    {
+      "path": "client\\public\\images\\Pasted-Let-s-build-the-Vendor-Admin-Dashboard-with-the-following-features-Location-client-src-pages-1750631088480_1750631088481.txt",
+      "type": "file",
+      "size": 2116
+    },
+    {
+      "path": "client\\public\\images\\Pasted-Let-s-build-the-Vendor-Admin-Dashboard-with-the-following-features-Location-client-src-pages-1750632636846_1750632636847.txt",
+      "type": "file",
+      "size": 2116
+    },
+    {
+      "path": "client\\public\\images\\Pasted-NAV-STRUCTURE-DO-NOT-STACK-MENU-ITEMS-HORIZONTALLY-Replace-the-current-top-nav-bar-with-the-followi-1750554609754_1750554609755.txt",
+      "type": "file",
+      "size": 2759
+    },
+    {
+      "path": "client\\public\\images\\Pasted-NSTRUCTIONS-FOR-customer-html-1-FIX-WHITE-TEXT-ISSUE-Make-All-Text-Readable-In-style-css-or-1750623588496_1750623588496.txt",
+      "type": "file",
+      "size": 4221
+    },
+    {
+      "path": "client\\public\\images\\Pasted-Please-build-a-fully-functional-Super-Admin-Dashboard-using-the-same-styling-and-layout-system-as-th-1750709870382_1750709870383.txt",
+      "type": "file",
+      "size": 2864
+    },
+    {
+      "path": "client\\public\\images\\Pasted-Please-create-a-new-page-file-at-bash-Copy-Edit-client-src-pages-vendor-tsx-Then-use-the-following-1750552229823_1750552229823.txt",
+      "type": "file",
+      "size": 3357
+    },
+    {
+      "path": "client\\public\\images\\Pasted-PURPOSE-Drop-off-locations-are-local-hubs-that-Receive-vendor-deliveries-Handle-customer-pickups-1750720819034_1750720819034.txt",
+      "type": "file",
+      "size": 2979
+    },
+    {
+      "path": "client\\public\\images\\Pasted-START-WITH-SMART-LABEL-PRINTING-MODULE-Create-a-new-component-for-a-Smart-Label-Printing-System-und-1750633923948_1750633923949.txt",
+      "type": "file",
+      "size": 2116
+    },
+    {
+      "path": "client\\public\\images\\Pasted-Step-by-Step-Instructions-for-Replit-Agent-Goal-Build-the-Join-the-Movement-page-join-the-moveme-1750556214508_1750556214509.txt",
+      "type": "file",
+      "size": 3492
+    },
+    {
+      "path": "client\\public\\images\\Pasted-Supplier-Marketplace-Vendor-Only-Access-Purpose-Create-a-private-marketplace-viewable-only-by--1750721262839_1750721262840.txt",
+      "type": "file",
+      "size": 2821
+    },
+    {
+      "path": "client\\public\\images\\Pasted-Suppliers-should-be-able-to-List-and-manage-products-available-for-vendors-to-restock-with-View-b-1750720741834_1750720741834.txt",
+      "type": "file",
+      "size": 2552
+    },
+    {
+      "path": "client\\public\\images\\Pasted-Vendor-Dashboard-Sidebar-Restructure-Hey-team-we-need-to-reorganize-the-left-hand-vendor-dashboard-1750636522851_1750636522851.txt",
+      "type": "file",
+      "size": 4067
+    },
+    {
+      "path": "client\\public\\images\\test-login.html",
+      "type": "file",
+      "size": 5127
+    },
+    {
+      "path": "client\\public\\images\\vercel.svg",
+      "type": "file",
+      "size": 128
+    },
+    {
+      "path": "client\\public\\images\\window.svg",
+      "type": "file",
+      "size": 385
+    },
+    {
+      "path": "client\\public\\video",
+      "type": "dir"
+    },
+    {
+      "path": "client\\public\\vite.svg",
+      "type": "file",
+      "size": 1497
+    },
+    {
+      "path": "client\\README.md",
+      "type": "file",
+      "size": 2269
+    },
+    {
+      "path": "client\\src",
+      "type": "dir"
+    },
+    {
+      "path": "client\\src\\App.tsx",
+      "type": "file",
+      "size": 10645
+    },
+    {
+      "path": "client\\src\\assets",
+      "type": "dir"
+    },
+    {
+      "path": "client\\src\\assets\\react.svg",
+      "type": "file",
+      "size": 4126
+    },
+    {
+      "path": "client\\src\\components",
+      "type": "dir"
+    },
+    {
+      "path": "client\\src\\components\\AddToCartButton.tsx",
+      "type": "file",
+      "size": 3407
+    },
+    {
+      "path": "client\\src\\components\\AIForecastExample.tsx",
+      "type": "file",
+      "size": 2511
+    },
+    {
+      "path": "client\\src\\components\\AIForecastWidget.tsx",
+      "type": "file",
+      "size": 12960
+    },
+    {
+      "path": "client\\src\\components\\analytics",
+      "type": "dir"
+    },
+    {
+      "path": "client\\src\\components\\analytics\\AIForecastWidget.tsx",
+      "type": "file",
+      "size": 12747
+    },
+    {
+      "path": "client\\src\\components\\analytics\\AISummaryBuilder.tsx",
+      "type": "file",
+      "size": 13230
+    },
+    {
+      "path": "client\\src\\components\\analytics\\AnalyticsDashboard.tsx",
+      "type": "file",
+      "size": 7649
+    },
+    {
+      "path": "client\\src\\components\\analytics\\ConversionFunnel.tsx",
+      "type": "file",
+      "size": 16409
+    },
+    {
+      "path": "client\\src\\components\\analytics\\EnhancedBestSellers.tsx",
+      "type": "file",
+      "size": 20353
+    },
+    {
+      "path": "client\\src\\components\\analytics\\EnhancedProfitLoss.tsx",
+      "type": "file",
+      "size": 16744
+    },
+    {
+      "path": "client\\src\\components\\analytics\\InteractiveCashFlow.tsx",
+      "type": "file",
+      "size": 17071
+    },
+    {
+      "path": "client\\src\\components\\BalanceSheetTable.tsx",
+      "type": "file",
+      "size": 3031
+    },
+    {
+      "path": "client\\src\\components\\CartIcon.tsx",
+      "type": "file",
+      "size": 973
+    },
+    {
+      "path": "client\\src\\components\\charts",
+      "type": "dir"
+    },
+    {
+      "path": "client\\src\\components\\charts\\TrendChart.tsx",
+      "type": "file",
+      "size": 3396
+    },
+    {
+      "path": "client\\src\\components\\CreateVersionModal.tsx",
+      "type": "file",
+      "size": 5346
+    },
+    {
+      "path": "client\\src\\components\\CSVImportButton.tsx",
+      "type": "file",
+      "size": 4162
+    },
+    {
+      "path": "client\\src\\components\\dashboard",
+      "type": "dir"
+    },
+    {
+      "path": "client\\src\\components\\dashboard\\vendor",
+      "type": "dir"
+    },
+    {
+      "path": "client\\src\\components\\dashboard\\vendor\\AIInsightsPanel.tsx",
+      "type": "file",
+      "size": 1232
+    },
+    {
+      "path": "client\\src\\components\\dashboard\\vendor\\BusinessHealth.tsx",
+      "type": "file",
+      "size": 1582
+    },
+    {
+      "path": "client\\src\\components\\dashboard\\vendor\\LeaderboardWidget.tsx",
+      "type": "file",
+      "size": 1692
+    },
+    {
+      "path": "client\\src\\components\\dashboard\\vendor\\OptionalWidgets.tsx",
+      "type": "file",
+      "size": 992
+    },
+    {
+      "path": "client\\src\\components\\dashboard\\vendor\\QuickActionsPanel.tsx",
+      "type": "file",
+      "size": 1233
+    },
+    {
+      "path": "client\\src\\components\\dashboard\\vendor\\SalesSnapshot.tsx",
+      "type": "file",
+      "size": 1154
+    },
+    {
+      "path": "client\\src\\components\\dashboard\\vendor\\VendorInbox.tsx",
+      "type": "file",
+      "size": 1592
+    },
+    {
+      "path": "client\\src\\components\\dashboard\\vendor\\VendorSidebar.tsx",
+      "type": "file",
+      "size": 1260
+    },
+    {
+      "path": "client\\src\\components\\dashboard\\vendor\\VendorTopNav.tsx",
+      "type": "file",
+      "size": 5013
+    },
+    {
+      "path": "client\\src\\components\\EditableFinancialTable.tsx",
+      "type": "file",
+      "size": 12856
+    },
+    {
+      "path": "client\\src\\components\\FinancialFilters.tsx",
+      "type": "file",
+      "size": 4408
+    },
+    {
+      "path": "client\\src\\components\\FinancialHealthIndicator.tsx",
+      "type": "file",
+      "size": 6385
+    },
+    {
+      "path": "client\\src\\components\\FinancialInsights.tsx",
+      "type": "file",
+      "size": 12478
+    },
+    {
+      "path": "client\\src\\components\\FinancialSummary.tsx",
+      "type": "file",
+      "size": 8381
+    },
+    {
+      "path": "client\\src\\components\\Footer.tsx",
+      "type": "file",
+      "size": 2051
+    },
+    {
+      "path": "client\\src\\components\\FreeCashFlowTable.tsx",
+      "type": "file",
+      "size": 4019
+    },
+    {
+      "path": "client\\src\\components\\Header.tsx",
+      "type": "file",
+      "size": 16127
+    },
+    {
+      "path": "client\\src\\components\\index.ts",
+      "type": "file",
+      "size": 204
+    },
+    {
+      "path": "client\\src\\components\\InspirationalQuote.tsx",
+      "type": "file",
+      "size": 3711
+    },
+    {
+      "path": "client\\src\\components\\Layout.tsx",
+      "type": "file",
+      "size": 351
+    },
+    {
+      "path": "client\\src\\components\\LoadingSpinner.tsx",
+      "type": "file",
+      "size": 680
+    },
+    {
+      "path": "client\\src\\components\\MarginAlertDashboard.tsx",
+      "type": "file",
+      "size": 10820
+    },
+    {
+      "path": "client\\src\\components\\MarginValidationWidget.tsx",
+      "type": "file",
+      "size": 15988
+    },
+    {
+      "path": "client\\src\\components\\MyPantry.tsx",
+      "type": "file",
+      "size": 24767
+    },
+    {
+      "path": "client\\src\\components\\NavHeader.tsx",
+      "type": "file",
+      "size": 35718
+    },
+    {
+      "path": "client\\src\\components\\NotFound.tsx",
+      "type": "file",
+      "size": 1501
+    },
+    {
+      "path": "client\\src\\components\\OnboardingPrompt.tsx",
+      "type": "file",
+      "size": 7147
+    },
+    {
+      "path": "client\\src\\components\\PickupMap.tsx",
+      "type": "file",
+      "size": 15966
+    },
+    {
+      "path": "client\\src\\components\\ProductMarginAlert.tsx",
+      "type": "file",
+      "size": 2401
+    },
+    {
+      "path": "client\\src\\components\\ProfitLossTable.tsx",
+      "type": "file",
+      "size": 3537
+    },
+    {
+      "path": "client\\src\\components\\ProtectedRoute.tsx",
+      "type": "file",
+      "size": 1096
+    },
+    {
+      "path": "client\\src\\components\\RecipeCostCalculator.tsx",
+      "type": "file",
+      "size": 9593
+    },
+    {
+      "path": "client\\src\\components\\RecipeVersionDiffViewer.tsx",
+      "type": "file",
+      "size": 17270
+    },
+    {
+      "path": "client\\src\\components\\ReorderCard.tsx",
+      "type": "file",
+      "size": 8264
+    },
+    {
+      "path": "client\\src\\components\\ScheduleOrder.tsx",
+      "type": "file",
+      "size": 21307
+    },
+    {
+      "path": "client\\src\\components\\StripeCheckoutSession.tsx",
+      "type": "file",
+      "size": 10414
+    },
+    {
+      "path": "client\\src\\components\\StripePaymentForm.tsx",
+      "type": "file",
+      "size": 6550
+    },
+    {
+      "path": "client\\src\\components\\TailwindTest.tsx",
+      "type": "file",
+      "size": 715
+    },
+    {
+      "path": "client\\src\\components\\TaxForecastCard.tsx",
+      "type": "file",
+      "size": 16094
+    },
+    {
+      "path": "client\\src\\components\\vendor",
+      "type": "dir"
+    },
+    {
+      "path": "client\\src\\components\\vendor\\analytics",
+      "type": "dir"
+    },
+    {
+      "path": "client\\src\\components\\vendor\\analytics\\AiInsights.tsx",
+      "type": "file",
+      "size": 2432
+    },
+    {
+      "path": "client\\src\\components\\vendor\\analytics\\BalanceSheet.tsx",
+      "type": "file",
+      "size": 11960
+    },
+    {
+      "path": "client\\src\\components\\vendor\\analytics\\BestSellers.tsx",
+      "type": "file",
+      "size": 17062
+    },
+    {
+      "path": "client\\src\\components\\vendor\\analytics\\BestSellersList.tsx",
+      "type": "file",
+      "size": 17421
+    },
+    {
+      "path": "client\\src\\components\\vendor\\analytics\\CashFlowChart.tsx",
+      "type": "file",
+      "size": 14776
+    },
+    {
+      "path": "client\\src\\components\\vendor\\analytics\\ConversionFunnel.tsx",
+      "type": "file",
+      "size": 8012
+    },
+    {
+      "path": "client\\src\\components\\vendor\\analytics\\CustomerInsights.tsx",
+      "type": "file",
+      "size": 12343
+    },
+    {
+      "path": "client\\src\\components\\vendor\\analytics\\KpiCard.tsx",
+      "type": "file",
+      "size": 1191
+    },
+    {
+      "path": "client\\src\\components\\vendor\\analytics\\KpiCardExample.tsx",
+      "type": "file",
+      "size": 778
+    },
+    {
+      "path": "client\\src\\components\\vendor\\analytics\\KpiCardTest.tsx",
+      "type": "file",
+      "size": 938
+    },
+    {
+      "path": "client\\src\\components\\vendor\\analytics\\PerformanceKpis.tsx",
+      "type": "file",
+      "size": 1192
+    },
+    {
+      "path": "client\\src\\components\\vendor\\analytics\\PortfolioBuilder.tsx",
+      "type": "file",
+      "size": 21754
+    },
+    {
+      "path": "client\\src\\components\\vendor\\analytics\\PriceOptimizer.tsx",
+      "type": "file",
+      "size": 18083
+    },
+    {
+      "path": "client\\src\\components\\vendor\\analytics\\ProfitLossStatement.tsx",
+      "type": "file",
+      "size": 13108
+    },
+    {
+      "path": "client\\src\\components\\vendor\\analytics\\StorefrontSnapshot.tsx",
+      "type": "file",
+      "size": 17144
+    },
+    {
+      "path": "client\\src\\components\\vendor\\analytics\\TaxSummary.tsx",
+      "type": "file",
+      "size": 21767
+    },
+    {
+      "path": "client\\src\\components\\vendor\\analytics\\TopProducts.tsx",
+      "type": "file",
+      "size": 1598
+    },
+    {
+      "path": "client\\src\\components\\vendor\\analytics\\TrendChart.tsx",
+      "type": "file",
+      "size": 2135
+    },
+    {
+      "path": "client\\src\\components\\vendor\\ContactModal.tsx",
+      "type": "file",
+      "size": 5160
+    },
+    {
+      "path": "client\\src\\components\\vendor\\FulfillmentInfo.tsx",
+      "type": "file",
+      "size": 1935
+    },
+    {
+      "path": "client\\src\\components\\vendor\\index.ts",
+      "type": "file",
+      "size": 1423
+    },
+    {
+      "path": "client\\src\\components\\vendor\\ProductCard.tsx",
+      "type": "file",
+      "size": 5502
+    },
+    {
+      "path": "client\\src\\components\\vendor\\ReviewBlock.tsx",
+      "type": "file",
+      "size": 2774
+    },
+    {
+      "path": "client\\src\\components\\vendor\\VendorBio.tsx",
+      "type": "file",
+      "size": 1556
+    },
+    {
+      "path": "client\\src\\components\\vendor\\VendorHeader.tsx",
+      "type": "file",
+      "size": 4432
+    },
+    {
+      "path": "client\\src\\components\\VendorAnalyticsTab.tsx",
+      "type": "file",
+      "size": 9750
+    },
+    {
+      "path": "client\\src\\components\\VendorFinancialDashboard.tsx",
+      "type": "file",
+      "size": 15438
+    },
+    {
+      "path": "client\\src\\components\\VendorPayoutHistory.tsx",
+      "type": "file",
+      "size": 16007
+    },
+    {
+      "path": "client\\src\\components\\VendorStripeOnboarding.tsx",
+      "type": "file",
+      "size": 14403
+    },
+    {
+      "path": "client\\src\\components\\VendorStripeOnboardingController.tsx",
+      "type": "file",
+      "size": 14621
+    },
+    {
+      "path": "client\\src\\components\\VendorTaxReports.tsx",
+      "type": "file",
+      "size": 17406
+    },
+    {
+      "path": "client\\src\\components\\ViewVersionHistoryButton.tsx",
+      "type": "file",
+      "size": 1430
+    },
+    {
+      "path": "client\\src\\contexts",
+      "type": "dir"
+    },
+    {
+      "path": "client\\src\\contexts\\AuthContext.tsx",
+      "type": "file",
+      "size": 8110
+    },
+    {
+      "path": "client\\src\\contexts\\CartContext.tsx",
+      "type": "file",
+      "size": 7424
+    },
+    {
+      "path": "client\\src\\contexts\\ZipContext.tsx",
+      "type": "file",
+      "size": 1902
+    },
+    {
+      "path": "client\\src\\hooks",
+      "type": "dir"
+    },
+    {
+      "path": "client\\src\\hooks\\README.md",
+      "type": "file",
+      "size": 4879
+    },
+    {
+      "path": "client\\src\\hooks\\useTrendData.ts",
+      "type": "file",
+      "size": 4206
+    },
+    {
+      "path": "client\\src\\index.css",
+      "type": "file",
+      "size": 4239
+    },
+    {
+      "path": "client\\src\\layouts",
+      "type": "dir"
+    },
+    {
+      "path": "client\\src\\layouts\\VendorDashboardLayout.tsx",
+      "type": "file",
+      "size": 733
+    },
+    {
+      "path": "client\\src\\lib",
+      "type": "dir"
+    },
+    {
+      "path": "client\\src\\lib\\mapConfig.ts",
+      "type": "file",
+      "size": 7297
+    },
+    {
+      "path": "client\\src\\lib\\parseIngredients.ts",
+      "type": "file",
+      "size": 7764
+    },
+    {
+      "path": "client\\src\\main.tsx",
+      "type": "file",
+      "size": 931
+    },
+    {
+      "path": "client\\src\\mock",
+      "type": "dir"
+    },
+    {
+      "path": "client\\src\\mock\\analyticsData.ts",
+      "type": "file",
+      "size": 6376
+    },
+    {
+      "path": "client\\src\\mock\\index.ts",
+      "type": "file",
+      "size": 266
+    },
+    {
+      "path": "client\\src\\pages",
+      "type": "dir"
+    },
+    {
+      "path": "client\\src\\pages\\AboutPage.tsx",
+      "type": "file",
+      "size": 9903
+    },
+    {
+      "path": "client\\src\\pages\\AdminDashboardPage.tsx",
+      "type": "file",
+      "size": 19616
+    },
+    {
+      "path": "client\\src\\pages\\BatchPricingPage.tsx",
+      "type": "file",
+      "size": 16126
+    },
+    {
+      "path": "client\\src\\pages\\CheckoutPage.tsx",
+      "type": "file",
+      "size": 18842
+    },
+    {
+      "path": "client\\src\\pages\\CommunityPage.tsx",
+      "type": "file",
+      "size": 13095
+    },
+    {
+      "path": "client\\src\\pages\\ContactPage.tsx",
+      "type": "file",
+      "size": 13367
+    },
+    {
+      "path": "client\\src\\pages\\CustomerDashboardPage.tsx",
+      "type": "file",
+      "size": 24252
+    },
+    {
+      "path": "client\\src\\pages\\CustomerOrdersPage.tsx",
+      "type": "file",
+      "size": 22343
+    },
+    {
+      "path": "client\\src\\pages\\dashboard",
+      "type": "dir"
+    },
+    {
+      "path": "client\\src\\pages\\dashboard\\vendor",
+      "type": "dir"
+    },
+    {
+      "path": "client\\src\\pages\\dashboard\\vendor\\analytics.tsx",
+      "type": "file",
+      "size": 7633
+    },
+    {
+      "path": "client\\src\\pages\\dashboard\\vendor.tsx",
+      "type": "file",
+      "size": 993
+    },
+    {
+      "path": "client\\src\\pages\\DashboardPage.tsx",
+      "type": "file",
+      "size": 8717
+    },
+    {
+      "path": "client\\src\\pages\\DropoffDashboardPage.tsx",
+      "type": "file",
+      "size": 19370
+    },
+    {
+      "path": "client\\src\\pages\\EventCoordinatorDashboardPage.tsx",
+      "type": "file",
+      "size": 23372
+    },
+    {
+      "path": "client\\src\\pages\\EventDetailPage.tsx",
+      "type": "file",
+      "size": 12780
+    },
+    {
+      "path": "client\\src\\pages\\EventsPage.tsx",
+      "type": "file",
+      "size": 6132
+    },
+    {
+      "path": "client\\src\\pages\\HomePage.tsx",
+      "type": "file",
+      "size": 33281
+    },
+    {
+      "path": "client\\src\\pages\\JoinB2BPage.tsx",
+      "type": "file",
+      "size": 7924
+    },
+    {
+      "path": "client\\src\\pages\\JoinCoordinatorPage.tsx",
+      "type": "file",
+      "size": 8795
+    },
+    {
+      "path": "client\\src\\pages\\JoinCustomerPage.tsx",
+      "type": "file",
+      "size": 7979
+    },
+    {
+      "path": "client\\src\\pages\\JoinDropoffPage.tsx",
+      "type": "file",
+      "size": 10349
+    },
+    {
+      "path": "client\\src\\pages\\JoinPage.tsx",
+      "type": "file",
+      "size": 12679
+    },
+    {
+      "path": "client\\src\\pages\\JoinVendorPage.tsx",
+      "type": "file",
+      "size": 7758
+    },
+    {
+      "path": "client\\src\\pages\\LoginPage.tsx",
+      "type": "file",
+      "size": 8464
+    },
+    {
+      "path": "client\\src\\pages\\MarketplacePage.tsx",
+      "type": "file",
+      "size": 38149
+    },
+    {
+      "path": "client\\src\\pages\\ProductPage.tsx",
+      "type": "file",
+      "size": 34312
+    },
+    {
+      "path": "client\\src\\pages\\RecipeVersionHistoryPage.tsx",
+      "type": "file",
+      "size": 25264
+    },
+    {
+      "path": "client\\src\\pages\\SignupPage.tsx",
+      "type": "file",
+      "size": 18577
+    },
+    {
+      "path": "client\\src\\pages\\VendorAnalyticsPage.tsx",
+      "type": "file",
+      "size": 12004
+    },
+    {
+      "path": "client\\src\\pages\\VendorDashboardPage.tsx",
+      "type": "file",
+      "size": 39158
+    },
+    {
+      "path": "client\\src\\pages\\VendorDeliveryBatchingPage.tsx",
+      "type": "file",
+      "size": 37653
+    },
+    {
+      "path": "client\\src\\pages\\VendorDeliveryPage.tsx",
+      "type": "file",
+      "size": 21645
+    },
+    {
+      "path": "client\\src\\pages\\VendorFinancialPage.tsx",
+      "type": "file",
+      "size": 4388
+    },
+    {
+      "path": "client\\src\\pages\\VendorInventoryPage.tsx",
+      "type": "file",
+      "size": 20376
+    },
+    {
+      "path": "client\\src\\pages\\VendorOnboardingPage.tsx",
+      "type": "file",
+      "size": 2357
+    },
+    {
+      "path": "client\\src\\pages\\VendorOrdersPage.tsx",
+      "type": "file",
+      "size": 36185
+    },
+    {
+      "path": "client\\src\\pages\\VendorPage.tsx",
+      "type": "file",
+      "size": 33487
+    },
+    {
+      "path": "client\\src\\pages\\VendorProductsPage.tsx",
+      "type": "file",
+      "size": 59641
+    },
+    {
+      "path": "client\\src\\pages\\VendorRecipeCreatePage.tsx",
+      "type": "file",
+      "size": 19334
+    },
+    {
+      "path": "client\\src\\pages\\VendorRecipeEditPage.tsx",
+      "type": "file",
+      "size": 24369
+    },
+    {
+      "path": "client\\src\\pages\\VendorSettingsPage.tsx",
+      "type": "file",
+      "size": 13784
+    },
+    {
+      "path": "client\\src\\pages\\VendorWatchlistPage.tsx",
+      "type": "file",
+      "size": 15023
+    },
+    {
+      "path": "client\\src\\services",
+      "type": "dir"
+    },
+    {
+      "path": "client\\src\\services\\analytics.ts",
+      "type": "file",
+      "size": 4948
+    },
+    {
+      "path": "client\\src\\services\\analyticsEvents.ts",
+      "type": "file",
+      "size": 4342
+    },
+    {
+      "path": "client\\src\\services\\index.ts",
+      "type": "file",
+      "size": 77
+    },
+    {
+      "path": "client\\src\\styles",
+      "type": "dir"
+    },
+    {
+      "path": "client\\src\\styles\\index.css",
+      "type": "file",
+      "size": 946
+    },
+    {
+      "path": "client\\src\\types",
+      "type": "dir"
+    },
+    {
+      "path": "client\\src\\types\\analytics.ts",
+      "type": "file",
+      "size": 661
+    },
+    {
+      "path": "client\\src\\utils",
+      "type": "dir"
+    },
+    {
+      "path": "client\\src\\utils\\errorHandlers.tsx",
+      "type": "file",
+      "size": 3731
+    },
+    {
+      "path": "client\\src\\vite-env.d.ts",
+      "type": "file",
+      "size": 38
+    },
+    {
+      "path": "client\\tailwind.config.js",
+      "type": "file",
+      "size": 2577
+    },
+    {
+      "path": "client\\tsconfig.app.json",
+      "type": "file",
+      "size": 875
+    },
+    {
+      "path": "client\\tsconfig.json",
+      "type": "file",
+      "size": 119
+    },
+    {
+      "path": "client\\tsconfig.node.json",
+      "type": "file",
+      "size": 630
+    },
+    {
+      "path": "client\\vite.config.ts",
+      "type": "file",
+      "size": 621
+    },
+    {
+      "path": "COLOR_SCHEME_GUIDE.md",
+      "type": "file",
+      "size": 4884
+    },
+    {
+      "path": "comprehensive-test-export.csv",
+      "type": "file",
+      "size": 667
+    },
+    {
+      "path": "comprehensive-test-export.pdf",
+      "type": "file",
+      "size": 2033
+    },
+    {
+      "path": "COST_CALCULATOR_FEATURE_DOCUMENTATION.md",
+      "type": "file",
+      "size": 13636
+    },
+    {
+      "path": "deploy.ps1",
+      "type": "file",
+      "size": 2524
+    },
+    {
+      "path": "DEPLOYMENT.md",
+      "type": "file",
+      "size": 4191
+    },
+    {
+      "path": "DIAGNOSTICS_AND_GUARDRAILS.md",
+      "type": "file",
+      "size": 8039
+    },
+    {
+      "path": "docker-compose.yml",
+      "type": "file",
+      "size": 1711
+    },
+    {
+      "path": "financial-report-q1-2025.pdf",
+      "type": "file",
+      "size": 134740
+    },
+    {
+      "path": "financial-report-with-charts.pdf",
+      "type": "file",
+      "size": 134740
+    },
+    {
+      "path": "FinancialSummaryAPI_Implementation_Summary.md",
+      "type": "file",
+      "size": 7980
+    },
+    {
+      "path": "FINANCIAL_DASHBOARD_COMPLETE_SUMMARY.md",
+      "type": "file",
+      "size": 9139
+    },
+    {
+      "path": "FINANCIAL_FILTERS_FEATURE_SUMMARY.md",
+      "type": "file",
+      "size": 7687
+    },
+    {
+      "path": "FINANCIAL_INSIGHTS_IMPLEMENTATION_SUMMARY.md",
+      "type": "file",
+      "size": 8991
+    },
+    {
+      "path": "FULL_FINANCIAL_PDF_REPORT_FEATURE.md",
+      "type": "file",
+      "size": 9265
+    },
+    {
+      "path": "ingredients-recipes-api-summary.md",
+      "type": "file",
+      "size": 10399
+    },
+    {
+      "path": "inventory-deduction-feature-documentation.md",
+      "type": "file",
+      "size": 15543
+    },
+    {
+      "path": "inventory-feature-documentation.md",
+      "type": "file",
+      "size": 8647
+    },
+    {
+      "path": "LOCALHOST_SERVICES_STATUS.md",
+      "type": "file",
+      "size": 4502
+    },
+    {
+      "path": "MARGIN_MANAGEMENT_FEATURES.md",
+      "type": "file",
+      "size": 7112
+    },
+    {
+      "path": "MARGIN_MANAGEMENT_IMPLEMENTATION.md",
+      "type": "file",
+      "size": 14588
+    },
+    {
+      "path": "package.json",
+      "type": "file",
+      "size": 1941
+    },
+    {
+      "path": "PAYMENT_FLOW_RESTRICTION_IMPLEMENTATION.md",
+      "type": "file",
+      "size": 14250
+    },
+    {
+      "path": "prisma",
+      "type": "dir"
+    },
+    {
+      "path": "prisma\\migrations",
+      "type": "dir"
+    },
+    {
+      "path": "prisma\\migrations\\20250731031217_init",
+      "type": "dir"
+    },
+    {
+      "path": "prisma\\migrations\\20250731031217_init\\migration.sql",
+      "type": "file",
+      "size": 6411
+    },
+    {
+      "path": "prisma\\migrations\\20250802012028_auth_init",
+      "type": "dir"
+    },
+    {
+      "path": "prisma\\migrations\\20250802012028_auth_init\\migration.sql",
+      "type": "file",
+      "size": 547
+    },
+    {
+      "path": "prisma\\migrations\\20250802022015_add_vendor_profile",
+      "type": "dir"
+    },
+    {
+      "path": "prisma\\migrations\\20250802022015_add_vendor_profile\\migration.sql",
+      "type": "file",
+      "size": 772
+    },
+    {
+      "path": "prisma\\migrations\\20250802025344_add_product_to_vendor_profile",
+      "type": "dir"
+    },
+    {
+      "path": "prisma\\migrations\\20250802025344_add_product_to_vendor_profile\\migration.sql",
+      "type": "file",
+      "size": 1953
+    },
+    {
+      "path": "prisma\\migrations\\20250802035650_add_ingredients_recipes",
+      "type": "dir"
+    },
+    {
+      "path": "prisma\\migrations\\20250802035650_add_ingredients_recipes\\migration.sql",
+      "type": "file",
+      "size": 2605
+    },
+    {
+      "path": "prisma\\migrations\\20250802052116_add_recipe_versioning",
+      "type": "dir"
+    },
+    {
+      "path": "prisma\\migrations\\20250802052116_add_recipe_versioning\\migration.sql",
+      "type": "file",
+      "size": 2083
+    },
+    {
+      "path": "prisma\\migrations\\20250802061856_add_version_editor_tracking",
+      "type": "dir"
+    },
+    {
+      "path": "prisma\\migrations\\20250802061856_add_version_editor_tracking\\migration.sql",
+      "type": "file",
+      "size": 488
+    },
+    {
+      "path": "prisma\\migrations\\20250802140153_add_target_margin_to_product",
+      "type": "dir"
+    },
+    {
+      "path": "prisma\\migrations\\20250802140153_add_target_margin_to_product\\migration.sql",
+      "type": "file",
+      "size": 94
+    },
+    {
+      "path": "prisma\\migrations\\20250802140227_add_recipe_id_and_relation_to_product",
+      "type": "dir"
+    },
+    {
+      "path": "prisma\\migrations\\20250802140227_add_recipe_id_and_relation_to_product\\migration.sql",
+      "type": "file",
+      "size": 267
+    },
+    {
+      "path": "prisma\\migrations\\20250802142935_add_watchlist_and_ai_fields",
+      "type": "dir"
+    },
+    {
+      "path": "prisma\\migrations\\20250802142935_add_watchlist_and_ai_fields\\migration.sql",
+      "type": "file",
+      "size": 199
+    },
+    {
+      "path": "prisma\\migrations\\20250802150243_add_fulfillment_model",
+      "type": "dir"
+    },
+    {
+      "path": "prisma\\migrations\\20250802150243_add_fulfillment_model\\migration.sql",
+      "type": "file",
+      "size": 955
+    },
+    {
+      "path": "prisma\\migrations\\20250802154646_add_fulfillment_prediction_fields",
+      "type": "dir"
+    },
+    {
+      "path": "prisma\\migrations\\20250802154646_add_fulfillment_prediction_fields\\migration.sql",
+      "type": "file",
+      "size": 123
+    },
+    {
+      "path": "prisma\\migrations\\20250802161205_add_delivery_day",
+      "type": "dir"
+    },
+    {
+      "path": "prisma\\migrations\\20250802161205_add_delivery_day\\migration.sql",
+      "type": "file",
+      "size": 282
+    },
+    {
+      "path": "prisma\\migrations\\20250802163420_add_delivery_batch_tracking",
+      "type": "dir"
+    },
+    {
+      "path": "prisma\\migrations\\20250802163420_add_delivery_batch_tracking\\migration.sql",
+      "type": "file",
+      "size": 1213
+    },
+    {
+      "path": "prisma\\migrations\\20250802170402_add_delivery_confirmation_fields",
+      "type": "dir"
+    },
+    {
+      "path": "prisma\\migrations\\20250802170402_add_delivery_confirmation_fields\\migration.sql",
+      "type": "file",
+      "size": 198
+    },
+    {
+      "path": "prisma\\migrations\\20250802175028_add_financial_snapshot",
+      "type": "dir"
+    },
+    {
+      "path": "prisma\\migrations\\20250802175028_add_financial_snapshot\\migration.sql",
+      "type": "file",
+      "size": 954
+    },
+    {
+      "path": "prisma\\migrations\\20250802193213_add_margin_alert_fields",
+      "type": "dir"
+    },
+    {
+      "path": "prisma\\migrations\\20250802193213_add_margin_alert_fields\\migration.sql",
+      "type": "file",
+      "size": 180
+    },
+    {
+      "path": "prisma\\migrations\\migration_lock.toml",
+      "type": "file",
+      "size": 128
+    },
+    {
+      "path": "prisma\\package-lock.json",
+      "type": "file",
+      "size": 4406
+    },
+    {
+      "path": "prisma\\package.json",
+      "type": "file",
+      "size": 528
+    },
+    {
+      "path": "prisma\\schema.prisma",
+      "type": "file",
+      "size": 3615
+    },
+    {
+      "path": "prisma\\seed",
+      "type": "dir"
+    },
+    {
+      "path": "prisma\\seed\\financials.ts",
+      "type": "file",
+      "size": 1406
+    },
+    {
+      "path": "prisma\\seed.ts",
+      "type": "file",
+      "size": 4279
+    },
+    {
+      "path": "prisma-schema-update-summary.md",
+      "type": "file",
+      "size": 5575
+    },
+    {
+      "path": "product-model-update-summary.md",
+      "type": "file",
+      "size": 3822
+    },
+    {
+      "path": "public",
+      "type": "dir"
+    },
+    {
+      "path": "public\\fonts",
+      "type": "dir"
+    },
+    {
+      "path": "public\\icons",
+      "type": "dir"
+    },
+    {
+      "path": "public\\images",
+      "type": "dir"
+    },
+    {
+      "path": "public\\README.md",
+      "type": "file",
+      "size": 959
+    },
+    {
+      "path": "README.md",
+      "type": "file",
+      "size": 7135
+    },
+    {
+      "path": "recipe-creation-feature-documentation.md",
+      "type": "file",
+      "size": 11065
+    },
+    {
+      "path": "recipe-versioning-documentation.md",
+      "type": "file",
+      "size": 10859
+    },
+    {
+      "path": "RECIPE_VERSIONING_ENDPOINT_SUMMARY.md",
+      "type": "file",
+      "size": 8691
+    },
+    {
+      "path": "RECIPE_VERSIONING_SUMMARY.md",
+      "type": "file",
+      "size": 6474
+    },
+    {
+      "path": "scripts",
+      "type": "dir"
+    },
+    {
+      "path": "scripts\\projectSnapshot.ts",
+      "type": "file",
+      "size": 8055
+    },
+    {
+      "path": "server",
+      "type": "dir"
+    },
+    {
+      "path": "server\\.env",
+      "type": "file",
+      "size": 939
+    },
+    {
+      "path": "server\\.env.example",
+      "type": "file",
+      "size": 472
+    },
+    {
+      "path": "server\\package.json",
+      "type": "file",
+      "size": 1823
+    },
+    {
+      "path": "server\\src",
+      "type": "dir"
+    },
+    {
+      "path": "server\\src\\controllers",
+      "type": "dir"
+    },
+    {
+      "path": "server\\src\\controllers\\ai-validation.ts",
+      "type": "file",
+      "size": 9890
+    },
+    {
+      "path": "server\\src\\controllers\\analyticsController.ts",
+      "type": "file",
+      "size": 28720
+    },
+    {
+      "path": "server\\src\\controllers\\checkout.ts",
+      "type": "file",
+      "size": 14108
+    },
+    {
+      "path": "server\\src\\controllers\\margin-management.ts",
+      "type": "file",
+      "size": 13099
+    },
+    {
+      "path": "server\\src\\controllers\\payout-reports.ts",
+      "type": "file",
+      "size": 15113
+    },
+    {
+      "path": "server\\src\\controllers\\stripe.ts",
+      "type": "file",
+      "size": 10471
+    },
+    {
+      "path": "server\\src\\controllers\\tax-projection.ts",
+      "type": "file",
+      "size": 12398
+    },
+    {
+      "path": "server\\src\\controllers\\tax-reports.ts",
+      "type": "file",
+      "size": 15008
+    },
+    {
+      "path": "server\\src\\controllers\\vendor-payouts.ts",
+      "type": "file",
+      "size": 10485
+    },
+    {
+      "path": "server\\src\\controllers\\wallet.ts",
+      "type": "file",
+      "size": 10231
+    },
+    {
+      "path": "server\\src\\index-mock.ts",
+      "type": "file",
+      "size": 6053
+    },
+    {
+      "path": "server\\src\\index.ts",
+      "type": "file",
+      "size": 6801
+    },
+    {
+      "path": "server\\src\\lib",
+      "type": "dir"
+    },
+    {
+      "path": "server\\src\\lib\\prisma.ts",
+      "type": "file",
+      "size": 422
+    },
+    {
+      "path": "server\\src\\middleware",
+      "type": "dir"
+    },
+    {
+      "path": "server\\src\\middleware\\auth-mock.ts",
+      "type": "file",
+      "size": 2863
+    },
+    {
+      "path": "server\\src\\middleware\\auth.ts",
+      "type": "file",
+      "size": 3235
+    },
+    {
+      "path": "server\\src\\middleware\\errorHandler.ts",
+      "type": "file",
+      "size": 298
+    },
+    {
+      "path": "server\\src\\middleware\\helmetConfig.ts",
+      "type": "file",
+      "size": 3728
+    },
+    {
+      "path": "server\\src\\middleware\\isVendorOwnerOrAdmin-mock.ts",
+      "type": "file",
+      "size": 1432
+    },
+    {
+      "path": "server\\src\\middleware\\isVendorOwnerOrAdmin.ts",
+      "type": "file",
+      "size": 1329
+    },
+    {
+      "path": "server\\src\\middleware\\logCors.ts",
+      "type": "file",
+      "size": 3574
+    },
+    {
+      "path": "server\\src\\routes",
+      "type": "dir"
+    },
+    {
+      "path": "server\\src\\routes\\ai-validation.ts",
+      "type": "file",
+      "size": 634
+    },
+    {
+      "path": "server\\src\\routes\\analyticsRoutes.ts",
+      "type": "file",
+      "size": 1446
+    },
+    {
+      "path": "server\\src\\routes\\auth-test.ts",
+      "type": "file",
+      "size": 7189
+    },
+    {
+      "path": "server\\src\\routes\\auth.ts",
+      "type": "file",
+      "size": 8204
+    },
+    {
+      "path": "server\\src\\routes\\checkout.ts",
+      "type": "file",
+      "size": 780
+    },
+    {
+      "path": "server\\src\\routes\\debug.ts",
+      "type": "file",
+      "size": 3786
+    },
+    {
+      "path": "server\\src\\routes\\financial-mock.ts",
+      "type": "file",
+      "size": 43389
+    },
+    {
+      "path": "server\\src\\routes\\financial.ts",
+      "type": "file",
+      "size": 40842
+    },
+    {
+      "path": "server\\src\\routes\\fulfillment-mock.ts",
+      "type": "file",
+      "size": 3408
+    },
+    {
+      "path": "server\\src\\routes\\fulfillment.ts",
+      "type": "file",
+      "size": 3396
+    },
+    {
+      "path": "server\\src\\routes\\ingredients-mock.ts",
+      "type": "file",
+      "size": 5905
+    },
+    {
+      "path": "server\\src\\routes\\ingredients.ts",
+      "type": "file",
+      "size": 6381
+    },
+    {
+      "path": "server\\src\\routes\\inventory-deduction.ts",
+      "type": "file",
+      "size": 14934
+    },
+    {
+      "path": "server\\src\\routes\\margin-management.ts",
+      "type": "file",
+      "size": 1799
+    },
+    {
+      "path": "server\\src\\routes\\orders-mock.ts",
+      "type": "file",
+      "size": 35754
+    },
+    {
+      "path": "server\\src\\routes\\orders.ts",
+      "type": "file",
+      "size": 30239
+    },
+    {
+      "path": "server\\src\\routes\\payout-reports.ts",
+      "type": "file",
+      "size": 498
+    },
+    {
+      "path": "server\\src\\routes\\protected-demo.ts",
+      "type": "file",
+      "size": 4272
+    },
+    {
+      "path": "server\\src\\routes\\protected.ts",
+      "type": "file",
+      "size": 3104
+    },
+    {
+      "path": "server\\src\\routes\\recipes-mock.ts",
+      "type": "file",
+      "size": 8965
+    },
+    {
+      "path": "server\\src\\routes\\recipes.ts",
+      "type": "file",
+      "size": 18049
+    },
+    {
+      "path": "server\\src\\routes\\route-optimization-mock.ts",
+      "type": "file",
+      "size": 9048
+    },
+    {
+      "path": "server\\src\\routes\\route-optimization.ts",
+      "type": "file",
+      "size": 9162
+    },
+    {
+      "path": "server\\src\\routes\\stripe-controller.ts",
+      "type": "file",
+      "size": 976
+    },
+    {
+      "path": "server\\src\\routes\\stripe.ts",
+      "type": "file",
+      "size": 10458
+    },
+    {
+      "path": "server\\src\\routes\\supplier-marketplace.ts",
+      "type": "file",
+      "size": 18923
+    },
+    {
+      "path": "server\\src\\routes\\tax-projection.ts",
+      "type": "file",
+      "size": 2523
+    },
+    {
+      "path": "server\\src\\routes\\tax-reports.ts",
+      "type": "file",
+      "size": 603
+    },
+    {
+      "path": "server\\src\\routes\\vendor-mock.ts",
+      "type": "file",
+      "size": 3123
+    },
+    {
+      "path": "server\\src\\routes\\vendor-orders-mock.ts",
+      "type": "file",
+      "size": 26086
+    },
+    {
+      "path": "server\\src\\routes\\vendor-orders.ts",
+      "type": "file",
+      "size": 17213
+    },
+    {
+      "path": "server\\src\\routes\\vendor-payouts.ts",
+      "type": "file",
+      "size": 978
+    },
+    {
+      "path": "server\\src\\routes\\vendor-products-mock.ts",
+      "type": "file",
+      "size": 23258
+    },
+    {
+      "path": "server\\src\\routes\\vendor-products.ts",
+      "type": "file",
+      "size": 37961
+    },
+    {
+      "path": "server\\src\\routes\\vendor-recipes.ts",
+      "type": "file",
+      "size": 19824
+    },
+    {
+      "path": "server\\src\\routes\\vendor.ts",
+      "type": "file",
+      "size": 17712
+    },
+    {
+      "path": "server\\src\\routes\\wallet.ts",
+      "type": "file",
+      "size": 1880
+    },
+    {
+      "path": "server\\src\\routes\\webhooks.ts",
+      "type": "file",
+      "size": 409
+    },
+    {
+      "path": "server\\src\\services",
+      "type": "dir"
+    },
+    {
+      "path": "server\\src\\services\\taxReminderCron.ts",
+      "type": "file",
+      "size": 7793
+    },
+    {
+      "path": "server\\src\\types",
+      "type": "dir"
+    },
+    {
+      "path": "server\\src\\types\\vendor.ts",
+      "type": "file",
+      "size": 2328
+    },
+    {
+      "path": "server\\src\\utils",
+      "type": "dir"
+    },
+    {
+      "path": "server\\src\\utils\\marginCalculator.ts",
+      "type": "file",
+      "size": 8055
+    },
+    {
+      "path": "server\\src\\utils\\marginValidator.ts",
+      "type": "file",
+      "size": 8192
+    },
+    {
+      "path": "server\\src\\utils\\stripe.ts",
+      "type": "file",
+      "size": 9436
+    },
+    {
+      "path": "server\\src\\utils\\taxProjection.ts",
+      "type": "file",
+      "size": 14661
+    },
+    {
+      "path": "server\\src\\utils\\twilio.ts",
+      "type": "file",
+      "size": 2218
+    },
+    {
+      "path": "server\\src\\utils\\validateEnv.ts",
+      "type": "file",
+      "size": 690
+    },
+    {
+      "path": "server\\src\\utils\\walletService.ts",
+      "type": "file",
+      "size": 8634
+    },
+    {
+      "path": "server\\src\\webhooks",
+      "type": "dir"
+    },
+    {
+      "path": "server\\src\\webhooks\\stripe.ts",
+      "type": "file",
+      "size": 14639
+    },
+    {
+      "path": "server\\tests",
+      "type": "dir"
+    },
+    {
+      "path": "server\\tests\\analytics.zip.spec.ts",
+      "type": "file",
+      "size": 10702
+    },
+    {
+      "path": "server\\tsconfig.json",
+      "type": "file",
+      "size": 952
+    },
+    {
+      "path": "services-status.md",
+      "type": "file",
+      "size": 2851
+    },
+    {
+      "path": "setup.ps1",
+      "type": "file",
+      "size": 2339
+    },
+    {
+      "path": "SMART_MARGIN_ALERT_SYSTEM_SUMMARY.md",
+      "type": "file",
+      "size": 7736
+    },
+    {
+      "path": "snapshot.json",
+      "type": "file",
+      "size": 0
+    },
+    {
+      "path": "start-mock-server.ps1",
+      "type": "file",
+      "size": 1477
+    },
+    {
+      "path": "STRIPE_CONNECT_IMPLEMENTATION.md",
+      "type": "file",
+      "size": 7511
+    },
+    {
+      "path": "STRIPE_KEYS_SETUP.md",
+      "type": "file",
+      "size": 4978
+    },
+    {
+      "path": "supplier-marketplace-feature-documentation.md",
+      "type": "file",
+      "size": 18180
+    },
+    {
+      "path": "TAILWIND_COMPLETE_SUCCESS.md",
+      "type": "file",
+      "size": 2834
+    },
+    {
+      "path": "TAILWIND_CSS_AUDIT_REPORT.md",
+      "type": "file",
+      "size": 5447
+    },
+    {
+      "path": "TAILWIND_FINAL_FIX.md",
+      "type": "file",
+      "size": 2546
+    },
+    {
+      "path": "TAILWIND_FIX_COMPLETE.md",
+      "type": "file",
+      "size": 3395
+    },
+    {
+      "path": "TAILWIND_PREFLIGHT_FIX.md",
+      "type": "file",
+      "size": 2686
+    },
+    {
+      "path": "TAILWIND_WORKSPACE_FIX.md",
+      "type": "file",
+      "size": 2653
+    },
+    {
+      "path": "TAX_PROJECTION_SYSTEM_COMPLETE.md",
+      "type": "file",
+      "size": 12899
+    },
+    {
+      "path": "TAX_REPORTS_IMPLEMENTATION.md",
+      "type": "file",
+      "size": 13242
+    },
+    {
+      "path": "test-1099-pdf-endpoint.ps1",
+      "type": "file",
+      "size": 10635
+    },
+    {
+      "path": "test-addon-features.ps1",
+      "type": "file",
+      "size": 13024
+    },
+    {
+      "path": "test-ai-forecast-endpoint.ps1",
+      "type": "file",
+      "size": 14158
+    },
+    {
+      "path": "test-ai-suggest-post.ps1",
+      "type": "file",
+      "size": 2318
+    },
+    {
+      "path": "test-ai-suggestion-direct.ps1",
+      "type": "file",
+      "size": 2017
+    },
+    {
+      "path": "test-ai-suggestion-standalone.js",
+      "type": "file",
+      "size": 6910
+    },
+    {
+      "path": "test-ai-suggestion.ps1",
+      "type": "file",
+      "size": 3131
+    },
+    {
+      "path": "test-analytics-api.ps1",
+      "type": "file",
+      "size": 3950
+    },
+    {
+      "path": "test-analytics-complete.ps1",
+      "type": "file",
+      "size": 8526
+    },
+    {
+      "path": "test-checkout-session.ps1",
+      "type": "file",
+      "size": 11097
+    },
+    {
+      "path": "test-complete-analytics-workflow.ps1",
+      "type": "file",
+      "size": 6555
+    },
+    {
+      "path": "test-complete-receipt-workflow.ps1",
+      "type": "file",
+      "size": 4036
+    },
+    {
+      "path": "test-conversion-funnel.ps1",
+      "type": "file",
+      "size": 5211
+    },
+    {
+      "path": "test-cost-calculator.ps1",
+      "type": "file",
+      "size": 14934
+    },
+    {
+      "path": "test-csv-export.csv",
+      "type": "file",
+      "size": 512
+    },
+    {
+      "path": "test-csv-export.ps1",
+      "type": "file",
+      "size": 2006
+    },
+    {
+      "path": "test-csv-import.ps1",
+      "type": "file",
+      "size": 4730
+    },
+    {
+      "path": "test-delete-product-api.ps1",
+      "type": "file",
+      "size": 4198
+    },
+    {
+      "path": "test-delivery-analytics.ps1",
+      "type": "file",
+      "size": 3632
+    },
+    {
+      "path": "test-delivery-confirmation-simple.ps1",
+      "type": "file",
+      "size": 2598
+    },
+    {
+      "path": "test-delivery-confirmation.ps1",
+      "type": "file",
+      "size": 3080
+    },
+    {
+      "path": "test-delivery-driver.ps1",
+      "type": "file",
+      "size": 4312
+    },
+    {
+      "path": "test-delivery-features.ps1",
+      "type": "file",
+      "size": 1637
+    },
+    {
+      "path": "test-enhanced-features.ps1",
+      "type": "file",
+      "size": 6620
+    },
+    {
+      "path": "test-enhanced-versioning.ps1",
+      "type": "file",
+      "size": 22465
+    },
+    {
+      "path": "test-export-complete.ps1",
+      "type": "file",
+      "size": 6565
+    },
+    {
+      "path": "test-financial-complete.ps1",
+      "type": "file",
+      "size": 8522
+    },
+    {
+      "path": "test-financial-dashboard-complete-with-insights.ps1",
+      "type": "file",
+      "size": 9956
+    },
+    {
+      "path": "test-financial-dashboard-complete.ps1",
+      "type": "file",
+      "size": 7396
+    },
+    {
+      "path": "test-financial-dashboard-with-charts.ps1",
+      "type": "file",
+      "size": 9002
+    },
+    {
+      "path": "test-financial-export-complete.ps1",
+      "type": "file",
+      "size": 4917
+    },
+    {
+      "path": "test-financial-features.ps1",
+      "type": "file",
+      "size": 10120
+    },
+    {
+      "path": "test-financial-filters.ps1",
+      "type": "file",
+      "size": 5950
+    },
+    {
+      "path": "test-financial-insights.ps1",
+      "type": "file",
+      "size": 5039
+    },
+    {
+      "path": "test-financial-seeder.ps1",
+      "type": "file",
+      "size": 1579
+    },
+    {
+      "path": "test-financial-summary.ps1",
+      "type": "file",
+      "size": 5678
+    },
+    {
+      "path": "test-import-data.csv",
+      "type": "file",
+      "size": 594
+    },
+    {
+      "path": "test-ingredients-recipes-api.ps1",
+      "type": "file",
+      "size": 19128
+    },
+    {
+      "path": "test-inline-editing.ps1",
+      "type": "file",
+      "size": 4725
+    },
+    {
+      "path": "test-inventory-api-simple.ps1",
+      "type": "file",
+      "size": 10009
+    },
+    {
+      "path": "test-inventory-api.ps1",
+      "type": "file",
+      "size": 9956
+    },
+    {
+      "path": "test-inventory-deduction.ps1",
+      "type": "file",
+      "size": 11991
+    },
+    {
+      "path": "test-manage-products-navigation.md",
+      "type": "file",
+      "size": 4202
+    },
+    {
+      "path": "test-margin-alerts.ps1",
+      "type": "file",
+      "size": 7324
+    },
+    {
+      "path": "test-margin-calculator.ps1",
+      "type": "file",
+      "size": 4166
+    },
+    {
+      "path": "test-margin-management.ps1",
+      "type": "file",
+      "size": 13884
+    },
+    {
+      "path": "test-margin-simple.ps1",
+      "type": "file",
+      "size": 2950
+    },
+    {
+      "path": "test-margin-with-auth.ps1",
+      "type": "file",
+      "size": 7292
+    },
+    {
+      "path": "test-margin-workflow.md",
+      "type": "file",
+      "size": 4916
+    },
+    {
+      "path": "test-new-api-structure.ps1",
+      "type": "file",
+      "size": 2258
+    },
+    {
+      "path": "test-payment-flow-restriction.ps1",
+      "type": "file",
+      "size": 11894
+    },
+    {
+      "path": "test-pdf-receipt.ps1",
+      "type": "file",
+      "size": 1670
+    },
+    {
+      "path": "test-pdf-with-charts.ps1",
+      "type": "file",
+      "size": 5347
+    },
+    {
+      "path": "test-plan-execution-fixed.ps1",
+      "type": "file",
+      "size": 11049
+    },
+    {
+      "path": "test-plan-execution.ps1",
+      "type": "file",
+      "size": 11062
+    },
+    {
+      "path": "test-plan-results.md",
+      "type": "file",
+      "size": 7075
+    },
+    {
+      "path": "test-pnl-api.ps1",
+      "type": "file",
+      "size": 2967
+    },
+    {
+      "path": "test-product-edit-functionality.md",
+      "type": "file",
+      "size": 11120
+    },
+    {
+      "path": "test-recipe-api.ps1",
+      "type": "file",
+      "size": 8866
+    },
+    {
+      "path": "test-recipe-versioning.ps1",
+      "type": "file",
+      "size": 10037
+    },
+    {
+      "path": "test-route-optimization.ps1",
+      "type": "file",
+      "size": 6280
+    },
+    {
+      "path": "test-server-health.ps1",
+      "type": "file",
+      "size": 1415
+    },
+    {
+      "path": "test-session-debug.ps1",
+      "type": "file",
+      "size": 2168
+    },
+    {
+      "path": "test-stripe-integration.ps1",
+      "type": "file",
+      "size": 8639
+    },
+    {
+      "path": "test-supplier-marketplace.ps1",
+      "type": "file",
+      "size": 13945
+    },
+    {
+      "path": "test-tax-projection-complete.ps1",
+      "type": "file",
+      "size": 14040
+    },
+    {
+      "path": "test-tax-projection.ps1",
+      "type": "file",
+      "size": 10809
+    },
+    {
+      "path": "test-tax-reports.ps1",
+      "type": "file",
+      "size": 11302
+    },
+    {
+      "path": "test-twilio-integration.ps1",
+      "type": "file",
+      "size": 2743
+    },
+    {
+      "path": "test-vendor-access-control.ps1",
+      "type": "file",
+      "size": 7712
+    },
+    {
+      "path": "test-vendor-access-simple.ps1",
+      "type": "file",
+      "size": 3495
+    },
+    {
+      "path": "test-vendor-api.ps1",
+      "type": "file",
+      "size": 5436
+    },
+    {
+      "path": "test-vendor-financials.ps1",
+      "type": "file",
+      "size": 12557
+    },
+    {
+      "path": "test-vendor-onboarding-check.ps1",
+      "type": "file",
+      "size": 7801
+    },
+    {
+      "path": "test-vendor-onboarding.ps1",
+      "type": "file",
+      "size": 9984
+    },
+    {
+      "path": "test-vendor-payouts.ps1",
+      "type": "file",
+      "size": 12216
+    },
+    {
+      "path": "test-vendor-products-api.ps1",
+      "type": "file",
+      "size": 8270
+    },
+    {
+      "path": "test-vendor-products-page.md",
+      "type": "file",
+      "size": 3670
+    },
+    {
+      "path": "test-vendor-tax-report-endpoint.ps1",
+      "type": "file",
+      "size": 8727
+    },
+    {
+      "path": "test-version-history.ps1",
+      "type": "file",
+      "size": 11004
+    },
+    {
+      "path": "test-versioning-simple.ps1",
+      "type": "file",
+      "size": 20252
+    },
+    {
+      "path": "test-versioning-workflow.ps1",
+      "type": "file",
+      "size": 23484
+    },
+    {
+      "path": "test-webhook-handling.ps1",
+      "type": "file",
+      "size": 12924
+    },
+    {
+      "path": "TEST_PLAN_COMPLETE.md",
+      "type": "file",
+      "size": 7151
+    },
+    {
+      "path": "TWILIO_INTEGRATION_SUMMARY.md",
+      "type": "file",
+      "size": 6052
+    },
+    {
+      "path": "updated-csv-export.csv",
+      "type": "file",
+      "size": 666
+    },
+    {
+      "path": "VendorAccessControl_Implementation_Summary.md",
+      "type": "file",
+      "size": 6776
+    },
+    {
+      "path": "VENDOR_ONBOARDING_CHECK_IMPLEMENTATION.md",
+      "type": "file",
+      "size": 10314
+    },
+    {
+      "path": "VENDOR_ONBOARDING_IMPLEMENTATION.md",
+      "type": "file",
+      "size": 9667
+    },
+    {
+      "path": "VENDOR_PAYOUT_HISTORY_IMPLEMENTATION.md",
+      "type": "file",
+      "size": 12519
+    },
+    {
+      "path": "VENDOR_TAX_REPORT_ENDPOINT_IMPLEMENTATION.md",
+      "type": "file",
+      "size": 8180
+    },
+    {
+      "path": "VERSION_HISTORY_FEATURE_DOCUMENTATION.md",
+      "type": "file",
+      "size": 12438
+    },
+    {
+      "path": "WEBHOOK_IMPLEMENTATION.md",
+      "type": "file",
+      "size": 10603
+    }
+  ],
+  "keyFiles": [
+    {
+      "path": "client\\package.json",
+      "truncated": false,
+      "lines": 60,
+      "content": "{\n  \"name\": \"client\",\n  \"private\": true,\n  \"version\": \"0.0.0\",\n  \"type\": \"module\",\n  \"scripts\": {\n    \"dev\": \"vite\",\n    \"build\": \"tsc -b && vite build\",\n    \"lint\": \"eslint .\",\n    \"preview\": \"vite preview\"\n  },\n  \"dependencies\": {\n    \"@hookform/resolvers\": \"^3.10.0\",\n    \"@radix-ui/react-dialog\": \"^1.1.14\",\n    \"@radix-ui/react-dropdown-menu\": \"^2.1.15\",\n    \"@stripe/react-stripe-js\": \"^2.5.0\",\n    \"@stripe/stripe-js\": \"^3.0.7\",\n    \"@tanstack/react-query\": \"^5.83.0\",\n    \"@tanstack/react-table\": \"^8.21.3\",\n    \"@types/leaflet\": \"^1.9.20\",\n    \"axios\": \"^1.11.0\",\n    \"date-fns\": \"^4.1.0\",\n    \"framer-motion\": \"^12.23.12\",\n    \"html2canvas\": \"^1.4.1\",\n    \"jspdf\": \"^3.0.1\",\n    \"jspdf-autotable\": \"^5.0.2\",\n    \"leaflet\": \"^1.9.4\",\n    \"lucide-react\": \"^0.534.0\",\n    \"react\": \"^19.1.0\",\n    \"react-dom\": \"^19.1.0\",\n    \"react-error-boundary\": \"^6.0.0\",\n    \"react-helmet-async\": \"^2.0.5\",\n    \"react-hook-form\": \"^7.61.1\",\n    \"react-hot-toast\": \"^2.5.2\",\n    \"react-leaflet\": \"^5.0.0\",\n    \"recharts\": \"^3.1.1\",\n    \"wouter\": \"^3.7.1\",\n    \"zod\": \"^3.22.4\"\n  },\n  \"devDependencies\": {\n    \"@eslint/js\": \"^9.30.1\",\n    \"@types/react\": \"^19.1.8\",\n    \"@types/react-dom\": \"^19.1.6\",\n    \"@vitejs/plugin-react\": \"^4.6.0\",\n    \"autoprefixer\": \"^10.4.21\",\n    \"eslint\": \"^9.32.0\",\n    \"eslint-plugin-react-hooks\": \"^5.2.0\",\n    \"eslint-plugin-react-refresh\": \"^0.4.20\",\n    \"globals\": \"^16.3.0\",\n    \"postcss\": \"^8.5.6\",\n    \"prettier\": \"^3.6.2\",\n    \"tailwindcss\": \"^3.4.0\",\n    \"typescript\": \"~5.8.3\",\n    \"typescript-eslint\": \"^8.35.1\",\n    \"vite\": \"^7.0.4\",\n    \"vite-plugin-checker\": \"^0.10.2\",\n    \"vite-plugin-inspect\": \"^11.3.2\"\n  }\n}\n"
+    },
+    {
+      "path": "client\\vite.config.ts",
+      "truncated": false,
+      "lines": 31,
+      "content": "import { defineConfig } from 'vite';\nimport react from '@vitejs/plugin-react';\nimport path from 'path';\nimport checker from 'vite-plugin-checker';\nimport inspect from 'vite-plugin-inspect';\n\n// https://vite.dev/config/\nexport default defineConfig({\n  plugins: [\n    react(),\n    checker({ typescript: true }),\n    inspect(),\n  ],\n  resolve: {\n    alias: {\n      '@': path.resolve(__dirname, './src'),\n    },\n  },\n  css: {\n    postcss: path.resolve(__dirname, 'postcss.config.cjs'),\n  },\n  optimizeDeps: {\n    exclude: ['zod/v4/core'],\n  },\n  build: {\n    rollupOptions: {\n      external: ['zod/v4/core'],\n    },\n  },\n});\n"
+    },
+    {
+      "path": "client\\tsconfig.json",
+      "truncated": false,
+      "lines": 8,
+      "content": "{\n  \"files\": [],\n  \"references\": [\n    { \"path\": \"./tsconfig.app.json\" },\n    { \"path\": \"./tsconfig.node.json\" }\n  ]\n}\n"
+    },
+    {
+      "path": "client\\tsconfig.app.json",
+      "truncated": false,
+      "lines": 36,
+      "content": "{\n  \"compilerOptions\": {\n    \"tsBuildInfoFile\": \"./node_modules/.tmp/tsconfig.app.tsbuildinfo\",\n    \"target\": \"ES2022\",\n    \"useDefineForClassFields\": true,\n    \"lib\": [\"ES2022\", \"DOM\", \"DOM.Iterable\"],\n    \"module\": \"ESNext\",\n    \"skipLibCheck\": true,\n\n    /* Bundler mode */\n    \"moduleResolution\": \"bundler\",\n    \"allowImportingTsExtensions\": true,\n    \"verbatimModuleSyntax\": true,\n    \"moduleDetection\": \"force\",\n    \"noEmit\": true,\n    \"jsx\": \"react-jsx\",\n    \"jsxImportSource\": \"react\",\n\n    /* Linting */\n    \"strict\": true,\n    \"forceConsistentCasingInFileNames\": true,\n    \"noUnusedLocals\": true,\n    \"noUnusedParameters\": true,\n    \"erasableSyntaxOnly\": true,\n    \"noFallthroughCasesInSwitch\": true,\n    \"noUncheckedSideEffectImports\": true,\n    \n    /* Path mapping */\n    \"baseUrl\": \".\",\n    \"paths\": {\n      \"@/*\": [\"./src/*\"]\n    }\n  },\n  \"include\": [\"src\"]\n}\n"
+    },
+    {
+      "path": "client\\tsconfig.node.json",
+      "truncated": false,
+      "lines": 26,
+      "content": "{\n  \"compilerOptions\": {\n    \"tsBuildInfoFile\": \"./node_modules/.tmp/tsconfig.node.tsbuildinfo\",\n    \"target\": \"ES2023\",\n    \"lib\": [\"ES2023\"],\n    \"module\": \"ESNext\",\n    \"skipLibCheck\": true,\n\n    /* Bundler mode */\n    \"moduleResolution\": \"bundler\",\n    \"allowImportingTsExtensions\": true,\n    \"verbatimModuleSyntax\": true,\n    \"moduleDetection\": \"force\",\n    \"noEmit\": true,\n\n    /* Linting */\n    \"strict\": true,\n    \"noUnusedLocals\": true,\n    \"noUnusedParameters\": true,\n    \"erasableSyntaxOnly\": true,\n    \"noFallthroughCasesInSwitch\": true,\n    \"noUncheckedSideEffectImports\": true\n  },\n  \"include\": [\"vite.config.ts\"]\n}\n"
+    },
+    {
+      "path": "client\\src\\main.tsx",
+      "truncated": false,
+      "lines": 34,
+      "content": "import { StrictMode } from 'react';\nimport { createRoot } from 'react-dom/client';\nimport { ErrorBoundary } from 'react-error-boundary';\nimport { QueryClient, QueryClientProvider } from '@tanstack/react-query';\nimport { HelmetProvider } from 'react-helmet-async';\nimport './index.css';\nimport App from './App.tsx';\nimport { setupGlobalErrorHandlers, ErrorFallback } from './utils/errorHandlers.tsx';\n\n// Setup global error handlers\nsetupGlobalErrorHandlers();\n\n// Create a client\nconst queryClient = new QueryClient({\n  defaultOptions: {\n    queries: {\n      retry: 1,\n      refetchOnWindowFocus: false,\n    },\n  },\n});\n\ncreateRoot(document.getElementById('root')!).render(\n  <StrictMode>\n    <ErrorBoundary FallbackComponent={ErrorFallback}>\n      <QueryClientProvider client={queryClient}>\n        <HelmetProvider>\n          <App />\n        </HelmetProvider>\n      </QueryClientProvider>\n    </ErrorBoundary>\n  </StrictMode>,\n);\n"
+    },
+    {
+      "path": "client\\src\\App.tsx",
+      "truncated": false,
+      "lines": 254,
+      "content": "import { Router, Route, Switch } from 'wouter';\nimport { Toaster } from 'react-hot-toast';\nimport { QueryClient, QueryClientProvider } from '@tanstack/react-query';\nimport { AuthProvider } from './contexts/AuthContext';\nimport { CartProvider } from './contexts/CartContext';\nimport { ZipProvider } from './contexts/ZipContext';\nimport { Layout } from './components/Layout';\nimport HomePage from './pages/HomePage';\nimport LoginPage from './pages/LoginPage';\nimport { SignupPage } from './pages/SignupPage';\nimport { JoinPage } from './pages/JoinPage';\nimport { JoinVendorPage } from './pages/JoinVendorPage';\nimport { JoinCustomerPage } from './pages/JoinCustomerPage';\nimport { JoinB2BPage } from './pages/JoinB2BPage';\nimport { JoinCoordinatorPage } from './pages/JoinCoordinatorPage';\nimport { JoinDropoffPage } from './pages/JoinDropoffPage';\nimport VendorPage from './pages/VendorPage';\nimport ProductPage from './pages/ProductPage';\nimport DashboardPage from './pages/DashboardPage';\nimport { CustomerDashboardPage } from './pages/CustomerDashboardPage';\nimport VendorDashboardPage from './pages/dashboard/vendor';\nimport { VendorSettingsPage } from './pages/VendorSettingsPage';\nimport VendorProductsPage from './pages/VendorProductsPage';\nimport VendorInventoryPage from './pages/VendorInventoryPage';\nimport VendorRecipeCreatePage from './pages/VendorRecipeCreatePage';\nimport VendorRecipeEditPage from './pages/VendorRecipeEditPage';\nimport RecipeVersionHistoryPage from './pages/RecipeVersionHistoryPage';\nimport BatchPricingPage from './pages/BatchPricingPage';\nimport { AdminDashboardPage } from './pages/AdminDashboardPage';\nimport { EventCoordinatorDashboardPage } from './pages/EventCoordinatorDashboardPage';\nimport { DropoffDashboardPage } from './pages/DropoffDashboardPage';\nimport { EventsPage } from './pages/EventsPage';\nimport { EventDetailPage } from './pages/EventDetailPage';\nimport CommunityPage from './pages/CommunityPage';\nimport MarketplacePage from './pages/MarketplacePage';\nimport AboutPage from './pages/AboutPage';\nimport ContactPage from './pages/ContactPage';\nimport VendorWatchlistPage from './pages/VendorWatchlistPage';\nimport VendorOrdersPage from './pages/VendorOrdersPage';\nimport VendorDeliveryBatchingPage from './pages/VendorDeliveryBatchingPage';\nimport VendorDeliveryPage from './pages/VendorDeliveryPage';\nimport CustomerOrdersPage from './pages/CustomerOrdersPage';\nimport CheckoutPage from './pages/CheckoutPage';\nimport VendorAnalyticsPage from './pages/VendorAnalyticsPage';\nimport VendorAnalyticsKpiPage from './pages/dashboard/vendor/analytics';\nimport { VendorFinancialPage } from './pages/VendorFinancialPage';\nimport VendorOnboardingPage from './pages/VendorOnboardingPage';\nimport { NotFound } from './components/NotFound';\nimport ProtectedRoute from './components/ProtectedRoute';\n\n// Create a client\nconst queryClient = new QueryClient({\n  defaultOptions: {\n    queries: {\n      staleTime: 5 * 60 * 1000, // 5 minutes\n      retry: 1,\n    },\n  },\n});\n\nfunction App() {\n  return (\n    <QueryClientProvider client={queryClient}>\n      <AuthProvider>\n        <CartProvider>\n          <ZipProvider>\n          <Router>\n            <Layout>\n            <Switch>\n            <Route path=\"/\" component={HomePage} />\n            <Route path=\"/login\" component={LoginPage} />\n            <Route path=\"/signup\" component={SignupPage} />\n            <Route path=\"/join\" component={JoinPage} />\n            <Route path=\"/join/vendor\" component={JoinVendorPage} />\n            <Route path=\"/join/customer\" component={JoinCustomerPage} />\n            <Route path=\"/join/b2b\" component={JoinB2BPage} />\n            <Route path=\"/join/coordinator\" component={JoinCoordinatorPage} />\n            <Route path=\"/join/dropoff\" component={JoinDropoffPage} />\n            <Route path=\"/vendor/:id\" component={VendorPage} />\n            <Route path=\"/product/:id\" component={ProductPage} />\n            <Route path=\"/checkout\" component={CheckoutPage} />\n            \n            {/* Public Pages */}\n            <Route path=\"/marketplace\" component={MarketplacePage} />\n            <Route path=\"/about\" component={AboutPage} />\n            <Route path=\"/contact\" component={ContactPage} />\n            <Route path=\"/community\" component={CommunityPage} />\n            <Route path=\"/events\" component={EventsPage} />\n            <Route path=\"/events/:id\" component={EventDetailPage} />\n            \n            {/* Protected Dashboard Routes */}\n            <Route path=\"/dashboard\">\n              <ProtectedRoute>\n                <DashboardPage />\n              </ProtectedRoute>\n            </Route>\n            <Route path=\"/dashboard/customer\">\n              <ProtectedRoute role=\"CUSTOMER\">\n                <CustomerDashboardPage />\n              </ProtectedRoute>\n            </Route>\n            <Route path=\"/dashboard/customer/orders\">\n              <ProtectedRoute role=\"CUSTOMER\">\n                <CustomerOrdersPage />\n              </ProtectedRoute>\n            </Route>\n            <Route path=\"/account/orders\">\n              <ProtectedRoute role=\"CUSTOMER\">\n                <CustomerOrdersPage />\n              </ProtectedRoute>\n            </Route>\n            <Route path=\"/dashboard/vendor\">\n              <ProtectedRoute role=\"VENDOR\">\n                <VendorDashboardPage />\n              </ProtectedRoute>\n            </Route>\n            <Route path=\"/dashboard/vendor/site-settings\">\n              <ProtectedRoute role=\"VENDOR\">\n                <VendorSettingsPage />\n              </ProtectedRoute>\n            </Route>\n            <Route path=\"/dashboard/vendor/products\">\n              <ProtectedRoute role=\"VENDOR\">\n                <VendorProductsPage />\n              </ProtectedRoute>\n            </Route>\n            <Route path=\"/dashboard/vendor/inventory\">\n              <ProtectedRoute role=\"VENDOR\">\n                <VendorInventoryPage />\n              </ProtectedRoute>\n            </Route>\n            <Route path=\"/dashboard/vendor/recipes/create\">\n              <ProtectedRoute role=\"VENDOR\">\n                <VendorRecipeCreatePage />\n              </ProtectedRoute>\n            </Route>\n            <Route path=\"/dashboard/vendor/recipes/:recipeId/edit\">\n              <ProtectedRoute role=\"VENDOR\">\n                <VendorRecipeEditPage />\n              </ProtectedRoute>\n            </Route>\n            <Route path=\"/dashboard/vendor/recipes/:recipeId/versions\">\n              <ProtectedRoute role=\"VENDOR\">\n                <RecipeVersionHistoryPage />\n              </ProtectedRoute>\n            </Route>\n            <Route path=\"/dashboard/vendor/batch-pricing\">\n              <ProtectedRoute role=\"VENDOR\">\n                <BatchPricingPage />\n              </ProtectedRoute>\n            </Route>\n            <Route path=\"/dashboard/watchlist\">\n              <ProtectedRoute role=\"VENDOR\">\n                <VendorWatchlistPage />\n              </ProtectedRoute>\n            </Route>\n            <Route path=\"/dashboard/orders\">\n              <ProtectedRoute role=\"VENDOR\">\n                <VendorOrdersPage />\n              </ProtectedRoute>\n            </Route>\n            <Route path=\"/dashboard/vendor/delivery-batching\">\n              <ProtectedRoute role=\"VENDOR\">\n                <VendorDeliveryBatchingPage />\n              </ProtectedRoute>\n            </Route>\n            <Route path=\"/vendor/delivery/:batchId\">\n              <ProtectedRoute role=\"VENDOR\">\n                <VendorDeliveryPage />\n              </ProtectedRoute>\n            </Route>\n            <Route path=\"/vendor/analytics/delivery\">\n              <ProtectedRoute role=\"VENDOR\">\n                <VendorAnalyticsPage />\n              </ProtectedRoute>\n            </Route>\n            <Route path=\"/dashboard/vendor/analytics\">\n              <ProtectedRoute role=\"VENDOR\">\n                <VendorAnalyticsKpiPage />\n              </ProtectedRoute>\n            </Route>\n            <Route path=\"/vendor/financial\">\n              <ProtectedRoute role=\"VENDOR\">\n                <VendorFinancialPage />\n              </ProtectedRoute>\n            </Route>\n            <Route path=\"/vendor/onboarding\">\n              <ProtectedRoute role=\"VENDOR\">\n                <VendorOnboardingPage />\n              </ProtectedRoute>\n            </Route>\n            <Route path=\"/dashboard/admin\">\n              <ProtectedRoute role=\"ADMIN\">\n                <AdminDashboardPage />\n              </ProtectedRoute>\n            </Route>\n            <Route path=\"/dashboard/event-coordinator\">\n              <ProtectedRoute role=\"EVENT_COORDINATOR\">\n                <EventCoordinatorDashboardPage />\n              </ProtectedRoute>\n            </Route>\n            <Route path=\"/dashboard/dropoff\">\n              <ProtectedRoute role=\"DROPOFF\">\n                <DropoffDashboardPage />\n              </ProtectedRoute>\n            </Route>\n            \n            <Route path=\"/events\" component={EventsPage} />\n            <Route path=\"/events/:id\" component={EventDetailPage} />\n            <Route path=\"/community\" component={CommunityPage} />\n          \n          {/* Placeholder routes for future pages */}\n          <Route path=\"/products\">\n            <div className=\"min-h-screen bg-gray-50 flex items-center justify-center\">\n              <div className=\"text-center\">\n                <h1 className=\"text-3xl font-bold text-gray-900 mb-4\">Products</h1>\n                <p className=\"text-gray-600\">Product catalog coming soon...</p>\n              </div>\n            </div>\n          </Route>\n          \n          <Route path=\"/artisans\">\n            <div className=\"min-h-screen bg-gray-50 flex items-center justify-center\">\n              <div className=\"text-center\">\n                <h1 className=\"text-3xl font-bold text-gray-900 mb-4\">Artisans</h1>\n                <p className=\"text-gray-600\">Artisan profiles coming soon...</p>\n              </div>\n            </div>\n          </Route>\n          \n          <Route path=\"/about\">\n            <div className=\"min-h-screen bg-gray-50 flex items-center justify-center\">\n              <div className=\"text-center\">\n                <h1 className=\"text-3xl font-bold text-gray-900 mb-4\">About</h1>\n                <p className=\"text-gray-600\">About page coming soon...</p>\n              </div>\n            </div>\n          </Route>\n          \n          {/* Catch-all route for unhandled routes */}\n          <Route component={NotFound} />\n        </Switch>\n      </Layout>\n      <Toaster position=\"top-right\" />\n    </Router>\n    </ZipProvider>\n    </CartProvider>\n    </AuthProvider>\n    </QueryClientProvider>\n  );\n}\n\nexport default App;\n"
+    },
+    {
+      "path": "client\\src\\contexts\\AuthContext.tsx",
+      "truncated": false,
+      "lines": 297,
+      "content": "import React, { createContext, useContext, useReducer, useEffect } from 'react';\nimport type { ReactNode } from 'react';\nimport { useLocation } from 'wouter';\nimport axios from 'axios';\nimport type { AxiosInstance, AxiosResponse } from 'axios';\n\n// Types\nexport interface User {\n  id: string;\n  email: string;\n  role: 'CUSTOMER' | 'VENDOR' | 'ADMIN' | 'SUPPLIER' | 'EVENT_COORDINATOR' | 'DROPOFF';\n  profile?: {\n    firstName: string;\n    lastName: string;\n    phone?: string;\n    bio?: string;\n    website?: string;\n    businessName?: string;\n  } | null;\n}\n\nexport interface AuthState {\n  user: User | null;\n  isAuthenticated: boolean;\n  isLoading: boolean;\n  error: string | null;\n}\n\nexport interface AuthContextType extends AuthState {\n  login: (email: string, password: \"***REDACTED***\" => Promise<void>;\n  signup: (userData: SignupData) => Promise<void>;\n  logout: () => Promise<void>;\n  fetchUser: () => Promise<void>;\n  clearError: () => void;\n}\n\nexport interface SignupData {\n  email: string;\n  password: \"***REDACTED***\"\n  role: 'CUSTOMER' | 'VENDOR' | 'ADMIN' | 'SUPPLIER' | 'EVENT_COORDINATOR' | 'DROPOFF';\n  firstName: string;\n  lastName: string;\n  phone?: string;\n  bio?: string;\n  website?: string;\n}\n\n// Action types\ntype AuthAction =\n  | { type: 'AUTH_START' }\n  | { type: 'AUTH_SUCCESS'; payload: User }\n  | { type: 'AUTH_FAILURE'; payload: string }\n  | { type: 'LOGOUT' }\n  | { type: 'CLEAR_ERROR' }\n  | { type: 'SET_LOADING'; payload: boolean }\n  | { type: 'FETCH_USER_START' }\n  | { type: 'FETCH_USER_SUCCESS'; payload: User }\n  | { type: 'FETCH_USER_FAILURE'; payload: string | null };\n\n// Initial state\nconst initialState: AuthState = {\n  user: null,\n  isAuthenticated: false,\n  isLoading: true,\n  error: null,\n};\n\n// Reducer\nconst authReducer = (state: AuthState, action: AuthAction): AuthState => {\n  switch (action.type) {\n    case 'AUTH_START':\n      return {\n        ...state,\n        isLoading: true,\n        error: null,\n      };\n    case 'AUTH_SUCCESS':\n      return {\n        ...state,\n        user: action.payload,\n        isAuthenticated: true,\n        isLoading: false,\n        error: null,\n      };\n    case 'AUTH_FAILURE':\n      return {\n        ...state,\n        user: null,\n        isAuthenticated: false,\n        isLoading: false,\n        error: action.payload,\n      };\n    case 'LOGOUT':\n      return {\n        ...state,\n        user: null,\n        isAuthenticated: false,\n        isLoading: false,\n        error: null,\n      };\n    case 'CLEAR_ERROR':\n      return {\n        ...state,\n        error: null,\n      };\n    case 'SET_LOADING':\n      return {\n        ...state,\n        isLoading: action.payload,\n      };\n    case 'FETCH_USER_START':\n      return {\n        ...state,\n        isLoading: true,\n        error: null,\n      };\n    case 'FETCH_USER_SUCCESS':\n      return {\n        ...state,\n        user: action.payload,\n        isAuthenticated: true,\n        isLoading: false,\n        error: null,\n      };\n    case 'FETCH_USER_FAILURE':\n      return {\n        ...state,\n        user: null,\n        isAuthenticated: false,\n        isLoading: false,\n        error: action.payload,\n      };\n    default:\n      return state;\n  }\n};\n\n// Create context\nconst AuthContext = createContext<AuthContextType | undefined>(undefined);\n\n// API base URL\nconst API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';\n\n// Set global Axios defaults\naxios.defaults.withCredentials = true;\n\n// Create Axios instance with default configuration\nconst api: AxiosInstance = axios.create({\n  baseURL: API_BASE_URL,\n  withCredentials: true, // Important for sending cookies with requests\n  headers: {\n    'Content-Type': 'application/json',\n  },\n});\n\n// Axios response interceptor for error handling\napi.interceptors.response.use(\n  (response: AxiosResponse) => response,\n  (error) => {\n    if (error.response?.status === 401) {\n      // Handle unauthorized responses\n      console.log('Unauthorized request, user may need to login');\n    }\n    return Promise.reject(error);\n  }\n);\n\n// Auth provider component\nexport const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {\n  const [state, dispatch] = useReducer(authReducer, initialState);\n  const [, setLocation] = useLocation();\n\n  // Fetch user on mount\n  useEffect(() => {\n    fetchUser();\n  }, []);\n\n  const fetchUser = async () => {\n    try {\n      dispatch({ type: 'FETCH_USER_START' });\n\n      const response = await api.get('/auth/session');\n      \n      if (response.data.authenticated && response.data.user) {\n        dispatch({ type: 'FETCH_USER_SUCCESS', payload: response.data.user });\n      } else {\n        // Don't treat this as an error - just no active session\n        dispatch({ type: 'FETCH_USER_FAILURE', payload: null });\n      }\n    } catch (error) {\n      // Only log the error, don't treat 401 as a failure since it's expected when not logged in\n      if (axios.isAxiosError(error) && error.response?.status === 401) {\n        dispatch({ type: 'FETCH_USER_FAILURE', payload: null });\n      } else {\n        console.error('Fetch user error:', error);\n        const errorMessage = error instanceof Error ? error.message : 'Failed to fetch user';\n        dispatch({ type: 'FETCH_USER_FAILURE', payload: errorMessage });\n      }\n    }\n  };\n\n  const login = async (email: string, password: \"***REDACTED***\" => {\n    try {\n      dispatch({ type: 'AUTH_START' });\n\n      const response = await api.post('/auth/login', { email, password });\n      \n      if (response.data.user) {\n        dispatch({ type: 'AUTH_SUCCESS', payload: response.data.user });\n      } else {\n        throw new Error('Login response missing user data');\n      }\n    } catch (error) {\n      console.error('Login error:', error);\n      let errorMessage = 'Login failed';\n      \n      if (axios.isAxiosError(error)) {\n        errorMessage = error.response?.data?.message || error.response?.data?.error || 'Login failed';\n      } else if (error instanceof Error) {\n        errorMessage = error.message;\n      }\n      \n      dispatch({ type: 'AUTH_FAILURE', payload: errorMessage });\n      throw new Error(errorMessage);\n    }\n  };\n\n  const signup = async (userData: SignupData) => {\n    try {\n      dispatch({ type: 'AUTH_START' });\n\n      const response = await api.post('/auth/register', userData);\n      \n      if (response.data.user) {\n        dispatch({ type: 'AUTH_SUCCESS', payload: response.data.user });\n      } else {\n        throw new Error('Registration response missing user data');\n      }\n    } catch (error) {\n      console.error('Signup error:', error);\n      let errorMessage = 'Registration failed';\n      \n      if (axios.isAxiosError(error)) {\n        if (error.response?.data?.details) {\n          // Handle validation errors\n          const validationErrors = error.response.data.details\n            .map((err: any) => `${err.field}: ${err.message}`)\n            .join(', ');\n          errorMessage = `Validation failed: ${validationErrors}`;\n        } else {\n          errorMessage = error.response?.data?.message || error.response?.data?.error || 'Registration failed';\n        }\n      } else if (error instanceof Error) {\n        errorMessage = error.message;\n      }\n      \n      dispatch({ type: 'AUTH_FAILURE', payload: errorMessage });\n      throw new Error(errorMessage);\n    }\n  };\n\n  const logout = async () => {\n    try {\n      await api.post('/auth/logout');\n    } catch (error) {\n      console.error('Logout error:', error);\n      // Continue with logout even if the request fails\n    } finally {\n      dispatch({ type: 'LOGOUT' });\n      setLocation('/');\n    }\n  };\n\n  const clearError = () => {\n    dispatch({ type: 'CLEAR_ERROR' });\n  };\n\n  const value: AuthContextType = {\n    ...state,\n    login,\n    signup,\n    logout,\n    fetchUser,\n    clearError,\n  };\n\n  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;\n};\n\n// Custom hook to use auth context\nexport const useAuth: \"***REDACTED***\" AuthContextType => {\n  const context = useContext(AuthContext);\n  if (context === undefined) {\n    throw new Error('useAuth must be used within an AuthProvider');\n  }\n  return context;\n}; "
+    },
+    {
+      "path": "client\\src\\contexts\\CartContext.tsx",
+      "truncated": false,
+      "lines": 289,
+      "content": "import React, { createContext, useContext, useReducer, useEffect } from 'react';\r\n\r\ninterface Product {\r\n  id: string;\r\n  name: string;\r\n  description?: string;\r\n  price: number;\r\n  imageUrl?: string;\r\n  tags: string[];\r\n  stock: number;\r\n  isAvailable: boolean;\r\n  targetMargin?: number;\r\n  recipeId?: string;\r\n  onWatchlist: boolean;\r\n  lastAiSuggestion?: number;\r\n  aiSuggestionNote?: string;\r\n  createdAt: string;\r\n  updatedAt: string;\r\n  vendorProfileId: string;\r\n}\r\n\r\ninterface CartItem {\r\n  product: Product;\r\n  quantity: number;\r\n}\r\n\r\ninterface CartState {\r\n  items: CartItem[];\r\n  isOpen: boolean;\r\n}\r\n\r\ntype CartAction =\r\n  | { type: 'ADD_ITEM'; payload: { product: Product; quantity: number } }\r\n  | { type: 'REMOVE_ITEM'; payload: { productId: string } }\r\n  | { type: 'UPDATE_QUANTITY'; payload: { productId: string; quantity: number } }\r\n  | { type: 'CLEAR_CART' }\r\n  | { type: 'TOGGLE_CART' }\r\n  | { type: 'CLOSE_CART' }\r\n  | { type: 'LOAD_CART'; payload: CartItem[] };\r\n\r\ninterface CartContextType {\r\n  state: CartState;\r\n  addItem: (product: Product, quantity: number) => void;\r\n  removeItem: (productId: string) => void;\r\n  updateQuantity: (productId: string, quantity: number) => void;\r\n  clearCart: () => void;\r\n  toggleCart: () => void;\r\n  closeCart: () => void;\r\n  getItemQuantity: (productId: string) => number;\r\n  getTotalItems: () => number;\r\n  getSubtotal: () => number;\r\n  getTax: () => number;\r\n  getShipping: () => number;\r\n  getTotal: () => number;\r\n  checkout: (userId: string, prediction?: any) => Promise<any>;\r\n}\r\n\r\nconst CartContext = createContext<CartContextType | undefined>(undefined);\r\n\r\n// Cart reducer\r\nconst cartReducer = (state: CartState, action: CartAction): CartState => {\r\n  switch (action.type) {\r\n    case 'ADD_ITEM': {\r\n      const { product, quantity } = action.payload;\r\n      const existingItem = state.items.find(item => item.product.id === product.id);\r\n      \r\n      if (existingItem) {\r\n        return {\r\n          ...state,\r\n          items: state.items.map(item =>\r\n            item.product.id === product.id\r\n              ? { ...item, quantity: item.quantity + quantity }\r\n              : item\r\n          )\r\n        };\r\n      } else {\r\n        return {\r\n          ...state,\r\n          items: [...state.items, { product, quantity }]\r\n        };\r\n      }\r\n    }\r\n    \r\n    case 'REMOVE_ITEM': {\r\n      return {\r\n        ...state,\r\n        items: state.items.filter(item => item.product.id !== action.payload.productId)\r\n      };\r\n    }\r\n    \r\n    case 'UPDATE_QUANTITY': {\r\n      const { productId, quantity } = action.payload;\r\n      if (quantity <= 0) {\r\n        return {\r\n          ...state,\r\n          items: state.items.filter(item => item.product.id !== productId)\r\n        };\r\n      }\r\n      \r\n      return {\r\n        ...state,\r\n        items: state.items.map(item =>\r\n          item.product.id === productId\r\n            ? { ...item, quantity }\r\n            : item\r\n        )\r\n      };\r\n    }\r\n    \r\n    case 'CLEAR_CART':\r\n      return {\r\n        ...state,\r\n        items: []\r\n      };\r\n    \r\n    case 'TOGGLE_CART':\r\n      return {\r\n        ...state,\r\n        isOpen: !state.isOpen\r\n      };\r\n    \r\n    case 'CLOSE_CART':\r\n      return {\r\n        ...state,\r\n        isOpen: false\r\n      };\r\n    \r\n    case 'LOAD_CART':\r\n      return {\r\n        ...state,\r\n        items: action.payload\r\n      };\r\n    \r\n    default:\r\n      return state;\r\n  }\r\n};\r\n\r\n// Tax rate (8.5% - adjust as needed)\r\nconst TAX_RATE = 0.085;\r\n\r\n// Shipping calculation\r\nconst calculateShipping = (subtotal: number): number => {\r\n  if (subtotal >= 50) {\r\n    return 0; // Free shipping over $50\r\n  }\r\n  return 5.99; // Standard shipping\r\n};\r\n\r\nexport const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {\r\n  const [state, dispatch] = useReducer(cartReducer, {\r\n    items: [],\r\n    isOpen: false\r\n  });\r\n\r\n  // Load cart from localStorage on mount\r\n  useEffect(() => {\r\n    const savedCart = localStorage.getItem('cart');\r\n    if (savedCart) {\r\n      try {\r\n        const cartItems = JSON.parse(savedCart);\r\n        dispatch({ type: 'LOAD_CART', payload: cartItems });\r\n      } catch (error) {\r\n        console.error('Error loading cart from localStorage:', error);\r\n      }\r\n    }\r\n  }, []);\r\n\r\n  // Save cart to localStorage whenever it changes\r\n  useEffect(() => {\r\n    localStorage.setItem('cart', JSON.stringify(state.items));\r\n  }, [state.items]);\r\n\r\n  const addItem = (product: Product, quantity: number) => {\r\n    dispatch({ type: 'ADD_ITEM', payload: { product, quantity } });\r\n  };\r\n\r\n  const removeItem = (productId: string) => {\r\n    dispatch({ type: 'REMOVE_ITEM', payload: { productId } });\r\n  };\r\n\r\n  const updateQuantity = (productId: string, quantity: number) => {\r\n    dispatch({ type: 'UPDATE_QUANTITY', payload: { productId, quantity } });\r\n  };\r\n\r\n  const clearCart = () => {\r\n    dispatch({ type: 'CLEAR_CART' });\r\n  };\r\n\r\n  const toggleCart = () => {\r\n    dispatch({ type: 'TOGGLE_CART' });\r\n  };\r\n\r\n  const closeCart = () => {\r\n    dispatch({ type: 'CLOSE_CART' });\r\n  };\r\n\r\n  const getItemQuantity = (productId: string): number => {\r\n    const item = state.items.find(item => item.product.id === productId);\r\n    return item ? item.quantity : 0;\r\n  };\r\n\r\n  const getTotalItems = (): number => {\r\n    return state.items.reduce((total, item) => total + item.quantity, 0);\r\n  };\r\n\r\n  const getSubtotal = (): number => {\r\n    return state.items.reduce((total, item) => total + (item.product.price * item.quantity), 0);\r\n  };\r\n\r\n  const getTax = (): number => {\r\n    return getSubtotal() * TAX_RATE;\r\n  };\r\n\r\n  const getShipping = (): number => {\r\n    return calculateShipping(getSubtotal());\r\n  };\r\n\r\n  const getTotal = (): number => {\r\n    return getSubtotal() + getTax() + getShipping();\r\n  };\r\n\r\n  const checkout = async (userId: string, prediction?: any): Promise<any> => {\r\n    try {\r\n      const response = await fetch('/api/orders/checkout', {\r\n        method: 'POST',\r\n        headers: {\r\n          'Content-Type': 'application/json',\r\n        },\r\n        credentials: 'include',\r\n        body: JSON.stringify({\r\n          items: state.items.map(item => ({\r\n            productId: item.product.id,\r\n            quantity: item.quantity,\r\n            price: item.product.price\r\n          })),\r\n          userId: userId,\r\n          subtotal: getSubtotal(),\r\n          tax: getTax(),\r\n          shipping: getShipping(),\r\n          total: getTotal(),\r\n          prediction: prediction\r\n        }),\r\n      });\r\n\r\n      if (!response.ok) {\r\n        throw new Error('Checkout failed');\r\n      }\r\n\r\n      const order = await response.json();\r\n      clearCart(); // Clear cart after successful checkout\r\n      return order;\r\n    } catch (error) {\r\n      console.error('Checkout error:', error);\r\n      throw error;\r\n    }\r\n  };\r\n\r\n  const value: CartContextType = {\r\n    state,\r\n    addItem,\r\n    removeItem,\r\n    updateQuantity,\r\n    clearCart,\r\n    toggleCart,\r\n    closeCart,\r\n    getItemQuantity,\r\n    getTotalItems,\r\n    getSubtotal,\r\n    getTax,\r\n    getShipping,\r\n    getTotal,\r\n    checkout\r\n  };\r\n\r\n  return (\r\n    <CartContext.Provider value={value}>\r\n      {children}\r\n    </CartContext.Provider>\r\n  );\r\n};\r\n\r\nexport const useCart = (): CartContextType => {\r\n  const context = useContext(CartContext);\r\n  if (context === undefined) {\r\n    throw new Error('useCart must be used within a CartProvider');\r\n  }\r\n  return context;\r\n}; "
+    },
+    {
+      "path": "client\\src\\contexts\\ZipContext.tsx",
+      "truncated": false,
+      "lines": 72,
+      "content": "import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';\r\n\r\ninterface ZipContextType {\r\n  zip: string;\r\n  updateZip: (newZip: string) => void;\r\n  isValidZip: (zip: string) => boolean;\r\n  isUsingLocation: boolean;\r\n  setUsingLocation: (using: boolean) => void;\r\n}\r\n\r\nconst ZipContext = createContext<ZipContextType | undefined>(undefined);\r\n\r\ninterface ZipProviderProps {\r\n  children: ReactNode;\r\n}\r\n\r\nexport const ZipProvider: React.FC<ZipProviderProps> = ({ children }) => {\r\n  const [zip, setZip] = useState<string>('12345'); // Default ZIP\r\n  const [isUsingLocation, setIsUsingLocation] = useState<boolean>(false);\r\n\r\n  // Load ZIP from localStorage on mount\r\n  useEffect(() => {\r\n    const savedZip = localStorage.getItem('userZip');\r\n    if (savedZip) {\r\n      setZip(savedZip);\r\n    } else {\r\n      // Try to get ZIP from browser geolocation or IP\r\n      // For now, we'll use a default\r\n      setZip('12345');\r\n    }\r\n  }, []);\r\n\r\n  // Save ZIP to localStorage whenever it changes\r\n  useEffect(() => {\r\n    localStorage.setItem('userZip', zip);\r\n  }, [zip]);\r\n\r\n  const isValidZip = (zipCode: string): boolean => {\r\n    const zipRegex = /^\\d{5}(-\\d{4})?$/;\r\n    return zipRegex.test(zipCode);\r\n  };\r\n\r\n  const updateZip = (newZip: string) => {\r\n    if (isValidZip(newZip)) {\r\n      setZip(newZip);\r\n    } else {\r\n      console.warn('Invalid ZIP code format:', newZip);\r\n    }\r\n  };\r\n\r\n  const value: ZipContextType = {\r\n    zip,\r\n    updateZip,\r\n    isValidZip,\r\n    isUsingLocation,\r\n    setUsingLocation: setIsUsingLocation,\r\n  };\r\n\r\n  return (\r\n    <ZipContext.Provider value={value}>\r\n      {children}\r\n    </ZipContext.Provider>\r\n  );\r\n};\r\n\r\nexport const useZip = (): ZipContextType => {\r\n  const context = useContext(ZipContext);\r\n  if (context === undefined) {\r\n    throw new Error('useZip must be used within a ZipProvider');\r\n  }\r\n  return context;\r\n}; "
+    },
+    {
+      "path": "server\\package.json",
+      "truncated": false,
+      "lines": 68,
+      "content": "{\n  \"name\": \"craved-artisan-server\",\n  \"version\": \"1.0.0\",\n  \"description\": \"Backend API for Craved Artisan marketplace\",\n  \"main\": \"dist/index.js\",\n  \"scripts\": {\n    \"build\": \"tsc\",\n    \"start\": \"node dist/index.js\",\n    \"dev\": \"tsx src/index.ts\",\n    \"dev:mock\": \"tsx src/index-mock.ts\",\n    \"test\": \"echo \\\"Error: no test specified\\\" && exit 1\",\n    \"lint\": \"eslint src/**/*.ts\",\n    \"lint:fix\": \"eslint src/**/*.ts --fix\"\n  },\n  \"keywords\": [\n    \"api\",\n    \"backend\",\n    \"express\",\n    \"typescript\"\n  ],\n  \"author\": \"\",\n  \"license\": \"MIT\",\n  \"dependencies\": {\n    \"@prisma/client\": \"^6.13.0\",\n    \"@types/connect-pg-simple\": \"^7.0.3\",\n    \"@types/express-session\": \"^1.18.2\",\n    \"@types/pdfkit\": \"^0.17.2\",\n    \"bcryptjs\": \"^2.4.3\",\n    \"chartjs-node-canvas\": \"^5.0.0\",\n    \"connect-pg-simple\": \"^10.0.0\",\n    \"cors\": \"^2.8.5\",\n    \"date-fns\": \"^4.1.0\",\n    \"dotenv\": \"^16.6.1\",\n    \"express\": \"^4.21.2\",\n    \"express-async-errors\": \"^3.1.1\",\n    \"express-session\": \"^1.18.2\",\n    \"express-validator\": \"^7.0.1\",\n    \"helmet\": \"^7.2.0\",\n    \"jsonwebtoken\": \"^9.0.2\",\n    \"morgan\": \"^1.10.0\",\n    \"multer\": \"^1.4.5-lts.1\",\n    \"node-cron\": \"^3.0.3\",\n    \"pdfkit\": \"^0.17.1\",\n    \"stripe\": \"^14.21.0\",\n    \"twilio\": \"^5.8.0\",\n    \"winston\": \"^3.17.0\",\n    \"zod\": \"^4.0.14\"\n  },\n  \"devDependencies\": {\n    \"@types/bcryptjs\": \"^2.4.6\",\n    \"@types/cors\": \"^2.8.17\",\n    \"@types/express\": \"^4.17.23\",\n    \"@types/jest\": \"^29.5.8\",\n    \"@types/jsonwebtoken\": \"^9.0.5\",\n    \"@types/morgan\": \"^1.9.9\",\n    \"@types/multer\": \"^1.4.11\",\n    \"@types/node\": \"^20.19.9\",\n    \"@types/node-cron\": \"^3.0.11\",\n    \"@typescript-eslint/eslint-plugin\": \"^6.13.0\",\n    \"@typescript-eslint/parser\": \"^6.13.0\",\n    \"eslint\": \"^8.54.0\",\n    \"jest\": \"^29.7.0\",\n    \"ts-jest\": \"^29.1.1\",\n    \"tsx\": \"^4.20.3\",\n    \"typescript\": \"^5.8.3\"\n  }\n}\n"
+    },
+    {
+      "path": "server\\src\\index.ts",
+      "truncated": false,
+      "lines": 218,
+      "content": "import 'express-async-errors';\nimport express from 'express';\nimport cors from 'cors';\nimport morgan from 'morgan';\nimport dotenv from 'dotenv';\nimport session from 'express-session';\nimport pgSession from 'connect-pg-simple';\nimport { createLogger, format, transports } from 'winston';\nimport { errorHandler } from './middleware/errorHandler';\nimport { env } from './utils/validateEnv';\nimport { logCors, corsWithLogging } from './middleware/logCors';\nimport { helmetConfig, devHelmetConfig } from './middleware/helmetConfig';\nimport authRoutes from './routes/auth-test';\nimport protectedRoutes from './routes/protected-demo';\nimport vendorRoutes from './routes/vendor';\nimport vendorProductsRoutes from './routes/vendor-products';\nimport vendorRecipesRoutes from './routes/vendor-recipes';\nimport vendorOrdersRoutes from './routes/vendor-orders';\nimport ingredientRoutes from './routes/ingredients';\nimport recipeRoutes from './routes/recipes';\nimport orderRoutes from './routes/orders';\nimport fulfillmentRoutes from './routes/fulfillment';\nimport routeOptimizationRoutes from './routes/route-optimization';\nimport financialRoutes from './routes/financial';\nimport stripeRoutes from './routes/stripe';\nimport stripeControllerRoutes from './routes/stripe-controller';\nimport checkoutRoutes from './routes/checkout';\nimport webhookRoutes from './routes/webhooks';\nimport vendorPayoutRoutes from './routes/vendor-payouts';\nimport aiValidationRoutes from './routes/ai-validation';\nimport payoutReportsRoutes from './routes/payout-reports';\nimport taxReportsRoutes from './routes/tax-reports';\nimport marginManagementRoutes from './routes/margin-management';\nimport taxProjectionRoutes from './routes/tax-projection';\nimport analyticsRoutes from './routes/analyticsRoutes';\nimport debugRoutes from './routes/debug';\nimport { initializeTaxReminderCron } from './services/taxReminderCron';\n\n// Load environment variables\ndotenv.config();\n\n// Create Winston logger\nconst logger = createLogger({\n  level: 'info',\n  format: format.combine(\n    format.timestamp({\n      format: 'YYYY-MM-DD HH:mm:ss'\n    }),\n    format.errors({ stack: true }),\n    format.splat(),\n    format.json()\n  ),\n  defaultMeta: { service: 'craved-artisan-server' },\n  transports: [\n    new transports.File({ filename: 'logs/error.log', level: 'error' }),\n    new transports.File({ filename: 'logs/combined.log' }),\n    new transports.Console({\n      format: format.combine(\n        format.colorize(),\n        format.simple()\n      )\n    })\n  ]\n});\n\n// Create Express app\nconst app = express();\nconst PORT = process.env.PORT || 3001;\n\n// Validate environment variables\ntry {\n  logger.info('Validating environment variables...');\n  logger.info(`Database URL: ${env.DATABASE_URL ? '✅ Set' : '❌ Missing'}`);\n  logger.info(`Node Environment: ${env.NODE_ENV}`);\n  logger.info(`Session Secret: \"***REDACTED***\" ? '✅ Set' : '❌ Missing'}`);\n} catch (error) {\n  logger.error('Environment validation failed:', error);\n  process.exit(1);\n}\n\n// Session store\nconst PostgresStore = pgSession(session);\n\n// Middleware\n// Use environment-specific helmet configuration\nif (env.NODE_ENV === 'development') {\n  app.use(devHelmetConfig);\n} else {\n  app.use(helmetConfig);\n}\n\n// CORS logging middleware\napp.use(logCors);\n\n// CORS configuration with logging\napp.use(cors(corsWithLogging));\napp.use(express.json({ limit: '10mb' }));\napp.use(express.urlencoded({ extended: true }));\n\n// Session middleware\napp.use(session({\n  store: new PostgresStore({\n    conString: env.DATABASE_URL,\n    tableName: 'sessions',\n    createTableIfMissing: true,\n  }),\n  secret: \"***REDACTED***\",\n  resave: true,\n  saveUninitialized: true,\n  cookie: \"***REDACTED***\"\n    secure: env.NODE_ENV === 'production',\n    httpOnly: true,\n    maxAge: 24 * 60 * 60 * 1000, // 24 hours\n    sameSite: env.NODE_ENV === 'production' ? 'strict' : 'lax',\n  },\n}));\n\n// Morgan logging middleware\napp.use(morgan('combined', {\n  stream: {\n    write: (message: string) => {\n      logger.info(message.trim());\n    }\n  }\n}));\n\n// Health check endpoint\napp.get('/health', (req, res) => {\n  logger.info('Health check requested');\n  res.status(200).json({ \n    status: 'OK', \n    timestamp: new Date().toISOString(),\n    service: 'craved-artisan-server'\n  });\n});\n\n// Test error route to verify Winston logging\napp.get('/test-error', (req, res) => {\n  logger.info('Test error route accessed');\n  throw new Error('This is a test error to verify Winston logging');\n});\n\n// API routes\napp.use('/api/auth', authRoutes);\napp.use('/api/protected', protectedRoutes);\napp.use('/api/vendor', vendorRoutes);\napp.use('/api/vendor/products', vendorProductsRoutes);\napp.use('/api/vendor/recipes', vendorRecipesRoutes);\napp.use('/api/vendor/orders', vendorOrdersRoutes);\napp.use('/api/ingredients', ingredientRoutes);\napp.use('/api/recipes', recipeRoutes);\napp.use('/api/orders', orderRoutes);\napp.use('/api/fulfillment', fulfillmentRoutes);\napp.use('/api/route', routeOptimizationRoutes);\napp.use('/api/financial', financialRoutes);\napp.use('/api/stripe', stripeRoutes);\napp.use('/api/stripe-controller', stripeControllerRoutes);\napp.use('/api/checkout', checkoutRoutes);\napp.use('/api/webhooks', webhookRoutes);\napp.use('/api/vendor-payouts', vendorPayoutRoutes);\napp.use('/api/ai-validation', aiValidationRoutes);\napp.use('/api/payout-reports', payoutReportsRoutes);\napp.use('/api/tax-reports', taxReportsRoutes);\napp.use('/api/margin-management', marginManagementRoutes);\napp.use('/api/tax-projection', taxProjectionRoutes);\napp.use('/api', analyticsRoutes);\n\n// Debug routes (development only)\nif (env.NODE_ENV === 'development') {\n  app.use('/api/_debug', debugRoutes);\n}\n\napp.use('/api/products', (req, res) => {\n  res.json({ message: 'Product routes - to be implemented' });\n});\n\napp.use('/api/users', (req, res) => {\n  res.json({ message: 'User routes - to be implemented' });\n});\n\n// 404 handler\napp.use('*', (req, res) => {\n  logger.warn(`Route not found: ${req.method} ${req.originalUrl}`);\n  res.status(404).json({ \n    error: 'Route not found',\n    path: req.originalUrl \n  });\n});\n\n// Error handling middleware\napp.use(errorHandler);\n\n// Start server\napp.listen(PORT, () => {\n  logger.info(`Server running on port ${PORT}`);\n  logger.info(`Environment: ${env.NODE_ENV}`);\n  \n  // Initialize tax reminder CRON jobs\n  if (env.NODE_ENV === 'production') {\n    initializeTaxReminderCron();\n    logger.info('Tax reminder CRON jobs initialized');\n  } else {\n    logger.info('Tax reminder CRON jobs disabled in development mode');\n  }\n});\n\n// Graceful shutdown\nprocess.on('SIGTERM', () => {\n  logger.info('SIGTERM received, shutting down gracefully');\n  process.exit(0);\n});\n\nprocess.on('SIGINT', () => {\n  logger.info('SIGINT received, shutting down gracefully');\n  process.exit(0);\n});\n\nexport default app; "
+    },
+    {
+      "path": "server\\src\\index-mock.ts",
+      "truncated": false,
+      "lines": 172,
+      "content": "import express from 'express';\nimport session from 'express-session';\nimport pgSession from 'connect-pg-simple';\nimport cors from 'cors';\nimport morgan from 'morgan';\nimport { createLogger, format, transports } from 'winston';\nimport dotenv from 'dotenv';\nimport { logCors, corsWithLogging } from './middleware/logCors';\nimport { devHelmetConfig } from './middleware/helmetConfig';\n\n// Import mock routes only\nimport authRoutes from './routes/auth-test';\nimport protectedRoutes from './routes/protected-demo';\nimport vendorRoutes from './routes/vendor-mock';\nimport vendorProductsRoutes from './routes/vendor-products-mock';\n// import vendorRecipesRoutes from './routes/vendor-recipes-mock';\nimport vendorOrdersRoutes from './routes/vendor-orders-mock';\nimport ingredientRoutes from './routes/ingredients-mock';\nimport recipeRoutes from './routes/recipes-mock';\nimport orderRoutes from './routes/orders-mock';\nimport fulfillmentRoutes from './routes/fulfillment-mock';\nimport routeOptimizationRoutes from './routes/route-optimization-mock';\nimport financialRoutes from './routes/financial-mock';\n// import inventoryDeductionRoutes from './routes/inventory-deduction-mock';\n// import supplierMarketplaceRoutes from './routes/supplier-marketplace-mock';\nimport debugRoutes from './routes/debug';\n\n// Load environment variables\ndotenv.config();\n\n// Create Winston logger\nconst logger = createLogger({\n  level: 'info',\n  format: format.combine(\n    format.timestamp({\n      format: 'YYYY-MM-DD HH:mm:ss'\n    }),\n    format.errors({ stack: true }),\n    format.splat(),\n    format.json()\n  ),\n  defaultMeta: { service: 'craved-artisan-server' },\n  transports: [\n    new transports.File({ filename: 'logs/error.log', level: 'error' }),\n    new transports.File({ filename: 'logs/combined.log' }),\n    new transports.Console({\n      format: format.combine(\n        format.colorize(),\n        format.simple()\n      )\n    })\n  ]\n});\n\n// Create Express app\nconst app = express();\nconst PORT = process.env.PORT || 3001;\n\n// Validate environment variables\ntry {\n  logger.info('Validating environment variables...');\n  logger.info(`Database URL: ${process.env.DATABASE_URL ? '✅ Set' : '❌ Missing'}`);\n  logger.info(`Node Environment: ${process.env.NODE_ENV || 'development'}`);\n  logger.info(`Session Secret: \"***REDACTED***\" ? '✅ Set' : '❌ Missing'}`);\n} catch (error) {\n  logger.error('Environment validation failed:', error);\n  process.exit(1);\n}\n\n// Session store (using memory store for mock mode)\nconst MemoryStore = session.MemoryStore;\n\n// Middleware\n// Use development helmet configuration\napp.use(devHelmetConfig);\n\n// CORS logging middleware\napp.use(logCors);\n\n// CORS configuration with logging\napp.use(cors(corsWithLogging));\napp.use(express.json({ limit: '10mb' }));\napp.use(express.urlencoded({ extended: true }));\n\n// Session middleware (using memory store)\napp.use(session({\n  store: new MemoryStore(),\n  secret: \"***REDACTED***\" || 'mock-secret-key',\n  resave: true,\n  saveUninitialized: true,\n  cookie: \"***REDACTED***\"\n    secure: false, // Set to false for development\n    httpOnly: true,\n    maxAge: 24 * 60 * 60 * 1000, // 24 hours\n    sameSite: 'lax',\n  },\n}));\n\n// Morgan logging middleware\napp.use(morgan('combined', {\n  stream: {\n    write: (message: string) => {\n      logger.info(message.trim());\n    }\n  }\n}));\n\n// Health check endpoint\napp.get('/health', (req, res) => {\n  logger.info('Health check requested');\n  res.status(200).json({ \n    status: 'OK', \n    timestamp: new Date().toISOString(),\n    service: 'craved-artisan-server',\n    mode: 'MOCK'\n  });\n});\n\n// API routes\napp.use('/api/auth', authRoutes);\napp.use('/api/protected', protectedRoutes);\napp.use('/api/vendor', vendorRoutes);\napp.use('/api/vendors', vendorRoutes); // Add vendors route for analytics\napp.use('/api/vendors', financialRoutes); // Mount financial routes under /api/vendors\napp.use('/api/vendor/products', vendorProductsRoutes);\n// app.use('/api/vendor/recipes', vendorRecipesRoutes);\napp.use('/api/vendor/orders', vendorOrdersRoutes);\napp.use('/api/ingredients', ingredientRoutes);\napp.use('/api/recipes', recipeRoutes);\napp.use('/api/orders', orderRoutes);\napp.use('/api/fulfillment', fulfillmentRoutes);\napp.use('/api/route', routeOptimizationRoutes);\napp.use('/api/financial', financialRoutes); // Keep for backward compatibility\n// app.use('/api/inventory', inventoryDeductionRoutes);\n// app.use('/api/supplier', supplierMarketplaceRoutes);\n\n// Debug routes (development only)\napp.use('/api/_debug', debugRoutes);\n\n// Error handling middleware\napp.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {\n  logger.error('Unhandled error:', err);\n  res.status(500).json({\n    error: 'Internal server error',\n    message: 'Something went wrong'\n  });\n});\n\n// 404 handler\napp.use('*', (req, res) => {\n  res.status(404).json({\n    error: 'Not found',\n    message: `Route ${req.originalUrl} not found`\n  });\n});\n\n// Start server\napp.listen(PORT, () => {\n  logger.info(`🚀 Server running in MOCK MODE on port ${PORT}`);\n  logger.info(`📊 Health check: http://localhost:${PORT}/health`);\n  logger.info(`🔐 Auth endpoints: http://localhost:${PORT}/api/auth`);\n  logger.info(`🛡️ Protected endpoints: http://localhost:${PORT}/api/protected`);\n  logger.info(`🏪 Vendor endpoints: http://localhost:${PORT}/api/vendor`);\n  logger.info(`📦 Product endpoints: http://localhost:${PORT}/api/vendor/products`);\n  logger.info(`🥘 Ingredient endpoints: http://localhost:${PORT}/api/ingredients`);\n  logger.info(`👨‍🍳 Recipe endpoints: http://localhost:${PORT}/api/recipes`);\n  logger.info(`🛒 Order endpoints: http://localhost:${PORT}/api/orders`);\n  logger.info(`📦 Vendor Order endpoints: http://localhost:${PORT}/api/vendor/orders`);\n  logger.info(`📦 Fulfillment endpoints: http://localhost:${PORT}/api/fulfillment`);\n  logger.info(`📦 Inventory endpoints: http://localhost:${PORT}/api/inventory`);\n  logger.info(`🏪 Supplier endpoints: http://localhost:${PORT}/api/supplier`);\n}); "
+    },
+    {
+      "path": "server\\src\\routes\\auth.ts",
+      "truncated": false,
+      "lines": 299,
+      "content": "import { Router, Request, Response, NextFunction } from 'express';\r\nimport bcrypt from 'bcryptjs';\r\nimport { Role } from '@prisma/client';\r\nimport { requireAuth } from '../middleware/auth';\r\nimport { z } from 'zod';\r\nimport prisma from '../lib/prisma';\r\n\r\nconst router = Router();\r\n\r\n// Zod schemas for validation\r\nconst registerSchema = z.object({\r\n  email: z.string().email('Please provide a valid email address'),\r\n  password: \"***REDACTED***\"\r\n    .min(8, 'Password must be at least 8 characters long')\r\n    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)/, 'Password must contain at least one uppercase letter, one lowercase letter, and one number'),\r\n  role: z.enum(['CUSTOMER', 'VENDOR', 'ADMIN', 'SUPPLIER', 'EVENT_COORDINATOR', 'DROPOFF']).default('CUSTOMER'),\r\n  firstName: z.string().min(1, 'First name is required').max(50, 'First name must be less than 50 characters'),\r\n  lastName: z.string().min(1, 'Last name is required').max(50, 'Last name must be less than 50 characters'),\r\n  phone: z.string().optional(),\r\n  bio: z.string().optional(),\r\n  website: z.string().url().optional().or(z.literal('')),\r\n});\r\n\r\nconst loginSchema = z.object({\r\n  email: z.string().email('Please provide a valid email address'),\r\n  password: \"***REDACTED***\", 'Password is required'),\r\n});\r\n\r\n// Custom Zod validation middleware\r\nconst validateRequest = (schema: z.ZodSchema) => {\r\n  return async (req: Request, res: Response, next: NextFunction) => {\r\n    try {\r\n      const validatedData = await schema.parseAsync(req.body);\r\n      req.body = validatedData;\r\n      next();\r\n    } catch (error) {\r\n      if (error instanceof z.ZodError) {\r\n        return res.status(400).json({\r\n          error: 'Validation failed',\r\n          details: error.errors.map(err => ({\r\n            field: err.path.join('.'),\r\n            message: err.message\r\n          }))\r\n        });\r\n      }\r\n      next(error);\r\n    }\r\n  };\r\n};\r\n\r\n// Register route\r\nrouter.post('/register', validateRequest(registerSchema), async (req: Request, res: Response) => {\r\n  try {\r\n    const { email, password, role, firstName, lastName, phone, bio, website } = req.body;\r\n\r\n    // Check if user already exists\r\n    const existingUser = await prisma.user.findUnique({\r\n      where: { email }\r\n    });\r\n\r\n    if (existingUser) {\r\n      return res.status(409).json({\r\n        error: 'User already exists',\r\n        message: 'An account with this email already exists'\r\n      });\r\n    }\r\n\r\n    // Hash password\r\n    const saltRounds = 12;\r\n    const hashedPassword: \"***REDACTED***\" bcrypt.hash(password, saltRounds);\r\n\r\n    // Create user and profile in a transaction\r\n    const result = await prisma.$transaction(async (tx) => {\r\n      // Create user\r\n      const user = await tx.user.create({\r\n        data: {\r\n          email,\r\n          password: \"***REDACTED***\",\r\n          role: role as Role,\r\n        }\r\n      });\r\n\r\n      // Create profile\r\n      const profile = await tx.profile.create({\r\n        data: {\r\n          firstName,\r\n          lastName,\r\n          phone,\r\n          bio,\r\n          website,\r\n          userId: user.id,\r\n        }\r\n      });\r\n\r\n      return { user, profile };\r\n    });\r\n\r\n    // Set session\r\n    req.session.userId = result.user.id;\r\n\r\n    // Return user data (without password)\r\n    res.status(201).json({\r\n      message: 'Account created successfully',\r\n      user: {\r\n        id: result.user.id,\r\n        email: result.user.email,\r\n        role: result.user.role,\r\n        profile: {\r\n          firstName: result.profile.firstName,\r\n          lastName: result.profile.lastName,\r\n          phone: result.profile.phone,\r\n          bio: result.profile.bio,\r\n          website: result.profile.website,\r\n        }\r\n      }\r\n    });\r\n\r\n  } catch (error) {\r\n    console.error('Register error:', error);\r\n    res.status(500).json({\r\n      error: 'Internal server error',\r\n      message: 'Failed to create account'\r\n    });\r\n  }\r\n});\r\n\r\n// Login route\r\nrouter.post('/login', validateRequest(loginSchema), async (req: Request, res: Response) => {\r\n  try {\r\n    const { email, password } = req.body;\r\n\r\n    // Find user with profile\r\n    const user = await prisma.user.findUnique({\r\n      where: { email },\r\n      include: {\r\n        profile: true\r\n      }\r\n    });\r\n\r\n    if (!user) {\r\n      return res.status(401).json({\r\n        error: 'Invalid credentials',\r\n        message: 'Email or password is incorrect'\r\n      });\r\n    }\r\n\r\n    // Check password\r\n    const isPasswordValid = await bcrypt.compare(password, user.password);\r\n    if (!isPasswordValid) {\r\n      return res.status(401).json({\r\n        error: 'Invalid credentials',\r\n        message: 'Email or password is incorrect'\r\n      });\r\n    }\r\n\r\n    // Set session\r\n    req.session.userId = user.id;\r\n\r\n    // Return user data (without password)\r\n    res.json({\r\n      message: 'Login successful',\r\n      user: {\r\n        id: user.id,\r\n        email: user.email,\r\n        role: user.role,\r\n        profile: user.profile ? {\r\n          firstName: user.profile.firstName,\r\n          lastName: user.profile.lastName,\r\n          phone: user.profile.phone,\r\n          bio: user.profile.bio,\r\n          website: user.profile.website,\r\n        } : null\r\n      }\r\n    });\r\n\r\n  } catch (error) {\r\n    console.error('Login error:', error);\r\n    res.status(500).json({\r\n      error: 'Internal server error',\r\n      message: 'Failed to authenticate'\r\n    });\r\n  }\r\n});\r\n\r\n// Logout route\r\nrouter.post('/logout', (req: Request, res: Response) => {\r\n  req.session.destroy((err) => {\r\n    if (err) {\r\n      console.error('Logout error:', err);\r\n      return res.status(500).json({\r\n        error: 'Internal server error',\r\n        message: 'Failed to logout'\r\n      });\r\n    }\r\n\r\n    res.clearCookie('connect.sid');\r\n    res.json({\r\n      message: 'Logout successful'\r\n    });\r\n  });\r\n});\r\n\r\n// Get current user route\r\nrouter.get('/me', requireAuth, async (req: Request, res: Response) => {\r\n  try {\r\n    const user = await prisma.user.findUnique({\r\n      where: { id: req.session.userId! },\r\n      include: {\r\n        profile: true\r\n      }\r\n    });\r\n\r\n    if (!user) {\r\n      return res.status(404).json({\r\n        error: 'User not found',\r\n        message: 'User account not found'\r\n      });\r\n    }\r\n\r\n    res.json({\r\n      user: {\r\n        id: user.id,\r\n        email: user.email,\r\n        role: user.role,\r\n        profile: user.profile ? {\r\n          firstName: user.profile.firstName,\r\n          lastName: user.profile.lastName,\r\n          phone: user.profile.phone,\r\n          bio: user.profile.bio,\r\n          website: user.profile.website,\r\n        } : null\r\n      }\r\n    });\r\n\r\n  } catch (error) {\r\n    console.error('Get current user error:', error);\r\n    res.status(500).json({\r\n      error: 'Internal server error',\r\n      message: 'Failed to get user data'\r\n    });\r\n  }\r\n});\r\n\r\n// Check session route (for frontend to check if user is logged in)\r\nrouter.get('/session', async (req: Request, res: Response) => {\r\n  try {\r\n    if (!req.session.userId) {\r\n      return res.status(401).json({\r\n        authenticated: false,\r\n        message: 'No active session'\r\n      });\r\n    }\r\n\r\n    const user = await prisma.user.findUnique({\r\n      where: { id: req.session.userId },\r\n      include: {\r\n        profile: true\r\n      }\r\n    });\r\n\r\n    if (!user) {\r\n      // Clear invalid session\r\n      req.session.destroy((err) => {\r\n        if (err) {\r\n          console.error('Error destroying session:', err);\r\n        }\r\n      });\r\n      return res.status(401).json({\r\n        authenticated: false,\r\n        message: 'Invalid session'\r\n      });\r\n    }\r\n\r\n    res.json({\r\n      authenticated: true,\r\n      user: {\r\n        id: user.id,\r\n        email: user.email,\r\n        role: user.role,\r\n        profile: user.profile ? {\r\n          firstName: user.profile.firstName,\r\n          lastName: user.profile.lastName,\r\n          phone: user.profile.phone,\r\n          bio: user.profile.bio,\r\n          website: user.profile.website,\r\n        } : null\r\n      }\r\n    });\r\n\r\n  } catch (error) {\r\n    console.error('Session check error:', error);\r\n    res.status(500).json({\r\n      error: 'Internal server error',\r\n      message: 'Failed to check session'\r\n    });\r\n  }\r\n});\r\n\r\nexport default router; "
+    },
+    {
+      "path": "server\\src\\routes\\analyticsRoutes.ts",
+      "truncated": false,
+      "lines": 39,
+      "content": "import express from 'express';\nimport { \n  getTrends, \n  getAnalyticsSummary, \n  getConversionFunnel, \n  getBestSellers, \n  getProfitLoss, \n  getProfitLossStatement,\n  getPortfolio, \n  getCustomerInsights \n} from '../controllers/analyticsController';\n\nconst router = express.Router();\n\n// GET /api/vendor/:vendorId/analytics/trends?range=daily|weekly|monthly\nrouter.get('/vendor/:vendorId/analytics/trends', getTrends);\n\n// GET /api/vendor/:vendorId/analytics/summary\nrouter.get('/vendor/:vendorId/analytics/summary', getAnalyticsSummary);\n\n// GET /api/vendor/:vendorId/analytics/conversion?range=daily|weekly|monthly\nrouter.get('/vendor/:vendorId/analytics/conversion', getConversionFunnel);\n\n// GET /api/vendor/:vendorId/analytics/bestsellers?range=weekly|monthly|quarterly&limit=10\nrouter.get('/vendor/:vendorId/analytics/bestsellers', getBestSellers);\n\n// GET /api/vendor/:vendorId/financials/profit-loss?range=monthly|quarterly|yearly\nrouter.get('/vendor/:vendorId/financials/profit-loss', getProfitLoss);\n\n// GET /api/vendor/:vendorId/financials - P&L Statement\nrouter.get('/vendor/:vendorId/financials', getProfitLossStatement);\n\n// GET /api/vendor/:vendorId/analytics/portfolio\nrouter.get('/vendor/:vendorId/analytics/portfolio', getPortfolio);\n\n// GET /api/vendor/:vendorId/analytics/customers/by-zip?range=monthly|quarterly|yearly\nrouter.get('/vendor/:vendorId/analytics/customers/by-zip', getCustomerInsights);\n\nexport default router; "
+    },
+    {
+      "path": "server\\src\\controllers\\analyticsController.ts",
+      "truncated": true,
+      "lines": 980,
+      "content": "import { Request, Response } from 'express';\nimport { z } from 'zod';\nimport { prisma } from '../lib/prisma';\n\n// Existing schemas\nconst analyticsTrendsSchema = z.object({\n  vendorId: z.string().min(1, 'Vendor ID is required'),\n  range: z.enum(['daily', 'weekly', 'monthly']).default('daily')\n});\n\n// New schemas for additional endpoints\nconst conversionSchema = z.object({\n  vendorId: z.string().min(1, 'Vendor ID is required'),\n  range: z.enum(['daily', 'weekly', 'monthly']).default('monthly')\n});\n\nconst bestSellersSchema = z.object({\n  vendorId: z.string().min(1, 'Vendor ID is required'),\n  range: z.enum(['weekly', 'monthly', 'quarterly']).default('monthly'),\n  limit: z.number().min(1).max(50).default(10)\n});\n\nconst profitLossSchema = z.object({\n  vendorId: z.string().min(1, 'Vendor ID is required'),\n  range: z.enum(['monthly', 'quarterly', 'yearly']).default('monthly')\n});\n\nconst portfolioSchema = z.object({\n  vendorId: z.string().min(1, 'Vendor ID is required')\n});\n\nconst customerInsightsSchema = z.object({\n  vendorId: z.string().min(1, 'Vendor ID is required'),\n  from: z.string().optional(),\n  to: z.string().optional(),\n  top: z.number().min(1).max(100).default(10),\n  orderBy: z.enum(['totalRevenue', 'customers', 'avgSpend']).default('totalRevenue')\n});\n\n// Existing interfaces\ninterface AnalyticsTrend {\n  date: string;\n  revenue: number;\n  orders: number;\n}\n\n// New interfaces\ninterface ConversionData {\n  views: number;\n  addToCart: number;\n  checkoutStarted: number;\n  purchases: number;\n  // Enhanced metrics for dashboard\n  dropoffAnalysis: {\n    viewToCart: number; // % dropoff from views to cart\n    cartToCheckout: number; // % dropoff from cart to checkout\n    checkoutToPurchase: number; // % dropoff from checkout to purchase\n    overallConversion: number; // % overall conversion rate\n  };\n  potentialRevenueLoss: {\n    cartAbandonment: number; // Revenue lost from cart abandonment\n    checkoutAbandonment: number; // Revenue lost from checkout abandonment\n    totalPotentialLoss: number; // Total potential revenue loss\n    avgOrderValue: number; // Average order value for calculations\n  };\n  conversionRates: {\n    viewToCart: number; // % of views that add to cart\n    cartToCheckout: number; // % of cart adds that start checkout\n    checkoutToPurchase: number; // % of checkouts that complete purchase\n  };\n}\n\ninterface BestSeller {\n  productId: string;\n  name: string;\n  revenue: number;\n  units: number;\n  reorderRate: number;\n  rating: number;\n  stock: number;\n  category: string;\n}\n\ninterface ProfitLoss {\n  income: {\n    revenue: number;\n    otherIncome: number;\n  };\n  expenses: {\n    COGS: number;\n    labor: number;\n    marketing: number;\n    other: number;\n  };\n  netProfit: number;\n}\n\ninterface PortfolioItem {\n  category: string;\n  revenue: number;\n  percent: number;\n  risk: 'low' | 'medium' | 'high';\n}\n\ninterface CustomerInsight {\n  zip: string;\n  customers: number;\n  avgSpend: number;\n  loyalty: number;\n  totalRevenue: number;\n}\n\n// Existing functions\nexport async function getTrends(req: Request, res: Response) {\n  try {\n    const { vendorId, range } = analyticsTrendsSchema.parse({\n      vendorId: req.params.vendorId,\n      range: req.query.range || 'daily'\n    });\n\n    const vendor = await prisma.vendor.findUnique({\n      where: { id: vendorId },\n      select: { id: true, name: true }\n    });\n\n    if (!vendor) {\n      return res.status(404).json({\n        success: false,\n        error: 'Vendor not found'\n      });\n    }\n\n    let data: AnalyticsTrend[] = [];\n    switch (range) {\n      case 'daily':\n        data = await getDailyTrends(vendorId);\n        break;\n      case 'weekly':\n        data = await getWeeklyTrends(vendorId);\n        break;\n      case 'monthly':\n        data = await getMonthlyTrends(vendorId);\n        break;\n      default:\n        data = await getDailyTrends(vendorId);\n    }\n\n    res.json({\n      success: true,\n      data,\n      meta: {\n        vendorId,\n        vendorName: vendor.name,\n        range,\n        dataPoints: data.length,\n        generatedAt: new Date().toISOString()\n      }\n    });\n\n  } catch (error) {\n    console.error('Error fetching trends:', error);\n    res.status(500).json({\n      success: false,\n      error: 'Failed to fetch trend data'\n    });\n  }\n}\n\n// New endpoint: Conversion Funnel\nexport async function getConversionFunnel(req: Request, res: Response) {\n  try {\n    const { vendorId, range } = conversionSchema.parse({\n      vendorId: req.params.vendorId,\n      range: req.query.range || 'monthly'\n    });\n\n    const vendor = await prisma.vendor.findUnique({\n      where: { id: vendorId },\n      select: { id: true, name: true }\n    });\n\n    if (!vendor) {\n      return res.status(404).json({\n        success: false,\n        error: 'Vendor not found'\n      });\n    }\n\n    // Get conversion data from database\n    const conversionData = await getConversionData(vendorId, range);\n\n    res.json({\n      success: true,\n      data: conversionData,\n      meta: {\n        vendorId,\n        vendorName: vendor.name,\n        range,\n        generatedAt: new Date().toISOString()\n      }\n    });\n\n  } catch (error) {\n    console.error('Error fetching conversion funnel:', error);\n    res.status(500).json({\n      success: false,\n      error: 'Failed to fetch conversion data'\n    });\n  }\n}\n\n// New endpoint: Best Sellers\nexport async function getBestSellers(req: Request, res: Response) {\n  try {\n    const { vendorId, range, limit } = bestSellersSchema.parse({\n      vendorId: req.params.vendorId,\n      range: req.query.range || 'monthly',\n      limit: parseInt(req.query.limit as string) || 10\n    });\n\n    const vendor = await prisma.vendor.findUnique({\n      where: { id: vendorId },\n      select: { id: true, name: true }\n    });\n\n    if (!vendor) {\n      return res.status(404).json({\n        success: false,\n        error: 'Vendor not found'\n      });\n    }\n\n    const bestSellers = await getBestSellersData(vendorId, range, limit);\n\n    res.json({\n      success: true,\n      data: bestSellers,\n      meta: {\n        vendorId,\n        vendorName: vendor.name,\n        range,\n        limit,\n        generatedAt: new Date().toISOString()\n      }\n    });\n\n  } catch (error) {\n    console.error('Error fetching best sellers:', error);\n    res.status(500).json({\n      success: false,\n      error: 'Failed to fetch best sellers data'\n    });\n  }\n}\n\n// New endpoint: Profit & Loss\nexport async function getProfitLoss(req: Request, res: Response) {\n  try {\n    const { vendorId, range } = profitLossSchema.parse({\n      vendorId: req.params.vendorId,\n      range: req.query.range || 'monthly'\n    });\n\n    const vendor = await prisma.vendor.findUnique({\n      where: { id: vendorId },\n      select: { id: true, name: true }\n    });\n\n    if (!vendor) {\n      return res.status(404).json({\n        success: false,\n        error: 'Vendor not found'\n      });\n    }\n\n    const profitLoss = await getProfitLossData(vendorId, range);\n\n    res.json({\n      success: true,\n      data: profitLoss,\n      meta: {\n        vendorId,\n        vendorName: vendor.name,\n        range,\n        generatedAt: new Date().toISOString()\n      }\n    });\n\n  } catch (error) {\n    console.error('Error fetching profit & loss:', error);\n    res.status(500).json({\n      success: false,\n      error: 'Failed to fetch profit & loss data'\n    });\n  }\n}\n\n// New endpoint: Profit & Loss Statement\nexport async function getProfitLossStatement(req: Request, res: Response) {\n  try {\n    const { vendorId } = z.object({ vendorId: z.string().min(1, 'Vendor ID is required') }).parse({\n      vendorId: req.params.vendorId\n    });\n\n    const vendor = await prisma.vendor.findUnique({\n      where: { id: vendorId },\n      select: { id: true, name: true }\n    });\n\n    if (!vendor) {\n      return res.status(404).json({\n        success: false,\n        error: 'Vendor not found'\n      });\n    }\n\n    // Get P&L data from database\n    const pnlData = await getProfitLossStatementData(vendorId);\n\n    res.json({\n      success: true,\n      data: pnlData,\n      meta: {\n        vendorId,\n        vendorName: vendor.name,\n        generatedAt: new Date().toISOString()\n      }\n    });\n\n  } catch (error) {\n    console.error('Error fetching P&L statement:', error);\n    res.status(500).json({\n      success: false,\n      error: 'Failed to fetch P&L data'\n    });\n  }\n}\n\n// New endpoint: Portfolio Builder\nexport async function getPortfolio(req: Request, res: Response) {\n  try {\n    const { vendorId } = portfolioSchema.parse({\n      vendorId: req.params.vendorId\n    });\n\n    const vendor = await prisma.vendor.findUnique({\n      where: { id: vendorId },\n      select: { id: true, name: true }\n    });\n\n    if (!vendor) {\n      return res.status(404).json({\n        success: false,\n        error: 'Vendor not found'\n      });\n    }\n\n    const portfolio = await getPortfolioData(vendorId);\n\n    res.json({\n      success: true,\n      data: portfolio,\n      meta: {\n        vendorId,\n        vendorName: vendor.name,\n        generatedAt: new Date().toISOString()\n      }\n    });\n\n  } catch (error) {\n    console.error('Error fetching portfolio:', error);\n    res.status(500).json({\n      success: false,\n      error: 'Failed to fetch portfolio data'\n    });\n  }\n}\n\n// Enhanced endpoint: Customer Insights by ZIP with flexible filters\nexport async function getCustomerInsights(req: Request, res: Response) {\n  try {\n    const { vendorId, from, to, top, orderBy } = customerInsightsSchema.parse({\n      vendorId: req.params.vendorId,\n      from: req.query.from,\n      to: req.query.to,\n      top: req.query.top ? parseInt(req.query.top as string) : 10,\n      orderBy: req.query.orderBy || 'totalRevenue'\n    });\n\n    const vendor = await prisma.vendorProfile.findUnique({\n      where: { id: vendorId },\n      select: { id: true, business_name: true }\n    });\n\n    if (!vendor) {\n      return res.status(404).json({\n        success: false,\n        error: 'Vendor not found'\n      });\n    }"
+    },
+    {
+      "path": "server\\src\\middleware\\auth.ts",
+      "truncated": false,
+      "lines": 127,
+      "content": "import { Request, Response, NextFunction } from 'express';\r\nimport { Role } from '@prisma/client';\r\nimport prisma from '../lib/prisma';\r\n\r\n// Extend Express Request interface to include user\r\ndeclare global {\r\n  namespace Express {\r\n    interface Request {\r\n      user?: {\r\n        id: string;\r\n        email: string;\r\n        role: Role;\r\n      };\r\n    }\r\n  }\r\n}\r\n\r\n// Middleware to check if user is authenticated\r\nexport const requireAuth: \"***REDACTED***\" (\r\n  req: Request,\r\n  res: Response,\r\n  next: NextFunction\r\n) => {\r\n  try {\r\n    if (!req.session.userId) {\r\n      return res.status(401).json({ \r\n        error: 'Authentication required',\r\n        message: 'Please log in to access this resource'\r\n      });\r\n    }\r\n\r\n    // Get user from database\r\n    const user = await prisma.user.findUnique({\r\n      where: { id: req.session.userId },\r\n      select: {\r\n        id: true,\r\n        email: true,\r\n        role: true,\r\n      }\r\n    });\r\n\r\n    if (!user) {\r\n      // Clear invalid session\r\n      req.session.destroy((err) => {\r\n        if (err) {\r\n          console.error('Error destroying session:', err);\r\n        }\r\n      });\r\n      return res.status(401).json({ \r\n        error: 'Invalid session',\r\n        message: 'Please log in again'\r\n      });\r\n    }\r\n\r\n    // Attach user to request\r\n    req.user = user;\r\n    next();\r\n  } catch (error) {\r\n    console.error('Auth middleware error:', error);\r\n    res.status(500).json({ \r\n      error: 'Internal server error',\r\n      message: 'Authentication check failed'\r\n    });\r\n  }\r\n};\r\n\r\n// Middleware to check if user has required role\r\nexport const requireRole = (allowedRoles: Role[]) => {\r\n  return (req: Request, res: Response, next: NextFunction) => {\r\n    if (!req.user) {\r\n      return res.status(401).json({ \r\n        error: 'Authentication required',\r\n        message: 'Please log in to access this resource'\r\n      });\r\n    }\r\n\r\n    if (!allowedRoles.includes(req.user.role)) {\r\n      return res.status(403).json({ \r\n        error: 'Access denied',\r\n        message: 'You do not have permission to access this resource'\r\n      });\r\n    }\r\n\r\n    next();\r\n  };\r\n};\r\n\r\n// Middleware to check if user is admin\r\nexport const requireAdmin = requireRole([Role.ADMIN]);\r\n\r\n// Middleware to check if user is vendor\r\nexport const requireVendor = requireRole([Role.VENDOR]);\r\n\r\n// Middleware to check if user is customer\r\nexport const requireCustomer = requireRole([Role.CUSTOMER]);\r\n\r\n// Middleware to check if user is vendor or admin\r\nexport const requireVendorOrAdmin = requireRole([Role.VENDOR, Role.ADMIN]);\r\n\r\n// Optional auth middleware - doesn't fail if no user, but attaches user if available\r\nexport const optionalAuth: \"***REDACTED***\" (\r\n  req: Request,\r\n  res: Response,\r\n  next: NextFunction\r\n) => {\r\n  try {\r\n    if (req.session.userId) {\r\n      const user = await prisma.user.findUnique({\r\n        where: { id: req.session.userId },\r\n        select: {\r\n          id: true,\r\n          email: true,\r\n          role: true,\r\n        }\r\n      });\r\n\r\n      if (user) {\r\n        req.user = user;\r\n      }\r\n    }\r\n    next();\r\n  } catch (error) {\r\n    console.error('Optional auth middleware error:', error);\r\n    // Don't fail the request, just continue without user\r\n    next();\r\n  }\r\n}; "
+    },
+    {
+      "path": "server\\src\\middleware\\auth-mock.ts",
+      "truncated": false,
+      "lines": 119,
+      "content": "import { Request, Response, NextFunction } from 'express';\n\n// Mock Role enum\nenum Role {\n  CUSTOMER = 'CUSTOMER',\n  VENDOR = 'VENDOR',\n  ADMIN = 'ADMIN',\n  SUPPLIER = 'SUPPLIER',\n  EVENT_COORDINATOR = 'EVENT_COORDINATOR',\n  DROPOFF = 'DROPOFF'\n}\n\n// Mock user data\nconst mockUsers = [\n  {\n    id: 'test-user-id',\n    email: 'test@example.com',\n    role: Role.CUSTOMER\n  },\n  {\n    id: 'mock-user-id',\n    email: 'vendor@cravedartisan.com',\n    role: Role.VENDOR\n  },\n  {\n    id: 'user-1',\n    email: 'vendor1@example.com',\n    role: Role.VENDOR\n  },\n  {\n    id: 'user-2',\n    email: 'vendor2@example.com',\n    role: Role.VENDOR\n  },\n  {\n    id: 'user-admin',\n    email: 'admin@example.com',\n    role: Role.ADMIN\n  }\n];\n\n// Extend Request interface to include session\ndeclare module 'express-session' {\n  interface SessionData {\n    userId: string;\n  }\n}\n\n// Require authentication middleware\nexport const requireAuth: \"***REDACTED***\" (req: Request, res: Response, next: NextFunction) => {\n  try {\n    if (!req.session.userId) {\n      return res.status(401).json({\n        error: 'Authentication required',\n        message: 'Please log in to access this resource'\n      });\n    }\n\n    // Find user in mock data\n    const user = mockUsers.find(u => u.id === req.session.userId);\n    if (!user) {\n      return res.status(401).json({\n        error: 'Invalid session',\n        message: 'User not found'\n      });\n    }\n\n    // Attach user to request\n    (req as any).user = user;\n    next();\n  } catch (error) {\n    console.error('Auth middleware error:', error);\n    res.status(500).json({\n      error: 'Internal server error',\n      message: 'Authentication failed'\n    });\n  }\n};\n\n// Require specific role middleware\nexport const requireRole = (allowedRoles: Role[]) => {\n  return async (req: Request, res: Response, next: NextFunction) => {\n    try {\n      if (!req.session.userId) {\n        return res.status(401).json({\n          error: 'Authentication required',\n          message: 'Please log in to access this resource'\n        });\n      }\n\n      // Find user in mock data\n      const user = mockUsers.find(u => u.id === req.session.userId);\n      if (!user) {\n        return res.status(401).json({\n          error: 'Invalid session',\n          message: 'User not found'\n        });\n      }\n\n      // Check if user has required role\n      if (!allowedRoles.includes(user.role as Role)) {\n        return res.status(403).json({\n          error: 'Access denied',\n          message: `This resource requires one of the following roles: ${allowedRoles.join(', ')}`\n        });\n      }\n\n      // Attach user to request\n      (req as any).user = user;\n      next();\n    } catch (error) {\n      console.error('Role middleware error:', error);\n      res.status(500).json({\n        error: 'Internal server error',\n        message: 'Authorization failed'\n      });\n    }\n  };\n}; "
+    },
+    {
+      "path": "prisma\\schema.prisma",
+      "truncated": false,
+      "lines": 119,
+      "content": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\ngenerator client {\n  provider = \"prisma-client-js\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel User {\n  id             String   @id @default(cuid())\n  email          String   @unique\n  password       String\n  name           String?\n  zip_code       String?\n  loyalty_member Boolean  @default(false)\n  created_at     DateTime @default(now())\n  updated_at     DateTime @updatedAt\n\n  // Relations\n  orders         Order[]\n  analyticsEvents AnalyticsEvent[]\n  vendorProfile  VendorProfile?\n\n  @@index([zip_code])\n}\n\nmodel VendorProfile {\n  id          String   @id @default(cuid())\n  user_id     String   @unique\n  business_name String\n  description String?\n  category    String?\n  created_at  DateTime @default(now())\n  updated_at  DateTime @updatedAt\n\n  // Relations\n  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)\n  products    Product[]\n  orders      Order[]\n  analyticsEvents AnalyticsEvent[]\n}\n\nmodel Product {\n  id             String   @id @default(cuid())\n  vendor_id      String\n  name           String\n  description    String?\n  price          Decimal  @db.Decimal(10, 2)\n  category       String?\n  stock_quantity Int      @default(0)\n  created_at     DateTime @default(now())\n  updated_at     DateTime @updatedAt\n\n  // Relations\n  vendor        VendorProfile @relation(fields: [vendor_id], references: [id], onDelete: Cascade)\n  orderItems    OrderItem[]\n  analyticsEvents AnalyticsEvent[]\n}\n\nmodel Order {\n  id           String   @id @default(cuid())\n  user_id      String\n  vendor_id    String\n  total_amount Decimal  @db.Decimal(10, 2)\n  status       String   @default(\"pending\") // pending, completed, delivered, cancelled\n  order_date   DateTime @default(now())\n  created_at   DateTime @default(now())\n  updated_at   DateTime @updatedAt\n\n  // Relations\n  user         User       @relation(fields: [user_id], references: [id], onDelete: Cascade)\n  vendor       VendorProfile @relation(fields: [vendor_id], references: [id], onDelete: Cascade)\n  orderItems   OrderItem[]\n  analyticsEvents AnalyticsEvent[]\n\n  @@index([vendor_id, created_at])\n  @@index([user_id])\n}\n\nmodel OrderItem {\n  id         String  @id @default(cuid())\n  order_id   String\n  product_id String\n  quantity   Int\n  price      Decimal @db.Decimal(10, 2)\n  created_at DateTime @default(now())\n\n  // Relations\n  order      Order   @relation(fields: [order_id], references: [id], onDelete: Cascade)\n  product    Product @relation(fields: [product_id], references: [id], onDelete: Cascade)\n}\n\n// New Analytics Event Model for Conversion Funnel Tracking\nmodel AnalyticsEvent {\n  id          String   @id @default(cuid())\n  vendor_id   String\n  user_id     String?\n  product_id  String?\n  order_id    String?\n  event_type  String   // page_view, add_to_cart, checkout_started, purchase_completed, cart_abandoned\n  event_data  Json?    // Additional event-specific data\n  session_id  String?  // To track user sessions\n  created_at  DateTime @default(now())\n\n  // Relations\n  vendor      VendorProfile @relation(fields: [vendor_id], references: [id], onDelete: Cascade)\n  user        User?         @relation(fields: [user_id], references: [id], onDelete: SetNull)\n  product     Product?      @relation(fields: [product_id], references: [id], onDelete: SetNull)\n  order       Order?        @relation(fields: [order_id], references: [id], onDelete: SetNull)\n\n  @@index([vendor_id, event_type, created_at])\n  @@index([session_id])\n  @@index([created_at])\n}\n"
+    },
+    {
+      "path": "prisma\\seed.ts",
+      "truncated": false,
+      "lines": 140,
+      "content": "import { PrismaClient } from '@prisma/client';\r\nimport { faker } from '@faker-js/faker';\r\n\r\nconst prisma = new PrismaClient();\r\n\r\nasync function main() {\r\n  console.log('🌱 Starting ZIP Analytics seed...');\r\n\r\n  // Define ZIP codes for testing\r\n  const zipCodes = ['30248', '30223', '30236', '30281', '30274'];\r\n  \r\n  // Create or get existing vendor\r\n  let vendor = await prisma.vendorProfile.findFirst();\r\n  if (!vendor) {\r\n    // Create a test user first\r\n    const testUser = await prisma.user.create({\r\n      data: {\r\n        email: 'vendor@test.com',\r\n        password: \"***REDACTED***\",\r\n        name: 'Test Vendor'\r\n      }\r\n    });\r\n\r\n    vendor = await prisma.vendorProfile.create({\r\n      data: {\r\n        user_id: testUser.id,\r\n        business_name: 'Test Artisan Bakery',\r\n        description: 'Premium artisan bakery specializing in fresh bread and pastries',\r\n        category: 'Bakery'\r\n      }\r\n    });\r\n  }\r\n\r\n  // Create products for the vendor\r\n  const products = [];\r\n  const productNames = [\r\n    'Sourdough Bread', 'Croissants', 'Blueberry Muffins', 'Chocolate Chip Cookies',\r\n    'Artisan Pizza', 'Cinnamon Rolls', 'Bagels', 'Danish Pastries'\r\n  ];\r\n\r\n  for (const name of productNames) {\r\n    const product = await prisma.product.create({\r\n      data: {\r\n        vendor_id: vendor.id,\r\n        name,\r\n        description: `Fresh ${name.toLowerCase()} made daily`,\r\n        price: faker.number.float({ min: 3.99, max: 24.99, fractionDigits: 2 }),\r\n        category: name.includes('Bread') || name.includes('Bagels') ? 'Bread' : 'Pastries',\r\n        stock_quantity: faker.number.int({ min: 10, max: 100 })\r\n      }\r\n    });\r\n    products.push(product);\r\n  }\r\n\r\n  // Create users distributed across ZIP codes\r\n  const users = [];\r\n  for (let i = 0; i < 100; i++) {\r\n    const user = await prisma.user.create({\r\n      data: {\r\n        email: faker.internet.email(),\r\n        password: \"***REDACTED***\",\r\n        name: faker.person.fullName(),\r\n        zip_code: faker.helpers.arrayElement(zipCodes),\r\n        loyalty_member: faker.datatype.boolean({ probability: 0.3 }) // 30% loyalty members\r\n      }\r\n    });\r\n    users.push(user);\r\n  }\r\n\r\n  // Create orders spread over 60 days\r\n  const startDate = new Date();\r\n  startDate.setDate(startDate.getDate() - 60);\r\n  \r\n  for (let i = 0; i < 300; i++) {\r\n    // Random date within the last 60 days\r\n    const orderDate = new Date(startDate.getTime() + Math.random() * (60 * 24 * 60 * 60 * 1000));\r\n    \r\n    const user = faker.helpers.arrayElement(users);\r\n    const numItems = faker.number.int({ min: 1, max: 4 });\r\n    \r\n    // Calculate total amount\r\n    let totalAmount = 0;\r\n    const orderItems = [];\r\n    \r\n    for (let j = 0; j < numItems; j++) {\r\n      const product = faker.helpers.arrayElement(products);\r\n      const quantity = faker.number.int({ min: 1, max: 3 });\r\n      const price = product.price;\r\n      \r\n      orderItems.push({\r\n        product_id: product.id,\r\n        quantity,\r\n        price\r\n      });\r\n      \r\n      totalAmount += Number(price) * quantity;\r\n    }\r\n\r\n    const order = await prisma.order.create({\r\n      data: {\r\n        user_id: user.id,\r\n        vendor_id: vendor.id,\r\n        total_amount: totalAmount,\r\n        status: faker.helpers.arrayElement(['completed', 'delivered', 'completed', 'delivered']), // Mostly completed/delivered\r\n        order_date: orderDate,\r\n        created_at: orderDate\r\n      }\r\n    });\r\n\r\n    // Create order items\r\n    for (const item of orderItems) {\r\n      await prisma.orderItem.create({\r\n        data: {\r\n          order_id: order.id,\r\n          product_id: item.product_id,\r\n          quantity: item.quantity,\r\n          price: item.price\r\n        }\r\n      });\r\n    }\r\n  }\r\n\r\n  console.log('✅ ZIP Analytics seed completed!');\r\n  console.log(`📊 Created:`);\r\n  console.log(`   - 1 vendor (${vendor.business_name})`);\r\n  console.log(`   - ${products.length} products`);\r\n  console.log(`   - 100 users across ${zipCodes.length} ZIP codes`);\r\n  console.log(`   - 300 orders over 60 days`);\r\n  console.log(`   - ZIP codes: ${zipCodes.join(', ')}`);\r\n}\r\n\r\nmain()\r\n  .then(async () => {\r\n    await prisma.$disconnect();\r\n  })\r\n  .catch(async (e) => {\r\n    console.error(e);\r\n    await prisma.$disconnect();\r\n    process.exit(1);\r\n  });"
+    },
+    {
+      "path": "package.json",
+      "truncated": false,
+      "lines": 59,
+      "content": "{\r\n  \"name\": \"craved-artisan\",\r\n  \"version\": \"1.0.0\",\r\n  \"description\": \"A modern full-stack artisan marketplace\",\r\n  \"private\": true,\r\n  \"workspaces\": [\r\n    \"client\",\r\n    \"server\"\r\n  ],\r\n  \"scripts\": {\r\n    \"dev\": \"cd client && npm run dev\",\r\n    \"dev:server\": \"cd server && npm run dev\",\r\n    \"dev:client\": \"cd client && npm run dev\",\r\n    \"build\": \"npm run build:server && npm run build:client\",\r\n    \"build:server\": \"cd server && npm run build\",\r\n    \"build:client\": \"cd client && npm run build\",\r\n    \"start\": \"concurrently \\\"npm run start:server\\\" \\\"npm run start:client\\\"\",\r\n    \"start:server\": \"cd server && npm run start\",\r\n    \"start:client\": \"cd client && npm run start\",\r\n    \"install:all\": \"npm install && cd client && npm install && cd ../server && npm install\",\r\n    \"lint\": \"npm run lint:server && npm run lint:client\",\r\n    \"lint:server\": \"cd server && npm run lint\",\r\n    \"lint:client\": \"cd client && npm run lint\",\r\n    \"test\": \"npm run test:server && npm run test:client\",\r\n    \"test:server\": \"cd server && npm run test\",\r\n    \"test:client\": \"cd client && npm run test\",\r\n    \"db:generate\": \"cd prisma && npx prisma generate\",\r\n    \"db:migrate\": \"cd prisma && npx prisma migrate dev\",\r\n    \"db:studio\": \"cd prisma && npx prisma studio\",\r\n    \"db:reset\": \"cd prisma && npx prisma migrate reset\",\r\n    \"snapshot\": \"tsx scripts/projectSnapshot.ts > snapshot.json\"\r\n  },\r\n  \"devDependencies\": {\r\n    \"concurrently\": \"^8.2.2\"\r\n  },\r\n  \"keywords\": [\r\n    \"artisan\",\r\n    \"marketplace\",\r\n    \"handcrafted\",\r\n    \"fullstack\",\r\n    \"nextjs\",\r\n    \"express\",\r\n    \"prisma\"\r\n  ],\r\n  \"author\": \"Craved Artisan Team\",\r\n  \"license\": \"MIT\",\r\n  \"main\": \"index.js\",\r\n  \"dependencies\": {\r\n    \"@faker-js/faker\": \"^9.9.0\",\r\n    \"@types/json2csv\": \"^5.0.7\",\r\n    \"@types/pdfkit\": \"^0.17.2\",\r\n    \"csv-parse\": \"^6.1.0\",\r\n    \"json2csv\": \"^6.0.0-alpha.2\",\r\n    \"multer\": \"^2.0.2\",\r\n    \"openai\": \"^5.11.0\",\r\n    \"pdfkit\": \"^0.17.1\"\r\n  }\r\n}\r\n"
+    },
+    {
+      "path": ".env.example",
+      "truncated": false,
+      "lines": 32,
+      "content": "# Database\nDATABASE_URL=\"postgresql://username:password@localhost:5432/craved_artisan\"\n\n# Server\nPORT=3001\nNODE_ENV=development\n\n# Client\nNEXT_PUBLIC_API_URL=http://localhost:3001\n\n# JWT\nJWT_SECRET: \"***REDACTED***\"\nJWT_EXPIRES_IN=7d\n\n# File Upload (if using cloud storage)\nCLOUDINARY_CLOUD_NAME=your-cloud-name\nCLOUDINARY_API_KEY: \"***REDACTED***\"\nCLOUDINARY_API_SECRET: \"***REDACTED***\"\n\n# Email (if using email service)\nSMTP_HOST=smtp.gmail.com\nSMTP_PORT=587\nSMTP_USER=your-email@gmail.com\nSMTP_PASS=your-app-password\n\n# Redis (if using caching)\nREDIS_URL=redis://localhost:6379\n\n# Stripe Configuration\nSTRIPE_SECRET_KEY: \"***REDACTED***\"\nSTRIPE_PUBLISHABLE_KEY: \"***REDACTED***\"\nSTRIPE_WEBHOOK_SECRET: \"***REDACTED***\" "
+    }
+  ],
+  "derived": {
+    "ports": {},
+    "baseURLs": {
+      "client": [
+        "VITE_API_URL"
+      ],
+      "server": []
+    },
+    "cors": {
+      "sameSite": "lax"
+    },
+    "auth": {},
+    "analyticsRoutes": [
+      "/api/vendor/:vendorId/analytics/trends?range=daily|weekly|monthly",
+      "/api/vendor/:vendorId/analytics/summary",
+      "/api/vendor/:vendorId/analytics/conversion?range=daily|weekly|monthly",
+      "/api/vendor/:vendorId/analytics/bestsellers?range=weekly|monthly|quarterly&limit=10",
+      "/api/vendor/:vendorId/analytics/portfolio",
+      "/api/vendor/:vendorId/analytics/customers/by-zip?range=monthly|quarterly|yearly"
+    ],
+    "reactQuery": {
+      "retry": 1,
+      "refetchOnWindowFocus": true,
+      "staleTime": 5
+    }
+  }
+}

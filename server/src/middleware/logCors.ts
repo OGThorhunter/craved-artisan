@@ -24,36 +24,71 @@ const corsLogger = createLogger({
   ]
 });
 
-// CORS allowlist for different environments
+// Environment-specific CORS configuration
+const getCorsConfig = () => {
+  const nodeEnv = process.env.NODE_ENV || 'development';
+  
+  switch (nodeEnv) {
+    case 'development':
+      return {
+        origins: ['http://localhost:5173'],
+        credentials: true,
+        cookie: {
+          sameSite: 'lax',
+          secure: false,
+          httpOnly: true,
+          domain: undefined
+        }
+      };
+      
+    case 'staging':
+      return {
+        origins: ['https://staging.cravedartisan.com'],
+        credentials: true,
+        cookie: {
+          sameSite: 'lax',
+          secure: true,
+          httpOnly: true,
+          domain: '.cravedartisan.com'
+        }
+      };
+      
+    case 'production':
+      return {
+        origins: ['https://cravedartisan.com'],
+        credentials: true,
+        cookie: {
+          sameSite: 'strict',
+          secure: true,
+          httpOnly: true,
+          domain: '.cravedartisan.com'
+        }
+      };
+      
+    default:
+      return {
+        origins: ['http://localhost:5173'],
+        credentials: true,
+        cookie: {
+          sameSite: 'lax',
+          secure: false,
+          httpOnly: true,
+          domain: undefined
+        }
+      };
+  }
+};
+
+// Get allowed origins for current environment
 const getAllowedOrigins = () => {
-  const baseOrigins = [
-    'http://localhost:5173',
-    'http://localhost:5174', 
-    'http://localhost:5175',
-    'http://localhost:3000',
-    'http://127.0.0.1:5173',
-    'http://127.0.0.1:5174',
-    'http://127.0.0.1:5175',
-    'http://127.0.0.1:3000'
-  ];
-
-  // Add production origins if available
-  if (process.env.CLIENT_URL) {
-    baseOrigins.push(process.env.CLIENT_URL);
-  }
-
-  // Add additional origins from environment
-  if (process.env.ADDITIONAL_CORS_ORIGINS) {
-    const additionalOrigins = process.env.ADDITIONAL_CORS_ORIGINS.split(',').map(origin => origin.trim());
-    baseOrigins.push(...additionalOrigins);
-  }
-
-  return baseOrigins.filter(Boolean);
+  const config = getCorsConfig();
+  return config.origins;
 };
 
 export const logCors = (req: Request, res: Response, next: NextFunction) => {
   const origin = req.get('Origin');
   const allowedOrigins = getAllowedOrigins();
+  const nodeEnv = process.env.NODE_ENV || 'development';
   
   // Log the request origin and whether it's allowed
   const isAllowed = !origin || allowedOrigins.includes(origin);
@@ -64,6 +99,7 @@ export const logCors = (req: Request, res: Response, next: NextFunction) => {
     path: req.path,
     allowed: isAllowed,
     allowedOrigins: allowedOrigins,
+    environment: nodeEnv,
     userAgent: req.get('User-Agent'),
     ip: req.ip || req.connection.remoteAddress
   });
@@ -77,30 +113,37 @@ export const logCors = (req: Request, res: Response, next: NextFunction) => {
       origin: origin || 'no-origin',
       accessControlRequestMethod: req.get('Access-Control-Request-Method'),
       accessControlRequestHeaders: req.get('Access-Control-Request-Headers'),
-      allowed: isAllowed
+      allowed: isAllowed,
+      environment: nodeEnv
     });
   }
 
   next();
 };
 
-// Enhanced CORS configuration with logging
+// Enhanced CORS configuration with environment-specific settings
 export const corsWithLogging = {
   origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
     const allowedOrigins = getAllowedOrigins();
+    const nodeEnv = process.env.NODE_ENV || 'development';
     
-    // Allow requests with no origin (like mobile apps or curl requests)
+    // Allow requests with no origin (like mobile apps or curl requests) in development only
     if (!origin) {
-      corsLogger.info('CORS: Allowing request with no origin');
-      return callback(null, true);
+      if (nodeEnv === 'development') {
+        corsLogger.info('CORS: Allowing request with no origin (development mode)');
+        return callback(null, true);
+      } else {
+        corsLogger.warn('CORS: Blocking request with no origin (production mode)');
+        return callback(new Error('Origin required in production'));
+      }
     }
     
     if (allowedOrigins.includes(origin)) {
-      corsLogger.info(`CORS: Allowing origin: ${origin}`);
+      corsLogger.info(`CORS: Allowing origin: ${origin} (${nodeEnv})`);
       callback(null, true);
     } else {
-      corsLogger.warn(`CORS: Blocking origin: ${origin}`);
-      callback(new Error(`Origin ${origin} not allowed by CORS policy`));
+      corsLogger.warn(`CORS: Blocking origin: ${origin} (${nodeEnv})`);
+      callback(new Error(`Origin ${origin} not allowed by CORS policy in ${nodeEnv}`));
     }
   },
   credentials: true,
@@ -112,9 +155,15 @@ export const corsWithLogging = {
     'Accept',
     'Authorization',
     'X-CSRF-Token',
-    'X-API-Key'
+    'X-API-Key',
+    'X-Request-ID'
   ],
-  exposedHeaders: ['X-Total-Count', 'X-Page-Count'],
+  exposedHeaders: ['X-Total-Count', 'X-Page-Count', 'X-Request-ID'],
   maxAge: 86400 // 24 hours
+};
+
+// Export CORS configuration for use in session middleware
+export const getCorsConfigForSession = () => {
+  return getCorsConfig().cookie;
 };
 

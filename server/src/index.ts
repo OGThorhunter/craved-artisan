@@ -8,7 +8,7 @@ import pgSession from 'connect-pg-simple';
 import { createLogger, format, transports } from 'winston';
 import { errorHandler } from './middleware/errorHandler';
 import { env } from './utils/validateEnv';
-import { logCors, corsWithLogging } from './middleware/logCors';
+import { logCors, corsWithLogging, getCorsConfigForSession } from './middleware/logCors';
 import { helmetConfig, devHelmetConfig } from './middleware/helmetConfig';
 import authRoutes from './routes/auth-test';
 import protectedRoutes from './routes/protected-demo';
@@ -108,10 +108,8 @@ app.use(session({
   resave: true,
   saveUninitialized: true,
   cookie: {
-    secure: env.NODE_ENV === 'production',
-    httpOnly: true,
+    ...getCorsConfigForSession(),
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    sameSite: env.NODE_ENV === 'production' ? 'strict' : 'lax',
   },
 }));
 

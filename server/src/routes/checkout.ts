@@ -1,22 +1,28 @@
 import express from 'express';
-import { requireAuth, requireRole } from '../middleware/auth';
+import { requireAuth } from '../middleware/auth';
 import { 
+  addToCart,
+  getCart,
+  updateCartItem,
+  removeFromCart,
   createCheckoutSession,
-  processMultiVendorTransfers,
-  getCheckoutSessionStatus,
-  calculateCommissionBreakdown
+  getCheckoutSession,
+  confirmCheckout,
+  cancelCheckout
 } from '../controllers/checkout';
 
 const router = express.Router();
 
-// Checkout Session Routes
-router.post('/create-session', requireAuth, requireRole(['CUSTOMER']), createCheckoutSession);
-router.get('/session/:sessionId', requireAuth, getCheckoutSessionStatus);
+// Cart management endpoints
+router.post('/cart', requireAuth, addToCart);
+router.get('/cart', requireAuth, getCart);
+router.put('/cart/:itemId', requireAuth, updateCartItem);
+router.delete('/cart/:itemId', requireAuth, removeFromCart);
 
-// Multi-vendor Transfer Routes
-router.post('/transfers/:orderId', requireAuth, requireRole(['CUSTOMER']), processMultiVendorTransfers);
-
-// Commission Calculation Routes
-router.get('/commission/:orderId', requireAuth, calculateCommissionBreakdown);
+// Checkout session endpoints
+router.post('/checkout/session', requireAuth, createCheckoutSession);
+router.get('/checkout/session/:sessionId', requireAuth, getCheckoutSession);
+router.post('/checkout/session/:sessionId/confirm', requireAuth, confirmCheckout);
+router.post('/checkout/session/:sessionId/cancel', requireAuth, cancelCheckout);
 
 export default router; 

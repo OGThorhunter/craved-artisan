@@ -1,0 +1,923 @@
+openapi: 3.0.3
+info:
+  title: Craved Artisan Marketplace API
+  description: API for the Craved Artisan marketplace platform
+  version: 1.0.0
+  contact:
+    name: Craved Artisan Team
+servers:
+  - url: http://localhost:3001/api
+    description: Development server
+  - url: https://api.cravedartisan.com/api
+    description: Production server
+
+components:
+  securitySchemes:
+    sessionAuth:
+      type: apiKey
+      in: cookie
+      name: connect.sid
+      description: Session cookie for authentication
+
+  schemas:
+    # Common schemas
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error type
+        message:
+          type: string
+          description: Human-readable error message
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+      required:
+        - error
+        - message
+
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+          minimum: 1
+          example: 1
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+          example: 20
+        total:
+          type: integer
+          example: 150
+        totalPages:
+          type: integer
+          example: 8
+        hasNext:
+          type: boolean
+          example: true
+        hasPrev:
+          type: boolean
+          example: false
+
+    # Auth schemas
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: "vendor@cravedartisan.com"
+        password:
+          type: string
+          minLength: 8
+          example: "SecurePass123!"
+      required:
+        - email
+        - password
+
+    RegisterRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: "newvendor@example.com"
+        password:
+          type: string
+          minLength: 8
+          example: "SecurePass123!"
+        role:
+          type: string
+          enum: [CUSTOMER, VENDOR, ADMIN, SUPPLIER, EVENT_COORDINATOR, DROPOFF]
+          default: CUSTOMER
+          example: "VENDOR"
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 50
+          example: "John"
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 50
+          example: "Doe"
+        phone:
+          type: string
+          example: "+1-555-123-4567"
+        bio:
+          type: string
+          maxLength: 500
+          example: "Artisan baker specializing in sourdough breads"
+        website:
+          type: string
+          format: uri
+          example: "https://johnsbread.com"
+      required:
+        - email
+        - password
+        - firstName
+        - lastName
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "user_123"
+        email:
+          type: string
+          format: email
+          example: "vendor@cravedartisan.com"
+        role:
+          type: string
+          enum: [CUSTOMER, VENDOR, ADMIN, SUPPLIER, EVENT_COORDINATOR, DROPOFF]
+          example: "VENDOR"
+        profile:
+          $ref: '#/components/schemas/UserProfile'
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-01-01T00:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2025-01-01T00:00:00Z"
+
+    UserProfile:
+      type: object
+      properties:
+        firstName:
+          type: string
+          example: "John"
+        lastName:
+          type: string
+          example: "Doe"
+        phone:
+          type: string
+          example: "+1-555-123-4567"
+        bio:
+          type: string
+          example: "Artisan baker specializing in sourdough breads"
+        website:
+          type: string
+          format: uri
+          example: "https://johnsbread.com"
+
+    AuthResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Login successful"
+        user:
+          $ref: '#/components/schemas/User'
+
+    SessionResponse:
+      type: object
+      properties:
+        authenticated:
+          type: boolean
+          example: true
+        user:
+          $ref: '#/components/schemas/User'
+
+    # Vendor schemas
+    Vendor:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "vendor_123"
+        businessName:
+          type: string
+          example: "John's Artisan Bakery"
+        description:
+          type: string
+          example: "Premium artisan bakery specializing in fresh bread and pastries"
+        category:
+          type: string
+          example: "Bakery"
+        rating:
+          type: number
+          minimum: 0
+          maximum: 5
+          example: 4.8
+        totalOrders:
+          type: integer
+          example: 1250
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-01-01T00:00:00Z"
+
+    # Product schemas
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "product_123"
+        vendorId:
+          type: string
+          example: "vendor_123"
+        name:
+          type: string
+          example: "Sourdough Bread"
+        description:
+          type: string
+          example: "Traditional sourdough bread made with our 100-year-old starter"
+        price:
+          type: number
+          minimum: 0
+          example: 8.99
+        category:
+          type: string
+          example: "Bread"
+        stockQuantity:
+          type: integer
+          minimum: 0
+          example: 25
+        images:
+          type: array
+          items:
+            type: string
+            format: uri
+          example: ["https://example.com/bread1.jpg"]
+        rating:
+          type: number
+          minimum: 0
+          maximum: 5
+          example: 4.9
+        reviewCount:
+          type: integer
+          example: 47
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-01-01T00:00:00Z"
+
+    ProductListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    # Analytics schemas
+    VendorOverview:
+      type: object
+      properties:
+        vendorId:
+          type: string
+          example: "vendor_123"
+        period:
+          type: string
+          enum: [daily, weekly, monthly, quarterly, yearly]
+          example: "monthly"
+        revenue:
+          type: object
+          properties:
+            current:
+              type: number
+              example: 12500.50
+            previous:
+              type: number
+              example: 11800.25
+            change:
+              type: number
+              example: 5.93
+            changeType:
+              type: string
+              enum: [increase, decrease]
+              example: "increase"
+        orders:
+          type: object
+          properties:
+            current:
+              type: integer
+              example: 156
+            previous:
+              type: integer
+              example: 142
+            change:
+              type: number
+              example: 9.86
+        customers:
+          type: object
+          properties:
+            new:
+              type: integer
+              example: 23
+            returning:
+              type: integer
+              example: 89
+            total:
+              type: integer
+              example: 112
+        topCategories:
+          type: array
+          items:
+            type: object
+            properties:
+              category:
+                type: string
+                example: "Bread"
+              revenue:
+                type: number
+                example: 6500.25
+              percentage:
+                type: number
+                example: 52.0
+
+    BestSeller:
+      type: object
+      properties:
+        productId:
+          type: string
+          example: "product_123"
+        name:
+          type: string
+          example: "Sourdough Bread"
+        revenue:
+          type: number
+          example: 1250.75
+        units:
+          type: integer
+          example: 139
+        reorderRate:
+          type: number
+          minimum: 0
+          maximum: 1
+          example: 0.85
+        rating:
+          type: number
+          minimum: 0
+          maximum: 5
+          example: 4.9
+        stock:
+          type: integer
+          example: 25
+        category:
+          type: string
+          example: "Bread"
+
+    BestSellersResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/BestSeller'
+        meta:
+          type: object
+          properties:
+            period:
+              type: string
+              enum: [weekly, monthly, quarterly]
+              example: "monthly"
+            limit:
+              type: integer
+              example: 10
+            totalProducts:
+              type: integer
+              example: 45
+
+    # Cart and Checkout schemas
+    CartItem:
+      type: object
+      properties:
+        productId:
+          type: string
+          example: "product_123"
+        quantity:
+          type: integer
+          minimum: 1
+          example: 2
+        price:
+          type: number
+          minimum: 0
+          example: 8.99
+
+    CartRequest:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CartItem'
+          minItems: 1
+      required:
+        - items
+
+    CartResponse:
+      type: object
+      properties:
+        cartId:
+          type: string
+          example: "cart_123"
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CartItem'
+        subtotal:
+          type: number
+          example: 17.98
+        tax:
+          type: number
+          example: 1.44
+        total:
+          type: number
+          example: 19.42
+        expiresAt:
+          type: string
+          format: date-time
+          example: "2025-01-02T00:00:00Z"
+
+    CheckoutSessionRequest:
+      type: object
+      properties:
+        cartId:
+          type: string
+          example: "cart_123"
+        shippingAddress:
+          type: object
+          properties:
+            firstName:
+              type: string
+              example: "John"
+            lastName:
+              type: string
+              example: "Doe"
+            address:
+              type: string
+              example: "123 Main St"
+            city:
+              type: string
+              example: "Atlanta"
+            state:
+              type: string
+              example: "GA"
+            zipCode:
+              type: string
+              example: "30301"
+            country:
+              type: string
+              example: "US"
+        deliveryMethod:
+          type: string
+          enum: [pickup, delivery]
+          example: "pickup"
+        pickupLocation:
+          type: string
+          example: "Downtown Market"
+        pickupTime:
+          type: string
+          format: date-time
+          example: "2025-01-02T14:00:00Z"
+      required:
+        - cartId
+        - shippingAddress
+        - deliveryMethod
+
+    CheckoutSessionResponse:
+      type: object
+      properties:
+        sessionId:
+          type: string
+          example: "cs_123"
+        status:
+          type: string
+          enum: [pending, completed, expired]
+          example: "pending"
+        amount:
+          type: number
+          example: 19.42
+        currency:
+          type: string
+          example: "usd"
+        expiresAt:
+          type: string
+          format: date-time
+          example: "2025-01-02T00:00:00Z"
+        paymentIntent:
+          type: string
+          example: "pi_123"
+
+paths:
+  # Auth endpoints
+  /auth/login:
+    post:
+      summary: User login
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/register:
+    post:
+      summary: User registration
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: User already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/session:
+    get:
+      summary: Check current session
+      tags: [Authentication]
+      security:
+        - sessionAuth: []
+      responses:
+        '200':
+          description: Session valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+        '401':
+          description: No valid session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # Vendor endpoints
+  /vendors/{vendorId}:
+    get:
+      summary: Get vendor details
+      tags: [Vendors]
+      parameters:
+        - name: vendorId
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "vendor_123"
+      responses:
+        '200':
+          description: Vendor details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vendor'
+        '404':
+          description: Vendor not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /vendors/{vendorId}/products:
+    get:
+      summary: Get vendor products
+      tags: [Vendors]
+      parameters:
+        - name: vendorId
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "vendor_123"
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          example: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          example: 20
+        - name: category
+          in: query
+          schema:
+            type: string
+          example: "Bread"
+      responses:
+        '200':
+          description: Vendor products
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductListResponse'
+        '404':
+          description: Vendor not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # Product endpoints
+  /products:
+    get:
+      summary: Get products
+      tags: [Products]
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          example: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          example: 20
+        - name: category
+          in: query
+          schema:
+            type: string
+          example: "Bread"
+        - name: vendorId
+          in: query
+          schema:
+            type: string
+          example: "vendor_123"
+        - name: minPrice
+          in: query
+          schema:
+            type: number
+            minimum: 0
+          example: 5.00
+        - name: maxPrice
+          in: query
+          schema:
+            type: number
+            minimum: 0
+          example: 25.00
+      responses:
+        '200':
+          description: Products list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductListResponse'
+
+  /products/{productId}:
+    get:
+      summary: Get product details
+      tags: [Products]
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "product_123"
+      responses:
+        '200':
+          description: Product details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # Analytics endpoints
+  /analytics/vendor/overview:
+    get:
+      summary: Get vendor analytics overview
+      tags: [Analytics]
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [daily, weekly, monthly, quarterly, yearly]
+            default: monthly
+          example: "monthly"
+        - name: vendorId
+          in: query
+          required: true
+          schema:
+            type: string
+          example: "vendor_123"
+      responses:
+        '200':
+          description: Vendor analytics overview
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VendorOverview'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Vendor not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /analytics/vendor/best-sellers:
+    get:
+      summary: Get vendor best sellers
+      tags: [Analytics]
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [weekly, monthly, quarterly]
+            default: monthly
+          example: "monthly"
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+          example: 10
+        - name: vendorId
+          in: query
+          required: true
+          schema:
+            type: string
+          example: "vendor_123"
+      responses:
+        '200':
+          description: Vendor best sellers
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BestSellersResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Vendor not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # Cart and Checkout endpoints
+  /cart:
+    post:
+      summary: Add items to cart
+      tags: [Orders]
+      security:
+        - sessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CartRequest'
+      responses:
+        '200':
+          description: Cart created/updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CartResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /checkout/session:
+    post:
+      summary: Create checkout session
+      tags: [Orders]
+      security:
+        - sessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckoutSessionRequest'
+      responses:
+        '200':
+          description: Checkout session created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckoutSessionResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Cart not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+tags:
+  - name: Authentication
+    description: User authentication and session management
+  - name: Vendors
+    description: Vendor profile and product management
+  - name: Products
+    description: Product catalog and details
+  - name: Analytics
+    description: Vendor analytics and insights
+  - name: Orders
+    description: Shopping cart and checkout process
