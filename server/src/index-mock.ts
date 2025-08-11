@@ -26,6 +26,41 @@ import financialRoutes from './routes/financial-mock';
 import debugRoutes from './routes/debug';
 import { vendors, products } from './mocks/fixtures';
 
+// Analytics fixtures
+function makeSeries(days = 14) {
+  const out = [];
+  const today = new Date();
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    out.push({
+      date: d.toISOString().slice(0, 10),
+      revenue: +(200 + Math.random() * 400).toFixed(2),
+      orders: Math.floor(5 + Math.random() * 20),
+    });
+  }
+  return out;
+}
+
+const series = makeSeries(14);
+const totals = series.reduce(
+  (acc, d) => ({ 
+    totalRevenue: +(acc.totalRevenue + d.revenue).toFixed(2), 
+    totalOrders: acc.totalOrders + d.orders 
+  }), 
+  { totalRevenue: 0, totalOrders: 0 }
+);
+const avgOrderValue = totals.totalOrders ? +(totals.totalRevenue / totals.totalOrders).toFixed(2) : 0;
+
+// Reuse product fixtures to build top sellers
+const bestSellers = {
+  items: [
+    { productId: "prod-sourdough-1", name: "Country Sourdough Loaf", qtySold: 140, totalRevenue: 1190.00 },
+    { productId: "prod-granola-1", name: "Honey Almond Granola", qtySold: 85, totalRevenue: 1020.00 },
+    { productId: "prod-soap-1", name: "Lavender Goat Milk Soap", qtySold: 60, totalRevenue: 420.00 },
+  ]
+};
+
 // Load environment variables
 dotenv.config();
 
@@ -127,10 +162,13 @@ app.use('/api/financial', financialRoutes); // Keep for backward compatibility
 // Debug routes (development only)
 app.use('/api/_debug', debugRoutes);
 
+// 1) helper to mount routes at BOTH "/" and "/api"
+const both = (p: string) => [p, `/api${p}`] as const;
+
 const router = express.Router();
 
 // Health (already works)
-router.get("/health", (req,res) => {
+router.get(both("/health"), (req,res) => {
   res.json({ status: "OK", timestamp: new Date().toISOString(), service: "craved-artisan-server", mode: "MOCK" });
 });
 
@@ -172,6 +210,90 @@ router.get("/vendors/:vendorId/products", (req, res) => {
 
 app.use(router);
 
+// 4) Analytics mocks (match your frontend exactly)
+app.get(both("/analytics/vendor/:vendorId/summary"), (_req, res) => {
+  res.json({ totalRevenue: totals.totalRevenue, totalOrders: totals.totalOrders, avgOrderValue, series });
+});
+app.get(both("/analytics/vendor/:vendorId/trends"), (_req, res) => {
+  res.json({ series });
+});
+app.get(both("/analytics/vendor/:vendorId/best-sellers"), (_req, res) => {
+  res.json({
+    items: [
+      { productId: "prod-sourdough-1", name: "Country Sourdough Loaf", qtySold: 140, totalRevenue: 1190.00 },
+      { productId: "prod-granola-1", name: "Honey Almond Granola", qtySold: 85, totalRevenue: 1020.00 },
+      { productId: "prod-soap-1", name: "Lavender Goat Milk Soap", qtySold: 60, totalRevenue: 420.00 },
+    ]
+  });
+});
+
+// Aliases to match current frontend calls
+app.get("/api/vendor/:vendorId/analytics/summary", (_req, res) => {
+  res.json({ totals, series });
+});
+
+app.get("/api/vendor/:vendorId/analytics/trends", (req, res) => {
+  res.json({ series });
+});
+
+app.get("/api/vendor/:vendorId/analytics/bestsellers", (req, res) => {
+  const range = req.query.range || 'monthly';
+  const limit = parseInt(req.query.limit as string) || 10;
+  
+  // Return mock best sellers data with the expected structure
+  res.json({
+    data: [
+      {
+        productId: "prod-sourdough-1",
+        name: "Country Sourdough Loaf",
+        revenue: 1190.00,
+        units: 140,
+        reorderRate: 85.5,
+        rating: 4.8,
+        stock: 25,
+        category: "Bread",
+        trend: 12.5,
+        trendData: series.map(s => ({ date: s.date, value: s.revenue }))
+      },
+      {
+        productId: "prod-granola-1",
+        name: "Honey Almond Granola",
+        revenue: 1020.00,
+        units: 85,
+        reorderRate: 78.2,
+        rating: 4.6,
+        stock: 15,
+        category: "Snacks",
+        trend: 8.3,
+        trendData: series.map(s => ({ date: s.date, value: s.revenue * 0.8 }))
+      },
+      {
+        productId: "prod-soap-1",
+        name: "Lavender Goat Milk Soap",
+        revenue: 420.00,
+        units: 60,
+        reorderRate: 92.1,
+        rating: 4.9,
+        stock: 8,
+        category: "Personal Care",
+        trend: 15.7,
+        trendData: series.map(s => ({ date: s.date, value: s.revenue * 0.3 }))
+      }
+    ].slice(0, limit),
+    meta: {
+      vendorId: req.params.vendorId,
+      vendorName: "Mock Vendor",
+      range,
+      limit,
+      totalRevenue: 2630.00,
+      totalUnits: 285,
+      avgReorderRate: 85.3
+    }
+  });
+});
+
+
+
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   logger.error('Unhandled error:', err);
@@ -181,10 +303,8 @@ app.use((err: any, req: express.Request, res: express.Response, next: express.Ne
   });
 });
 
-// Keep your 404 handler LAST:
-app.use((req, res) => {
-  res.status(404).json({ error: "Not found", message: `Route ${req.path} not found` });
-});
+// 5) 404 LAST
+app.use((req,res)=> res.status(404).json({ error:"Not found", message:`Route ${req.path} not found (MOCK)` }));
 
 // Start server
 app.listen(PORT, () => {
@@ -202,4 +322,4 @@ app.listen(PORT, () => {
   logger.info(`📦 Fulfillment endpoints: http://localhost:${PORT}/api/fulfillment`);
   logger.info(`📦 Inventory endpoints: http://localhost:${PORT}/api/inventory`);
   logger.info(`🏪 Supplier endpoints: http://localhost:${PORT}/api/supplier`);
-}); 
+});

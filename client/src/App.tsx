@@ -1,10 +1,10 @@
 import { Router, Route, Switch } from 'wouter';
 import { Toaster } from 'react-hot-toast';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
 import { ZipProvider } from './contexts/ZipContext';
 import { Layout } from './components/Layout';
+import { QueryProvider } from './lib/query';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
@@ -16,6 +16,8 @@ import { JoinCoordinatorPage } from './pages/JoinCoordinatorPage';
 import { JoinDropoffPage } from './pages/JoinDropoffPage';
 import VendorPage from './pages/VendorPage';
 import ProductPage from './pages/ProductPage';
+import VendorStorefrontPage from './pages/VendorStorefrontPage';
+import ProductDetailPage from './pages/ProductDetailPage';
 import DashboardPage from './pages/DashboardPage';
 import { CustomerDashboardPage } from './pages/CustomerDashboardPage';
 import VendorDashboardPage from './pages/dashboard/vendor';
@@ -48,19 +50,9 @@ import VendorOnboardingPage from './pages/VendorOnboardingPage';
 import { NotFound } from './components/NotFound';
 import ProtectedRoute from './components/ProtectedRoute';
 
-// Create a client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      retry: 1,
-    },
-  },
-});
-
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
+    <QueryProvider>
       <AuthProvider>
         <CartProvider>
           <ZipProvider>
@@ -78,6 +70,8 @@ function App() {
             <Route path="/join/dropoff" component={JoinDropoffPage} />
             <Route path="/vendor/:id" component={VendorPage} />
             <Route path="/product/:id" component={ProductPage} />
+            <Route path="/vendors/:vendorId" component={VendorStorefrontPage} />
+            <Route path="/product/:productId" component={ProductDetailPage} />
             <Route path="/checkout" component={CheckoutPage} />
             
             {/* Public Pages */}
@@ -246,7 +240,7 @@ function App() {
     </ZipProvider>
     </CartProvider>
     </AuthProvider>
-    </QueryClientProvider>
+    </QueryProvider>
   );
 }
 

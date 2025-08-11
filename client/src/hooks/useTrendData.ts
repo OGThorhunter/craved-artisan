@@ -32,7 +32,7 @@ export function useTrendData(vendorId: string, range: 'daily' | 'weekly' | 'mont
  * @returns React Query result with analytics summary data
  */
 export function useAnalyticsSummary(vendorId: string) {
-  return useQuery<AnalyticsSummaryResponse>({
+  const { data } = useQuery<AnalyticsSummaryResponse>({
     queryKey: ['analyticsSummary', vendorId],
     queryFn: async () => {
       return await fetchAnalyticsSummary(vendorId);
@@ -43,6 +43,9 @@ export function useAnalyticsSummary(vendorId: string) {
     retry: 2, // Retry failed requests 2 times
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
+  
+  const safe = data ?? { totals: { totalRevenue: 0, totalOrders: 0, avgOrderValue: 0 }, series: [] };
+  return { data: safe, isLoading: false, error: null };
 }
 
 /**

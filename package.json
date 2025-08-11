@@ -26,10 +26,10 @@
     "test": "npm run test:server && npm run test:client",
     "test:server": "cd server && npm run test",
     "test:client": "cd client && npm run test",
-    "db:generate": "cd prisma && npx prisma generate",
-    "db:migrate": "cd prisma && npx prisma migrate dev",
-    "db:studio": "cd prisma && npx prisma studio",
-    "db:reset": "cd prisma && npx prisma migrate reset",
+    "db:generate": "cd server && npx prisma generate",
+    "db:migrate": "cd server && npx prisma migrate dev",
+    "db:studio": "cd server && npx prisma studio",
+    "db:reset": "cd server && npx prisma migrate reset",
     "snapshot": "tsx scripts/projectSnapshot.ts > snapshot.json",
     "gen:api": "npm run gen:types && npm run gen:validators",
     "gen:types": "npx openapi-typescript openapi.yaml -o client/src/lib/api/types.ts",
@@ -38,7 +38,15 @@
   "devDependencies": {
     "concurrently": "^8.2.2",
     "openapi-typescript": "^7.0.0",
-    "openapi-zod-client": "^1.18.3"
+    "openapi-zod-client": "^1.18.3",
+    "supertest": "^7.0.0",
+    "vitest": "^2.0.0",
+    "express-rate-limit": "^7.3.1",
+    "@types/express-rate-limit": "^6.0.0",
+    "@types/supertest": "^6.0.2",
+    "@types/express": "^4.17.23",
+    "@types/cors": "^2.8.17",
+    "@types/morgan": "^1.9.9"
   },
   "keywords": [
     "artisan",

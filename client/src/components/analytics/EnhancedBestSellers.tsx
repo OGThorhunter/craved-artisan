@@ -69,6 +69,15 @@ const EnhancedBestSellers = () => {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [showTrendChart, setShowTrendChart] = useState<string | null>(null);
 
+  // Safe defaults
+  const DEFAULT_SUMMARY = {
+    totalRevenue: 0,
+    totalOrders: 0,
+    avgOrderValue: 0,
+    series: []
+  };
+  const DEFAULT_BEST = { items: [] };
+
   const { data: response, isLoading, error } = useQuery({
     queryKey: ['bestsellers', user?.id, range, limit, selectedCategory, dateRange],
     queryFn: () => fetchBestSellers(user?.id || '', range, limit),
@@ -76,13 +85,33 @@ const EnhancedBestSellers = () => {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  const data: BestSellersResponse | null = response || null;
+  // wherever you consume the data:
+  const summaryLike = response?.summary ?? response?.overview ?? DEFAULT_SUMMARY; // accept either shape
+  const totalRevenue = summaryLike?.totals?.totalRevenue ?? summaryLike?.totalRevenue ?? 0;
+  const totalOrders  = summaryLike?.totals?.totalOrders  ?? summaryLike?.totalOrders  ?? 0;
+  const aov          = summaryLike?.totals?.avgOrderValue ?? summaryLike?.avgOrderValue ?? 0;
+
+  const best = response?.bestSellers ?? DEFAULT_BEST;
+  const items = Array.isArray(best?.items) ? best.items : [];
+  
+  const data: BestSellersResponse | null = response ?? {
+    data: items,
+    meta: {
+      vendorId: user?.id || '',
+      vendorName: '',
+      range: 'monthly',
+      limit: 10,
+      totalRevenue,
+      totalUnits: totalOrders,
+      avgReorderRate: 0,
+    }
+  };
 
   // Filter and sort data
   const filteredAndSortedData = useMemo(() => {
-    if (!data?.data) return [];
+    if (!items.length) return [];
     
-    let filtered = data.data;
+    let filtered = items;
     
     // Apply category filter
     if (selectedCategory !== 'all') {
@@ -108,15 +137,15 @@ const EnhancedBestSellers = () => {
       } else {
         return bValue - aValue;
       }
-    });
-  }, [data, selectedCategory, dateRange, customStartDate, customEndDate, sortField, sortDirection]);
+         });
+   }, [items, selectedCategory, dateRange, customStartDate, customEndDate, sortField, sortDirection]);
 
   // Get unique categories
   const categories = useMemo(() => {
-    if (!data?.data) return [];
-    const uniqueCategories = [...new Set(data.data.map(item => item.category))];
+    if (!items.length) return ['all'];
+    const uniqueCategories = [...new Set(items.map(item => item.category))];
     return ['all', ...uniqueCategories];
-  }, [data]);
+  }, [items]);
 
   const handleSort = (field: typeof sortField) => {
     if (sortField === field) {
@@ -312,48 +341,48 @@ const EnhancedBestSellers = () => {
         </div>
       </div>
 
-      {/* Summary Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-blue-600">Total Revenue</p>
-              <p className="text-2xl font-bold text-blue-900">${data.meta.totalRevenue.toLocaleString()}</p>
-            </div>
-            <DollarSign className="w-8 h-8 text-blue-500" />
-          </div>
-        </div>
+             {/* Summary Stats */}
+       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+         <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+           <div className="flex items-center justify-between">
+             <div>
+               <p className="text-sm font-medium text-blue-600">Total Revenue</p>
+               <p className="text-2xl font-bold text-blue-900">${totalRevenue.toLocaleString()}</p>
+             </div>
+             <DollarSign className="w-8 h-8 text-blue-500" />
+           </div>
+         </div>
 
-        <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-green-600">Total Units</p>
-              <p className="text-2xl font-bold text-green-900">{data.meta.totalUnits.toLocaleString()}</p>
-            </div>
-            <Package className="w-8 h-8 text-green-500" />
-          </div>
-        </div>
+         <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+           <div className="flex items-center justify-between">
+             <div>
+               <p className="text-sm font-medium text-green-600">Total Units</p>
+               <p className="text-2xl font-bold text-green-900">{totalOrders.toLocaleString()}</p>
+             </div>
+             <Package className="w-8 h-8 text-green-500" />
+           </div>
+         </div>
 
-        <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-yellow-600">Avg Reorder Rate</p>
-              <p className="text-2xl font-bold text-yellow-900">{data.meta.avgReorderRate.toFixed(1)}%</p>
-            </div>
-            <Target className="w-8 h-8 text-yellow-500" />
-          </div>
-        </div>
+         <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+           <div className="flex items-center justify-between">
+             <div>
+               <p className="text-sm font-medium text-yellow-600">Avg Reorder Rate</p>
+               <p className="text-2xl font-bold text-yellow-900">{aov.toFixed(1)}%</p>
+             </div>
+             <Target className="w-8 h-8 text-yellow-500" />
+           </div>
+         </div>
 
-        <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-purple-600">Products</p>
-              <p className="text-2xl font-bold text-purple-900">{filteredAndSortedData.length}</p>
-            </div>
-            <ShoppingCart className="w-8 h-8 text-purple-500" />
-          </div>
-        </div>
-      </div>
+         <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+           <div className="flex items-center justify-between">
+             <div>
+               <p className="text-sm font-medium text-purple-600">Products</p>
+               <p className="text-2xl font-bold text-purple-900">{filteredAndSortedData.length}</p>
+             </div>
+             <ShoppingCart className="w-8 h-8 text-purple-500" />
+           </div>
+         </div>
+       </div>
 
       {/* Products Table */}
       <div className="overflow-x-auto">

@@ -6,6 +6,11 @@ import inspect from 'vite-plugin-inspect';
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: "/", // important for dev
+  server: {
+    port: 5173,
+    strictPort: true,
+  },
   plugins: [
     react(),
     checker({ typescript: true }),

@@ -34,6 +34,8 @@ import marginManagementRoutes from './routes/margin-management';
 import taxProjectionRoutes from './routes/tax-projection';
 import analyticsRoutes from './routes/analyticsRoutes';
 import debugRoutes from './routes/debug';
+import vendorRouter from './routes/vendor.routes';
+import productRouter from './routes/product.routes';
 import { initializeTaxReminderCron } from './services/taxReminderCron';
 
 // Load environment variables
@@ -167,6 +169,10 @@ app.use('/api', analyticsRoutes);
 if (env.NODE_ENV === 'development') {
   app.use('/api/_debug', debugRoutes);
 }
+
+// Mount new vendor and product routes
+app.use('/vendors', vendorRouter);
+app.use('/products', productRouter);
 
 app.use('/api/products', (req, res) => {
   res.json({ message: 'Product routes - to be implemented' });

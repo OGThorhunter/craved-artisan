@@ -59,6 +59,9 @@ model Product {
   vendor        VendorProfile @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
   orderItems    OrderItem[]
   analyticsEvents AnalyticsEvent[]
+
+  @@index([vendor_id])
+  @@index([created_at])
 }
 
 model Order {
