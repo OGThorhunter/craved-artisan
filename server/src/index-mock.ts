@@ -292,7 +292,48 @@ app.get("/api/vendor/:vendorId/analytics/bestsellers", (req, res) => {
   });
 });
 
+// New analytics endpoints for the live analytics feature
+app.get("/api/analytics/vendor/:vendorId/overview", (req, res) => {
+  const interval = req.query.interval || 'day';
+  const from = req.query.from ? new Date(req.query.from as string) : undefined;
+  const to = req.query.to ? new Date(req.query.to as string) : undefined;
+  
+  // Generate mock data based on interval
+  const days = interval === 'day' ? 14 : interval === 'week' ? 12 : 12;
+  const mockSeries = makeSeries(days);
+  const mockTotals = mockSeries.reduce(
+    (acc, d) => ({ 
+      totalRevenue: +(acc.totalRevenue + d.revenue).toFixed(2), 
+      totalOrders: acc.totalOrders + d.orders 
+    }), 
+    { totalRevenue: 0, totalOrders: 0 }
+  );
+  const mockAvgOrderValue = mockTotals.totalOrders ? +(mockTotals.totalRevenue / mockTotals.totalOrders).toFixed(2) : 0;
+  
+  res.json({
+    totals: {
+      totalRevenue: mockTotals.totalRevenue,
+      totalOrders: mockTotals.totalOrders,
+      avgOrderValue: mockAvgOrderValue
+    },
+    series: mockSeries
+  });
+});
 
+app.get("/api/analytics/vendor/:vendorId/best-sellers", (req, res) => {
+  const limit = parseInt(req.query.limit as string) || 10;
+  const from = req.query.from ? new Date(req.query.from as string) : undefined;
+  const to = req.query.to ? new Date(req.query.to as string) : undefined;
+  
+  res.json({
+    items: bestSellers.items.slice(0, limit).map(item => ({
+      productId: item.productId,
+      name: item.name,
+      qtySold: item.qtySold,
+      totalRevenue: item.totalRevenue
+    }))
+  });
+});
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

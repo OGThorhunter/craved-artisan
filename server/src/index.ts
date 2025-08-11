@@ -6,6 +6,8 @@ import dotenv from 'dotenv';
 import session from 'express-session';
 import pgSession from 'connect-pg-simple';
 import { createLogger, format, transports } from 'winston';
+import rateLimit from 'express-rate-limit';
+import { LRUCache } from 'lru-cache';
 import { errorHandler } from './middleware/errorHandler';
 import { env } from './utils/validateEnv';
 import { logCors, corsWithLogging, getCorsConfigForSession } from './middleware/logCors';
@@ -33,6 +35,7 @@ import taxReportsRoutes from './routes/tax-reports';
 import marginManagementRoutes from './routes/margin-management';
 import taxProjectionRoutes from './routes/tax-projection';
 import analyticsRoutes from './routes/analyticsRoutes';
+import analyticsRouter from './routes/analytics.routes';
 import debugRoutes from './routes/debug';
 import vendorRouter from './routes/vendor.routes';
 import productRouter from './routes/product.routes';
@@ -124,6 +127,46 @@ app.use(morgan('combined', {
   }
 }));
 
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200, // limit each IP to 200 requests per windowMs
+  message: {
+    error: 'Too many requests',
+    message: 'Rate limit exceeded. Please try again later.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use(limiter);
+
+// Simple LRU cache for GET endpoints
+const cache = new LRUCache<string, any>({
+  max: 500, // Maximum number of items
+  ttl: 30 * 1000, // 30 seconds TTL
+});
+
+// Cache middleware for GET requests
+app.use((req, res, next) => {
+  if (req.method === 'GET' && (req.path.startsWith('/api/products') || req.path.startsWith('/api/vendors'))) {
+    const key = req.originalUrl;
+    const cached = cache.get(key);
+    
+    if (cached) {
+      return res.json(cached);
+    }
+    
+    // Store original send method
+    const originalSend = res.json;
+    res.json = function(data) {
+      cache.set(key, data);
+      return originalSend.call(this, data);
+    };
+  }
+  next();
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   logger.info('Health check requested');
@@ -164,6 +207,7 @@ app.use('/api/tax-reports', taxReportsRoutes);
 app.use('/api/margin-management', marginManagementRoutes);
 app.use('/api/tax-projection', taxProjectionRoutes);
 app.use('/api', analyticsRoutes);
+app.use('/api/analytics', analyticsRouter);
 
 // Debug routes (development only)
 if (env.NODE_ENV === 'development') {
@@ -171,16 +215,8 @@ if (env.NODE_ENV === 'development') {
 }
 
 // Mount new vendor and product routes
-app.use('/vendors', vendorRouter);
-app.use('/products', productRouter);
-
-app.use('/api/products', (req, res) => {
-  res.json({ message: 'Product routes - to be implemented' });
-});
-
-app.use('/api/users', (req, res) => {
-  res.json({ message: 'User routes - to be implemented' });
-});
+app.use('/api/vendors', vendorRouter);
+app.use('/api/products', productRouter);
 
 // 404 handler
 app.use('*', (req, res) => {

@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { http } from '../lib/http';
+import { flags } from '../lib/flags';
 
 // Types - fallback to inferred types until OpenAPI types are generated
 interface Product {
@@ -42,7 +43,8 @@ export function useProducts({ limit = 12, offset = 0 } = {}) {
   return useQuery({
     queryKey: ['products', { limit, offset }],
     queryFn: async (): Promise<ProductListResponse> => {
-      const response = await http(`/products?limit=${limit}&offset=${offset}`);
+      const path = flags.LIVE_PRODUCTS ? `/api/products?limit=${limit}&offset=${offset}` : `/products?limit=${limit}&offset=${offset}`;
+      const response = await http(path);
       return response.json();
     },
     staleTime: 5000,
@@ -53,7 +55,8 @@ export function useProduct(productId: string) {
   return useQuery({
     queryKey: ['product', productId],
     queryFn: async (): Promise<Product> => {
-      const response = await http(`/products/${productId}`);
+      const path = flags.LIVE_PRODUCTS ? `/api/products/${productId}` : `/products/${productId}`;
+      const response = await http(path);
       return response.json();
     },
     staleTime: 5000,
@@ -65,7 +68,8 @@ export function useVendor(vendorId: string) {
   return useQuery({
     queryKey: ['vendor', vendorId],
     queryFn: async (): Promise<Vendor> => {
-      const response = await http(`/vendors/${vendorId}`);
+      const path = flags.LIVE_PRODUCTS ? `/api/vendors/${vendorId}` : `/vendors/${vendorId}`;
+      const response = await http(path);
       return response.json();
     },
     staleTime: 5000,
@@ -77,7 +81,8 @@ export function useVendorProducts(vendorId: string) {
   return useQuery({
     queryKey: ['vendor-products', vendorId],
     queryFn: async (): Promise<VendorProductsResponse> => {
-      const response = await http(`/vendors/${vendorId}/products`);
+      const path = flags.LIVE_PRODUCTS ? `/api/vendors/${vendorId}/products` : `/vendors/${vendorId}/products`;
+      const response = await http(path);
       return response.json();
     },
     staleTime: 5000,

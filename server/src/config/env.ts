@@ -23,6 +23,12 @@ const envSchema = z.object({
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
   STRIPE_CONNECT_CLIENT_ID: z.string().optional(),
   
+  // Financial configuration with sane defaults
+  PLATFORM_FEE_BPS: z.string().optional().transform(val => val ? parseInt(val, 10) : 100), // 1.0%
+  STRIPE_FEE_BPS: z.string().optional().transform(val => val ? parseInt(val, 10) : 290), // 2.9%
+  STRIPE_FEE_FLAT: z.string().optional().transform(val => val ? parseInt(val, 10) : 30), // 30 cents
+  DEFAULT_COGS_PCT: z.string().optional().transform(val => val ? parseFloat(val) : 0), // 0% default
+  
   // Server configuration
   PORT: z.string().optional().transform(val => val ? parseInt(val, 10) : 3001),
   
@@ -119,6 +125,13 @@ export const stripeConfig = {
   enabled: config.ENABLE_STRIPE,
 } as const;
 
+export const financialConfig = {
+  platformFeeBps: config.PLATFORM_FEE_BPS,
+  stripeFeeBps: config.STRIPE_FEE_BPS,
+  stripeFeeFlat: config.STRIPE_FEE_FLAT,
+  defaultCogsPct: config.DEFAULT_COGS_PCT,
+} as const;
+
 export const loggingConfig = {
   level: config.LOG_LEVEL,
   fileEnabled: config.LOG_FILE_ENABLED,
@@ -145,6 +158,7 @@ export type DatabaseConfig = typeof databaseConfig;
 export type SessionConfig = typeof sessionConfig;
 export type CorsConfig = typeof corsConfig;
 export type StripeConfig = typeof stripeConfig;
+export type FinancialConfig = typeof financialConfig;
 export type LoggingConfig = typeof loggingConfig;
 export type SecurityConfig = typeof securityConfig;
 export type FeatureConfig = typeof featureConfig;

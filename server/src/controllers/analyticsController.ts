@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
+import { vendorOverview, vendorBestSellers } from '../services/analytics.service';
+import LRU from 'lru-cache';
 
 // Existing schemas
 const analyticsTrendsSchema = z.object({
@@ -977,4 +979,43 @@ function generateMockCustomerInsights(): CustomerInsight[] {
   });
   
   return insights.sort((a, b) => b.totalRevenue - a.totalRevenue);
+}
+
+// New analytics endpoints with caching
+const cache = new LRU<string, any>({ ttl: 30_000, max: 500 });
+
+export async function getVendorOverview(req: Request, res: Response) {
+  const { vendorId } = req.params;
+  const { from, to, interval } = req.query as any;
+  const key = `ov:${vendorId}:${from || ""}:${to || ""}:${interval}`;
+  
+  const hit = cache.get(key); 
+  if (hit) return res.json(hit);
+  
+  const data = await vendorOverview(vendorId, {
+    from: from ? new Date(from) : undefined,
+    to: to ? new Date(to) : undefined,
+    interval: (interval as any) || "day",
+  });
+  
+  cache.set(key, data); 
+  res.json(data);
+}
+
+export async function getVendorBestSellers(req: Request, res: Response) {
+  const { vendorId } = req.params;
+  const { from, to, limit } = req.query as any;
+  const key = `bs:${vendorId}:${from || ""}:${to || ""}:${limit || 10}`;
+  
+  const hit = cache.get(key); 
+  if (hit) return res.json(hit);
+  
+  const data = await vendorBestSellers(vendorId, {
+    from: from ? new Date(from) : undefined,
+    to: to ? new Date(to) : undefined,
+    limit: limit ? Number(limit) : 10,
+  });
+  
+  cache.set(key, data); 
+  res.json(data);
 } 

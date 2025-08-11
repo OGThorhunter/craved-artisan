@@ -24,12 +24,42 @@ import AISummaryBuilder from "@/components/analytics/AISummaryBuilder";
 import InteractiveCashFlow from "@/components/analytics/InteractiveCashFlow";
 import { mockKpis } from "@/mock/analyticsData";
 import { DollarSign, TrendingUp, Package, Users } from "lucide-react";
+import { flags } from "@/lib/flags";
+import { 
+  useVendorOverview, 
+  useVendorBestSellers,
+  useMockVendorOverview,
+  useMockVendorBestSellers 
+} from "@/hooks/analytics";
 
 type TabType = 'insights' | 'financials' | 'taxes' | 'pricing' | 'portfolio';
 
 export default function VendorAnalyticsPage() {
   const [location] = useLocation();
   const [activeTab, setActiveTab] = useState<TabType>('insights');
+  
+  // Use real vendor ID from context or mock for development
+  const vendorId = 'dev-user-id'; // This should come from auth context in production
+  
+  // Analytics data fetching with feature flag support
+  const overviewQuery = flags.LIVE_ANALYTICS 
+    ? useVendorOverview(vendorId, { interval: 'day' })
+    : useMockVendorOverview(vendorId, { interval: 'day' });
+    
+  const bestSellersQuery = flags.LIVE_ANALYTICS
+    ? useVendorBestSellers(vendorId, { limit: 10 })
+    : useMockVendorBestSellers(vendorId, { limit: 10 });
+  
+  // Extract data with safe defaults
+  const overviewData = overviewQuery.data || {
+    totals: { totalRevenue: 0, totalOrders: 0, avgOrderValue: 0 },
+    series: []
+  };
+  
+  const bestSellersData = bestSellersQuery.data || { items: [] };
+  
+  // Loading states
+  const isLoading = overviewQuery.isLoading || bestSellersQuery.isLoading;
 
   // Parse URL parameters to determine active tab
   useEffect(() => {
@@ -62,12 +92,56 @@ export default function VendorAnalyticsPage() {
     <TrendingUp key="avg" size={20} />,
     <Package key="orders" size={20} />,
   ];
+  
+  // Debug information
+  useEffect(() => {
+    console.log('=== ANALYTICS DATA DEBUG ===');
+    console.log('Feature flag LIVE_ANALYTICS:', flags.LIVE_ANALYTICS);
+    console.log('Overview data:', overviewData);
+    console.log('Best sellers data:', bestSellersData);
+    console.log('Loading state:', isLoading);
+  }, [overviewData, bestSellersData, isLoading]);
 
   const renderTabContent = () => {
     switch (activeTab) {
       case 'insights':
         return (
           <div className="space-y-8">
+            {/* Loading State */}
+            {isLoading && (
+              <div className="flex items-center justify-center p-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <span className="ml-2 text-gray-600">Loading analytics data...</span>
+              </div>
+            )}
+            
+            {/* Real-time Analytics Overview */}
+            {!isLoading && flags.LIVE_ANALYTICS && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <KpiCard
+                  title="Total Revenue"
+                  value={`$${overviewData.totals.totalRevenue.toLocaleString()}`}
+                  icon={<DollarSign size={20} />}
+                  trend="+12.5%"
+                  trendDirection="up"
+                />
+                <KpiCard
+                  title="Total Orders"
+                  value={overviewData.totals.totalOrders.toLocaleString()}
+                  icon={<Package size={20} />}
+                  trend="+8.2%"
+                  trendDirection="up"
+                />
+                <KpiCard
+                  title="Avg Order Value"
+                  value={`$${overviewData.totals.avgOrderValue.toFixed(2)}`}
+                  icon={<TrendingUp size={20} />}
+                  trend="+5.1%"
+                  trendDirection="up"
+                />
+              </div>
+            )}
+            
             {/* AI Summary Builder - This Month's Performance */}
             <AISummaryBuilder />
             

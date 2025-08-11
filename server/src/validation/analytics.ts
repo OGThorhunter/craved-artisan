@@ -1,17 +1,17 @@
 import { z } from "zod";
-import type { Request, Response, NextFunction } from 'express';
 
-export const zLimitOffset = z.object({
-  limit: z.coerce.number().int().min(1).max(100).default(20),
-  offset: z.coerce.number().int().min(0).default(0),
+export const zRange = z.object({
+  from: z.string().datetime().optional(),
+  to: z.string().datetime().optional(),
+  interval: z.enum(["day", "week", "month"]).default("day"),
 });
 
-export const zId = z.object({ 
-  id: z.string().min(1) 
+export const zLimit = z.object({ 
+  limit: z.coerce.number().int().min(1).max(50).default(10) 
 });
 
 export function validateQuery<T extends z.ZodTypeAny>(schema: T) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: any, res: any, next: any) => {
     const result = schema.safeParse(req.query);
     if (!result.success) {
       return res.status(400).json({
@@ -25,7 +25,7 @@ export function validateQuery<T extends z.ZodTypeAny>(schema: T) {
 }
 
 export function validateParams<T extends z.ZodTypeAny>(schema: T) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: any, res: any, next: any) => {
     const result = schema.safeParse(req.params);
     if (!result.success) {
       return res.status(400).json({

@@ -1,60 +1,32 @@
-import { Request, Response } from 'express';
-import { productRepo } from '../repos/product.repo';
-import { mapProduct } from './mappers';
+import { productRepo, type ProductFilters } from '../repos/product.repo';
+import { mapProduct, type ProductDTO } from './mappers';
 
-export class ProductService {
-  // List products with pagination
-  static async listProducts(limit: number, offset: number, res: Response) {
+export const productService = {
+  /**
+   * List products with pagination
+   */
+  async products(filters: ProductFilters = {}) {
     // Enforce limits
-    const safeLimit = Math.min(limit, 100);
-    const safeOffset = Math.max(offset, 0);
+    const limit = Math.min(filters.limit ?? 20, 100);
+    const offset = Math.max(filters.offset ?? 0, 0);
 
-    // Get data from repo
-    const [products, total] = await Promise.all([
-      productRepo.listProducts(safeLimit, safeOffset),
-      productRepo.countProducts()
-    ]);
-
-    // Map products
-    const mappedProducts = products.map(mapProduct);
-
-    // Compute meta
-    const meta = {
-      total,
-      limit: safeLimit,
-      offset: safeOffset,
-      hasNext: safeOffset + safeLimit < total,
-      hasPrev: safeOffset > 0,
-      totalPages: Math.ceil(total / safeLimit),
-      currentPage: Math.floor(safeOffset / safeLimit) + 1
-    };
-
-    // Set cache headers
-    res.set({
-      'Cache-Control': 'public, max-age=60', // 1 minute for product lists
-      'ETag': `"products-${safeLimit}-${safeOffset}-${total}"`
-    });
-
-    return {
-      data: mappedProducts,
-      meta
-    };
-  }
-
-  // Get product by ID
-  static async getProductById(productId: string, res: Response) {
-    const product = await productRepo.getProductById(productId);
+    const result = await productRepo.listProducts({ limit, offset });
     
-    if (!product) {
-      return null;
-    }
+    return {
+      data: result.data.map(mapProduct),
+      meta: {
+        total: result.meta.total,
+        limit: result.meta.limit,
+        offset: result.meta.offset
+      }
+    };
+  },
 
-    // Set cache headers
-    res.set({
-      'Cache-Control': 'public, max-age=300', // 5 minutes for individual products
-      'ETag': `"product-${productId}-${product.updatedAt?.getTime() || Date.now()}"`
-    });
-
-    return mapProduct(product);
+  /**
+   * Get product by ID
+   */
+  async productById(id: string): Promise<ProductDTO | null> {
+    const product = await productRepo.getProductById(id);
+    return product ? mapProduct(product) : null;
   }
-}
+};

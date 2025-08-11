@@ -1,52 +1,59 @@
 import { Request, Response } from 'express';
-import { ProductService } from '../services/product.service';
+import { productService } from '../services/product.service';
 
-// GET /products
-export async function listProducts(req: Request, res: Response) {
-  try {
-    const { limit, offset } = (req as any).validated;
-    
-    // Set request ID header if available
-    if (res.locals.requestId) {
-      res.set('x-request-id', res.locals.requestId);
-    }
-
-    const result = await ProductService.listProducts(limit, offset, res);
-    res.json(result);
-  } catch (error) {
-    console.error('Error in listProducts:', error);
-    res.status(500).json({
-      error: 'Internal server error',
-      message: 'Failed to retrieve products'
-    });
-  }
-}
-
-// GET /products/:productId
-export async function getProductById(req: Request, res: Response) {
-  try {
-    const { productId } = (req as any).validated;
-    
-    // Set request ID header if available
-    if (res.locals.requestId) {
-      res.set('x-request-id', res.locals.requestId);
-    }
-
-    const product = await ProductService.getProductById(productId, res);
-    
-    if (!product) {
-      return res.status(404).json({
-        error: 'Not found',
-        message: `Product ${productId} not found`
+export const productController = {
+  /**
+   * List products with pagination
+   */
+  async list(req: Request, res: Response) {
+    try {
+      const { limit, offset } = req.query as { limit?: number; offset?: number };
+      const result = await productService.products({ limit, offset });
+      
+      // Set cache headers
+      res.set({
+        'Cache-Control': 'public, max-age=60', // 1 minute for product lists
+        'ETag': `"products-${limit}-${offset}-${result.meta.total}"`
+      });
+      
+      res.json(result);
+    } catch (error) {
+      console.error('Product list error:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        message: 'Failed to fetch products'
       });
     }
+  },
 
-    res.json(product);
-  } catch (error) {
-    console.error('Error in getProductById:', error);
-    res.status(500).json({
-      error: 'Internal server error',
-      message: 'Failed to retrieve product'
-    });
+  /**
+   * Get product by ID
+   */
+  async byId(req: Request, res: Response) {
+    try {
+      const { id } = req.params as { id: string };
+      const product = await productService.productById(id);
+      
+      if (!product) {
+        return res.status(404).json({
+          error: 'Not found',
+          message: `Product ${id} not found`
+        });
+      }
+      
+      // Set cache headers
+      res.set({
+        'Cache-Control': 'public, max-age=300', // 5 minutes for individual products
+        'ETag': `"product-${id}"`
+      });
+      
+      res.json(product);
+    } catch (error) {
+      console.error('Product byId error:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        message: 'Failed to fetch product'
+      });
+    }
   }
-}
+};
