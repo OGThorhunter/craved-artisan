@@ -94,6 +94,38 @@ craved-artisan/
 - **Concurrently** - Run multiple commands
 - **Docker Compose** - Local development
 
+## 🔒 Security & Diagnostics
+
+### CORS Configuration
+
+The application includes comprehensive CORS logging and configuration:
+
+- **Development**: Allows localhost origins (5173, 5174, 5175, 3000)
+- **Production**: Requires explicit `CLIENT_URL` environment variable
+- **Logging**: All CORS requests are logged to `logs/cors.log`
+- **Vary Header**: Proper caching behavior with `Vary: Origin`
+
+### Debug Endpoints (Development Only)
+
+Available at `/api/_debug/`:
+
+- `/cookies` - Echo request cookies and session data
+- `/headers` - Echo request and response headers  
+- `/cors-config` - Show current CORS configuration
+- `/session-config` - Show session configuration
+
+### Content Security Policy
+
+Environment-specific CSP policies:
+
+- **Development**: Allows Vite HMR and development features
+- **Production**: Strict policies with Stripe integration
+- **Report-only mode**: Available for testing violations
+
+### Troubleshooting
+
+See [DIAGNOSTICS_AND_GUARDRAILS.md](./DIAGNOSTICS_AND_GUARDRAILS.md) for detailed troubleshooting guide.
+
 ## 🚀 Deployment
 
 ### Render + Neon Setup

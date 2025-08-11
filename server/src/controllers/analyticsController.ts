@@ -31,7 +31,10 @@ const portfolioSchema = z.object({
 
 const customerInsightsSchema = z.object({
   vendorId: z.string().min(1, 'Vendor ID is required'),
-  range: z.enum(['monthly', 'quarterly', 'yearly']).default('monthly')
+  from: z.string().optional(),
+  to: z.string().optional(),
+  top: z.number().min(1).max(100).default(10),
+  orderBy: z.enum(['totalRevenue', 'customers', 'avgSpend']).default('totalRevenue')
 });
 
 // Existing interfaces
@@ -292,6 +295,47 @@ export async function getProfitLoss(req: Request, res: Response) {
   }
 }
 
+// New endpoint: Profit & Loss Statement
+export async function getProfitLossStatement(req: Request, res: Response) {
+  try {
+    const { vendorId } = z.object({ vendorId: z.string().min(1, 'Vendor ID is required') }).parse({
+      vendorId: req.params.vendorId
+    });
+
+    const vendor = await prisma.vendor.findUnique({
+      where: { id: vendorId },
+      select: { id: true, name: true }
+    });
+
+    if (!vendor) {
+      return res.status(404).json({
+        success: false,
+        error: 'Vendor not found'
+      });
+    }
+
+    // Get P&L data from database
+    const pnlData = await getProfitLossStatementData(vendorId);
+
+    res.json({
+      success: true,
+      data: pnlData,
+      meta: {
+        vendorId,
+        vendorName: vendor.name,
+        generatedAt: new Date().toISOString()
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching P&L statement:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch P&L data'
+    });
+  }
+}
+
 // New endpoint: Portfolio Builder
 export async function getPortfolio(req: Request, res: Response) {
   try {
@@ -332,17 +376,20 @@ export async function getPortfolio(req: Request, res: Response) {
   }
 }
 
-// New endpoint: Customer Insights by ZIP
+// Enhanced endpoint: Customer Insights by ZIP with flexible filters
 export async function getCustomerInsights(req: Request, res: Response) {
   try {
-    const { vendorId, range } = customerInsightsSchema.parse({
+    const { vendorId, from, to, top, orderBy } = customerInsightsSchema.parse({
       vendorId: req.params.vendorId,
-      range: req.query.range || 'monthly'
+      from: req.query.from,
+      to: req.query.to,
+      top: req.query.top ? parseInt(req.query.top as string) : 10,
+      orderBy: req.query.orderBy || 'totalRevenue'
     });
 
-    const vendor = await prisma.vendor.findUnique({
+    const vendor = await prisma.vendorProfile.findUnique({
       where: { id: vendorId },
-      select: { id: true, name: true }
+      select: { id: true, business_name: true }
     });
 
     if (!vendor) {
@@ -352,21 +399,28 @@ export async function getCustomerInsights(req: Request, res: Response) {
       });
     }
 
-    const customerInsights = await getCustomerInsightsData(vendorId, range);
+    const customerInsights = await getCustomerInsightsData(vendorId, { from, to, top, orderBy });
 
     res.json({
       success: true,
       data: customerInsights,
       meta: {
         vendorId,
-        vendorName: vendor.name,
-        range,
+        vendorName: vendor.business_name,
+        filters: { from, to, top, orderBy },
         generatedAt: new Date().toISOString()
       }
     });
 
   } catch (error) {
     console.error('Error fetching customer insights:', error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid query parameters',
+        details: error.errors
+      });
+    }
     res.status(500).json({
       success: false,
       error: 'Failed to fetch customer insights data'
@@ -697,27 +751,131 @@ async function getPortfolioData(vendorId: string): Promise<PortfolioItem[]> {
   }
 }
 
-async function getCustomerInsightsData(vendorId: string, range: string): Promise<CustomerInsight[]> {
+interface CustomerInsightsFilters {
+  from?: string;
+  to?: string;
+  top: number;
+  orderBy: 'totalRevenue' | 'customers' | 'avgSpend';
+}
+
+async function getCustomerInsightsData(vendorId: string, filters: CustomerInsightsFilters): Promise<CustomerInsight[]> {
   try {
-    const result = await prisma.$queryRaw<CustomerInsight[]>`
+    const { from, to, top, orderBy } = filters;
+    
+    // Build date filter conditions
+    let dateCondition = '';
+    const params: any[] = [vendorId];
+    
+    if (from && to) {
+      dateCondition = 'AND o.created_at >= $2 AND o.created_at <= $3';
+      params.push(new Date(from), new Date(to + 'T23:59:59.999Z'));
+    } else if (from) {
+      dateCondition = 'AND o.created_at >= $2';
+      params.push(new Date(from));
+    } else if (to) {
+      dateCondition = 'AND o.created_at <= $2';
+      params.push(new Date(to + 'T23:59:59.999Z'));
+    }
+    
+    // Map orderBy to SQL column
+    const orderByColumn = {
+      totalRevenue: '"totalRevenue"',
+      customers: 'customers',
+      avgSpend: '"avgSpend"'
+    }[orderBy];
+
+    const query = `
       SELECT 
         COALESCE(u.zip_code, 'Unknown') AS zip,
-        COUNT(DISTINCT o.user_id) AS customers,
-        COALESCE(AVG(o.total_amount), 0) AS "avgSpend",
-        COALESCE(COUNT(CASE WHEN u.loyalty_member = true THEN 1 END), 0) AS loyalty,
-        COALESCE(SUM(o.total_amount), 0) AS "totalRevenue"
+        COUNT(DISTINCT o.user_id)::int AS customers,
+        COALESCE(AVG(o.total_amount), 0)::numeric AS "avgSpend",
+        COUNT(CASE WHEN u.loyalty_member = true THEN 1 END)::int AS loyalty,
+        COALESCE(SUM(o.total_amount), 0)::numeric AS "totalRevenue"
       FROM "Order" o
       LEFT JOIN "User" u ON o.user_id = u.id
-      WHERE o.vendor_id = ${vendorId}
+      WHERE o.vendor_id = $1
       AND o.status IN ('completed', 'delivered')
+      ${dateCondition}
+      AND u.zip_code IS NOT NULL
       GROUP BY u.zip_code
-      ORDER BY "totalRevenue" DESC
-      LIMIT 20
+      ORDER BY ${orderByColumn} DESC
+      LIMIT ${top}
     `;
-    return result;
+
+    const result = await prisma.$queryRawUnsafe<CustomerInsight[]>(query, ...params);
+    
+    return result.map(row => ({
+      zip: row.zip,
+      customers: Number(row.customers),
+      avgSpend: Number(row.avgSpend),
+      loyalty: Number(row.loyalty),
+      totalRevenue: Number(row.totalRevenue)
+    }));
   } catch (error) {
     console.error('Error fetching customer insights:', error);
     return generateMockCustomerInsights();
+  }
+}
+
+// Helper function for P&L Statement
+async function getProfitLossStatementData(vendorId: string) {
+  try {
+    // Get completed orders for revenue calculation
+    const orders = await prisma.order.findMany({
+      where: {
+        vendor_id: vendorId,
+        status: { in: ['completed', 'delivered'] }
+      },
+      select: {
+        total_amount: true,
+        created_at: true
+      }
+    });
+
+    // Calculate revenue (sum of all completed orders)
+    const revenue = orders.reduce((sum, order) => sum + Number(order.total_amount), 0);
+    
+    // Calculate other income (simulated - in real app, this would come from other sources)
+    const otherIncome = revenue * 0.05; // 5% of revenue as other income
+    
+    // Calculate expenses based on revenue percentages (simulated)
+    const cogs = revenue * 0.35; // 35% of revenue as COGS
+    const labor = revenue * 0.25; // 25% of revenue as labor
+    const marketing = revenue * 0.15; // 15% of revenue as marketing
+    const other = revenue * 0.10; // 10% of revenue as other expenses
+    
+    // Calculate net profit
+    const totalExpenses = cogs + labor + marketing + other;
+    const netProfit = revenue + otherIncome - totalExpenses;
+
+    return {
+      income: {
+        revenue: Math.round(revenue * 100) / 100,
+        otherIncome: Math.round(otherIncome * 100) / 100
+      },
+      expenses: {
+        COGS: Math.round(cogs * 100) / 100,
+        labor: Math.round(labor * 100) / 100,
+        marketing: Math.round(marketing * 100) / 100,
+        other: Math.round(other * 100) / 100
+      },
+      netProfit: Math.round(netProfit * 100) / 100
+    };
+  } catch (error) {
+    console.error('Error fetching P&L data:', error);
+    return {
+      income: {
+        revenue: 0,
+        otherIncome: 0
+      },
+      expenses: {
+        COGS: 0,
+        labor: 0,
+        marketing: 0,
+        other: 0
+      },
+      netProfit: 0
+    };
   }
 }
 

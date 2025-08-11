@@ -7,9 +7,11 @@ import { TrendChart } from "@/components/vendor/analytics/TrendChart";
 import ConversionFunnel from "@/components/analytics/ConversionFunnel";
 import { BestSellers } from "@/components/vendor/analytics/BestSellers";
 import { BestSellersList } from "@/components/vendor/analytics/BestSellersList";
+import EnhancedBestSellers from "@/components/analytics/EnhancedBestSellers";
 import { PerformanceKpis } from "@/components/vendor/analytics/PerformanceKpis";
 import { CustomerInsights } from "@/components/vendor/analytics/CustomerInsights";
 import { ProfitLossStatement } from "@/components/vendor/analytics/ProfitLossStatement";
+import EnhancedProfitLoss from "@/components/analytics/EnhancedProfitLoss";
 import { CashFlowChart } from "@/components/vendor/analytics/CashFlowChart";
 import { BalanceSheet } from "@/components/vendor/analytics/BalanceSheet";
 import { PortfolioBuilder } from "@/components/vendor/analytics/PortfolioBuilder";
@@ -81,11 +83,8 @@ export default function VendorAnalyticsPage() {
             {/* Conversion Funnel */}
             <ConversionFunnel />
             
-            {/* Best Sellers List */}
-            <BestSellers />
-            
-            {/* Best Sellers Compact List */}
-            <BestSellersList />
+            {/* Enhanced Best Sellers with Filters */}
+            <EnhancedBestSellers />
             
             {/* Product Performance */}
             <PerformanceKpis />
@@ -102,7 +101,7 @@ export default function VendorAnalyticsPage() {
             <InteractiveCashFlow />
             
             {/* Profit Loss Statement */}
-            <ProfitLossStatement />
+            <EnhancedProfitLoss />
             
             {/* Cash Flow Chart */}
             <CashFlowChart />

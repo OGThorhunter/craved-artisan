@@ -24,6 +24,8 @@ model User {
   orders         Order[]
   analyticsEvents AnalyticsEvent[]
   vendorProfile  VendorProfile?
+
+  @@index([zip_code])
 }
 
 model VendorProfile {
@@ -74,6 +76,9 @@ model Order {
   vendor       VendorProfile @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
   orderItems   OrderItem[]
   analyticsEvents AnalyticsEvent[]
+
+  @@index([vendor_id, created_at])
+  @@index([user_id])
 }
 
 model OrderItem {

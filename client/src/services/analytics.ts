@@ -1,20 +1,9 @@
-// Types for analytics data
-export interface AnalyticsTrend {
-  date: string;
-  revenue: number;
-  orders: number;
-}
-
-export interface AnalyticsTrendsResponse {
-  success: boolean;
-  data: AnalyticsTrend[];
-  meta: {
-    vendorId: string;
-    range: 'daily' | 'weekly' | 'monthly';
-    dataPoints: number;
-    generatedAt: string;
-  };
-}
+import type { 
+  AnalyticsTrend, 
+  AnalyticsTrendsResponse, 
+  AnalyticsSummary, 
+  AnalyticsSummaryResponse 
+} from '../types/analytics';
 
 // API base URL - adjust based on your environment
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
@@ -61,18 +50,7 @@ export const fetchAnalyticsTrends = async (
  */
 export const fetchAnalyticsSummary = async (
   vendorId: string
-): Promise<{
-  success: boolean;
-  data: {
-    vendorId: string;
-    vendorName: string;
-    totalRevenue: number;
-    totalOrders: number;
-    avgOrderValue: number;
-    thisMonthRevenue: number;
-    thisMonthOrders: number;
-  };
-}> => {
+): Promise<AnalyticsSummaryResponse> => {
   try {
     const response = await fetch(
       `${API_BASE_URL}/vendor/${vendorId}/analytics/summary`,
@@ -192,4 +170,7 @@ export const generateMockAnalyticsTrends = (
       generatedAt: new Date().toISOString()
     }
   };
-}; 
+};
+
+// Re-export types for convenience
+export type { AnalyticsTrend, AnalyticsTrendsResponse, AnalyticsSummary, AnalyticsSummaryResponse }; 

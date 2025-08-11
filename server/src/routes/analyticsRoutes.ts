@@ -5,6 +5,7 @@ import {
   getConversionFunnel, 
   getBestSellers, 
   getProfitLoss, 
+  getProfitLossStatement,
   getPortfolio, 
   getCustomerInsights 
 } from '../controllers/analyticsController';
@@ -25,6 +26,9 @@ router.get('/vendor/:vendorId/analytics/bestsellers', getBestSellers);
 
 // GET /api/vendor/:vendorId/financials/profit-loss?range=monthly|quarterly|yearly
 router.get('/vendor/:vendorId/financials/profit-loss', getProfitLoss);
+
+// GET /api/vendor/:vendorId/financials - P&L Statement
+router.get('/vendor/:vendorId/financials', getProfitLossStatement);
 
 // GET /api/vendor/:vendorId/analytics/portfolio
 router.get('/vendor/:vendorId/analytics/portfolio', getPortfolio);

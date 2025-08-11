@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { Eye, ShoppingCart, CreditCard, CheckCircle, TrendingDown, DollarSign, AlertTriangle, Users, Target } from 'lucide-react';
+import { Eye, ShoppingCart, CreditCard, CheckCircle, TrendingDown, DollarSign, AlertTriangle, Users, Target, TrendingUp, Download, FileText } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
@@ -34,9 +34,17 @@ const fetchConversionData = async (vendorId: string, range: string = 'monthly') 
   return response.data;
 };
 
-const ConversionFunnel = () => {
-  const { user } = useAuth();
-  const [range, setRange] = useState<'daily' | 'weekly' | 'monthly'>('monthly');
+  const ConversionFunnel = () => {
+    const { user } = useAuth();
+    const [range, setRange] = useState<'daily' | 'weekly' | 'monthly'>('monthly');
+
+    // Mock trend data for demonstration
+    const mockTrends = {
+      views: 12.5,
+      addToCart: -3.2,
+      checkoutStarted: 8.7,
+      purchases: 15.3
+    };
 
   const { data: response, isLoading, error } = useQuery({
     queryKey: ['conversion', user?.id, range],
@@ -100,6 +108,48 @@ const ConversionFunnel = () => {
     return 'text-red-600';
   };
 
+  const getTrendArrow = (trend: number) => {
+    if (trend > 0) {
+      return <TrendingUp className="w-4 h-4 text-green-500" />;
+    } else if (trend < 0) {
+      return <TrendingDown className="w-4 h-4 text-red-500" />;
+    }
+    return <span className="w-4 h-4 text-gray-400">—</span>;
+  };
+
+  const getTrendColor = (trend: number) => {
+    if (trend > 0) return 'text-green-600';
+    if (trend < 0) return 'text-red-600';
+    return 'text-gray-600';
+  };
+
+  const handleExportCSV = () => {
+    if (!data) return;
+    
+    const headers = ['Metric', 'Count', 'Conversion Rate', 'Dropoff Rate', 'Trend'];
+    const csvContent = [
+      headers.join(','),
+      `Views,${data.views},${data.conversionRates.viewToCart}%,${data.dropoffAnalysis.viewToCart}%,${mockTrends.views > 0 ? '+' : ''}${mockTrends.views}%`,
+      `Add to Cart,${data.addToCart},${data.conversionRates.cartToCheckout}%,${data.dropoffAnalysis.cartToCheckout}%,${mockTrends.addToCart > 0 ? '+' : ''}${mockTrends.addToCart}%`,
+      `Checkout Started,${data.checkoutStarted},${data.conversionRates.checkoutToPurchase}%,${data.dropoffAnalysis.checkoutToPurchase}%,${mockTrends.checkoutStarted > 0 ? '+' : ''}${mockTrends.checkoutStarted}%`,
+      `Purchases,${data.purchases},${data.dropoffAnalysis.overallConversion}%,0%,${mockTrends.purchases > 0 ? '+' : ''}${mockTrends.purchases}%`
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `conversion-funnel-${range}-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const handleExportPDF = () => {
+    console.log('Exporting conversion funnel to PDF...');
+    // In real app, this would generate a PDF report
+    alert('📄 PDF export feature coming soon!');
+  };
+
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
       {/* Header */}
@@ -108,7 +158,22 @@ const ConversionFunnel = () => {
           <h2 className="text-2xl font-bold text-gray-900">Conversion Funnel</h2>
           <p className="text-gray-600">Track your customer journey from views to purchases</p>
         </div>
-        <div className="flex space-x-2">
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={handleExportCSV}
+            className="flex items-center space-x-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            <Download className="w-4 h-4" />
+            <span>Export CSV</span>
+          </button>
+          <button
+            onClick={handleExportPDF}
+            className="flex items-center space-x-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <FileText className="w-4 h-4" />
+            <span>Export PDF</span>
+          </button>
+          <div className="flex space-x-2">
           {['daily', 'weekly', 'monthly'].map((r) => (
             <button
               key={r}
@@ -120,8 +185,9 @@ const ConversionFunnel = () => {
               }`}
             >
               {r.charAt(0).toUpperCase() + r.slice(1)}
-            </button>
-          ))}
+                          </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -132,6 +198,12 @@ const ConversionFunnel = () => {
             <div>
               <p className="text-sm font-medium text-blue-600">Total Views</p>
               <p className="text-2xl font-bold text-blue-900">{data.views.toLocaleString()}</p>
+              <div className="flex items-center space-x-1 mt-1">
+                {getTrendArrow(mockTrends.views)}
+                <span className={`text-sm ${getTrendColor(mockTrends.views)}`}>
+                  {mockTrends.views > 0 ? '+' : ''}{mockTrends.views}%
+                </span>
+              </div>
             </div>
             <Eye className="w-8 h-8 text-blue-500" />
           </div>
@@ -145,6 +217,12 @@ const ConversionFunnel = () => {
               <p className={`text-sm ${getStatusColor(data.conversionRates.viewToCart)}`}>
                 {data.conversionRates.viewToCart}% conversion
               </p>
+              <div className="flex items-center space-x-1 mt-1">
+                {getTrendArrow(mockTrends.addToCart)}
+                <span className={`text-sm ${getTrendColor(mockTrends.addToCart)}`}>
+                  {mockTrends.addToCart > 0 ? '+' : ''}{mockTrends.addToCart}%
+                </span>
+              </div>
             </div>
             <ShoppingCart className="w-8 h-8 text-green-500" />
           </div>
@@ -158,6 +236,12 @@ const ConversionFunnel = () => {
               <p className={`text-sm ${getStatusColor(data.conversionRates.cartToCheckout)}`}>
                 {data.conversionRates.cartToCheckout}% conversion
               </p>
+              <div className="flex items-center space-x-1 mt-1">
+                {getTrendArrow(mockTrends.checkoutStarted)}
+                <span className={`text-sm ${getTrendColor(mockTrends.checkoutStarted)}`}>
+                  {mockTrends.checkoutStarted > 0 ? '+' : ''}{mockTrends.checkoutStarted}%
+                </span>
+              </div>
             </div>
             <CreditCard className="w-8 h-8 text-yellow-500" />
           </div>
@@ -171,6 +255,12 @@ const ConversionFunnel = () => {
               <p className={`text-sm ${getStatusColor(data.conversionRates.checkoutToPurchase)}`}>
                 {data.conversionRates.checkoutToPurchase}% conversion
               </p>
+              <div className="flex items-center space-x-1 mt-1">
+                {getTrendArrow(mockTrends.purchases)}
+                <span className={`text-sm ${getTrendColor(mockTrends.purchases)}`}>
+                  {mockTrends.purchases > 0 ? '+' : ''}{mockTrends.purchases}%
+                </span>
+              </div>
             </div>
             <CheckCircle className="w-8 h-8 text-red-500" />
           </div>

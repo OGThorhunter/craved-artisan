@@ -1,21 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
-import { fetchAnalyticsTrends, fetchAnalyticsSummary, AnalyticsTrendsResponse } from '../services/analytics';
-
-// Types for the analytics summary
-export interface AnalyticsSummary {
-  vendorId: string;
-  vendorName: string;
-  totalRevenue: number;
-  totalOrders: number;
-  avgOrderValue: number;
-  thisMonthRevenue: number;
-  thisMonthOrders: number;
-}
-
-export interface AnalyticsSummaryResponse {
-  success: boolean;
-  data: AnalyticsSummary;
-}
+import { fetchAnalyticsTrends, fetchAnalyticsSummary } from '../services/analytics';
+import type { 
+  AnalyticsTrendsResponse,
+  AnalyticsSummaryResponse,
+  AnalyticsSummary
+} from '../types/analytics';
 
 /**
  * React Query hook for fetching analytics trend data
@@ -115,4 +104,7 @@ export async function prefetchAnalyticsSummary(queryClient: any, vendorId: strin
     },
     staleTime: 10 * 60 * 1000,
   });
-} 
+}
+
+// Re-export types for convenience
+export type { AnalyticsTrend, AnalyticsTrendsResponse, AnalyticsSummary, AnalyticsSummaryResponse } from '../types/analytics'; 

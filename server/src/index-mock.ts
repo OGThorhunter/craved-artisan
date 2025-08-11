@@ -2,10 +2,11 @@ import express from 'express';
 import session from 'express-session';
 import pgSession from 'connect-pg-simple';
 import cors from 'cors';
-import helmet from 'helmet';
 import morgan from 'morgan';
 import { createLogger, format, transports } from 'winston';
 import dotenv from 'dotenv';
+import { logCors, corsWithLogging } from './middleware/logCors';
+import { devHelmetConfig } from './middleware/helmetConfig';
 
 // Import mock routes only
 import authRoutes from './routes/auth-test';
@@ -22,6 +23,7 @@ import routeOptimizationRoutes from './routes/route-optimization-mock';
 import financialRoutes from './routes/financial-mock';
 // import inventoryDeductionRoutes from './routes/inventory-deduction-mock';
 // import supplierMarketplaceRoutes from './routes/supplier-marketplace-mock';
+import debugRoutes from './routes/debug';
 
 // Load environment variables
 dotenv.config();
@@ -69,28 +71,14 @@ try {
 const MemoryStore = session.MemoryStore;
 
 // Middleware
-app.use(helmet());
-app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    const allowedOrigins = [
-      'http://localhost:5173',
-      'http://localhost:5174', 
-      'http://localhost:5175',
-      'http://localhost:3000',
-      process.env.CLIENT_URL
-    ].filter(Boolean);
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true
-}));
+// Use development helmet configuration
+app.use(devHelmetConfig);
+
+// CORS logging middleware
+app.use(logCors);
+
+// CORS configuration with logging
+app.use(cors(corsWithLogging));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -145,6 +133,9 @@ app.use('/api/route', routeOptimizationRoutes);
 app.use('/api/financial', financialRoutes); // Keep for backward compatibility
 // app.use('/api/inventory', inventoryDeductionRoutes);
 // app.use('/api/supplier', supplierMarketplaceRoutes);
+
+// Debug routes (development only)
+app.use('/api/_debug', debugRoutes);
 
 // Error handling middleware
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {

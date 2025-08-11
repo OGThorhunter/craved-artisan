@@ -1,7 +1,6 @@
 import 'express-async-errors';
 import express from 'express';
 import cors from 'cors';
-import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import session from 'express-session';
@@ -9,6 +8,8 @@ import pgSession from 'connect-pg-simple';
 import { createLogger, format, transports } from 'winston';
 import { errorHandler } from './middleware/errorHandler';
 import { env } from './utils/validateEnv';
+import { logCors, corsWithLogging } from './middleware/logCors';
+import { helmetConfig, devHelmetConfig } from './middleware/helmetConfig';
 import authRoutes from './routes/auth-test';
 import protectedRoutes from './routes/protected-demo';
 import vendorRoutes from './routes/vendor';
@@ -32,6 +33,7 @@ import taxReportsRoutes from './routes/tax-reports';
 import marginManagementRoutes from './routes/margin-management';
 import taxProjectionRoutes from './routes/tax-projection';
 import analyticsRoutes from './routes/analyticsRoutes';
+import debugRoutes from './routes/debug';
 import { initializeTaxReminderCron } from './services/taxReminderCron';
 
 // Load environment variables
@@ -80,28 +82,18 @@ try {
 const PostgresStore = pgSession(session);
 
 // Middleware
-app.use(helmet());
-app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    const allowedOrigins = [
-      'http://localhost:5173',
-      'http://localhost:5174', 
-      'http://localhost:5175',
-      'http://localhost:3000',
-      process.env.CLIENT_URL
-    ].filter(Boolean);
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true
-}));
+// Use environment-specific helmet configuration
+if (env.NODE_ENV === 'development') {
+  app.use(devHelmetConfig);
+} else {
+  app.use(helmetConfig);
+}
+
+// CORS logging middleware
+app.use(logCors);
+
+// CORS configuration with logging
+app.use(cors(corsWithLogging));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
@@ -172,6 +164,11 @@ app.use('/api/tax-reports', taxReportsRoutes);
 app.use('/api/margin-management', marginManagementRoutes);
 app.use('/api/tax-projection', taxProjectionRoutes);
 app.use('/api', analyticsRoutes);
+
+// Debug routes (development only)
+if (env.NODE_ENV === 'development') {
+  app.use('/api/_debug', debugRoutes);
+}
 
 app.use('/api/products', (req, res) => {
   res.json({ message: 'Product routes - to be implemented' });
