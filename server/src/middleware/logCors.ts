@@ -31,7 +31,7 @@ const getCorsConfig = () => {
   switch (nodeEnv) {
     case 'development':
       return {
-        origins: ['http://localhost:5173'],
+        origins: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:5176', 'http://localhost:5177', 'http://localhost:5178'],
         credentials: true,
         cookie: {
           sameSite: 'lax',
@@ -67,7 +67,7 @@ const getCorsConfig = () => {
       
     default:
       return {
-        origins: ['http://localhost:5173'],
+        origins: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:5176', 'http://localhost:5177', 'http://localhost:5178'],
         credentials: true,
         cookie: {
           sameSite: 'lax',

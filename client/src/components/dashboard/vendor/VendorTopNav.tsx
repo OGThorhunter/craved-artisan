@@ -65,7 +65,7 @@ export default function VendorTopNav() {
                       className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                         isAnalyticsActive
                           ? 'text-[#5B6E02] bg-[#F7F2EC]'
-                          : 'text-gray-700 hover:text-[#5B6E02] hover:bg-[#F7F2EC]'
+                          : 'text-white hover:text-[#5B6E02] hover:bg-[#F7F2EC]'
                       }`}
                     >
                       {item.label}
@@ -76,7 +76,7 @@ export default function VendorTopNav() {
                       className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                         isActive(item.href)
                           ? 'text-[#5B6E02] bg-[#F7F2EC]'
-                          : 'text-gray-700 hover:text-[#5B6E02] hover:bg-[#F7F2EC]'
+                          : 'text-white hover:text-[#5B6E02] hover:bg-[#F7F2EC]'
                       }`}
                     >
                       {item.label}

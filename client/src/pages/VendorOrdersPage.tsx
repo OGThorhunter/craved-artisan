@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import axios from 'axios';
+import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
 
 interface OrderItem {
   id: string;
@@ -226,18 +227,20 @@ const VendorOrdersPage = () => {
 
   if (ordersLoading) {
     return (
-      <div className="page-container bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <RefreshCw className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600">Loading orders...</p>
+      <VendorDashboardLayout>
+        <div className="p-6 flex items-center justify-center">
+          <div className="text-center">
+            <RefreshCw className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
+            <p className="text-gray-600">Loading orders...</p>
+          </div>
         </div>
-      </div>
+      </VendorDashboardLayout>
     );
   }
 
   return (
-    <div className="page-container bg-gray-50">
-      <div className="container-responsive py-8">
+    <VendorDashboardLayout>
+      <div className="p-6">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-4 mb-4">
@@ -809,7 +812,7 @@ const VendorOrdersPage = () => {
           </div>
         </div>
       )}
-    </div>
+    </VendorDashboardLayout>
   );
 };
 

@@ -218,50 +218,54 @@ export default function NavHeader() {
   return (
     <header className={`fixed top-0 z-50 w-full transition-all duration-300 ${
       isScrolled 
-        ? 'bg-brand-cream/40 backdrop-blur-md shadow-sm' 
-        : 'bg-brand-cream/40 backdrop-blur-md shadow-sm'
+        ? 'bg-white shadow-sm border-b border-[#5B6E02]/20' 
+        : 'bg-white shadow-sm border-b border-[#5B6E02]/20'
     }`}>
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
 
         {/* LEFT: Logo + Desktop Nav */}
         <div className="flex items-center space-x-6">
           <Link href="/">
-                         <img 
-               src={logonobg} 
-               alt="Craved Artisan Logo" 
-               className="h-12 w-auto object-contain max-w-[200px]"
-             />
+            <img 
+              src={logonobg} 
+              alt="Craved Artisan Logo" 
+              className="h-12 w-auto object-contain max-w-[200px]"
+            />
           </Link>
 
-          <nav className="hidden md:flex items-center space-x-4 text-sm font-medium text-brand-charcoal">
+          <nav className="hidden md:flex items-center space-x-4 text-sm font-medium text-[#2C2C2C]">
             {navLinks.map(link => (
-              <Link key={link.href} href={link.href}>{link.label}</Link>
+              <Link key={link.href} href={link.href} className="hover:text-[#5B6E02] transition-colors">{link.label}</Link>
             ))}
-            <Link
-              href="/join"
-              className="bg-brand-maroon text-white px-3 py-1 rounded-lg shadow hover:bg-[#681b24] transition"
-            >
-              Join
-            </Link>
-            {role !== 'guest' && roleLinks[role]}
+                         <Link
+               href="/join"
+               className="bg-[#5B6E02] text-white px-3 py-1 rounded-lg shadow hover:bg-[#4A5A01] transition-colors"
+             >
+               Join
+             </Link>
+            {role !== 'guest' && (
+              <span className="text-[#2C2C2C] hover:text-[#5B6E02] transition-colors">
+                {roleLinks[role]}
+              </span>
+            )}
           </nav>
         </div>
 
         {/* RIGHT: ZIP + Icons + Auth */}
         <div className="flex items-center space-x-4">
           <div className="hidden lg:flex items-center space-x-2">
-            <form onSubmit={handleZipSubmit} className="flex items-center border border-brand-beige rounded px-2">
+            <form onSubmit={handleZipSubmit} className="flex items-center border border-[#5B6E02]/30 rounded px-2">
               <input
                 type="text"
                 value={zipInput}
                 onChange={(e) => setZipInput(e.target.value)}
                 placeholder="ZIP"
-                className="bg-transparent text-sm text-brand-charcoal outline-none w-20 placeholder-brand-grey"
+                className="bg-transparent text-sm text-[#2C2C2C] outline-none w-20 placeholder-gray-400"
               />
-              <button type="submit" className="text-xs text-brand-green">Go</button>
+              <button type="submit" className="text-xs text-[#5B6E02] hover:text-[#4A5A01] transition-colors">Go</button>
             </form>
             {isUsingLocation && (
-              <div className="flex items-center text-xs text-brand-green">
+              <div className="flex items-center text-xs text-[#5B6E02]">
                 <MapPin className="h-3 w-3 mr-1" />
                 <span>Located</span>
               </div>
@@ -269,544 +273,548 @@ export default function NavHeader() {
             <button
               onClick={handleLocateMe}
               disabled={isLocating}
-              className="p-1.5 rounded-full bg-brand-green text-white hover:bg-brand-green/80 transition-colors disabled:opacity-50"
+              className="p-1.5 rounded-full bg-[#5B6E02] text-white hover:bg-[#4A5A01] transition-colors disabled:opacity-50"
               title="Use my location"
             >
               <MapPin className="h-3 w-3" />
             </button>
           </div>
 
-                     <div className="relative hidden sm:block search-container">
-             <button
-               onClick={() => setIsSearchOpen(!isSearchOpen)}
-               onMouseEnter={() => {
-                 // Close other dropdowns first
-                 setIsCartOpen(false);
-                 setIsNotificationsOpen(false);
-                 setIsChatOpen(false);
-                 
-                 // Clear other timeouts
-                 if (cartTimeout) {
-                   clearTimeout(cartTimeout);
-                   setCartTimeout(null);
-                 }
-                 if (notificationsTimeout) {
-                   clearTimeout(notificationsTimeout);
-                   setNotificationsTimeout(null);
-                 }
-                 if (chatTimeout) {
-                   clearTimeout(chatTimeout);
-                   setChatTimeout(null);
-                 }
-               }}
-               className="p-1 hover:bg-brand-beige rounded transition-colors"
-               title="Search"
-             >
-               <Search className="h-5 w-5 text-brand-charcoal cursor-pointer" />
-             </button>
-             {isSearchOpen && (
-               <div className="absolute right-0 mt-2 w-80 bg-brand-beige text-brand-charcoal rounded shadow-md p-4 z-50">
-                 <form onSubmit={handleSearch} className="space-y-3">
-                   <input
-                     type="text"
-                     value={searchQuery}
-                     onChange={(e) => setSearchQuery(e.target.value)}
-                     placeholder="Search products, vendors, events..."
-                     className="w-full px-3 py-2 border border-brand-cream rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green text-brand-charcoal"
-                     autoFocus
-                   />
-                   <div className="flex justify-between items-center">
-                     <button
-                       type="submit"
-                       className="bg-brand-green text-white px-4 py-1 rounded hover:bg-brand-green/80 transition-colors"
-                     >
-                       Search
-                     </button>
-                     <button
-                       type="button"
-                       onClick={() => setIsSearchOpen(false)}
-                       className="text-brand-charcoal hover:underline"
-                     >
-                       Cancel
-                     </button>
-                   </div>
-                 </form>
-               </div>
-             )}
-           </div>
-
-                     <div className="relative cart-container">
-             <button
-               onClick={handleCartClick}
-               onMouseEnter={() => {
-                 // Close other dropdowns first
-                 setIsNotificationsOpen(false);
-                 setIsChatOpen(false);
-                 setIsSearchOpen(false);
-                 
-                 // Clear other timeouts
-                 if (notificationsTimeout) {
-                   clearTimeout(notificationsTimeout);
-                   setNotificationsTimeout(null);
-                 }
-                 if (chatTimeout) {
-                   clearTimeout(chatTimeout);
-                   setChatTimeout(null);
-                 }
-                 
-                 // Open cart dropdown
-                 if (cartTimeout) {
-                   clearTimeout(cartTimeout);
-                   setCartTimeout(null);
-                 }
-                 setIsCartOpen(true);
-               }}
-               onMouseLeave={() => {
-                 const timeout = setTimeout(() => {
-                   setIsCartOpen(false);
-                 }, 300);
-                 setCartTimeout(timeout);
-               }}
-               className="p-1 hover:bg-brand-beige rounded transition-colors relative"
-               title="Shopping Cart"
-             >
-               <ShoppingCart className="h-5 w-5 text-brand-charcoal cursor-pointer" />
-               {/* Cart badge - you can add cart item count here */}
-               <span className="absolute -top-1 -right-1 bg-brand-maroon text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                 3
-               </span>
-             </button>
-             {isCartOpen && (
-               <div 
-                 className="absolute right-0 mt-2 w-80 bg-brand-beige text-brand-charcoal rounded shadow-md p-4 z-50"
-                 onMouseEnter={() => {
-                   if (cartTimeout) {
-                     clearTimeout(cartTimeout);
-                     setCartTimeout(null);
-                   }
-                 }}
-                 onMouseLeave={() => {
-                   const timeout = setTimeout(() => {
-                     setIsCartOpen(false);
-                   }, 300);
-                   setCartTimeout(timeout);
-                 }}
-               >
-                 <h3 className="font-semibold mb-3 flex items-center justify-between">
-                   Shopping Cart
-                   <span className="text-sm text-brand-grey">3 items</span>
-                 </h3>
-                 
-                 {/* Cart Items Preview */}
-                 <div className="space-y-3 max-h-48 overflow-y-auto">
-                   <div className="flex items-center gap-3 p-2 bg-white rounded">
-                     <div className="w-10 h-10 bg-brand-cream rounded flex items-center justify-center">
-                       <span className="text-xs">🥖</span>
-                     </div>
-                     <div className="flex-1 min-w-0">
-                       <p className="text-sm font-medium truncate">Fresh Sourdough Bread</p>
-                       <p className="text-xs text-brand-grey">Rustic Bakes</p>
-                       <p className="text-xs text-brand-maroon">$6.50</p>
-                     </div>
-                     <div className="text-xs text-brand-grey">Qty: 1</div>
-                   </div>
-                   
-                   <div className="flex items-center gap-3 p-2 bg-white rounded">
-                     <div className="w-10 h-10 bg-brand-cream rounded flex items-center justify-center">
-                       <span className="text-xs">🍯</span>
-                     </div>
-                     <div className="flex-1 min-w-0">
-                       <p className="text-sm font-medium truncate">Local Honey</p>
-                       <p className="text-xs text-brand-grey">Sweet Georgia</p>
-                       <p className="text-xs text-brand-maroon">$8.00</p>
-                     </div>
-                     <div className="text-xs text-brand-grey">Qty: 1</div>
-                   </div>
-                   
-                   <div className="flex items-center gap-3 p-2 bg-white rounded">
-                     <div className="w-10 h-10 bg-brand-cream rounded flex items-center justify-center">
-                       <span className="text-xs">🧀</span>
-                     </div>
-                     <div className="flex-1 min-w-0">
-                       <p className="text-sm font-medium truncate">Artisan Cheese</p>
-                       <p className="text-xs text-brand-grey">Dairy Delights</p>
-                       <p className="text-xs text-brand-maroon">$12.00</p>
-                     </div>
-                     <div className="text-xs text-brand-grey">Qty: 1</div>
-                   </div>
-                 </div>
-                 
-                 <div className="mt-3 pt-3 border-t border-brand-cream">
-                   <div className="flex justify-between items-center mb-3">
-                     <span className="font-medium">Total:</span>
-                     <span className="font-bold text-brand-maroon">$26.50</span>
-                   </div>
-                   <div className="flex gap-2">
-                     <Link 
-                       href="/cart" 
-                       className="flex-1 bg-brand-maroon text-white py-2 px-3 rounded text-sm text-center hover:bg-[#681b24] transition-colors"
-                     >
-                       View Cart
-                     </Link>
-                     <Link 
-                       href="/checkout" 
-                       className="flex-1 bg-brand-green text-white py-2 px-3 rounded text-sm text-center hover:bg-brand-green/80 transition-colors"
-                     >
-                       Checkout
-                     </Link>
-                   </div>
-                 </div>
-               </div>
-             )}
-           </div>
-
-                     <div className="relative notifications-container">
-             <button
-               onClick={handleNotificationsClick}
-               onMouseEnter={() => {
-                 // Close other dropdowns first
-                 setIsCartOpen(false);
-                 setIsChatOpen(false);
-                 setIsSearchOpen(false);
-                 
-                 // Clear other timeouts
-                 if (cartTimeout) {
-                   clearTimeout(cartTimeout);
-                   setCartTimeout(null);
-                 }
-                 if (chatTimeout) {
-                   clearTimeout(chatTimeout);
-                   setChatTimeout(null);
-                 }
-                 
-                 // Open notifications dropdown
-                 if (notificationsTimeout) {
-                   clearTimeout(notificationsTimeout);
-                   setNotificationsTimeout(null);
-                 }
-                 setIsNotificationsOpen(true);
-               }}
-               onMouseLeave={() => {
-                 const timeout = setTimeout(() => {
-                   setIsNotificationsOpen(false);
-                 }, 300);
-                 setNotificationsTimeout(timeout);
-               }}
-               className="p-1 hover:bg-brand-beige rounded transition-colors relative"
-               title="Notifications"
-             >
-               <Bell className="h-5 w-5 text-brand-charcoal cursor-pointer" />
-               {/* Notification badge - you can add notification count here */}
-               <span className="absolute -top-1 -right-1 bg-brand-maroon text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                 2
-               </span>
-             </button>
-             {isNotificationsOpen && (
-               <div 
-                 className="absolute right-0 mt-2 w-80 bg-brand-beige text-brand-charcoal rounded shadow-md p-4 z-50"
-                 onMouseEnter={() => {
-                   if (notificationsTimeout) {
-                     clearTimeout(notificationsTimeout);
-                     setNotificationsTimeout(null);
-                   }
-                 }}
-                 onMouseLeave={() => {
-                   const timeout = setTimeout(() => {
-                     setIsNotificationsOpen(false);
-                   }, 300);
-                   setNotificationsTimeout(timeout);
-                 }}
-               >
-                 <h3 className="font-semibold mb-3 flex items-center justify-between">
-                   Notifications
-                   <span className="text-sm text-brand-grey">2 new</span>
-                 </h3>
-                 
-                 {/* Notifications Preview */}
-                 <div className="space-y-3 max-h-48 overflow-y-auto">
-                   <div className="flex items-start gap-3 p-2 bg-white rounded">
-                     <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                       <span className="text-xs">📦</span>
-                     </div>
-                     <div className="flex-1 min-w-0">
-                       <p className="text-sm font-medium">Order Shipped!</p>
-                       <p className="text-xs text-brand-grey">Your order #1234 has been shipped and will arrive tomorrow.</p>
-                       <p className="text-xs text-brand-maroon mt-1">2 hours ago</p>
-                     </div>
-                     <div className="w-2 h-2 bg-brand-maroon rounded-full flex-shrink-0"></div>
-                   </div>
-                   
-                   <div className="flex items-start gap-3 p-2 bg-white rounded">
-                     <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                       <span className="text-xs">🎪</span>
-                     </div>
-                     <div className="flex-1 min-w-0">
-                       <p className="text-sm font-medium">New Event Near You</p>
-                       <p className="text-xs text-brand-grey">Locust Grove Farmers Market this Saturday at 9 AM.</p>
-                       <p className="text-xs text-brand-maroon mt-1">1 day ago</p>
-                     </div>
-                     <div className="w-2 h-2 bg-brand-maroon rounded-full flex-shrink-0"></div>
-                   </div>
-                   
-                   <div className="flex items-start gap-3 p-2 bg-white/50 rounded">
-                     <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
-                       <span className="text-xs">🥖</span>
-                     </div>
-                     <div className="flex-1 min-w-0">
-                       <p className="text-sm font-medium">New Product Available</p>
-                       <p className="text-xs text-brand-grey">Rustic Bakes just added fresh sourdough to their menu.</p>
-                       <p className="text-xs text-brand-grey mt-1">3 days ago</p>
-                     </div>
-                   </div>
-                 </div>
-                 
-                 <div className="mt-3 pt-3 border-t border-brand-cream">
-                   <Link 
-                     href="/notifications" 
-                     className="w-full bg-brand-maroon text-white py-2 px-3 rounded text-sm text-center hover:bg-[#681b24] transition-colors block"
-                   >
-                     View All Notifications
-                   </Link>
-                 </div>
-               </div>
-                          )}
-           </div>
-
-           {/* AI Chat Widget */}
-           <div className="relative chat-container">
-             <button
-               onClick={handleChatClick}
-               onMouseEnter={() => {
-                 // Close other dropdowns first
-                 setIsCartOpen(false);
-                 setIsNotificationsOpen(false);
-                 setIsSearchOpen(false);
-                 
-                 // Clear other timeouts
-                 if (cartTimeout) {
-                   clearTimeout(cartTimeout);
-                   setCartTimeout(null);
-                 }
-                 if (notificationsTimeout) {
-                   clearTimeout(notificationsTimeout);
-                   setNotificationsTimeout(null);
-                 }
-                 
-                 // Open chat dropdown
-                 if (chatTimeout) {
-                   clearTimeout(chatTimeout);
-                   setChatTimeout(null);
-                 }
-                 setIsChatOpen(true);
-               }}
-               onMouseLeave={() => {
-                 const timeout = setTimeout(() => {
-                   setIsChatOpen(false);
-                 }, 300);
-                 setChatTimeout(timeout);
-               }}
-               className="p-1 hover:bg-brand-beige rounded transition-colors relative"
-               title="AI Assistant"
-             >
-               <MessageCircle className="h-5 w-5 text-brand-charcoal cursor-pointer" />
-               {/* Chat indicator - shows when there are unread messages */}
-               <span className="absolute -top-1 -right-1 bg-brand-green text-white text-xs rounded-full w-4 h-4 flex items-center justify-center animate-pulse">
-                 AI
-               </span>
-             </button>
-             {isChatOpen && (
-               <div 
-                 className="absolute right-0 mt-2 w-96 bg-brand-beige text-brand-charcoal rounded shadow-md z-50"
-                 onMouseEnter={() => {
-                   if (chatTimeout) {
-                     clearTimeout(chatTimeout);
-                     setChatTimeout(null);
-                   }
-                 }}
-                 onMouseLeave={() => {
-                   const timeout = setTimeout(() => {
-                     setIsChatOpen(false);
-                   }, 300);
-                   setChatTimeout(timeout);
-                 }}
-               >
-                 {/* Chat Header */}
-                 <div className="flex items-center justify-between p-4 border-b border-brand-cream">
-                   <div className="flex items-center gap-2">
-                     <div className="w-8 h-8 bg-brand-green rounded-full flex items-center justify-center">
-                       <span className="text-white text-sm font-bold">AI</span>
-                     </div>
-                     <div>
-                       <h3 className="font-semibold text-sm">Craved Artisan Assistant</h3>
-                       <p className="text-xs text-brand-grey">Live AI Support</p>
-                     </div>
-                   </div>
-                   <button
-                     onClick={() => setIsChatOpen(false)}
-                     className="p-1 hover:bg-brand-cream rounded transition-colors"
-                     title="Close chat"
-                   >
-                     <CloseIcon className="h-4 w-4" />
-                   </button>
-                 </div>
-
-                 {/* Chat Messages */}
-                 <div className="h-80 overflow-y-auto p-4 space-y-3">
-                   {chatMessages.map((msg) => (
-                     <div
-                       key={msg.id}
-                       className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
-                     >
-                       <div
-                         className={`max-w-[80%] p-3 rounded-lg ${
-                           msg.type === 'user'
-                             ? 'bg-brand-maroon text-white'
-                             : 'bg-white text-brand-charcoal'
-                         }`}
-                       >
-                         <p className="text-sm">{msg.message}</p>
-                         <p className="text-xs opacity-70 mt-1">
-                           {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                         </p>
-                       </div>
-                     </div>
-                   ))}
-                   
-                   {/* Typing indicator */}
-                   {isTyping && (
-                     <div className="flex justify-start">
-                       <div className="bg-white text-brand-charcoal p-3 rounded-lg">
-                         <div className="flex items-center gap-1">
-                           <div className="w-2 h-2 bg-brand-grey rounded-full animate-bounce"></div>
-                           <div className="w-2 h-2 bg-brand-grey rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                           <div className="w-2 h-2 bg-brand-grey rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                         </div>
-                       </div>
-                     </div>
-                   )}
-                 </div>
-
-                 {/* Chat Input */}
-                 <div className="p-4 border-t border-brand-cream">
-                   <form onSubmit={handleChatSubmit} className="flex gap-2">
-                     <input
-                       type="text"
-                       value={chatMessage}
-                       onChange={(e) => setChatMessage(e.target.value)}
-                       placeholder="Ask me anything about Craved Artisan..."
-                       className="flex-1 px-3 py-2 border border-brand-cream rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green text-sm"
-                       disabled={isTyping}
-                     />
-                     <button
-                       type="submit"
-                       disabled={!chatMessage.trim() || isTyping}
-                       className="p-2 bg-brand-green text-white rounded-lg hover:bg-brand-green/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                       title="Send message"
-                     >
-                       <Send className="h-4 w-4" />
-                     </button>
-                   </form>
-                 </div>
-               </div>
-             )}
-           </div>
-
-           <div className="relative user-menu-container">
-            {isAuthenticated && user ? (
-              <div className="relative">
-                <button
-                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  onMouseEnter={() => {
-                    if (userMenuTimeout) {
-                      clearTimeout(userMenuTimeout);
-                      setUserMenuTimeout(null);
-                    }
-                  }}
-                  onMouseLeave={() => {
-                    const timeout = setTimeout(() => {
-                      setIsUserMenuOpen(false);
-                    }, 300);
-                    setUserMenuTimeout(timeout);
-                  }}
-                  className="w-8 h-8 rounded-full bg-brand-green text-white flex items-center justify-center cursor-pointer hover:bg-brand-green/80 transition-colors"
-                >
-                  <span className="text-sm font-medium">
-                    {user.profile?.firstName?.charAt(0) || user.email?.charAt(0) || 'U'}
-                  </span>
-                </button>
-                {isUserMenuOpen && (
-                  <div 
-                    className="absolute right-0 mt-2 w-40 bg-brand-beige text-brand-charcoal rounded shadow-md p-2 z-50"
-                    onMouseEnter={() => {
-                      if (userMenuTimeout) {
-                        clearTimeout(userMenuTimeout);
-                        setUserMenuTimeout(null);
-                      }
-                    }}
-                    onMouseLeave={() => {
-                      const timeout = setTimeout(() => {
-                        setIsUserMenuOpen(false);
-                      }, 300);
-                      setUserMenuTimeout(timeout);
-                    }}
-                  >
-                    <p className="text-sm mb-1">Hello, {user.profile?.firstName || user.email}</p>
-                    <Link href="/dashboard" className="block text-sm hover:underline">Dashboard</Link>
-                    <Link href="/settings" className="block text-sm hover:underline">Settings</Link>
-                    <button onClick={logout} className="mt-2 text-sm text-brand-maroon hover:underline">Logout</button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <Link href="/login" className="text-sm text-brand-charcoal">Login</Link>
-            )}
-          </div>
-
-          {/* Mobile menu toggle */}
-          <button className="md:hidden" onClick={() => setMobileOpen(!isMobileOpen)}>
-            {isMobileOpen ? <X className="h-6 w-6 text-brand-charcoal" /> : <Menu className="h-6 w-6 text-brand-charcoal" />}
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile Slideout */}
-      {isMobileOpen && (
-        <div className="md:hidden bg-brand-cream border-t px-6 py-4 space-y-4 text-brand-charcoal">
-          {/* Mobile ZIP input */}
-          <div className="flex items-center space-x-2 pb-4 border-b border-brand-beige">
-            <form onSubmit={handleZipSubmit} className="flex-1 flex items-center border border-brand-beige rounded px-2">
-              <input
-                type="text"
-                value={zipInput}
-                onChange={(e) => setZipInput(e.target.value)}
-                placeholder="ZIP"
-                className="bg-transparent text-sm text-brand-charcoal outline-none w-full placeholder-brand-grey"
-              />
-              <button type="submit" className="text-xs text-brand-green">Go</button>
-            </form>
-            {isUsingLocation && (
-              <div className="flex items-center text-xs text-brand-green">
-                <MapPin className="h-3 w-3 mr-1" />
-                <span>Located</span>
-              </div>
-            )}
+          <div className="relative hidden sm:block search-container">
             <button
-              onClick={handleLocateMe}
-              disabled={isLocating}
-              className="p-2 rounded-full bg-brand-green text-white hover:bg-brand-green/80 transition-colors disabled:opacity-50"
-              title="Use my location"
+              onClick={() => setIsSearchOpen(!isSearchOpen)}
+              onMouseEnter={() => {
+                // Close other dropdowns first
+                setIsCartOpen(false);
+                setIsNotificationsOpen(false);
+                setIsChatOpen(false);
+                
+                // Clear other timeouts
+                if (cartTimeout) {
+                  clearTimeout(cartTimeout);
+                  setCartTimeout(null);
+                }
+                if (notificationsTimeout) {
+                  clearTimeout(notificationsTimeout);
+                  setNotificationsTimeout(null);
+                }
+                if (chatTimeout) {
+                  clearTimeout(chatTimeout);
+                  setChatTimeout(null);
+                }
+              }}
+              className="p-1 hover:bg-[#F7F2EC] rounded transition-colors"
+              title="Search"
             >
-              <MapPin className="h-4 w-4" />
+              <Search className="h-5 w-5 text-[#2C2C2C] cursor-pointer" />
             </button>
+            {isSearchOpen && (
+              <div className="absolute right-0 mt-2 w-80 bg-[#F7F2EC] text-[#2C2C2C] rounded shadow-md p-4 z-50 border-2 border-[#5B6E02]">
+                <form onSubmit={handleSearch} className="space-y-3">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search products, vendors, events..."
+                    className="w-full px-3 py-2 border border-[#5B6E02]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5B6E02] text-[#2C2C2C] bg-white"
+                    autoFocus
+                  />
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      className="bg-[#5B6E02] text-white px-4 py-1 rounded hover:bg-[#4A5A01] transition-colors"
+                    >
+                      Search
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsSearchOpen(false)}
+                      className="text-[#2C2C2C] hover:underline"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
           </div>
-          
-          {navLinks.map(link => (
-            <Link key={link.href} href={link.href}>{link.label}</Link>
-          ))}
-          <Link href="/join" className="block bg-brand-maroon text-white px-3 py-1 rounded shadow">Join</Link>
-          {role !== 'guest' && roleLinks[role]}
-        </div>
-      )}
-    </header>
-  );
+
+          <div className="relative cart-container">
+            <button
+              onClick={handleCartClick}
+              onMouseEnter={() => {
+                // Close other dropdowns first
+                setIsNotificationsOpen(false);
+                setIsChatOpen(false);
+                setIsSearchOpen(false);
+                
+                // Clear other timeouts
+                if (notificationsTimeout) {
+                  clearTimeout(notificationsTimeout);
+                  setNotificationsTimeout(null);
+                }
+                if (chatTimeout) {
+                  clearTimeout(chatTimeout);
+                  setChatTimeout(null);
+                }
+                
+                // Open cart dropdown
+                if (cartTimeout) {
+                  clearTimeout(cartTimeout);
+                  setCartTimeout(null);
+                }
+                setIsCartOpen(true);
+              }}
+              onMouseLeave={() => {
+                const timeout = setTimeout(() => {
+                  setIsCartOpen(false);
+                }, 300);
+                setCartTimeout(timeout);
+              }}
+              className="p-1 hover:bg-[#F7F2EC] rounded transition-colors relative"
+              title="Shopping Cart"
+            >
+              <ShoppingCart className="h-5 w-5 text-[#2C2C2C] cursor-pointer" />
+              {/* Cart badge - you can add cart item count here */}
+              <span className="absolute -top-1 -right-1 bg-[#5B6E02] text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                3
+              </span>
+            </button>
+            {isCartOpen && (
+              <div 
+                className="absolute right-0 mt-2 w-80 bg-[#F7F2EC] text-[#2C2C2C] rounded shadow-md p-4 z-50"
+                onMouseEnter={() => {
+                  if (cartTimeout) {
+                    clearTimeout(cartTimeout);
+                    setCartTimeout(null);
+                  }
+                }}
+                onMouseLeave={() => {
+                  const timeout = setTimeout(() => {
+                    setIsCartOpen(false);
+                  }, 300);
+                  setCartTimeout(timeout);
+                }}
+              >
+                <h3 className="font-semibold mb-3 flex items-center justify-between">
+                  Shopping Cart
+                  <span className="text-sm text-gray-500">3 items</span>
+                </h3>
+                
+                {/* Cart Items Preview */}
+                <div className="space-y-3 max-h-48 overflow-y-auto">
+                  <div className="flex items-center gap-3 p-2 bg-white rounded">
+                    <div className="w-10 h-10 bg-[#F7F2EC] rounded flex items-center justify-center">
+                      <span className="text-xs">🥖</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">Fresh Sourdough Bread</p>
+                      <p className="text-xs text-gray-500">Rustic Bakes</p>
+                      <p className="text-xs text-[#5B6E02]">$6.50</p>
+                    </div>
+                    <div className="text-xs text-gray-500">Qty: 1</div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 p-2 bg-white rounded">
+                    <div className="w-10 h-10 bg-[#F7F2EC] rounded flex items-center justify-center">
+                      <span className="text-xs">🍯</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">Local Honey</p>
+                      <p className="text-xs text-gray-500">Sweet Georgia</p>
+                      <p className="text-xs text-[#5B6E02]">$8.00</p>
+                    </div>
+                    <div className="text-xs text-gray-500">Qty: 1</div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3 p-2 bg-white rounded">
+                    <div className="w-10 h-10 bg-[#F7F2EC] rounded flex items-center justify-center">
+                      <span className="text-xs">🧀</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">Artisan Cheese</p>
+                      <p className="text-xs text-gray-500">Dairy Delights</p>
+                      <p className="text-xs text-[#5B6E02]">$12.00</p>
+                    </div>
+                    <div className="text-xs text-gray-500">Qty: 1</div>
+                  </div>
+                </div>
+                
+                <div className="mt-3 pt-3 border-t border-[#5B6E02]/30">
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="font-medium">Total:</span>
+                    <span className="font-bold text-[#5B6E02]">$26.50</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <Link 
+                      href="/cart" 
+                      className="flex-1 bg-[#5B6E02] text-white py-2 px-3 rounded text-sm text-center hover:bg-[#4A5A01] transition-colors"
+                    >
+                      View Cart
+                    </Link>
+                    <Link 
+                      href="/checkout" 
+                      className="flex-1 bg-[#5B6E02] text-white py-2 px-3 rounded text-sm text-center hover:bg-[#4A5A01] transition-colors"
+                    >
+                      Checkout
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="relative notifications-container">
+            <button
+              onClick={handleNotificationsClick}
+              onMouseEnter={() => {
+                // Close other dropdowns first
+                setIsCartOpen(false);
+                setIsChatOpen(false);
+                setIsSearchOpen(false);
+                
+                // Clear other timeouts
+                if (cartTimeout) {
+                  clearTimeout(cartTimeout);
+                  setCartTimeout(null);
+                }
+                if (chatTimeout) {
+                  clearTimeout(chatTimeout);
+                  setChatTimeout(null);
+                }
+                
+                // Open notifications dropdown
+                if (notificationsTimeout) {
+                  clearTimeout(notificationsTimeout);
+                  setNotificationsTimeout(null);
+                }
+                setIsNotificationsOpen(true);
+              }}
+              onMouseLeave={() => {
+                const timeout = setTimeout(() => {
+                  setIsNotificationsOpen(false);
+                }, 300);
+                setNotificationsTimeout(timeout);
+              }}
+              className="p-1 hover:bg-[#F7F2EC] rounded transition-colors relative"
+              title="Notifications"
+            >
+              <Bell className="h-5 w-5 text-[#2C2C2C] cursor-pointer" />
+              {/* Notification badge - you can add notification count here */}
+              <span className="absolute -top-1 -right-1 bg-[#5B6E02] text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                2
+              </span>
+            </button>
+            {isNotificationsOpen && (
+              <div 
+                className="absolute right-0 mt-2 w-80 bg-[#F7F2EC] text-[#2C2C2C] rounded shadow-md p-4 z-50"
+                onMouseEnter={() => {
+                  if (notificationsTimeout) {
+                    clearTimeout(notificationsTimeout);
+                    setNotificationsTimeout(null);
+                  }
+                }}
+                onMouseLeave={() => {
+                  const timeout = setTimeout(() => {
+                    setIsNotificationsOpen(false);
+                  }, 300);
+                  setNotificationsTimeout(timeout);
+                }}
+              >
+                <h3 className="font-semibold mb-3 flex items-center justify-between">
+                  Notifications
+                  <span className="text-sm text-gray-500">2 new</span>
+                </h3>
+                
+                {/* Notifications Preview */}
+                <div className="space-y-3 max-h-48 overflow-y-auto">
+                  <div className="flex items-start gap-3 p-2 bg-white rounded">
+                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-xs">📦</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium">Order Shipped!</p>
+                      <p className="text-xs text-gray-500">Your order #1234 has been shipped and will arrive tomorrow.</p>
+                      <p className="text-xs text-[#5B6E02] mt-1">2 hours ago</p>
+                    </div>
+                    <div className="w-2 h-2 bg-[#5B6E02] rounded-full flex-shrink-0"></div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3 p-2 bg-white rounded">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-xs">🎪</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium">New Event Near You</p>
+                      <p className="text-xs text-gray-500">Locust Grove Farmers Market this Saturday at 9 AM.</p>
+                      <p className="text-xs text-[#5B6E02] mt-1">1 day ago</p>
+                    </div>
+                    <div className="w-2 h-2 bg-[#5B6E02] rounded-full flex-shrink-0"></div>
+                  </div>
+                  
+                  <div className="flex items-start gap-3 p-2 bg-white/50 rounded">
+                    <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-xs">🥖</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium">New Product Available</p>
+                      <p className="text-xs text-gray-500">Rustic Bakes just added fresh sourdough to their menu.</p>
+                      <p className="text-xs text-gray-500 mt-1">3 days ago</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-3 pt-3 border-t border-[#5B6E02]/30">
+                  <Link 
+                    href="/notifications" 
+                    className="w-full bg-[#5B6E02] text-white py-2 px-3 rounded text-sm text-center hover:bg-[#4A5A01] transition-colors block"
+                  >
+                    View All Notifications
+                  </Link>
+                </div>
+              </div>
+                          )}
+          </div>
+
+          {/* AI Chat Widget */}
+          <div className="relative chat-container">
+            <button
+              onClick={handleChatClick}
+              onMouseEnter={() => {
+                // Close other dropdowns first
+                setIsCartOpen(false);
+                setIsNotificationsOpen(false);
+                setIsSearchOpen(false);
+                
+                // Clear other timeouts
+                if (cartTimeout) {
+                  clearTimeout(cartTimeout);
+                  setCartTimeout(null);
+                }
+                if (notificationsTimeout) {
+                  clearTimeout(notificationsTimeout);
+                  setNotificationsTimeout(null);
+                }
+                
+                // Open chat dropdown
+                if (chatTimeout) {
+                  clearTimeout(chatTimeout);
+                  setChatTimeout(null);
+                }
+                setIsChatOpen(true);
+              }}
+              onMouseLeave={() => {
+                const timeout = setTimeout(() => {
+                  setIsChatOpen(false);
+                }, 300);
+                setChatTimeout(timeout);
+              }}
+              className="p-1 hover:bg-[#F7F2EC] rounded transition-colors relative"
+              title="AI Assistant"
+            >
+              <MessageCircle className="h-5 w-5 text-[#2C2C2C] cursor-pointer" />
+              {/* Chat indicator - shows when there are unread messages */}
+              <span className="absolute -top-1 -right-1 bg-[#5B6E02] text-white text-xs rounded-full w-4 h-4 flex items-center justify-center animate-pulse">
+                AI
+              </span>
+            </button>
+            {isChatOpen && (
+              <div 
+                className="absolute right-0 mt-2 w-96 bg-[#F7F2EC] text-[#2C2C2C] rounded shadow-md z-50"
+                onMouseEnter={() => {
+                  if (chatTimeout) {
+                    clearTimeout(chatTimeout);
+                    setChatTimeout(null);
+                  }
+                }}
+                onMouseLeave={() => {
+                  const timeout = setTimeout(() => {
+                    setIsChatOpen(false);
+                  }, 300);
+                  setChatTimeout(timeout);
+                }}
+              >
+                {/* Chat Header */}
+                <div className="flex items-center justify-between p-4 border-b border-[#5B6E02]/30">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-[#5B6E02] rounded-full flex items-center justify-center">
+                      <span className="text-white text-sm font-bold">AI</span>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-sm">Craved Artisan Assistant</h3>
+                      <p className="text-xs text-gray-500">Live AI Support</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setIsChatOpen(false)}
+                    className="p-1 hover:bg-[#F7F2EC] rounded transition-colors"
+                    title="Close chat"
+                  >
+                    <CloseIcon className="h-4 w-4" />
+                  </button>
+                </div>
+
+                {/* Chat Messages */}
+                <div className="h-80 overflow-y-auto p-4 space-y-3">
+                  {chatMessages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div
+                        className={`max-w-[80%] p-3 rounded-lg ${
+                          msg.type === 'user'
+                            ? 'bg-[#5B6E02] text-white'
+                            : 'bg-white text-[#2C2C2C]'
+                        }`}
+                      >
+                        <p className="text-sm">{msg.message}</p>
+                        <p className="text-xs opacity-70 mt-1">
+                          {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {/* Typing indicator */}
+                  {isTyping && (
+                    <div className="flex justify-start">
+                      <div className="bg-white text-[#2C2C2C] p-3 rounded-lg">
+                        <div className="flex items-center gap-1">
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Chat Input */}
+                <div className="p-4 border-t border-[#5B6E02]/30">
+                  <form onSubmit={handleChatSubmit} className="flex gap-2">
+                    <input
+                      type="text"
+                      value={chatMessage}
+                      onChange={(e) => setChatMessage(e.target.value)}
+                      placeholder="Ask me anything about Craved Artisan..."
+                      className="flex-1 px-3 py-2 border border-[#5B6E02]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5B6E02] text-sm"
+                      disabled={isTyping}
+                    />
+                    <button
+                      type="submit"
+                      disabled={!chatMessage.trim() || isTyping}
+                      className="p-2 bg-[#5B6E02] text-white rounded-lg hover:bg-[#4A5A01] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Send message"
+                    >
+                      <Send className="h-4 w-4" />
+                    </button>
+                  </form>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="relative user-menu-container">
+           {isAuthenticated && user ? (
+             <div className="relative">
+               <button
+                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                 onMouseEnter={() => {
+                   if (userMenuTimeout) {
+                     clearTimeout(userMenuTimeout);
+                     setUserMenuTimeout(null);
+                   }
+                 }}
+                 onMouseLeave={() => {
+                   const timeout = setTimeout(() => {
+                     setIsUserMenuOpen(false);
+                   }, 300);
+                   setUserMenuTimeout(timeout);
+                 }}
+                 className="w-8 h-8 rounded-full bg-[#5B6E02] text-white flex items-center justify-center cursor-pointer hover:bg-[#4A5A01] transition-colors"
+               >
+                 <span className="text-sm font-medium">
+                   {user.profile?.firstName?.charAt(0) || user.email?.charAt(0) || 'U'}
+                 </span>
+               </button>
+               {isUserMenuOpen && (
+                 <div 
+                   className="absolute right-0 mt-2 w-40 bg-[#F7F2EC] text-[#2C2C2C] rounded shadow-md p-2 z-50"
+                   onMouseEnter={() => {
+                     if (userMenuTimeout) {
+                       clearTimeout(userMenuTimeout);
+                       setUserMenuTimeout(null);
+                     }
+                   }}
+                   onMouseLeave={() => {
+                     const timeout = setTimeout(() => {
+                       setIsUserMenuOpen(false);
+                     }, 300);
+                     setUserMenuTimeout(timeout);
+                   }}
+                 >
+                   <p className="text-sm mb-1">Hello, {user.profile?.firstName || user.email}</p>
+                   <Link href="/dashboard" className="block text-sm hover:underline">Dashboard</Link>
+                   <Link href="/settings" className="block text-sm hover:underline">Settings</Link>
+                   <button onClick={logout} className="mt-2 text-sm text-[#5B6E02] hover:underline">Logout</button>
+                 </div>
+               )}
+             </div>
+           ) : (
+             <Link href="/login" className="text-sm text-[#2C2C2C]">Login</Link>
+           )}
+         </div>
+
+         {/* Mobile menu toggle */}
+         <button className="md:hidden" onClick={() => setMobileOpen(!isMobileOpen)}>
+           {isMobileOpen ? <X className="h-6 w-6 text-[#2C2C2C]" /> : <Menu className="h-6 w-6 text-[#2C2C2C]" />}
+         </button>
+       </div>
+     </div>
+
+     {/* Mobile Slideout */}
+     {isMobileOpen && (
+       <div className="md:hidden bg-[#F7F2EC] border-t px-6 py-4 space-y-4 text-[#2C2C2C]">
+         {/* Mobile ZIP input */}
+         <div className="flex items-center space-x-2 pb-4 border-b border-[#5B6E02]/30">
+           <form onSubmit={handleZipSubmit} className="flex-1 flex items-center border border-[#5B6E02]/30 rounded px-2">
+             <input
+               type="text"
+               value={zipInput}
+               onChange={(e) => setZipInput(e.target.value)}
+               placeholder="ZIP"
+               className="bg-transparent text-sm text-[#2C2C2C] outline-none w-full placeholder-gray-400"
+             />
+             <button type="submit" className="text-xs text-[#5B6E02] hover:text-[#4A5A01] transition-colors">Go</button>
+           </form>
+           {isUsingLocation && (
+             <div className="flex items-center text-xs text-[#5B6E02]">
+               <MapPin className="h-3 w-3 mr-1" />
+               <span>Located</span>
+             </div>
+           )}
+           <button
+             onClick={handleLocateMe}
+             disabled={isLocating}
+             className="p-2 rounded-full bg-[#5B6E02] text-white hover:bg-[#4A5A01] transition-colors disabled:opacity-50"
+             title="Use my location"
+           >
+             <MapPin className="h-4 w-4" />
+           </button>
+         </div>
+         
+         {navLinks.map(link => (
+           <Link key={link.href} href={link.href}>{link.label}</Link>
+         ))}
+                   <Link href="/join" className="block bg-[#5B6E02] text-white px-3 py-1 rounded shadow">Join</Link>
+         {role !== 'guest' && (
+           <span className="text-[#2C2C2C] hover:text-[#5B6E02] transition-colors">
+             {roleLinks[role]}
+           </span>
+         )}
+       </div>
+     )}
+   </header>
+ );
 } 

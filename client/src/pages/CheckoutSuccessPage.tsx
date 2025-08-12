@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useLocation } from 'wouter';
 import { CheckCircle } from 'lucide-react';
 
 interface OrderDetails {
@@ -17,12 +17,13 @@ interface OrderDetails {
 }
 
 export default function CheckoutSuccessPage() {
-  const [searchParams] = useSearchParams();
+  const [location] = useLocation();
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const orderId = searchParams.get('orderId');
+  // Parse orderId from URL query parameters
+  const orderId = new URLSearchParams(location.split('?')[1] || '').get('orderId');
 
   useEffect(() => {
     if (!orderId) {

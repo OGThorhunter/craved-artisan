@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
 import { vendorOverview, vendorBestSellers } from '../services/analytics.service';
-import LRU from 'lru-cache';
+import { LRUCache } from 'lru-cache';
 
 // Existing schemas
 const analyticsTrendsSchema = z.object({
@@ -982,7 +982,7 @@ function generateMockCustomerInsights(): CustomerInsight[] {
 }
 
 // New analytics endpoints with caching
-const cache = new LRU<string, any>({ ttl: 30_000, max: 500 });
+const cache = new LRUCache<string, any>({ ttl: 30_000, max: 500 });
 
 export async function getVendorOverview(req: Request, res: Response) {
   const { vendorId } = req.params;

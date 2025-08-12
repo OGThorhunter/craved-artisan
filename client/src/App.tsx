@@ -24,6 +24,7 @@ import VendorDashboardPage from './pages/dashboard/vendor';
 import { VendorSettingsPage } from './pages/VendorSettingsPage';
 import VendorProductsPage from './pages/VendorProductsPage';
 import VendorInventoryPage from './pages/VendorInventoryPage';
+import VendorCRMPage from './pages/VendorCRMPage';
 import VendorRecipeCreatePage from './pages/VendorRecipeCreatePage';
 import VendorRecipeEditPage from './pages/VendorRecipeEditPage';
 import RecipeVersionHistoryPage from './pages/RecipeVersionHistoryPage';
@@ -125,6 +126,11 @@ function App() {
             <Route path="/dashboard/vendor/inventory">
               <ProtectedRoute role="VENDOR">
                 <VendorInventoryPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/dashboard/vendor/crm">
+              <ProtectedRoute role="VENDOR">
+                <VendorCRMPage />
               </ProtectedRoute>
             </Route>
             <Route path="/dashboard/vendor/recipes/create">

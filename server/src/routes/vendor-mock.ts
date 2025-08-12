@@ -6,7 +6,7 @@ const router = express.Router();
 // Mock vendor profile data
 let mockVendorProfile = {
   id: 'mock-vendor-id',
-  userId: 'mock-user-id',
+  userId: 'dev-user-id',
   storeName: 'Mock Artisan Store',
   slug: 'mock-artisan-store',
   bio: 'A wonderful mock artisan store for testing purposes.',
@@ -19,7 +19,7 @@ let mockVendorProfile = {
 router.get('/profile', requireAuth, requireRole(['VENDOR']), async (req, res) => {
   try {
     // Simulate database lookup
-    if (req.session.userId === 'mock-user-id') {
+    if (req.session.userId === 'dev-user-id') {
       res.json(mockVendorProfile);
     } else {
       res.status(404).json({

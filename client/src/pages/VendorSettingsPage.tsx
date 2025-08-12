@@ -2,6 +2,7 @@
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '../contexts/AuthContext';
+import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
 import { 
   Store, 
   Edit3, 
@@ -117,20 +118,23 @@ export const VendorSettingsPage = () => {
 
   if (isLoading) {
     return (
-      <div className="page-container bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading profile...</p>
+      <VendorDashboardLayout>
+        <div className="p-6 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading profile...</p>
+          </div>
         </div>
-      </div>
+      </VendorDashboardLayout>
     );
   }
 
   return (
-    <div className="page-container bg-gray-50">
-      <div className="max-w-4xl mx-auto responsive-padding py-8">
+    <VendorDashboardLayout>
+      <div className="p-8 pt-12">
+        <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-2xl shadow-sm p-6 mb-8">
+        <div className="bg-amber-50 rounded-2xl shadow-sm p-6 mb-8 border border-amber-200">
           <div className="flex items-center space-x-4">
             <div className="p-3 bg-primary-100 rounded-xl">
               <Store className="w-8 h-8 text-primary-600" />
@@ -145,7 +149,7 @@ export const VendorSettingsPage = () => {
         </div>
 
         {/* Profile Form */}
-        <div className="bg-white rounded-2xl shadow-sm p-8">
+        <div className="bg-amber-50 rounded-2xl shadow-sm p-8 border border-amber-200">
           <div className="flex items-center space-x-3 mb-6">
             <Edit3 className="w-6 h-6 text-gray-600" />
             <h2 className="responsive-subheading text-gray-900">Store Profile</h2>
@@ -303,11 +307,11 @@ export const VendorSettingsPage = () => {
                 >
                   Reset
                 </button>
-                <button
-                  type="submit"
-                  disabled={isSaving || !isDirty}
-                  className="responsive-button bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
-                >
+                                 <button
+                   type="submit"
+                   disabled={isSaving || !isDirty}
+                   className="responsive-button bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+                 >
                   {isSaving ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -326,7 +330,7 @@ export const VendorSettingsPage = () => {
         </div>
 
         {/* Additional Settings Section */}
-        <div className="mt-8 bg-white rounded-2xl shadow-sm p-8">
+        <div className="mt-8 bg-amber-50 rounded-2xl shadow-sm p-8 border border-amber-200">
           <h2 className="responsive-subheading text-gray-900 mb-6">Additional Settings</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="p-4 border border-gray-200 rounded-lg">
@@ -347,7 +351,8 @@ export const VendorSettingsPage = () => {
             </div>
           </div>
         </div>
+        </div>
       </div>
-    </div>
+    </VendorDashboardLayout>
   );
 }; 

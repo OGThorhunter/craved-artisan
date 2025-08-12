@@ -23,6 +23,11 @@ const mockUsers = [
     role: Role.VENDOR
   },
   {
+    id: 'dev-user-id',
+    email: 'dev@local.test',
+    role: Role.VENDOR
+  },
+  {
     id: 'user-1',
     email: 'vendor1@example.com',
     role: Role.VENDOR

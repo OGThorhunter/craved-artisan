@@ -7,7 +7,7 @@ const navItems = [
   { label: 'Customer Service', href: '/dashboard/vendor/support' },
   { label: 'Inventory', href: '/dashboard/vendor/inventory' },
   { label: 'Site Management', href: '/dashboard/vendor/site' },
-  { label: 'Settings', href: '/dashboard/vendor/settings' },
+  { label: 'Settings', href: '/dashboard/vendor/site-settings' },
 ];
 
 export default function VendorSidebar() {

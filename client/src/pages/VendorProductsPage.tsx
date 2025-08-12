@@ -5,6 +5,7 @@ import { toast } from 'react-hot-toast';
 import { Plus, Package, Tag, DollarSign, FileText, Edit, Trash2, Eye, X, Image as ImageIcon, Brain, AlertTriangle, RefreshCw } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
+import VendorDashboardLayout from '../layouts/VendorDashboardLayout';
 
 // Types
 interface Product {
@@ -13,7 +14,7 @@ interface Product {
   description?: string;
   price: number;
   imageUrl?: string;
-  tags: string[];
+  tags?: string[];
   stock: number;
   isAvailable: boolean;
   targetMargin?: number;
@@ -101,7 +102,7 @@ const fetchProducts = async (): Promise<ProductsResponse> => {
 
 const createProduct = async (productData: CreateProductForm): Promise<{ message: string; product: Product }> => {
   // Convert tags string to array
-  const tags = productData.tags
+  const tags = (productData.tags || '')
     .split(',')
     .map(tag => tag.trim())
     .filter(tag => tag.length > 0);
@@ -121,7 +122,7 @@ const createProduct = async (productData: CreateProductForm): Promise<{ message:
 
 const updateProduct = async (productData: CreateProductForm & { id: string }): Promise<{ message: string; product: Product }> => {
   // Convert tags string to array
-  const tags = productData.tags
+  const tags = (productData.tags || '')
     .split(',')
     .map(tag => tag.trim())
     .filter(tag => tag.length > 0);
@@ -182,6 +183,15 @@ const VendorProductsPage: React.FC = () => {
     retry: 1,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
+
+  // Debug logging
+  console.log('VendorProductsPage - productsData:', productsData);
+  console.log('VendorProductsPage - productsData?.products:', productsData?.products);
+  console.log('VendorProductsPage - productsData?.products?.length:', productsData?.products?.length);
+
+  // Ensure we have safe data to work with
+  const safeProductsData = productsData || { products: [], count: 0 };
+  const safeProducts = safeProductsData.products || [];
 
   // React Query for creating products
   const createProductMutation = useMutation({
@@ -327,7 +337,7 @@ const VendorProductsPage: React.FC = () => {
   const startEdit = (product: Product) => {
     setEditing(product);
     setShowAddForm(true);
-    setTags(product.tags);
+    setTags(product.tags || []);
     setImagePreview(product.imageUrl || '');
     setMarginData(null);
     setShowMarginAnalysis(false);
@@ -723,15 +733,15 @@ const VendorProductsPage: React.FC = () => {
                         <div>
                           <span className="text-purple-700">Suggested Price:</span>
                           <span className="ml-2 font-medium text-purple-900">
-                            ${editing.lastAiSuggestion.toFixed(2)}
+                            ${(editing.lastAiSuggestion || 0).toFixed(2)}
                           </span>
                         </div>
                         <div>
                           <span className="text-purple-700">Price Difference:</span>
                           <span className={`ml-2 font-medium ${
-                            editing.lastAiSuggestion > editing.price ? 'text-green-600' : 'text-red-600'
+                            (editing.lastAiSuggestion || 0) > (editing.price || 0) ? 'text-green-600' : 'text-red-600'
                           }`}>
-                            ${(editing.lastAiSuggestion - editing.price).toFixed(2)}
+                            ${((editing.lastAiSuggestion || 0) - (editing.price || 0)).toFixed(2)}
                           </span>
                         </div>
                         {editing.aiSuggestionNote && (
@@ -779,7 +789,7 @@ const VendorProductsPage: React.FC = () => {
                         <div className="grid grid-cols-2 gap-4 text-sm">
                           <div>
                             <span className="text-gray-600">Unit Cost:</span>
-                            <span className="ml-2 font-medium">${marginData.costAnalysis.unitCost.toFixed(2)}</span>
+                            <span className="ml-2 font-medium">${(marginData.costAnalysis.unitCost || 0).toFixed(2)}</span>
                           </div>
                           <div>
                             <span className="text-gray-600">Recipe Yield:</span>
@@ -805,7 +815,7 @@ const VendorProductsPage: React.FC = () => {
                               marginData.marginAnalysis.status === 'warning' ? 'text-yellow-600' :
                               'text-green-600'
                             }`}>
-                              {marginData.marginAnalysis.currentMargin.toFixed(1)}%
+                              {(marginData.marginAnalysis.currentMargin || 0).toFixed(1)}%
                             </span>
                           </div>
                           <div>
@@ -823,7 +833,7 @@ const VendorProductsPage: React.FC = () => {
                             <div className="col-span-2">
                               <span className="text-gray-600">Suggested Price:</span>
                               <span className="ml-2 font-medium text-blue-600">
-                                ${marginData.marginAnalysis.suggestedPrice.toFixed(2)}
+                                ${(marginData.marginAnalysis.suggestedPrice || 0).toFixed(2)}
                               </span>
                             </div>
                           )}
@@ -906,7 +916,7 @@ const VendorProductsPage: React.FC = () => {
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <h2 className="responsive-subheading text-gray-900">
-                Your Products ({productsData?.count || 0})
+                Your Products ({safeProductsData.count || 0})
               </h2>
               <button
                 onClick={() => refetch()}
@@ -917,7 +927,7 @@ const VendorProductsPage: React.FC = () => {
             </div>
           </div>
 
-          {productsData?.products.length === 0 ? (
+          {(!safeProducts || safeProducts.length === 0) ? (
             <div className="p-12 text-center">
               <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="responsive-subheading text-gray-900 mb-2">No products yet</h3>
@@ -944,7 +954,7 @@ const VendorProductsPage: React.FC = () => {
             </div>
           ) : (
             <div className="divide-y divide-gray-200">
-              {productsData?.products.map((product) => (
+              {safeProducts.map((product) => (
                 <div key={product.id} className="p-6 hover:bg-gray-50 transition-colors">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -1005,7 +1015,7 @@ const VendorProductsPage: React.FC = () => {
                             </div>
                           )}
 
-                          {product.tags.length > 0 && (
+                          {product.tags && product.tags.length > 0 && (
                             <div className="flex items-center gap-1 mb-2">
                               <Tag className="h-4 w-4 text-gray-400" />
                               <div className="flex flex-wrap gap-1">
@@ -1180,7 +1190,7 @@ const VendorProductsPage: React.FC = () => {
                   </div>
                   <div>
                     <span className="text-gray-600">Current Price:</span>
-                    <span className="ml-2 font-medium">${marginData.product.currentPrice.toFixed(2)}</span>
+                    <span className="ml-2 font-medium">${(marginData.product.currentPrice || 0).toFixed(2)}</span>
                   </div>
                   <div>
                     <span className="text-gray-600">Target Margin:</span>
@@ -1197,7 +1207,7 @@ const VendorProductsPage: React.FC = () => {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="text-gray-600">Unit Cost:</span>
-                    <span className="ml-2 font-medium">${marginData.costAnalysis.unitCost.toFixed(2)}</span>
+                    <span className="ml-2 font-medium">${(marginData.costAnalysis.unitCost || 0).toFixed(2)}</span>
                   </div>
                   <div>
                     <span className="text-gray-600">Recipe Yield:</span>
@@ -1223,7 +1233,7 @@ const VendorProductsPage: React.FC = () => {
                       marginData.marginAnalysis.status === 'warning' ? 'text-yellow-600' :
                       'text-green-600'
                     }`}>
-                      {marginData.marginAnalysis.currentMargin.toFixed(1)}%
+                      {(marginData.marginAnalysis.currentMargin || 0).toFixed(1)}%
                     </span>
                   </div>
                   <div>
@@ -1241,7 +1251,7 @@ const VendorProductsPage: React.FC = () => {
                     <div className="col-span-2">
                       <span className="text-gray-600">Suggested Price:</span>
                       <span className="ml-2 font-medium text-blue-600 text-lg">
-                        ${marginData.marginAnalysis.suggestedPrice.toFixed(2)}
+                        ${(marginData.marginAnalysis.suggestedPrice || 0).toFixed(2)}
                       </span>
                     </div>
                   )}
@@ -1298,7 +1308,7 @@ const VendorProductsPage: React.FC = () => {
                   </div>
                   <div>
                     <span className="text-gray-600">Current Price:</span>
-                    <span className="ml-2 font-medium">${aiSuggestionData.product.currentPrice.toFixed(2)}</span>
+                    <span className="ml-2 font-medium">${(aiSuggestionData.product.currentPrice || 0).toFixed(2)}</span>
                   </div>
                   <div>
                     <span className="text-gray-600">Target Margin:</span>
@@ -1315,7 +1325,7 @@ const VendorProductsPage: React.FC = () => {
                  <div className="grid grid-cols-2 gap-4 text-sm">
                    <div>
                      <span className="text-gray-600">Unit Cost:</span>
-                     <span className="ml-2 font-medium">${aiSuggestionData.costAnalysis.unitCost.toFixed(2)}</span>
+                     <span className="ml-2 font-medium">${(aiSuggestionData.costAnalysis.unitCost || 0).toFixed(2)}</span>
                    </div>
                    <div>
                      <span className="text-gray-600">Has Recipe:</span>
@@ -1333,7 +1343,7 @@ const VendorProductsPage: React.FC = () => {
                   <div>
                     <span className="text-gray-600">Suggested Price:</span>
                     <span className="ml-2 font-medium text-blue-600 text-lg">
-                      ${aiSuggestionData.aiSuggestion.suggestedPrice.toFixed(2)}
+                      ${(aiSuggestionData.aiSuggestion.suggestedPrice || 0).toFixed(2)}
                     </span>
                   </div>
                   <div>
@@ -1354,11 +1364,11 @@ const VendorProductsPage: React.FC = () => {
                   </div>
                   <div>
                     <span className="text-gray-600">Price Difference:</span>
-                    <span className="ml-2 font-medium">${aiSuggestionData.aiSuggestion.priceDifference.toFixed(2)}</span>
+                    <span className="ml-2 font-medium">${(aiSuggestionData.aiSuggestion.priceDifference || 0).toFixed(2)}</span>
                   </div>
                   <div>
                     <span className="text-gray-600">Percentage Change:</span>
-                    <span className="ml-2 font-medium">{aiSuggestionData.aiSuggestion.percentageChange.toFixed(1)}%</span>
+                    <span className="ml-2 font-medium">{(aiSuggestionData.aiSuggestion.percentageChange || 0).toFixed(1)}%</span>
                   </div>
                 </div>
               </div>

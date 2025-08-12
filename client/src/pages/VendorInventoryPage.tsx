@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
 import { Link } from 'wouter';
 import axios from 'axios';
+import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
 import { 
   Plus, 
   AlertTriangle, 
@@ -58,8 +59,13 @@ export default function VendorInventoryPage() {
   const { data: ingredients = [], isLoading, error } = useQuery({
     queryKey: ['ingredients'],
     queryFn: async () => {
-      const response = await axios.get('/api/ingredients');
-      return response.data.ingredients;
+      try {
+        const response = await axios.get('/api/ingredients');
+        return response.data?.ingredients || [];
+      } catch (error) {
+        console.error('Error fetching ingredients:', error);
+        return [];
+      }
     }
   });
 

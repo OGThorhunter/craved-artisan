@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getVendorOverview, getVendorBestSellers } from "../controllers/analytics.controller";
+import { getVendorOverview, getVendorBestSellers } from "../controllers/analyticsController";
 import { zRange, zLimit } from "../validation/analytics";
 import { validateQuery } from "../validation/common";
 
