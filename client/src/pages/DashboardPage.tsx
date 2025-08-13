@@ -86,7 +86,7 @@ const DashboardPage: React.FC = () => {
       <div className="container mx-auto px-4 py-8">
         
         {/* User Info Card */}
-        <div className="bg-amber-50 rounded-2xl shadow-xl p-6 mb-8 border-2 border-[#5B6E02]">
+        <div className="bg-[#F7F2EC] rounded-2xl shadow-xl p-6 mb-8 border-2 border-[#5B6E02]">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className="w-16 h-16 bg-[#5B6E02] rounded-full flex items-center justify-center">
@@ -111,7 +111,7 @@ const DashboardPage: React.FC = () => {
 
         {/* Storefront URL Section */}
         {user?.role === 'VENDOR' && (
-          <div className="bg-amber-50 rounded-2xl shadow-xl p-6 mb-8 border-2 border-[#5B6E02]">
+          <div className="bg-[#F7F2EC] rounded-2xl shadow-xl p-6 mb-8 border-2 border-[#5B6E02]">
             <h4 className="text-lg font-semibold text-[#2C2C2C] mb-3">Storefront URL</h4>
             <div className="flex items-center space-x-2">
               <div className="flex-1 bg-white border border-gray-300 rounded-lg px-3 py-2">
@@ -151,7 +151,7 @@ const DashboardPage: React.FC = () => {
         {/* Navigation Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {/* Vendor Dashboard Card */}
-          <div className="bg-amber-50 rounded-2xl shadow-xl p-6 border-2 border-[#5B6E02] hover:shadow-2xl transition-shadow cursor-pointer"
+          <div className="bg-[#F7F2EC] rounded-2xl shadow-xl p-6 border-2 border-[#5B6E02] hover:shadow-2xl transition-shadow cursor-pointer"
                onClick={() => setLocation('/dashboard/vendor')}>
             <div className="flex items-center space-x-4">
               <div className="w-12 h-12 bg-[#5B6E02] rounded-lg flex items-center justify-center flex-shrink-0">
@@ -165,7 +165,7 @@ const DashboardPage: React.FC = () => {
           </div>
 
           {/* Profile Card */}
-          <div className="bg-amber-50 rounded-2xl shadow-xl p-6 border-2 border-[#5B6E02] hover:shadow-2xl transition-shadow cursor-pointer"
+          <div className="bg-[#F7F2EC] rounded-2xl shadow-xl p-6 border-2 border-[#5B6E02] hover:shadow-2xl transition-shadow cursor-pointer"
                onClick={() => setLocation('/profile')}>
             <div className="flex items-center space-x-4">
               <div className="w-12 h-12 bg-[#5B6E02] rounded-lg flex items-center justify-center flex-shrink-0">
@@ -179,7 +179,7 @@ const DashboardPage: React.FC = () => {
           </div>
 
           {/* Subscription Card */}
-          <div className="bg-amber-50 rounded-2xl shadow-xl p-6 border-2 border-[#5B6E02] hover:shadow-2xl transition-shadow cursor-pointer"
+          <div className="bg-[#F7F2EC] rounded-2xl shadow-xl p-6 border-2 border-[#5B6E02] hover:shadow-2xl transition-shadow cursor-pointer"
                onClick={() => setLocation('/subscription')}>
             <div className="flex items-center space-x-4">
               <div className="w-12 h-12 bg-[#5B6E02] rounded-lg flex items-center justify-center flex-shrink-0">

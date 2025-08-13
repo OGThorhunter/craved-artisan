@@ -38,7 +38,7 @@ export async function ensurePendingOrder(cartId: string, customerId: string, zip
   return order;
 }
 
-export async function createOrUpdatePaymentIntent(orderId: string, customerEmail?: string) {
+export async function createOrUpdatePaymentIntent(orderId: string, customerEmail?: string, billingZip?: string) {
   const order = await prisma.order.findUnique({ 
     where: { id: orderId }, 
     include: { items: true } 
@@ -46,16 +46,28 @@ export async function createOrUpdatePaymentIntent(orderId: string, customerEmail
   if (!order) throw new Error("Order not found");
   const amount = Math.round(Number(order.total) * 100); // cents
 
+  // Use the destination ZIP for tax calculation:
+  // - pickup: the chosen vendor location zip
+  // - delivery: the customer's zip
+  const taxZip = billingZip || order.zip;
+
+  const base = {
+    amount,
+    currency: "usd",
+    automatic_payment_methods: { enabled: true },
+    metadata: { orderId: order.id },
+    transfer_group: order.transferGroup || `order_${order.id}`,
+    // Tax:
+    automatic_tax: { enabled: process.env.ENABLE_STRIPE_TAX === "true" },
+    customer_details: {
+      email: customerEmail,
+      address: { country: "US", postal_code: taxZip }
+    }
+  };
+
   // Create or update the PaymentIntent on the PLATFORM
   if (!order.paymentIntentId) {
-    const pi = await stripe.paymentIntents.create({
-      amount,
-      currency: "usd",
-      automatic_payment_methods: { enabled: true },
-      metadata: { orderId: order.id },
-      receipt_email: customerEmail,
-      transfer_group: order.transferGroup || `order_${order.id}`,
-    });
+    const pi = await stripe.paymentIntents.create(base);
     await prisma.order.update({ 
       where: { id: order.id }, 
       data: { 
@@ -65,10 +77,7 @@ export async function createOrUpdatePaymentIntent(orderId: string, customerEmail
     });
     return pi;
   } else {
-    const pi = await stripe.paymentIntents.update(order.paymentIntentId, {
-      amount,
-      metadata: { orderId: order.id }
-    });
+    const pi = await stripe.paymentIntents.update(order.paymentIntentId, base);
     return pi;
   }
 }

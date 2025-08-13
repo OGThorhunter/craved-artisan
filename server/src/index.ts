@@ -8,10 +8,16 @@ import pgSession from 'connect-pg-simple';
 import { createLogger, format, transports } from 'winston';
 import rateLimit from 'express-rate-limit';
 import { LRUCache } from 'lru-cache';
+import helmet from 'helmet';
+import compression from 'compression';
+import pino from 'pino-http';
+import { v4 as uuid } from 'uuid';
+import * as Sentry from '@sentry/node';
 import { errorHandler } from './middleware/errorHandler';
 import { env } from './utils/validateEnv';
 import { logCors, corsWithLogging, getCorsConfigForSession } from './middleware/logCors';
 import { helmetConfig, devHelmetConfig } from './middleware/helmetConfig';
+import { healthz, readyz } from './infra/health';
 import authRoutes from './routes/auth-test';
 import protectedRoutes from './routes/protected-demo';
 import vendorRoutes from './routes/vendor';
@@ -45,6 +51,8 @@ import issuesRouter from './routes/issues.routes';
 import discountsRouter from './routes/discounts.routes';
 import stripeRouter from './routes/stripe.routes';
 import checkoutRouter from './routes/checkout.routes';
+import taxRouter from './routes/tax.routes';
+import dashboardRouter from './routes/dashboard.routes';
 import debugRoutes from './routes/debug';
 import vendorRouter from './routes/vendor.routes';
 import productRouter from './routes/product.routes';
@@ -52,6 +60,15 @@ import { initializeTaxReminderCron } from './services/taxReminderCron';
 
 // Load environment variables
 dotenv.config();
+
+// Initialize Sentry
+if (env.SENTRY_DSN) {
+  Sentry.init({ 
+    dsn: env.SENTRY_DSN, 
+    environment: env.NODE_ENV, 
+    release: env.SENTRY_RELEASE 
+  });
+}
 
 // Create Winston logger
 const logger = createLogger({
@@ -80,6 +97,34 @@ const logger = createLogger({
 // Create Express app
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Trust proxy in production for secure cookies
+if (env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
+// Observability middleware
+app.use(pino({ 
+  genReqId: () => uuid(), 
+  customSuccessMessage: () => "ok" 
+}));
+app.use((req, res, next) => { 
+  res.setHeader("x-request-id", (req as any).id); 
+  next(); 
+});
+
+// Security middleware
+app.use(helmet({ 
+  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" } 
+}));
+app.use(compression());
+
+// CORS configuration
+const ALLOW_ORIGIN = process.env.FRONTEND_URL || "http://localhost:5173";
+app.use(cors({ 
+  origin: ALLOW_ORIGIN, 
+  credentials: true 
+}));
 
 // Validate environment variables
 try {
@@ -124,6 +169,8 @@ app.use(session({
   cookie: {
     ...getCorsConfigForSession(),
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    secure: env.NODE_ENV === 'production',
+    sameSite: 'lax',
   },
 }));
 
@@ -139,7 +186,7 @@ app.use(morgan('combined', {
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200, // limit each IP to 200 requests per windowMs
+  max: 400, // limit each IP to 400 requests per windowMs
   message: {
     error: 'Too many requests',
     message: 'Rate limit exceeded. Please try again later.'
@@ -176,7 +223,11 @@ app.use((req, res, next) => {
   next();
 });
 
-// Health check endpoint
+// Health check endpoints
+app.get('/healthz', healthz);
+app.get('/readyz', readyz);
+
+// Legacy health endpoint
 app.get('/health', (req, res) => {
   logger.info('Health check requested');
   res.status(200).json({ 
@@ -226,6 +277,8 @@ app.use('/api/issues', issuesRouter);
 app.use('/api/discounts', discountsRouter);
 app.use('/api/stripe', stripeRouter);
 app.use('/api/checkout', checkoutRouter);
+app.use('/api/tax', taxRouter);
+app.use('/api/dashboard', dashboardRouter);
 
 // Debug routes (development only)
 if (env.NODE_ENV === 'development') {
@@ -249,7 +302,7 @@ app.use('*', (req, res) => {
 app.use(errorHandler);
 
 // Start server
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   logger.info(`Server running on port ${PORT}`);
   logger.info(`Environment: ${env.NODE_ENV}`);
   
@@ -263,14 +316,20 @@ app.listen(PORT, () => {
 });
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async () => {
   logger.info('SIGTERM received, shutting down gracefully');
-  process.exit(0);
+  server.close(async () => { 
+    await prisma.$disconnect(); 
+    process.exit(0); 
+  });
 });
 
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   logger.info('SIGINT received, shutting down gracefully');
-  process.exit(0);
+  server.close(async () => { 
+    await prisma.$disconnect(); 
+    process.exit(0); 
+  });
 });
 
 export default app; 

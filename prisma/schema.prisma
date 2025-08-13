@@ -49,6 +49,7 @@ model Product {
   name           String
   description    String?
   price          Decimal  @db.Decimal(10, 2)
+  taxCode        String?  // optional: Stripe Tax code like txcd_xxx
   category       String?
   stock_quantity Int      @default(0)
   created_at     DateTime @default(now())
@@ -81,6 +82,8 @@ model Order {
   user         User       @relation(fields: [customerId], references: [id], onDelete: Cascade)
   orderItems   OrderItem[]
   analyticsEvents AnalyticsEvent[]
+  fulfillments OrderFulfillment[]
+  events       OrderEvent[]
 
   @@index([customerId, createdAt])
 }
@@ -317,4 +320,134 @@ model CartItem {
 
   @@index([cartId])
   @@index([vendorId])
+}
+
+// Fulfillment & Order Lifecycle Models
+model FulfillmentLocation {
+  id        String  @id @default(cuid())
+  vendorId  String
+  name      String
+  type      String   // "pickup" | "dropoff" | "delivery_hub"
+  address1  String?
+  city      String?
+  state     String?
+  zip       String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  windows   FulfillmentWindow[]
+  fulfillments OrderFulfillment[]
+  @@index([vendorId, zip])
+}
+
+model FulfillmentWindow {
+  id         String  @id @default(cuid())
+  vendorId   String
+  locationId String?
+  kind       String   // "pickup" | "delivery"
+  // weekly recurrence (cron-ish): 0=Sun .. 6=Sat
+  weekday    Int
+  startTime  String   // "09:00"
+  endTime    String   // "12:00"
+  capacity   Int?     // optional cap per window
+  active     Boolean  @default(true)
+
+  location   FulfillmentLocation? @relation(fields: [locationId], references: [id])
+  @@index([vendorId, kind, weekday])
+}
+
+model OrderFulfillment {
+  id         String  @id @default(cuid())
+  orderId    String
+  vendorId   String
+  method     String  // "pickup" | "delivery" | "ship"
+  locationId String?
+  date       DateTime
+  fee        Decimal  @default(0)
+  notes      String?
+
+  location   FulfillmentLocation? @relation(fields: [locationId], references: [id])
+  order      Order @relation(fields: [orderId], references: [id])
+
+  @@index([orderId, vendorId])
+}
+
+model OrderEvent {
+  id        String  @id @default(cuid())
+  orderId   String
+  actorId   String?
+  actorRole String? // "system"|"vendor"|"customer"|"admin"
+  type      String  // "created"|"paid"|"scheduled"|"ready"|"picked_up"|"delivered"|"canceled"|"refunded"
+  message   String?
+  createdAt DateTime @default(now())
+
+  order     Order @relation(fields: [orderId], references: [id])
+  @@index([orderId, type, createdAt])
+}
+
+// CRM Models
+model CustomerProfile {
+  id           String   @id @default(cuid())
+  vendorId     String
+  userId       String?          // if the buyer has an account
+  email        String?
+  phone        String?
+  firstName    String?
+  lastName     String?
+  city         String?
+  state        String?
+  zip          String?
+  tags         String[] @default([])
+  emailOptIn   Boolean  @default(false)
+  smsOptIn     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  notes        ContactNote[]
+  tasks        CRMTask[]
+
+  @@index([vendorId, email])
+  @@index([vendorId, phone])
+  @@index([vendorId, lastName, firstName])
+}
+
+model ContactNote {
+  id         String   @id @default(cuid())
+  vendorId   String
+  contactId  String
+  authorId   String
+  body       String
+  createdAt  DateTime @default(now())
+
+  contact    CustomerProfile @relation(fields: [contactId], references: [id])
+  @@index([vendorId, contactId, createdAt])
+}
+
+model CRMTask {
+  id         String   @id @default(cuid())
+  vendorId   String
+  contactId  String
+  title      String
+  status     String   @default("open")  // open|in_progress|done
+  dueDate    DateTime?
+  ownerId    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  contact    CustomerProfile @relation(fields: [contactId], references: [id])
+  @@index([vendorId, status, dueDate])
+}
+
+model Segment {
+  id        String   @id @default(cuid())
+  vendorId  String
+  name      String
+  // simple JSON rules, e.g. { "any":[ {"field":"tags","op":"has","value":"VIP"}, {"field":"totalOrders","op":">=","value":3 } ] }
+  rulesJson Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([vendorId, name])
 }

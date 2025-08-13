@@ -261,7 +261,7 @@ export const VendorDashboardPage = () => {
       <div className="container-responsive py-8">
         
         {/* Storefront Management Bar */}
-        <div className="bg-amber-50 rounded-2xl shadow-xl p-6 mb-6 border-2 border-[#5B6E02] relative overflow-hidden">
+        <div className="bg-[#F7F2EC] rounded-2xl shadow-xl p-6 mb-6 border-2 border-[#5B6E02] relative overflow-hidden">
           {/* Background pattern */}
           <div className="absolute inset-0 opacity-5">
             <div className="absolute top-0 right-0 w-32 h-32 bg-[#5B6E02] rounded-full -translate-y-16 translate-x-16"></div>
@@ -295,7 +295,7 @@ export const VendorDashboardPage = () => {
         </div>
         
         {/* Page Header */}
-        <div className="bg-amber-50 rounded-2xl shadow-xl p-6 mb-6 border-2 border-[#5B6E02]">
+        <div className="bg-[#F7F2EC] rounded-2xl shadow-xl p-6 mb-6 border-2 border-[#5B6E02]">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Vendor Dashboard</h1>
@@ -379,7 +379,7 @@ export const VendorDashboardPage = () => {
 
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-amber-50 rounded-2xl shadow-xl p-6 border-2 border-[#5B6E02]">
+          <div className="bg-[#E8F5E8] rounded-2xl shadow-xl p-6 border-2 border-[#5B6E02]">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-600 text-sm">Total Sales</p>
@@ -392,7 +392,7 @@ export const VendorDashboardPage = () => {
             </div>
           </div>
 
-          <div className="bg-amber-50 rounded-2xl shadow-xl p-6 border-2 border-[#5B6E02]">
+          <div className="bg-[#E0F2F7] rounded-2xl shadow-xl p-6 border-2 border-[#5B6E02]">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-600 text-sm">Active Orders</p>
@@ -405,7 +405,7 @@ export const VendorDashboardPage = () => {
             </div>
           </div>
 
-          <div className="bg-amber-50 rounded-2xl shadow-xl p-6 border-2 border-[#5B6E02]">
+          <div className="bg-[#F7F2EC] rounded-2xl shadow-xl p-6 border-2 border-[#5B6E02]">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-600 text-sm">Products</p>
@@ -418,7 +418,7 @@ export const VendorDashboardPage = () => {
             </div>
           </div>
 
-          <div className="bg-amber-50 rounded-2xl shadow-xl p-6 border-2 border-[#5B6E02]">
+          <div className="bg-[#F7F2EC] rounded-2xl shadow-xl p-6 border-2 border-[#5B6E02]">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-600 text-sm">Customers</p>
@@ -443,7 +443,7 @@ export const VendorDashboardPage = () => {
         {/* Margin Alerts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Low Margin Products Alert */}
-          <div className="bg-amber-50 rounded-2xl shadow-xl p-6 border-2 border-[#5B6E02]">
+          <div className="bg-[#F7F2EC] rounded-2xl shadow-xl p-6 border-2 border-[#5B6E02]">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center">
                 <div className="p-2 bg-red-100 rounded-lg">
@@ -506,7 +506,7 @@ export const VendorDashboardPage = () => {
           </div>
 
           {/* Ingredient Price Alerts */}
-          <div className="bg-amber-50 rounded-2xl shadow-xl p-6 border-2 border-[#5B6E02]">
+          <div className="bg-[#F7F2EC] rounded-2xl shadow-xl p-6 border-2 border-[#5B6E02]">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center">
                 <div className="p-2 bg-orange-100 rounded-lg">
@@ -575,7 +575,7 @@ export const VendorDashboardPage = () => {
           <h2 className="responsive-subheading text-gray-900 mb-4">Quick Actions</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <Link href="/dashboard/vendor/products">
-              <div className="bg-amber-50 rounded-xl shadow-xl p-6 border-2 border-[#5B6E02] hover:shadow-2xl transition-shadow cursor-pointer">
+              <div className="bg-[#E0F2F7] rounded-xl shadow-xl p-6 border-2 border-[#5B6E02] hover:shadow-2xl transition-shadow cursor-pointer">
                 <div className="flex items-center">
                   <div className="p-3 rounded-lg bg-blue-500 bg-opacity-10">
                     <Plus className="w-6 h-6 text-blue-500" />
@@ -588,7 +588,7 @@ export const VendorDashboardPage = () => {
               </div>
             </Link>
             <Link href="/dashboard/vendor/batch-pricing">
-              <div className="bg-amber-50 rounded-xl shadow-xl p-6 border-2 border-[#5B6E02] hover:shadow-2xl transition-shadow cursor-pointer">
+              <div className="bg-[#E8F5E8] rounded-xl shadow-xl p-6 border-2 border-[#5B6E02] hover:shadow-2xl transition-shadow cursor-pointer">
                 <div className="flex items-center">
                   <div className="p-3 rounded-lg bg-emerald-500 bg-opacity-10">
                     <DollarSign className="w-6 h-6 text-emerald-500" />

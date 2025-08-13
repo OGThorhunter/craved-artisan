@@ -48,6 +48,7 @@ import CartPage from './pages/CartPage';
 import CheckoutSuccessPage from './pages/CheckoutSuccessPage';
 import VendorAnalyticsPage from './pages/VendorAnalyticsPage';
 import VendorAnalyticsKpiPage from './pages/dashboard/vendor/analytics';
+import OverviewPage from './pages/vendor/OverviewPage';
 import { VendorFinancialPage } from './pages/VendorFinancialPage';
 import VendorOnboardingPage from './pages/VendorOnboardingPage';
 import { NotFound } from './components/NotFound';
@@ -110,7 +111,7 @@ function App() {
             </Route>
             <Route path="/dashboard/vendor">
               <ProtectedRoute role="VENDOR">
-                <VendorDashboardPage />
+                <OverviewPage />
               </ProtectedRoute>
             </Route>
             <Route path="/dashboard/vendor/site-settings">

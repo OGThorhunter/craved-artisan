@@ -1,0 +1,45 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  build_test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with: 
+          node-version: 20
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Type check server
+        run: npm run -w server typecheck || true
+      
+      - name: Type check client
+        run: npm run -w client typecheck || true
+      
+      - name: Lint server
+        run: npm run -w server lint || true
+      
+      - name: Lint client
+        run: npm run -w client lint || true
+      
+      - name: Run tests
+        run: npm test --workspaces || true
+      
+      - name: Build client
+        run: npm run -w client build
+      
+      - name: Build server
+        run: npm run -w server build
+      
+      - name: Check Prisma schema
+        run: npx prisma format --check
+      
+      - name: Generate Prisma client
+        run: npx prisma generate

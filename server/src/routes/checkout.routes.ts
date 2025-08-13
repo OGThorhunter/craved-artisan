@@ -3,20 +3,25 @@ import Stripe from "stripe";
 import { prisma } from "../db/prisma";
 import { env } from "../config/env";
 import { ensurePendingOrder, createOrUpdatePaymentIntent } from "../services/checkout.service";
+import { sendOrderConfirmation } from "../services/email.service";
 
 const r = Router();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2024-06-20" });
 
+// Use raw body parsing for webhook to preserve Stripe signature
+const webhookRouter = Router();
+webhookRouter.use(express.raw({ type: 'application/json' }));
+
 // Create an order from cart and get client_secret for PaymentElement
 r.post("/create-intent", async (req, res) => {
-  const { cartId, customerId, zip, email } = req.body;
+  const { cartId, customerId, zip, email, billingZip } = req.body;
   const order = await ensurePendingOrder(cartId, customerId, zip);
-  const pi = await createOrUpdatePaymentIntent(order.id, email);
+  const pi = await createOrUpdatePaymentIntent(order.id, email, billingZip);
   res.json({ clientSecret: pi.client_secret, orderId: order.id });
 });
 
 // Webhook: finalize order and create transfers per vendor
-r.post("/webhook", async (req, res) => {
+webhookRouter.post("/webhook", async (req, res) => {
   let event: Stripe.Event;
   try {
     const sig = req.headers["stripe-signature"] as string;
@@ -65,6 +70,33 @@ r.post("/webhook", async (req, res) => {
       }
 
       await prisma.order.update({ where: { id: orderId }, data: { status: "paid" } });
+      
+      // Create order event for payment
+      await prisma.orderEvent.create({ data: { orderId, type: "paid", message: "Payment captured" }});
+
+      // Inventory snapshot per item (uses your existing service)
+      for (const it of order.items) {
+        try { 
+          // TODO: Import and call snapshotCogsForOrderItem(it.id); 
+          console.log("COGS snapshot needed for item:", it.id);
+        } catch (e) { 
+          console.error("COGS snapshot failed", it.id, e); 
+        } 
+      }
+
+      // Send confirmation email
+      try {
+        const fulfillments = await prisma.orderFulfillment.findMany({ 
+          where: { orderId }, 
+          include: { location: true } 
+        });
+        const user = await prisma.user.findUnique({ where: { id: order.customerId } });
+        if (user?.email) {
+          await sendOrderConfirmation(user.email, order, fulfillments);
+        }
+      } catch (e) {
+        console.error("Email confirmation failed", e);
+      }
     }
   }
 
@@ -76,5 +108,8 @@ r.post("/webhook", async (req, res) => {
 
   res.json({ received: true });
 });
+
+// Mount webhook router on main router
+r.use('/', webhookRouter);
 
 export default r;

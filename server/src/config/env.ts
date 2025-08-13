@@ -16,12 +16,14 @@ const envSchema = z.object({
   // Optional environment variables
   USE_MOCK: z.string().optional().transform(val => val === 'true'),
   SENTRY_DSN: z.string().url('SENTRY_DSN must be a valid URL').optional(),
+  SENTRY_RELEASE: z.string().optional(),
   
   // Stripe configuration (stubs for now)
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_PUBLISHABLE_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
   STRIPE_CONNECT_CLIENT_ID: z.string().optional(),
+  ENABLE_STRIPE_TAX: z.enum(["true","false"]).default("false"),
   
   // Financial configuration with sane defaults
   PLATFORM_FEE_BPS: z.string().optional().transform(val => val ? parseInt(val, 10) : 100), // 1.0%
@@ -73,6 +75,9 @@ function parseEnv() {
       }
       if (!env.STRIPE_WEBHOOK_SECRET) {
         throw new Error('STRIPE_WEBHOOK_SECRET is required in production');
+      }
+      if (env.ENABLE_STRIPE_TAX === 'true' && !env.STRIPE_SECRET_KEY) {
+        throw new Error('STRIPE_SECRET_KEY is required when ENABLE_STRIPE_TAX=true');
       }
     }
     

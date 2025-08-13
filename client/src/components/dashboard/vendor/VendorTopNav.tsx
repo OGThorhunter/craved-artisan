@@ -53,7 +53,7 @@ export default function VendorTopNav() {
   return (
     <>
       {/* Secondary Navigation */}
-      <header className="bg-white border-b border-gray-200 shadow-sm">
+      <header className="bg-[#F0F8FF] border-b-2 border-[#5B6E02] shadow-md">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex space-x-8">
@@ -65,7 +65,7 @@ export default function VendorTopNav() {
                       className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                         isAnalyticsActive
                           ? 'text-[#5B6E02] bg-[#F7F2EC]'
-                          : 'text-white hover:text-[#5B6E02] hover:bg-[#F7F2EC]'
+                          : 'text-[#2C2C2C] hover:text-[#5B6E02] hover:bg-[#F7F2EC]'
                       }`}
                     >
                       {item.label}
@@ -76,7 +76,7 @@ export default function VendorTopNav() {
                       className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                         isActive(item.href)
                           ? 'text-[#5B6E02] bg-[#F7F2EC]'
-                          : 'text-white hover:text-[#5B6E02] hover:bg-[#F7F2EC]'
+                          : 'text-[#2C2C2C] hover:text-[#5B6E02] hover:bg-[#F7F2EC]'
                       }`}
                     >
                       {item.label}
@@ -91,7 +91,7 @@ export default function VendorTopNav() {
 
       {/* Tertiary Navigation - Only show when Analytics is active */}
       {isAnalyticsActive && (
-        <div className="bg-[#F7F2EC] border-b border-[#5B6E02] shadow-sm">
+        <div className="bg-[#F7F2EC] border-b-2 border-[#5B6E02] shadow-md">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex space-x-1 py-3">
               {navItems.find(item => item.hasSubmenu)?.subItems?.map((subItem) => {
