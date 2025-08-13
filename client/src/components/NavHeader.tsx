@@ -218,8 +218,8 @@ export default function NavHeader() {
   return (
     <header className={`fixed top-0 z-50 w-full transition-all duration-300 ${
       isScrolled 
-        ? 'bg-white shadow-sm border-b border-[#5B6E02]/20' 
-        : 'bg-white shadow-sm border-b border-[#5B6E02]/20'
+        ? 'bg-white/80 backdrop-blur shadow-sm border-b border-border' 
+        : 'bg-white/80 backdrop-blur shadow-sm border-b border-border'
     }`}>
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
 
@@ -233,18 +233,18 @@ export default function NavHeader() {
             />
           </Link>
 
-          <nav className="hidden md:flex items-center space-x-4 text-sm font-medium text-[#2C2C2C]">
+          <nav className="hidden md:flex items-center space-x-4 text-sm font-medium text-charcoal">
             {navLinks.map(link => (
-              <Link key={link.href} href={link.href} className="hover:text-[#5B6E02] transition-colors">{link.label}</Link>
+              <Link key={link.href} href={link.href} className="hover:text-accent transition-colors">{link.label}</Link>
             ))}
                          <Link
                href="/join"
-               className="bg-[#5B6E02] text-white px-3 py-1 rounded-lg shadow hover:bg-[#4A5A01] transition-colors"
+               className="bg-accent text-white px-3 py-1 rounded-lg shadow hover:opacity-90 transition-colors"
              >
                Join
              </Link>
             {role !== 'guest' && (
-              <span className="text-[#2C2C2C] hover:text-[#5B6E02] transition-colors">
+              <span className="text-charcoal hover:text-accent transition-colors">
                 {roleLinks[role]}
               </span>
             )}

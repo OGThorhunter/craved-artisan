@@ -8,6 +8,7 @@ import OnboardingPrompt from '../components/OnboardingPrompt';
 import TaxForecastCard from '../components/TaxForecastCard';
 import VendorDashboardLayout from '../layouts/VendorDashboardLayout';
 import InspirationalQuote from '../components/InspirationalQuote';
+import OverviewPage from './vendor/OverviewPage';
 import { 
   Package, 
   TrendingUp, 
@@ -258,6 +259,9 @@ export const VendorDashboardPage = () => {
 
   return (
     <VendorDashboardLayout>
+      {/* Overview Dashboard */}
+      <OverviewPage />
+      
       <div className="container-responsive py-8">
         
         {/* Storefront Management Bar */}

@@ -294,6 +294,31 @@ app.get("/api/vendor/:vendorId/analytics/bestsellers", (req, res) => {
   });
 });
 
+app.get("/api/vendor/:vendorId/analytics/conversion", (req, res) => {
+  const range = req.query.range || 'monthly';
+  
+  // Return mock conversion funnel data
+  res.json({
+    data: {
+      visitors: range === 'daily' ? 1250 : range === 'weekly' ? 8750 : 37500,
+      pageViews: range === 'daily' ? 2100 : range === 'weekly' ? 14700 : 63000,
+      addToCart: range === 'daily' ? 420 : range === 'weekly' ? 2940 : 12600,
+      checkoutStarted: range === 'daily' ? 315 : range === 'weekly' ? 2205 : 9450,
+      ordersCompleted: range === 'daily' ? 252 : range === 'weekly' ? 1764 : 7560,
+      revenue: range === 'daily' ? 3780 : range === 'weekly' ? 26460 : 113400
+    },
+    meta: {
+      vendorId: req.params.vendorId,
+      vendorName: "Mock Vendor",
+      range,
+      conversionRate: 20.2,
+      avgOrderValue: 150.00,
+      topFunnelDropoff: "add-to-cart",
+      improvementOpportunity: "checkout optimization"
+    }
+  });
+});
+
 // New analytics endpoints for the live analytics feature
 app.get("/api/analytics/vendor/:vendorId/overview", (req, res) => {
   const interval = req.query.interval || 'day';

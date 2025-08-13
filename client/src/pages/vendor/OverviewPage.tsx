@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useVendorOverviewDashboard } from "@/hooks/dashboard";
+import { Card, Button, Section, StatTile } from "@/components/ui";
 
 function DeltaBadge({ pct }: { pct:number }) {
   const color = pct > 0 ? "text-green-600" : pct < 0 ? "text-red-600" : "text-gray-700";
@@ -45,107 +46,128 @@ export default function OverviewPage(){
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <Section>
       {/* Hero */}
-      <div className="rounded-2xl p-6 bg-[#F7F2EC] flex items-center justify-between">
+      <Card tone="offwhite" className="p-6 flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold">Welcome back 👋</h1>
           <p className="text-sm text-neutral-700">Here's your business at a glance.</p>
         </div>
         <div className="flex gap-2">
           {(["today","week","month"] as const).map(r=>(
-            <button key={r} onClick={()=>setRange(r)} className={`px-3 py-1 rounded-xl border ${range===r?"bg-[#5B6E02] text-white":"bg-white"}`}>{r.toUpperCase()}</button>
+            <Button 
+              key={r} 
+              onClick={()=>setRange(r)} 
+              variant={range===r ? "success" : "secondary"}
+            >
+              {r.toUpperCase()}
+            </Button>
           ))}
         </div>
-      </div>
+      </Card>
 
       {/* Today's Performance Tiles */}
       <div className="grid md:grid-cols-5 gap-4">
-        <div className="p-4 rounded-2xl border-2 border-[#5B6E02] bg-[#F7F2EC] shadow-xl">
-          <div className="text-xs text-neutral-600">Revenue ({sales?.period?.label || ""})</div>
-          <div className="text-2xl font-semibold">${(sales?.revenue||0).toFixed(2)}</div>
-          <div className="mt-1"><DeltaBadge pct={sales?.delta?.revenuePct||0} /></div>
-          <div className="mt-2"><SparkLine data={sales?.sparkline||[]} /></div>
-        </div>
-        <div className="p-4 rounded-2xl border-2 border-[#5B6E02] bg-[#F7F2EC] shadow-xl">
-          <div className="text-xs text-neutral-600">Orders</div>
-          <div className="text-2xl font-semibold">{sales?.orders||0}</div>
-          <div className="mt-1"><DeltaBadge pct={sales?.delta?.ordersPct||0} /></div>
-        </div>
-        <div className="p-4 rounded-2xl border-2 border-[#5B6E02] bg-[#F7F2EC] shadow-xl">
-          <div className="text-xs text-neutral-600">Average Order Value</div>
-          <div className="text-2xl font-semibold">${(sales?.aov||0).toFixed(2)}</div>
-          <div className="mt-1"><DeltaBadge pct={sales?.delta?.aovPct||0} /></div>
-        </div>
-        <div className="p-4 rounded-2xl border-2 border-[#5B6E02] bg-[#F7F2EC] shadow-xl">
-          <div className="text-xs text-neutral-600">Top Product Today</div>
+        <StatTile 
+          label={`Revenue (${sales?.period?.label || ""})`}
+          value={`$${(sales?.revenue||0).toFixed(2)}`}
+          delta={sales?.delta?.revenuePct||0}
+        />
+        <StatTile 
+          label="Orders"
+          value={`${sales?.orders||0}`}
+          delta={sales?.delta?.ordersPct||0}
+        />
+        <StatTile 
+          label="Average Order Value"
+          value={`$${(sales?.aov||0).toFixed(2)}`}
+          delta={sales?.delta?.aovPct||0}
+        />
+        <Card tone="beige" className="p-5">
+          <div className="text-sm text-neutral-600">Top Product Today</div>
           <div className="text-base">{data?.sales?.topProductToday?.name || "—"}</div>
-          <div className="text-xs text-neutral-600">{data?.sales?.topProductToday ? `${data.sales.topProductToday.qtySold} sold` : ""}</div>
-        </div>
-        <div className="p-4 rounded-2xl border-2 border-[#5B6E02] bg-[#F7F2EC] shadow-xl">
-          <div className="text-xs text-neutral-600">Best Day</div>
-          <div className="text-base">{data?.sales?.bestDay?.date ? new Date(data.sales.bestDay.date).toDateString() : "—"}</div>
-          <div className="text-sm font-medium">${(data?.sales?.bestDay?.revenue||0).toFixed(2)}</div>
-        </div>
+          <div className="text-xs text-neutral-600">
+            {data?.sales?.topProductToday ? `${data.sales.topProductToday.qtySold} sold` : ""}
+          </div>
+        </Card>
+        <Card tone="beige" className="p-5">
+          <div className="text-sm text-neutral-600">Best Day</div>
+          <div className="text-base">
+            {data?.sales?.bestDay?.date ? new Date(data.sales.bestDay.date).toDateString() : "—"}
+          </div>
+          <div className="text-sm font-medium">
+            ${(data?.sales?.bestDay?.revenue||0).toFixed(2)}
+          </div>
+        </Card>
       </div>
 
       {/* Business Health Snapshot */}
       <div className="grid md:grid-cols-5 gap-4">
-        <div className="p-4 rounded-2xl border-2 border-[#5B6E02] bg-[#F7F2EC] shadow-xl">
-          <div className="text-xs">Inventory Status</div>
+        <Card tone="beige" className="p-5">
+          <div className="text-sm text-neutral-600">Inventory Status</div>
           <div className="text-lg">{health?.lowStockCount||0} low-stock</div>
-        </div>
-        <div className="p-4 rounded-2xl border-2 border-[#5B6E02] bg-[#F7F2EC] shadow-xl">
-          <div className="text-xs">Fulfillment Queue</div>
+        </Card>
+        <Card tone="beige" className="p-5">
+          <div className="text-sm text-neutral-600">Fulfillment Queue</div>
           <div className="text-lg">{health?.fulfillmentQueueCount||0} orders</div>
-        </div>
-        <div className="p-4 rounded-2xl border-2 border-[#5B6E02] bg-[#F7F2EC] shadow-xl">
-          <div className="text-xs">Profit Margin (est.)</div>
+        </Card>
+        <Card tone="beige" className="p-5">
+          <div className="text-sm text-neutral-600">Profit Margin (est.)</div>
           <div className="text-lg">{(health?.profitMarginPct||0).toFixed(1)}%</div>
-        </div>
-        <div className="p-4 rounded-2xl border-2 border-[#5B6E02] bg-[#F7F2EC] shadow-xl">
-          <div className="text-xs">Pending Payouts</div>
+        </Card>
+        <Card tone="beige" className="p-5">
+          <div className="text-sm text-neutral-600">Pending Payouts</div>
           <div className="text-lg">${(health?.pendingPayoutsEstimate||0).toFixed(2)}</div>
-        </div>
-        <div className="p-4 rounded-2xl border-2 border-[#5B6E02] bg-[#F7F2EC] shadow-xl">
-          <div className="text-xs">Churn Risk</div>
+        </Card>
+        <Card tone="beige" className="p-5">
+          <div className="text-sm text-neutral-600">Churn Risk</div>
           <div className="text-lg">⚠️ {health?.churnRiskCount||0}</div>
-        </div>
+        </Card>
       </div>
 
       {/* AI Insights + Notifications */}
       <div className="grid md:grid-cols-3 gap-4">
-        <div className="p-4 rounded-2xl border-2 border-[#5B6E02] bg-[#F7F2EC] shadow-xl md:col-span-2">
+        <Card tone="beige" className="p-5 md:col-span-2">
           <div className="font-medium mb-2">🧠 AI Insights</div>
           <ul className="list-disc pl-5 space-y-1">
             {insights.length ? insights.map((s,i)=><li key={i}>{s}</li>) : <li>No insights yet — come back after more orders.</li>}
           </ul>
-        </div>
-        <div className="p-4 rounded-2xl border-2 border-[#5B6E02] bg-[#F7F2EC] shadow-xl">
+        </Card>
+        <Card tone="beige" className="p-5">
           <div className="font-medium mb-2">📬 Messages & Alerts</div>
           <div>{(messages?.unreadCount||0)} new messages</div>
           <div>{(messages?.newReviewsToday||0)} reviews today</div>
-        </div>
+        </Card>
       </div>
 
       {/* Quick Actions */}
-      <div className="p-4 rounded-2xl border-2 border-[#5B6E02] bg-[#F7F2EC] shadow-xl">
+      <Card tone="beige" className="p-5">
         <div className="font-medium mb-3">🎯 Quick Actions</div>
         <div className="flex flex-wrap gap-2">
-          <a href="/dashboard/vendor/products/new" className="px-3 py-2 rounded-xl border bg-white hover:bg-gray-50">Add New Product</a>
-          <a href="/dashboard/vendor/discounts/new" className="px-3 py-2 rounded-xl border bg-white hover:bg-gray-50">Create Discount</a>
-          <a href="/dashboard/vendor/marketing/email" className="px-3 py-2 rounded-xl border bg-white hover:bg-gray-50">Send Email to Segment</a>
-          <a href="/dashboard/vendor/payouts" className="px-3 py-2 rounded-xl border bg-white hover:bg-gray-50">View Payouts</a>
-          <a href="/dashboard/vendor/reports/export" className="px-3 py-2 rounded-xl border bg-white hover:bg-gray-50">Export Report</a>
+          <Button variant="secondary" asChild>
+            <a href="/dashboard/vendor/products/new">Add New Product</a>
+          </Button>
+          <Button variant="secondary" asChild>
+            <a href="/dashboard/vendor/discounts/new">Create Discount</a>
+          </Button>
+          <Button variant="secondary" asChild>
+            <a href="/dashboard/vendor/marketing/email">Send Email to Segment</a>
+          </Button>
+          <Button variant="secondary" asChild>
+            <a href="/dashboard/vendor/payouts">View Payouts</a>
+          </Button>
+          <Button variant="secondary" asChild>
+            <a href="/dashboard/vendor/reports/export">Export Report</a>
+          </Button>
         </div>
-      </div>
+      </Card>
 
       {/* Motivator */}
-      <div className="p-4 rounded-2xl border-2 border-[#5B6E02] bg-[#F7F2EC] shadow-xl">
+      <Card tone="beige" className="p-5">
         <div className="font-medium mb-2">🔥 Leaderboard / Motivator</div>
         <div>Your best sales day: {data?.sales?.bestDay?.date ? new Date(data.sales.bestDay.date).toDateString() : "—"} — ${ (data?.sales?.bestDay?.revenue||0).toFixed(2) }</div>
         <div>You've served {data?.leaderboard?.totalCustomersServed||0} customers 🙌</div>
-      </div>
-    </div>
+      </Card>
+    </Section>
   );
 }

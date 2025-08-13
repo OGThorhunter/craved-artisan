@@ -6,6 +6,17 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --surface: theme(colors.surface);
+    --panel: theme(colors.panel);
+    --offwhite: theme(colors.offwhite);
+    --accent: theme(colors.accent);
+    --accent2: theme(colors.accent2);
+    --charcoal: theme(colors.charcoal);
+    --muted: theme(colors.muted);
+    --border: theme(colors.border);
+  }
+  
   html {
     font-family: 'Inter', system-ui, sans-serif;
     scroll-behavior: smooth;
@@ -13,11 +24,15 @@
   
   html, body, #root {
     height: 100%;
-    /* Removed overflow: hidden to allow footer to be visible */
+    background: var(--surface); /* WHITE */
+    color: var(--charcoal);
   }
   
+  a { @apply underline-offset-2; }
+  .container-page { @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8; }
+  
   body {
-    @apply bg-brand-cream text-foreground font-sans;
+    @apply font-sans;
   }
 
   /* Reset any conflicting styles */

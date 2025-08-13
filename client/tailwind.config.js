@@ -4,6 +4,17 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Design tokens
+        surface: "#FFFFFF",          // page background (pure white)
+        offwhite: "#F7F2EC",         // gentle backgrounds / hero
+        panel: "#E8CBAE",            // soft beige (use with /20 for cards)
+        accent: "#5B6E02",           // Verdun Green (sparingly)
+        accent2: "#7F232E",          // Crown of Thorns (primary CTA)
+        charcoal: "#333333",
+        muted: "#777777",
+        border: "#0000000D",         // 5% black
+        
+        // Legacy colors (keeping for backward compatibility)
         primary: {
           50: '#fef7ee',
           100: '#fdedd6',
@@ -43,16 +54,23 @@ export default {
         background: '#ffffff',
         foreground: '#171717',
         muted: '#f5f5f4',
-        // Brand color scheme
+        // Brand color scheme (legacy)
         brand: {
           cream: '#F7F2EC',
           beige: '#E8CBAE',
           green: '#5B6E02',
-          'green-hover': '#4A5A01', // Darker shade for hover
+          'green-hover': '#4A5A01',
           maroon: '#7F232E',
           charcoal: '#333333',
           grey: '#777777',
         },
+        borderRadius: {
+          xl: "14px",
+          "2xl": "20px"
+        },
+        boxShadow: {
+          soft: "0 6px 18px rgba(0,0,0,0.06)"
+        }
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],

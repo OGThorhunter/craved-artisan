@@ -8,7 +8,7 @@ interface LayoutProps {
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
-    <div className="content-wrapper">
+    <div className="min-h-screen bg-surface">
       <NavHeader />
       <main className="main-content">{children}</main>
       <Footer />

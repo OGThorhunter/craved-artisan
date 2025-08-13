@@ -111,7 +111,7 @@ function App() {
             </Route>
             <Route path="/dashboard/vendor">
               <ProtectedRoute role="VENDOR">
-                <OverviewPage />
+                <VendorDashboardPage />
               </ProtectedRoute>
             </Route>
             <Route path="/dashboard/vendor/site-settings">
@@ -182,6 +182,11 @@ function App() {
             <Route path="/dashboard/vendor/analytics">
               <ProtectedRoute role="VENDOR">
                 <VendorAnalyticsKpiPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/dashboard/vendor/overview">
+              <ProtectedRoute role="VENDOR">
+                <OverviewPage />
               </ProtectedRoute>
             </Route>
             <Route path="/vendor/financial">
