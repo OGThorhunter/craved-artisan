@@ -1,12 +1,26 @@
 import { Link, useLocation } from 'wouter';
-import { useState } from 'react';
-import { Lightbulb, BarChart3, Receipt, Tag, Briefcase } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { 
+  Lightbulb, 
+  BarChart3, 
+  Receipt, 
+  Tag, 
+  Briefcase,
+  Home,
+  Package,
+  ShoppingCart,
+  Database,
+  Users,
+  Settings,
+  ChevronDown
+} from 'lucide-react';
 
 const navItems = [
-  { label: 'Overview', href: '/dashboard/vendor' },
+  { label: 'Overview', href: '/dashboard/vendor', icon: Home },
   { 
     label: 'Analytics', 
     href: '/dashboard/vendor/analytics',
+    icon: BarChart3,
     hasSubmenu: true,
     subItems: [
       { label: 'Insights', href: '/dashboard/vendor/analytics', icon: Lightbulb },
@@ -16,39 +30,34 @@ const navItems = [
       { label: 'Portfolio Builder', href: '/dashboard/vendor/analytics?tab=portfolio', icon: Briefcase },
     ]
   },
-  { label: 'Products', href: '/dashboard/vendor/products' },
-  { label: 'Orders', href: '/dashboard/orders' },
-  { label: 'Inventory', href: '/dashboard/vendor/inventory' },
-  { label: 'CRM', href: '/dashboard/vendor/crm' },
-  { label: 'Settings', href: '/dashboard/vendor/site-settings' },
+  { label: 'Products', href: '/dashboard/vendor/products', icon: Package },
+  { label: 'Orders', href: '/dashboard/orders', icon: ShoppingCart },
+  { label: 'Inventory', href: '/dashboard/vendor/inventory', icon: Database },
+  { label: 'CRM', href: '/dashboard/vendor/crm', icon: Users },
+  { label: 'Settings', href: '/dashboard/vendor/site-settings', icon: Settings },
 ];
 
 export default function VendorTopNav() {
   const [location, setLocation] = useLocation();
+  const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const isActive = (path: string) => location === path;
   const isAnalyticsActive = location.includes('/dashboard/vendor/analytics');
 
-  const isSubItemActive = (href: string) => {
-    if (href.includes('?tab=')) {
-      const urlParams = new URLSearchParams(location.split('?')[1]);
-      const tabParam = urlParams.get('tab');
-      console.log('Checking subItem active:', href, 'tabParam:', tabParam, 'location:', location);
-      return href.includes(`tab=${tabParam}`);
-    }
-    return isActive(href);
-  };
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsAnalyticsOpen(false);
+      }
+    };
 
-  const handleTertiaryNavClick = (href: string, label: string) => {
-    console.log('=== TERTIARY NAVIGATION DEBUG ===');
-    console.log('Clicking tertiary nav item:', label);
-    console.log('Target href:', href);
-    console.log('Current location before navigation:', location);
-    console.log('Navigating to:', href);
-    setLocation(href);
-  };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
-  console.log('VendorTopNav - Current location:', location, 'isAnalyticsActive:', isAnalyticsActive);
+  console.log('VendorTopNav - Current location:', location);
 
   return (
     <>
@@ -56,66 +65,70 @@ export default function VendorTopNav() {
       <header className="bg-[#F0F8FF] border-b-2 border-[#5B6E02] shadow-md">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
-            <div className="flex space-x-8">
-              {navItems.map((item) => (
-                <div key={item.href} className="flex items-center">
-                  {item.hasSubmenu ? (
-                    <Link
-                      href={item.href}
-                      className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                        isAnalyticsActive
-                          ? 'text-[#5B6E02] bg-[#F7F2EC]'
-                          : 'text-[#2C2C2C] hover:text-[#5B6E02] hover:bg-[#F7F2EC]'
-                      }`}
-                    >
-                      {item.label}
-                    </Link>
-                  ) : (
-                    <Link
-                      href={item.href}
-                      className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                        isActive(item.href)
-                          ? 'text-[#5B6E02] bg-[#F7F2EC]'
-                          : 'text-[#2C2C2C] hover:text-[#5B6E02] hover:bg-[#F7F2EC]'
-                      }`}
-                    >
-                      {item.label}
-                    </Link>
-                  )}
-                </div>
-              ))}
+            <div className="flex space-x-4 lg:space-x-6 overflow-x-auto">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <div key={item.href} className="flex items-center relative">
+                    {item.hasSubmenu ? (
+                      <div className="relative" ref={dropdownRef}>
+                        <button
+                          onClick={() => setIsAnalyticsOpen(!isAnalyticsOpen)}
+                          className={`inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                            isAnalyticsActive
+                              ? 'text-[#5B6E02] bg-[#F7F2EC]'
+                              : 'text-[#2C2C2C] hover:text-[#5B6E02] hover:bg-[#F7F2EC]'
+                          }`}
+                        >
+                          {Icon && <Icon className="w-4 h-4" />}
+                          {item.label}
+                          <ChevronDown className={`w-4 h-4 transition-transform ${isAnalyticsOpen ? 'rotate-180' : ''}`} />
+                        </button>
+                        
+                        {/* Analytics Dropdown */}
+                        {isAnalyticsOpen && (
+                          <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                            <div className="py-2">
+                              {item.subItems?.map((subItem) => {
+                                const SubIcon = subItem.icon;
+                                return (
+                                  <Link
+                                    key={subItem.href}
+                                    href={subItem.href}
+                                    onClick={() => setIsAnalyticsOpen(false)}
+                                    className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-[#5B6E02] transition-colors"
+                                  >
+                                    <SubIcon className="w-4 h-4" />
+                                    {subItem.label}
+                                  </Link>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <Link
+                        href={item.href}
+                        className={`inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                          isActive(item.href)
+                            ? 'text-[#5B6E02] bg-[#F7F2EC]'
+                            : 'text-[#2C2C2C] hover:text-[#5B6E02] hover:bg-[#F7F2EC]'
+                        }`}
+                      >
+                        {Icon && <Icon className="w-4 h-4" />}
+                        {item.label}
+                      </Link>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </nav>
       </header>
 
-      {/* Tertiary Navigation - Only show when Analytics is active */}
-      {isAnalyticsActive && (
-        <div className="bg-[#F7F2EC] border-b-2 border-[#5B6E02] shadow-md">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex space-x-1 py-3">
-              {navItems.find(item => item.hasSubmenu)?.subItems?.map((subItem) => {
-                const Icon = subItem.icon;
-                const isActive = isSubItemActive(subItem.href);
-                return (
-                  <button
-                    key={subItem.href}
-                    onClick={() => handleTertiaryNavClick(subItem.href, subItem.label)}
-                    className={`inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 ${
-                      isActive
-                        ? 'bg-[#5B6E02] text-white shadow-md'
-                        : 'text-[#5B6E02] hover:bg-white hover:shadow-sm border border-transparent hover:border-[#5B6E02]'
-                    }`}
-                  >
-                    <Icon className="w-4 h-4" />
-                    {subItem.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
+
     </>
   );
 } 

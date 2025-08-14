@@ -33,6 +33,7 @@ import {
 } from "@/hooks/analytics";
 import FinancialsTab from "@/pages/vendor/FinancialsTab";
 import ProductDeepDiveModal from "@/components/ProductDeepDiveModal";
+import { Breadcrumbs } from "@/components/dashboard/vendor/Breadcrumbs";
 
 type TabType = 'insights' | 'financials' | 'taxes' | 'pricing' | 'portfolio';
 
@@ -224,6 +225,7 @@ export default function VendorAnalyticsPage() {
     <VendorDashboardLayout>
       <div className="p-6 space-y-6 bg-white min-h-screen">
         <div className="max-w-7xl mx-auto">
+          <Breadcrumbs />
           <div className="bg-[#F7F2EC] rounded-2xl shadow-sm p-6 mb-6 border border-gray-100">
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -239,6 +241,40 @@ export default function VendorAnalyticsPage() {
               </div>
             </div>
             <InspirationalQuote />
+          </div>
+
+          {/* Tab Navigation */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+            <div className="border-b border-gray-200">
+              <nav className="flex space-x-8 px-6">
+                {[
+                  { id: 'insights', label: 'Insights', icon: '📊' },
+                  { id: 'financials', label: 'Financials', icon: '💰' },
+                  { id: 'taxes', label: 'Taxes', icon: '📋' },
+                  { id: 'pricing', label: 'Pricing Optimizer', icon: '🎯' },
+                  { id: 'portfolio', label: 'Portfolio Builder', icon: '📈' }
+                ].map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => {
+                      const newUrl = tab.id === 'insights' 
+                        ? '/dashboard/vendor/analytics'
+                        : `/dashboard/vendor/analytics?tab=${tab.id}`;
+                      window.history.pushState({}, '', newUrl);
+                      setActiveTab(tab.id as TabType);
+                    }}
+                    className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                      activeTab === tab.id
+                        ? 'border-[#5B6E02] text-[#5B6E02]'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    <span>{tab.icon}</span>
+                    {tab.label}
+                  </button>
+                ))}
+              </nav>
+            </div>
           </div>
           
           {/* KPI Row */}
@@ -256,18 +292,16 @@ export default function VendorAnalyticsPage() {
           
           {/* Tab Content */}
           <div className="tab-content">
-            {/* Debug Info - remove in production */}
-            {process.env.NODE_ENV === 'development' && (
-              <div className="mb-6 p-4 bg-yellow-100 border border-yellow-400 rounded-lg">
-                <div className="font-bold text-yellow-800 mb-2">🔍 Debug Info:</div>
-                <div className="text-sm text-yellow-700">
-                  <div>Active Tab: <span className="font-mono">{activeTab}</span></div>
-                  <div>Current URL: <span className="font-mono">{location}</span></div>
-                  <div>Tab Display Name: <span className="font-mono">{getTabDisplayName(activeTab)}</span></div>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#5B6E02] mx-auto mb-4"></div>
+                  <p className="text-gray-600">Loading analytics data...</p>
                 </div>
               </div>
+            ) : (
+              renderTabContent()
             )}
-            {renderTabContent()}
           </div>
         </div>
       </div>

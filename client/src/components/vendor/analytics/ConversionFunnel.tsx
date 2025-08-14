@@ -3,7 +3,11 @@
 import { useState } from "react";
 import { TrendingUp, TrendingDown, Target, Zap, AlertTriangle, CheckCircle } from "lucide-react";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell } from "recharts";
-import { mockFunnelData } from "@/mock/analyticsData";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+
+// API base URL - same as in analytics service
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 const COLORS = ["#C5C5C5", "#A67F5B", "#5B6E02", "#7F232E"];
 
@@ -41,11 +45,29 @@ const aiSuggestions = [
 export function ConversionFunnel() {
   const [showSuggestions, setShowSuggestions] = useState(true);
 
-  const total = mockFunnelData[0]?.count ?? 1;
+  // Fetch conversion data from API
+  const { data: conversionData, isLoading, error } = useQuery({
+    queryKey: ['conversion-funnel'],
+    queryFn: async () => {
+      const response = await axios.get(`${API_BASE_URL}/vendor/dev-user-id/analytics/conversion?range=monthly`);
+      return response.data;
+    }
+  });
 
-  const dataWithDropoff = mockFunnelData.map((step, index) => {
+  // Transform API data to funnel format
+  const funnelData = conversionData?.data ? [
+    { stage: "Visitors", count: conversionData.data.visitors },
+    { stage: "Page Views", count: conversionData.data.pageViews },
+    { stage: "Add to Cart", count: conversionData.data.addToCart },
+    { stage: "Checkout Started", count: conversionData.data.checkoutStarted },
+    { stage: "Orders Completed", count: conversionData.data.ordersCompleted }
+  ] : [];
+
+  const total = funnelData[0]?.count ?? 1;
+
+  const dataWithDropoff = funnelData.map((step, index) => {
     const dropoff =
-      index === 0 ? 0 : ((mockFunnelData[index - 1].count - step.count) / mockFunnelData[index - 1].count) * 100;
+      index === 0 ? 0 : ((funnelData[index - 1].count - step.count) / funnelData[index - 1].count) * 100;
     return {
       ...step,
       dropoff: index === 0 ? 0 : dropoff.toFixed(1),
@@ -82,6 +104,38 @@ export function ConversionFunnel() {
         return <Zap size={16} className="text-blue-600" />;
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="bg-[#F7F2EC] rounded-2xl p-4 shadow-md border border-gray-100">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <Target size={20} className="text-[#5B6E02]" />
+            <h2 className="text-xl font-semibold text-gray-800">Conversion Funnel</h2>
+          </div>
+        </div>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-gray-500">Loading conversion data...</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-[#F7F2EC] rounded-2xl p-4 shadow-md border border-gray-100">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <Target size={20} className="text-[#5B6E02]" />
+            <h2 className="text-xl font-semibold text-gray-800">Conversion Funnel</h2>
+          </div>
+        </div>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-red-500">Error loading conversion data</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#F7F2EC] rounded-2xl p-4 shadow-md border border-gray-100">
@@ -144,7 +198,7 @@ export function ConversionFunnel() {
               labelFormatter={(label) => `Stage: ${label}`}
             />
             <Bar dataKey="count" barSize={30} radius={[4, 4, 4, 4]}>
-              {mockFunnelData.map((_, index) => (
+              {funnelData.map((_, index) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Bar>
@@ -160,7 +214,7 @@ export function ConversionFunnel() {
             if (index === 0) return null;
             return (
               <p key={step.stage}>
-                🔻 {step.dropoff}% dropped off from <strong>{mockFunnelData[index - 1].stage}</strong> to{" "}
+                🔻 {step.dropoff}% dropped off from <strong>{funnelData[index - 1].stage}</strong> to{" "}
                 <strong>{step.stage}</strong>
               </p>
             );
@@ -171,16 +225,22 @@ export function ConversionFunnel() {
       {/* Key Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="text-center p-3 bg-green-50 rounded-lg border border-green-200">
-          <p className="text-2xl font-bold text-green-600">27.5%</p>
+          <p className="text-2xl font-bold text-green-600">
+            {conversionData?.meta?.conversionRate?.toFixed(1) || '20.2'}%
+          </p>
           <p className="text-sm text-gray-600">Overall Conversion Rate</p>
         </div>
         <div className="text-center p-3 bg-orange-50 rounded-lg border border-orange-200">
-          <p className="text-2xl font-bold text-orange-600">870</p>
+          <p className="text-2xl font-bold text-orange-600">
+            {formatNumber(conversionData?.data?.visitors - conversionData?.data?.ordersCompleted || 0)}
+          </p>
           <p className="text-sm text-gray-600">Lost Opportunities</p>
         </div>
         <div className="text-center p-3 bg-blue-50 rounded-lg border border-blue-200">
-          <p className="text-2xl font-bold text-blue-600">$12,450</p>
-          <p className="text-sm text-gray-600">Potential Revenue</p>
+          <p className="text-2xl font-bold text-blue-600">
+            ${formatNumber(conversionData?.data?.revenue || 0)}
+          </p>
+          <p className="text-sm text-gray-600">Total Revenue</p>
         </div>
       </div>
 

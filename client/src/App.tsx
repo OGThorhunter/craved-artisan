@@ -19,8 +19,8 @@ import ProductPage from './pages/ProductPage';
 import VendorStorefrontPage from './pages/VendorStorefrontPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import DashboardPage from './pages/DashboardPage';
-import { CustomerDashboardPage } from './pages/CustomerDashboardPage';
-import VendorDashboardPage from './pages/dashboard/vendor';
+import CustomerDashboardPage from './pages/CustomerDashboardPage';
+import VendorDashboardPage from './pages/VendorDashboardPage';
 import { VendorSettingsPage } from './pages/VendorSettingsPage';
 import VendorProductsPage from './pages/VendorProductsPage';
 import VendorInventoryPage from './pages/VendorInventoryPage';
@@ -29,11 +29,15 @@ import VendorRecipeCreatePage from './pages/VendorRecipeCreatePage';
 import VendorRecipeEditPage from './pages/VendorRecipeEditPage';
 import RecipeVersionHistoryPage from './pages/RecipeVersionHistoryPage';
 import BatchPricingPage from './pages/BatchPricingPage';
-import { AdminDashboardPage } from './pages/AdminDashboardPage';
-import { EventCoordinatorDashboardPage } from './pages/EventCoordinatorDashboardPage';
-import { DropoffDashboardPage } from './pages/DropoffDashboardPage';
-import { EventsPage } from './pages/EventsPage';
-import { EventDetailPage } from './pages/EventDetailPage';
+import AdminDashboardPage from './pages/AdminDashboardPage';
+import EventCoordinatorDashboardPage from './pages/EventCoordinatorDashboardPage';
+import DropoffDashboardPage from './pages/DropoffDashboardPage';
+import AdvancedSearchPage from './pages/AdvancedSearchPage';
+import KnowledgeBasePage from './pages/KnowledgeBasePage';
+import RecipeToolPage from './pages/RecipeToolPage';
+import CartPage from './pages/CartPage';
+import EventsPage from './pages/EventsPage';
+import EventDetailPage from './pages/EventDetailPage';
 import CommunityPage from './pages/CommunityPage';
 import MarketplacePage from './pages/MarketplacePage';
 import AboutPage from './pages/AboutPage';
@@ -44,7 +48,6 @@ import VendorDeliveryBatchingPage from './pages/VendorDeliveryBatchingPage';
 import VendorDeliveryPage from './pages/VendorDeliveryPage';
 import CustomerOrdersPage from './pages/CustomerOrdersPage';
 import CheckoutPage from './pages/CheckoutPage';
-import CartPage from './pages/CartPage';
 import CheckoutSuccessPage from './pages/CheckoutSuccessPage';
 import VendorAnalyticsPage from './pages/VendorAnalyticsPage';
 import VendorAnalyticsKpiPage from './pages/dashboard/vendor/analytics';
@@ -77,7 +80,6 @@ function App() {
             <Route path="/vendors/:vendorId" component={VendorStorefrontPage} />
             <Route path="/product/:productId" component={ProductDetailPage} />
             <Route path="/checkout" component={CheckoutPage} />
-            <Route path="/cart" component={CartPage} />
             <Route path="/checkout/success" component={CheckoutSuccessPage} />
             
             {/* Public Pages */}
@@ -86,7 +88,11 @@ function App() {
             <Route path="/contact" component={ContactPage} />
             <Route path="/community" component={CommunityPage} />
             <Route path="/events" component={EventsPage} />
-            <Route path="/events/:id" component={EventDetailPage} />
+            <Route path="/events/:eventId" component={EventDetailPage} />
+            <Route path="/search" component={AdvancedSearchPage} />
+            <Route path="/help" component={KnowledgeBasePage} />
+            <Route path="/recipes" component={RecipeToolPage} />
+            <Route path="/cart" component={CartPage} />
             
             {/* Protected Dashboard Routes */}
             <Route path="/dashboard">
@@ -97,6 +103,26 @@ function App() {
             <Route path="/dashboard/customer">
               <ProtectedRoute role="CUSTOMER">
                 <CustomerDashboardPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/dashboard/vendor">
+              <ProtectedRoute role="VENDOR">
+                <VendorDashboardPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/dashboard/event-coordinator">
+              <ProtectedRoute role="EVENT_COORDINATOR">
+                <EventCoordinatorDashboardPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/dashboard/dropoff">
+              <ProtectedRoute role="DROPOFF_MANAGER">
+                <DropoffDashboardPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/dashboard/admin">
+              <ProtectedRoute role="ADMIN">
+                <AdminDashboardPage />
               </ProtectedRoute>
             </Route>
             <Route path="/dashboard/customer/orders">

@@ -1,809 +1,689 @@
-﻿import { useState } from 'react';
-import { Link, useLocation } from 'wouter';
-import { useAuth } from '../contexts/AuthContext';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'react-hot-toast';
-import axios from 'axios';
-import OnboardingPrompt from '../components/OnboardingPrompt';
-import TaxForecastCard from '../components/TaxForecastCard';
-import VendorDashboardLayout from '../layouts/VendorDashboardLayout';
-import InspirationalQuote from '../components/InspirationalQuote';
-import OverviewPage from './vendor/OverviewPage';
-import { 
-  Package, 
-  TrendingUp, 
-  DollarSign, 
-  Users, 
-  Star, 
-  Plus,
-  Eye,
-  BarChart3,
-  Settings,
-  ShoppingCart,
-  Store,
-  Palette,
-  Target,
-  Calendar,
-  MessageSquare,
-  FileText,
-  Shield,
-  CreditCard,
-  Truck,
-  Award,
-  AlertTriangle,
-  TrendingDown,
-  RefreshCw,
-  CheckCircle,
-  XCircle,
-  ExternalLink,
-  Edit,
-  Globe,
-  Power,
-  PowerOff,
-  ShoppingBag
+﻿'use client';
+
+import { useState, useEffect } from 'react';
+import { Link } from 'wouter';
+import {
+  TrendingUp, TrendingDown, DollarSign, ShoppingBag, Users, Star, 
+  MessageCircle, AlertCircle, CheckCircle, Clock, Calendar, Package,
+  Settings, BarChart3, Headphones, Box, Palette, CreditCard,
+  Plus, Minus, Eye, Heart, Share2, Download, Upload, Filter,
+  Search, Grid, List, ChevronDown, ChevronUp, X, Bell, Zap,
+  Award, Target, Gift, Tag, MapPin, Truck, Globe, Camera,
+  Video, FileText, PieChart, Activity, ArrowUpRight, ArrowDownRight,
+  Sparkles, Brain, Lightbulb, Shield, Users as UsersIcon,
+  ShoppingCart, Package as PackageIcon, Calendar as CalendarIcon,
+  MessageSquare, Bell as BellIcon, Settings as SettingsIcon,
+  BarChart3 as BarChart3Icon, Headphones as HeadphonesIcon,
+  Box as BoxIcon, Palette as PaletteIcon, CreditCard as CreditCardIcon,
+  Info
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
-export const VendorDashboardPage = () => {
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
-  const [location, setLocation] = useLocation();
-  
-  // Site status state - in real app this would come from API
-  const [siteIsLive, setSiteIsLive] = useState(true);
-  
-  // Handle site status toggle
-  const handleSiteToggle = () => {
-    const newStatus = !siteIsLive;
-    setSiteIsLive(newStatus);
-    toast.success(newStatus ? 'Storefront is now live!' : 'Storefront taken offline');
+interface Vendor {
+  id: string;
+  name: string;
+  email: string;
+  avatar: string;
+  storeName: string;
+  verified: boolean;
+  joinDate: string;
+  totalRevenue: number;
+  totalOrders: number;
+  totalCustomers: number;
+  averageRating: number;
+  reviewCount: number;
+  subscription: 'free' | 'pro';
+}
+
+interface SalesData {
+  today: {
+    revenue: number;
+    orders: number;
+    change: number;
   };
-
-  // API functions
-  const fetchVendorProfile = async () => {
-    const response = await axios.get('/api/vendor/profile', {
-      withCredentials: true
-    });
-    return response.data;
+  week: {
+    revenue: number;
+    orders: number;
+    change: number;
   };
-
-  const fetchLowMarginProducts = async () => {
-    const response = await axios.get('/api/vendor/products/low-margin', {
-      withCredentials: true
-    });
-    return response.data;
+  month: {
+    revenue: number;
+    orders: number;
+    change: number;
   };
-
-  const fetchIngredientPriceAlerts = async () => {
-    const response = await axios.get('/api/vendor/products/ingredient-price-alerts', {
-      withCredentials: true
-    });
-    return response.data;
+  averageOrderValue: number;
+  topProduct: {
+    name: string;
+    sold: number;
   };
+}
 
-  const batchUpdatePricing = async (data: { targetMargin: number; productIds?: string[] }) => {
-    const response = await axios.post('/api/vendor/products/batch-update-pricing', data, {
-      withCredentials: true
-    });
-    return response.data;
-  };
+interface Order {
+  id: string;
+  customerName: string;
+  customerAvatar: string;
+  date: string;
+  status: 'pending' | 'confirmed' | 'preparing' | 'ready' | 'picked-up' | 'delivered' | 'cancelled';
+  total: number;
+  items: Array<{
+    id: string;
+    name: string;
+    quantity: number;
+    price: number;
+  }>;
+  pickupDate?: string;
+  pickupTime?: string;
+  priority: 'low' | 'medium' | 'high';
+}
 
-  // React Query hooks
-  const { data: vendorProfile, isLoading: vendorProfileLoading } = useQuery({
-    queryKey: ['vendor-profile'],
-    queryFn: fetchVendorProfile,
-    retry: 1,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
+interface AIInsight {
+  id: string;
+  type: 'suggestion' | 'warning' | 'opportunity';
+  title: string;
+  description: string;
+  action?: string;
+  priority: 'low' | 'medium' | 'high';
+}
 
-  const { data: lowMarginData, isLoading: lowMarginLoading } = useQuery({
-    queryKey: ['low-margin-products'],
-    queryFn: fetchLowMarginProducts,
-    retry: 1,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
+interface Message {
+  id: string;
+  customerName: string;
+  customerAvatar: string;
+  subject: string;
+  preview: string;
+  timestamp: string;
+  unread: boolean;
+  priority: 'low' | 'medium' | 'high';
+}
 
-  const { data: priceAlertsData, isLoading: priceAlertsLoading } = useQuery({
-    queryKey: ['ingredient-price-alerts'],
-    queryFn: fetchIngredientPriceAlerts,
-    retry: 1,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
+interface BusinessHealth {
+  inventoryAlerts: number;
+  fulfillmentQueue: number;
+  profitMargin: number;
+  pendingPayouts: number;
+  churnRisk: number;
+  lowStockItems: Array<{
+    id: string;
+    name: string;
+    currentStock: number;
+    threshold: number;
+  }>;
+}
 
-  const batchUpdateMutation = useMutation({
-    mutationFn: batchUpdatePricing,
-    onSuccess: (data) => {
-      toast.success(`Updated ${data.summary.updated} products with new pricing`);
-      queryClient.invalidateQueries({ queryKey: ['low-margin-products'] });
-      queryClient.invalidateQueries({ queryKey: ['ingredient-price-alerts'] });
-    },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || 'Failed to update pricing';
-      toast.error(message);
+export default function VendorDashboardPage() {
+  const [vendor, setVendor] = useState<Vendor | null>(null);
+  const [salesData, setSalesData] = useState<SalesData | null>(null);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [aiInsights, setAiInsights] = useState<AIInsight[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [businessHealth, setBusinessHealth] = useState<BusinessHealth | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'overview' | 'analytics' | 'crm' | 'customer-service' | 'inventory' | 'site-management' | 'settings'>('overview');
+  const [timeRange, setTimeRange] = useState<'today' | 'week' | 'month'>('today');
+  const [showQuickAddModal, setShowQuickAddModal] = useState(false);
+
+  // Mock data - replace with actual API calls
+  useEffect(() => {
+    const mockVendor: Vendor = {
+      id: 'v1',
+      name: 'Sarah Johnson',
+      email: 'sarah@rosecreekbakery.com',
+      avatar: '/images/avatars/sarah.jpg',
+      storeName: 'Rose Creek Bakery',
+      verified: true,
+      joinDate: '2023-03-15',
+      totalRevenue: 12450.75,
+      totalOrders: 445,
+      totalCustomers: 127,
+      averageRating: 4.8,
+      reviewCount: 89,
+      subscription: 'pro'
+    };
+
+    const mockSalesData: SalesData = {
+      today: {
+        revenue: 320.45,
+        orders: 8,
+        change: 12.5
+      },
+      week: {
+        revenue: 1850.30,
+        orders: 55,
+        change: 8.4
+      },
+      month: {
+        revenue: 5220.00,
+        orders: 156,
+        change: 15.2
+      },
+      averageOrderValue: 28.12,
+      topProduct: {
+        name: 'Sourdough Loaf',
+        sold: 14
+      }
+    };
+
+    const mockOrders: Order[] = [
+      {
+        id: 'o1',
+        customerName: 'Emma Wilson',
+        customerAvatar: '/images/avatars/emma.jpg',
+        date: '2024-02-10',
+        status: 'ready',
+        total: 32.50,
+        items: [
+          { id: 'i1', name: 'Sourdough Bread', quantity: 2, price: 9.00 },
+          { id: 'i2', name: 'Artisan Baguette', quantity: 1, price: 7.50 }
+        ],
+        pickupDate: '2024-02-12',
+        pickupTime: '14:00-16:00',
+        priority: 'high'
+      },
+      {
+        id: 'o2',
+        customerName: 'Michael Chen',
+        customerAvatar: '/images/avatars/michael.jpg',
+        date: '2024-02-10',
+        status: 'preparing',
+        total: 18.75,
+        items: [
+          { id: 'i3', name: 'Croissant', quantity: 3, price: 3.50 },
+          { id: 'i4', name: 'Danish Pastry', quantity: 2, price: 4.00 }
+        ],
+        pickupDate: '2024-02-11',
+        pickupTime: '10:00-12:00',
+        priority: 'medium'
+      }
+    ];
+
+    const mockAIInsights: AIInsight[] = [
+      {
+        id: 'ai1',
+        type: 'suggestion',
+        title: 'Bundle Opportunity',
+        description: 'Customers who bought Sourdough Bread are also buying Artisan Butter — consider bundling',
+        action: 'Create Bundle',
+        priority: 'medium'
+      },
+      {
+        id: 'ai2',
+        type: 'warning',
+        title: 'Order Volume Alert',
+        description: 'Order volume down 25% this week — try a flash promo?',
+        action: 'Create Promotion',
+        priority: 'high'
+      },
+      {
+        id: 'ai3',
+        type: 'opportunity',
+        title: 'Cart Recovery',
+        description: '3 shoppers left items in cart — send recovery email?',
+        action: 'Send Recovery Email',
+        priority: 'medium'
+      }
+    ];
+
+    const mockMessages: Message[] = [
+      {
+        id: 'm1',
+        customerName: 'Emma Wilson',
+        customerAvatar: '/images/avatars/emma.jpg',
+        subject: 'Order #o1 Ready for Pickup',
+        preview: 'Your order is ready for pickup at our location...',
+        timestamp: '2024-02-10T14:30:00Z',
+        unread: true,
+        priority: 'high'
+      },
+      {
+        id: 'm2',
+        customerName: 'Michael Chen',
+        customerAvatar: '/images/avatars/michael.jpg',
+        subject: 'Allergy Question',
+        preview: 'I have a nut allergy and wanted to ask about...',
+        timestamp: '2024-02-10T12:15:00Z',
+        unread: false,
+        priority: 'medium'
+      }
+    ];
+
+    const mockBusinessHealth: BusinessHealth = {
+      inventoryAlerts: 2,
+      fulfillmentQueue: 5,
+      profitMargin: 32,
+      pendingPayouts: 1100,
+      churnRisk: 12,
+      lowStockItems: [
+        { id: 'i1', name: 'Organic Flour', currentStock: 5, threshold: 10 },
+        { id: 'i2', name: 'Butter', currentStock: 3, threshold: 8 }
+      ]
+    };
+
+    setVendor(mockVendor);
+    setSalesData(mockSalesData);
+    setOrders(mockOrders);
+    setAiInsights(mockAIInsights);
+    setMessages(mockMessages);
+    setBusinessHealth(mockBusinessHealth);
+    setLoading(false);
+  }, []);
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'text-yellow-600 bg-yellow-100';
+      case 'confirmed': return 'text-blue-600 bg-blue-100';
+      case 'preparing': return 'text-orange-600 bg-orange-100';
+      case 'ready': return 'text-green-600 bg-green-100';
+      case 'picked-up': return 'text-purple-600 bg-purple-100';
+      case 'delivered': return 'text-green-600 bg-green-100';
+      case 'cancelled': return 'text-red-600 bg-red-100';
+      default: return 'text-gray-600 bg-gray-100';
     }
-  });
-
-  // Mock data - in real app, this would come from API
-  const stats = {
-    totalSales: 12450.75,
-    totalOrders: 89,
-    totalProducts: 24,
-    averageRating: 4.8,
-    monthlyGrowth: 12.5,
-    totalCustomers: 156,
-    lowStockItems: 3,
-    lowMarginItems: lowMarginData?.count || 0,
-    priceAlerts: priceAlertsData?.count || 0,
-    watchlistItems: 5 // This would come from API in real implementation
   };
 
-  // Check if vendor has completed Stripe onboarding
-  if (!vendorProfileLoading && vendorProfile && !vendorProfile.stripeAccountId) {
-    return <OnboardingPrompt />;
-  }
-
-  // Store overview cards configuration
-  const storeOverviewCards = [
-    {
-      id: 'products',
-      title: 'Product Catalog',
-      description: 'Manage your product catalog, add new items, and track inventory',
-      icon: Package,
-      iconColor: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-      link: '/dashboard/vendor/products',
-      stats: `${stats.totalProducts} active products`,
-      action: 'Manage Products',
-      actionLink: '/dashboard/vendor/products'
-    },
-    {
-      id: 'analytics',
-      title: 'Analytics & Reports',
-      description: 'View sales reports, customer insights, and performance metrics',
-      icon: BarChart3,
-      iconColor: 'text-green-600',
-      bgColor: 'bg-green-50',
-      link: '/dashboard/vendor/analytics',
-      stats: `$${stats.totalSales.toLocaleString()} total sales`,
-      action: 'View Reports',
-      actionLink: '/dashboard/vendor/analytics'
-    },
-    {
-      id: 'customers',
-      title: 'Customer Management',
-      description: 'Manage customer relationships, view orders, and track loyalty',
-      icon: Users,
-      iconColor: 'text-purple-600',
-      bgColor: 'bg-purple-50',
-      link: '/dashboard/vendor/orders',
-      stats: `${stats.totalCustomers} total customers`,
-      action: 'View Orders',
-      actionLink: '/dashboard/vendor/orders'
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high': return 'text-red-600 bg-red-100';
+      case 'medium': return 'text-yellow-600 bg-yellow-100';
+      case 'low': return 'text-green-600 bg-green-100';
+      default: return 'text-gray-600 bg-gray-100';
     }
-  ];
+  };
 
-  // Quick action cards for common tasks
-  const quickActions = [
-    {
-      id: 'manage-products',
-      title: 'Manage Products',
-      description: 'View and manage your product catalog',
-      icon: Package,
-      color: 'bg-blue-500',
-      link: '/dashboard/vendor/products'
-    },
-    {
-      id: 'add-product',
-      title: 'Add New Product',
-      description: 'Create a new product listing',
-      icon: Plus,
-      color: 'bg-emerald-500',
-      link: '/dashboard/vendor/products'
-    },
-              {
-            id: 'watchlist',
-            title: 'Product Watchlist',
-            description: 'Monitor products with price volatility',
-            icon: Eye,
-            color: 'bg-yellow-500',
-            link: '/dashboard/watchlist'
-          },
-          {
-            id: 'orders',
-            title: 'Order Fulfillment',
-            description: 'Manage and track customer orders',
-            icon: Package,
-            color: 'bg-blue-500',
-            link: '/dashboard/orders'
-          },
-          {
-            id: 'delivery-batching',
-            title: 'Delivery Batching',
-            description: 'Organize orders by delivery day',
-            icon: Calendar,
-            color: 'bg-purple-500',
-            link: '/dashboard/vendor/delivery-batching'
-          },
-    {
-      id: 'view-analytics',
-      title: 'View Analytics',
-      description: 'Check your performance metrics',
-      icon: TrendingUp,
-      color: 'bg-cyan-500',
-      link: '/dashboard/vendor/analytics'
-    },
-    {
-      id: 'manage-orders',
-      title: 'Process Orders',
-      description: 'Handle pending orders',
-      icon: Truck,
-      color: 'bg-amber-500',
-      link: '/dashboard/vendor/orders'
-    },
-    {
-      id: 'store-settings',
-      title: 'Store Settings',
-      description: 'Update your store profile',
-      icon: Store,
-      color: 'bg-slate-500',
-      link: '/dashboard/vendor/site-settings'
-    },
-    {
-      id: 'view-financials',
-      title: 'View Financials',
-      description: 'Check your financial performance',
-      icon: DollarSign,
-      color: 'bg-emerald-500',
-      link: '/vendor/financial'
+  const getInsightIcon = (type: string) => {
+    switch (type) {
+      case 'suggestion': return <Lightbulb className="w-4 h-4" />;
+      case 'warning': return <AlertCircle className="w-4 h-4" />;
+      case 'opportunity': return <Target className="w-4 h-4" />;
+      default: return <Info className="w-4 h-4" />;
     }
-  ];
+  };
+
+  if (loading) return <div>Loading...</div>;
+  if (!vendor || !salesData || !businessHealth) return <div>Vendor not found.</div>;
+
+  const currentSalesData = salesData[timeRange];
 
   return (
-    <VendorDashboardLayout>
-      {/* Overview Dashboard */}
-      <OverviewPage />
-      
-      <div className="container-responsive py-8">
-        
-        {/* Storefront Management Bar */}
-        <div className="bg-[#F7F2EC] rounded-2xl shadow-xl p-6 mb-6 border-2 border-[#5B6E02] relative overflow-hidden">
-          {/* Background pattern */}
-          <div className="absolute inset-0 opacity-5">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-[#5B6E02] rounded-full -translate-y-16 translate-x-16"></div>
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-[#5B6E02] rounded-full translate-y-12 -translate-x-12"></div>
-          </div>
-          
-          <div className="relative z-10">
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+    <div className="page-container bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b">
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <img src={vendor.avatar} alt={vendor.name} className="w-16 h-16 rounded-full" />
               <div>
-                <h1 className="text-3xl font-bold text-[#5B6E02] mb-2">Storefront Management</h1>
-                <p className="text-gray-600">Manage your products, orders, and store settings</p>
+                <h1 className="text-2xl font-bold text-gray-900">{vendor.storeName}</h1>
+                <p className="text-gray-600">Welcome back, {vendor.name}</p>
               </div>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <button
-                  onClick={() => setLocation('/store/mock-artisan-store')}
-                  className="bg-[#5B6E02] hover:bg-[#4A5A01] text-white px-6 py-3 rounded-lg flex items-center space-x-2 transition-colors"
-                >
-                  <Globe className="w-5 h-5" />
-                  <span>View Storefront</span>
-                </button>
-                <button
-                  onClick={() => setLocation('/dashboard/vendor/products')}
-                  className="bg-[#5B6E02] hover:bg-[#4A5A01] text-white px-6 py-3 rounded-lg flex items-center space-x-2 transition-colors"
-                >
-                  <Edit className="w-5 h-5" />
-                  <span>Edit Storefront</span>
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        {/* Page Header */}
-        <div className="bg-[#F7F2EC] rounded-2xl shadow-xl p-6 mb-6 border-2 border-[#5B6E02]">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Vendor Dashboard</h1>
-              <p className="text-gray-600 mt-1">
-                Welcome back, {user?.profile?.firstName || user?.email || 'Vendor'}!
-              </p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="text-right">
-                <p className="text-gray-500">Store Status</p>
-                <p className="text-green-600 font-medium">Active</p>
-              </div>
-            </div>
-          </div>
-          <InspirationalQuote />
-        </div>
-
-        {/* Horizontal Navigation */}
-        <div className="bg-[#E8CBAE] rounded-2xl shadow-sm p-4 mb-8 border border-gray-100">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex flex-wrap items-center gap-2">
-              <Link href="/dashboard/vendor/products">
-                <button className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors font-medium responsive-text">
-                  <Package className="w-5 h-5" />
-                  Products
-                </button>
-              </Link>
-              <Link href="/dashboard/vendor/orders">
-                <button className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors font-medium responsive-text">
-                  <FileText className="w-5 h-5" />
-                  Orders
-                </button>
-              </Link>
-              <Link href="/dashboard/vendor/analytics">
-                <button className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors font-medium responsive-text">
-                  <BarChart3 className="w-5 h-5" />
-                  Analytics
-                </button>
-              </Link>
-              <Link href="/dashboard/vendor/inventory">
-                <button className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors font-medium responsive-text">
-                  <ShoppingCart className="w-5 h-5" />
-                  Inventory
-                </button>
-              </Link>
-              <Link href="/vendor/financial">
-                <button className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors font-medium responsive-text">
-                  <DollarSign className="w-5 h-5" />
-                  Financials
-                </button>
-              </Link>
-              <Link href="/dashboard/vendor/delivery-batching">
-                <button className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors font-medium responsive-text">
-                  <Calendar className="w-5 h-5" />
-                  Delivery
-                </button>
-              </Link>
-              <Link href="/dashboard/watchlist">
-                <button className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors font-medium responsive-text">
-                  <Eye className="w-5 h-5" />
-                  Watchlist
-                </button>
-              </Link>
-            </div>
-            <div className="flex items-center gap-2">
-              <Link href="/dashboard/vendor/site-settings">
-                <button className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors font-medium responsive-text">
-                  <Settings className="w-5 h-5" />
-                  Settings
-                </button>
-              </Link>
-              <Link href="/dashboard/vendor/products">
-                <button className="bg-[#5B6E02] text-white responsive-button rounded-lg hover:bg-[#4A5A01] transition-colors font-medium flex items-center gap-2">
-                  <Plus className="w-5 h-5" />
-                  Add Product
-                </button>
-              </Link>
-            </div>
-          </div>
-        </div>
-
-        {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-[#E8F5E8] rounded-2xl shadow-xl p-6 border-2 border-[#5B6E02]">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm">Total Sales</p>
-                <p className="text-2xl font-bold text-[#5B6E02]">$12,450</p>
-                <p className="text-green-600 text-sm">+12% from last month</p>
-              </div>
-              <div className="w-12 h-12 bg-[#5B6E02] rounded-lg flex items-center justify-center">
-                <Truck className="w-6 h-6 text-white" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-[#E0F2F7] rounded-2xl shadow-xl p-6 border-2 border-[#5B6E02]">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm">Active Orders</p>
-                <p className="text-2xl font-bold text-[#5B6E02]">24</p>
-                <p className="text-blue-600 text-sm">8 pending fulfillment</p>
-              </div>
-              <div className="w-12 h-12 bg-[#5B6E02] rounded-lg flex items-center justify-center">
-                <Calendar className="w-6 h-6 text-white" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-[#F7F2EC] rounded-2xl shadow-xl p-6 border-2 border-[#5B6E02]">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm">Products</p>
-                <p className="text-2xl font-bold text-[#5B6E02]">156</p>
-                <p className="text-orange-600 text-sm">12 low stock</p>
-              </div>
-              <div className="w-12 h-12 bg-[#5B6E02] rounded-lg flex items-center justify-center">
-                <ShoppingBag className="w-6 h-6 text-white" />
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-[#F7F2EC] rounded-2xl shadow-xl p-6 border-2 border-[#5B6E02]">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm">Customers</p>
-                <p className="text-2xl font-bold text-[#5B6E02]">1,234</p>
-                <p className="text-purple-600 text-sm">+45 this week</p>
-              </div>
-              <div className="w-12 h-12 bg-[#5B6E02] rounded-lg flex items-center justify-center">
-                <Users className="w-6 h-6 text-white" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Tax Forecast Section */}
-        {user && (
-          <div className="mb-8">
-            <h2 className="responsive-subheading text-gray-900 mb-4">Tax Forecast & Obligations</h2>
-            <TaxForecastCard vendorId={user.id} />
-          </div>
-        )}
-
-        {/* Margin Alerts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Low Margin Products Alert */}
-          <div className="bg-[#F7F2EC] rounded-2xl shadow-xl p-6 border-2 border-[#5B6E02]">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center">
-                <div className="p-2 bg-red-100 rounded-lg">
-                  <AlertTriangle className="w-6 h-6 text-red-600" />
-                </div>
-                <div className="ml-3">
-                  <h3 className="text-lg font-semibold text-gray-900">Low Margin Products</h3>
-                  <p className="responsive-text text-gray-600">Products with margins below 35%</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="responsive-heading text-red-600">{stats.lowMarginItems}</p>
-                <p className="responsive-text text-gray-500">items need attention</p>
-              </div>
-            </div>
-            
-            {lowMarginLoading ? (
-              <div className="animate-pulse space-y-3">
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} className="h-4 bg-gray-200 rounded"></div>
-                ))}
-              </div>
-            ) : lowMarginData?.lowMarginProducts?.length > 0 ? (
-              <div className="space-y-3">
-                {lowMarginData.lowMarginProducts.slice(0, 3).map((product: any) => (
-                  <div key={product.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div>
-                      <p className="font-medium text-gray-900">{product.name}</p>
-                      <p className="responsive-text text-gray-600">
-                        Margin: <span className={`font-medium ${
-                          product.marginAnalysis.status === 'danger' ? 'text-red-600' : 'text-yellow-600'
-                        }`}>
-                          {product.marginAnalysis.currentMargin}%
-                        </span>
-                      </p>
-                    </div>
-                    <Link href="/dashboard/vendor/products">
-                      <button className="text-blue-600 hover:text-blue-700 responsive-text font-medium">
-                        Review →
-                      </button>
-                    </Link>
-                  </div>
-                ))}
-                {lowMarginData.lowMarginProducts.length > 3 && (
-                  <div className="text-center pt-2">
-                    <Link href="/dashboard/vendor/products">
-                      <button className="text-blue-600 hover:text-blue-700 responsive-text font-medium">
-                        View all {lowMarginData.lowMarginProducts.length} items →
-                      </button>
-                    </Link>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-center py-6">
-                <CheckCircle className="w-8 h-8 text-green-500 mx-auto mb-2" />
-                <p className="text-gray-600">All products have healthy margins!</p>
-              </div>
-            )}
-          </div>
-
-          {/* Ingredient Price Alerts */}
-          <div className="bg-[#F7F2EC] rounded-2xl shadow-xl p-6 border-2 border-[#5B6E02]">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center">
-                <div className="p-2 bg-orange-100 rounded-lg">
-                  <TrendingDown className="w-6 h-6 text-orange-600" />
-                </div>
-                <div className="ml-3">
-                  <h3 className="text-lg font-semibold text-gray-900">Price Alerts</h3>
-                  <p className="responsive-text text-gray-600">Ingredient price increases detected</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="responsive-heading text-orange-600">{stats.priceAlerts}</p>
-                <p className="responsive-text text-gray-500">price changes</p>
-              </div>
-            </div>
-            
-            {priceAlertsLoading ? (
-              <div className="animate-pulse space-y-3">
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} className="h-4 bg-gray-200 rounded"></div>
-                ))}
-              </div>
-            ) : priceAlertsData?.alerts?.length > 0 ? (
-              <div className="space-y-3">
-                {priceAlertsData.alerts.slice(0, 3).map((alert: any, index: number) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
-                    <div>
-                      <p className="font-medium text-gray-900">{alert.ingredientName}</p>
-                      <p className="responsive-text text-gray-600">
-                        +{alert.priceIncrease}% • {alert.productName}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="responsive-text font-medium text-orange-600">
-                        ${alert.currentCost}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        was ${alert.previousCost}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-                {priceAlertsData.alerts.length > 3 && (
-                  <div className="text-center pt-2">
-                    <button 
-                      onClick={() => batchUpdateMutation.mutate({ targetMargin: 35 })}
-                      disabled={batchUpdateMutation.isPending}
-                      className="text-blue-600 hover:text-blue-700 responsive-text font-medium disabled:opacity-50"
-                    >
-                      {batchUpdateMutation.isPending ? 'Updating...' : 'Update All Prices →'}
-                    </button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-center py-6">
-                <CheckCircle className="w-8 h-8 text-green-500 mx-auto mb-2" />
-                <p className="text-gray-600">No significant price changes detected</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Quick Actions */}
-        <div className="mb-8">
-          <h2 className="responsive-subheading text-gray-900 mb-4">Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <Link href="/dashboard/vendor/products">
-              <div className="bg-[#E0F2F7] rounded-xl shadow-xl p-6 border-2 border-[#5B6E02] hover:shadow-2xl transition-shadow cursor-pointer">
-                <div className="flex items-center">
-                  <div className="p-3 rounded-lg bg-blue-500 bg-opacity-10">
-                    <Plus className="w-6 h-6 text-blue-500" />
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="font-semibold text-gray-900">Add New Product</h3>
-                    <p className="responsive-text text-gray-600">Create a new product listing</p>
-                  </div>
-                </div>
-              </div>
-            </Link>
-            <Link href="/dashboard/vendor/batch-pricing">
-              <div className="bg-[#E8F5E8] rounded-xl shadow-xl p-6 border-2 border-[#5B6E02] hover:shadow-2xl transition-shadow cursor-pointer">
-                <div className="flex items-center">
-                  <div className="p-3 rounded-lg bg-emerald-500 bg-opacity-10">
-                    <DollarSign className="w-6 h-6 text-emerald-500" />
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="font-semibold text-gray-900">Batch Pricing</h3>
-                    <p className="responsive-text text-gray-600">Update pricing across products</p>
-                  </div>
-                </div>
-              </div>
-            </Link>
-            <Link href="/dashboard/vendor/analytics">
-              <div className="bg-amber-50 rounded-xl shadow-xl p-6 border-2 border-[#5B6E02] hover:shadow-2xl transition-shadow cursor-pointer">
-                <div className="flex items-center">
-                  <div className="p-3 rounded-lg bg-cyan-500 bg-opacity-10">
-                    <TrendingUp className="w-6 h-6 text-cyan-500" />
-                  </div>
-                  <div className="ml-4">
-                    <h3 className="font-semibold text-gray-900">View Analytics</h3>
-                    <p className="responsive-text text-gray-600">Check performance metrics</p>
-                  </div>
-                </div>
-              </div>
-            </Link>
-          </div>
-        </div>
-
-        {/* Batch Pricing Update Section */}
-        <div className="mb-8">
-          <div className="bg-amber-50 rounded-2xl shadow-xl p-6 border-2 border-[#5B6E02]">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="responsive-subheading text-gray-900">Batch Pricing Update</h2>
-                <p className="text-gray-600 mt-1">Update pricing across your inventory based on target margins</p>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="text-right">
-                  <p className="responsive-text text-gray-500">Target Margin</p>
-                  <p className="text-lg font-semibold text-gray-900">35%</p>
-                </div>
-                <Link href="/dashboard/vendor/batch-pricing">
-                  <button className="bg-[#5B6E02] text-white responsive-button rounded-lg hover:bg-[#4A5A01] transition-colors font-medium flex items-center gap-2">
-                    <DollarSign className="w-5 h-5" />
-                    Manage Pricing
-                  </button>
-                </Link>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="flex items-center">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <Package className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div className="ml-3">
-                    <p className="responsive-text font-medium text-gray-900">Total Products</p>
-                    <p className="responsive-heading text-gray-900">{stats.totalProducts}</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="flex items-center">
-                  <div className="p-2 bg-orange-100 rounded-lg">
-                    <AlertTriangle className="w-5 h-5 text-orange-600" />
-                  </div>
-                  <div className="ml-3">
-                    <p className="responsive-text font-medium text-gray-900">Low Margin Items</p>
-                    <p className="responsive-heading text-orange-600">{stats.lowMarginItems}</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-gray-50 rounded-lg p-4">
-                <div className="flex items-center">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <CheckCircle className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div className="ml-3">
-                    <p className="responsive-text font-medium text-gray-900">Healthy Margins</p>
-                    <p className="responsive-heading text-green-600">{stats.totalProducts - stats.lowMarginItems}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-              <div className="flex items-start">
-                <div className="p-1 bg-blue-100 rounded">
-                  <Target className="w-4 h-4 text-blue-600" />
-                </div>
-                <div className="ml-3">
-                  <p className="responsive-text font-medium text-blue-900">How it works</p>
-                  <p className="text-sm text-blue-700 mt-1">
-                    The system will calculate new prices for all products with recipes, ensuring they meet your 35% target margin. 
-                    Only products with significant price changes (>5%) will be updated.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Store Overview Cards */}
-        <div>
-          <h2 className="responsive-subheading text-gray-900 mb-4">Store Overview</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {storeOverviewCards.map((card) => (
-              <div key={card.id} className="bg-amber-50 rounded-2xl shadow-xl p-6 border-2 border-[#5B6E02] hover:shadow-2xl transition-shadow">
-                <div className="flex items-start justify-between mb-4">
-                  <div className={`p-3 rounded-xl ${card.bgColor}`}>
-                    <card.icon className={`w-8 h-8 ${card.iconColor}`} />
-                  </div>
-                  <div className="text-right">
-                    <p className="responsive-text text-gray-500">{card.stats}</p>
-                  </div>
-                </div>
-                
-                <h3 className="responsive-subheading text-gray-900 mb-2">{card.title}</h3>
-                <p className="text-gray-600 mb-6 leading-relaxed">{card.description}</p>
-                
-                <div className="flex items-center justify-between">
-                  <Link href={card.link}>
-                    <button className="text-primary-600 hover:text-primary-700 font-medium text-sm">
-                      View Details →
-                    </button>
-                  </Link>
-                  <Link href={card.actionLink}>
-                    <button className="responsive-button bg-[#5B6E02] text-white rounded-lg hover:bg-[#4A5A01] responsive-text font-medium transition-colors">
-                      {card.action}
-                    </button>
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Recent Activity */}
-        <div className="mt-8">
-          <div className="bg-amber-50 rounded-2xl shadow-xl p-6 border-2 border-[#5B6E02]">
-            <h2 className="responsive-subheading text-gray-900 mb-4">Recent Activity</h2>
-            <div className="space-y-4">
-              <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <DollarSign className="w-5 h-5 text-green-600" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-medium text-gray-900">New order received</p>
-                  <p className="responsive-text text-gray-600">Order #ORD-2024-003 for $89.99</p>
-                </div>
-                <span className="responsive-text text-gray-500">2 hours ago</span>
-              </div>
-              
-              {priceAlertsData?.alerts?.length > 0 && (
-                <div className="flex items-center space-x-4 p-4 bg-orange-50 rounded-lg border border-orange-200">
-                  <div className="p-2 bg-orange-100 rounded-lg">
-                    <TrendingDown className="w-5 h-5 text-orange-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900">Ingredient price increase detected</p>
-                    <p className="responsive-text text-gray-600">
-                      {priceAlertsData.alerts[0].ingredientName} increased by {priceAlertsData.alerts[0].priceIncrease}%
-                    </p>
-                  </div>
-                  <span className="responsive-text text-gray-500">1 hour ago</span>
+              {vendor.verified && (
+                <div className="flex items-center gap-1 text-blue-600">
+                  <CheckCircle className="w-5 h-5" />
+                  <span className="text-sm font-medium">Verified</span>
                 </div>
               )}
-              
-              {lowMarginData?.lowMarginProducts?.length > 0 && (
-                <div className="flex items-center space-x-4 p-4 bg-red-50 rounded-lg border border-red-200">
-                  <div className="p-2 bg-red-100 rounded-lg">
-                    <AlertTriangle className="w-5 h-5 text-red-600" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900">Low margin products detected</p>
-                    <p className="responsive-text text-gray-600">
-                      {lowMarginData.lowMarginProducts.length} products have margins below 35%
-                    </p>
-                  </div>
-                  <span className="responsive-text text-gray-500">3 hours ago</span>
-                </div>
-              )}
-              
-              <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Star className="w-5 h-5 text-blue-600" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-medium text-gray-900">New review received</p>
-                  <p className="responsive-text text-gray-600">5-star review for "Handcrafted Ceramic Mug Set"</p>
-                </div>
-                <span className="responsive-text text-gray-500">1 day ago</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-brand-green">${vendor.totalRevenue.toLocaleString()}</div>
+                <div className="text-sm text-gray-600">Total Revenue</div>
               </div>
-              
-              <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
-                <div className="p-2 bg-orange-100 rounded-lg">
-                  <ShoppingCart className="w-5 h-5 text-orange-600" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-medium text-gray-900">Low stock alert</p>
-                  <p className="responsive-text text-gray-600">"Artisan Soap Collection" is running low</p>
-                </div>
-                <span className="responsive-text text-gray-500">2 days ago</span>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-brand-maroon">{vendor.totalOrders}</div>
+                <div className="text-sm text-gray-600">Total Orders</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">{vendor.totalCustomers}</div>
+                <div className="text-sm text-gray-600">Customers</div>
               </div>
             </div>
           </div>
         </div>
-
       </div>
-    </VendorDashboardLayout>
+
+      {/* Navigation Tabs */}
+      <div className="bg-white border-b">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex overflow-x-auto">
+            {[
+              { id: 'overview', label: 'Overview', icon: Eye },
+              { id: 'analytics', label: 'Analytics', icon: BarChart3Icon },
+              { id: 'crm', label: 'CRM', icon: UsersIcon },
+              { id: 'customer-service', label: 'Customer Service', icon: HeadphonesIcon },
+              { id: 'inventory', label: 'Inventory', icon: BoxIcon },
+              { id: 'site-management', label: 'Site Management', icon: PaletteIcon },
+              { id: 'settings', label: 'Settings', icon: SettingsIcon }
+            ].map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as any)}
+                  className={`flex items-center gap-2 px-6 py-4 font-medium transition-colors whitespace-nowrap ${
+                    activeTab === tab.id
+                      ? 'border-b-2 border-brand-green text-brand-green'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <AnimatePresence mode="wait">
+          {activeTab === 'overview' && (
+            <motion.div
+              key="overview"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-8"
+            >
+              {/* Hero Banner */}
+              <div className="bg-gradient-to-r from-brand-green to-brand-maroon rounded-lg p-6 text-white">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold mb-2">Dashboard Overview</h2>
+                    <p className="text-green-100">Track your business performance and stay ahead</p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="text-center">
+                      <div className="text-3xl font-bold">{vendor.averageRating}</div>
+                      <div className="text-sm text-green-100">Average Rating</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-3xl font-bold">{vendor.reviewCount}</div>
+                      <div className="text-sm text-green-100">Reviews</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Today's Performance Tiles */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="bg-white rounded-lg p-6 border">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <DollarSign className="w-6 h-6 text-green-600" />
+                    </div>
+                    <div className={`flex items-center gap-1 text-sm ${
+                      currentSalesData.change >= 0 ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {currentSalesData.change >= 0 ? (
+                        <ArrowUpRight className="w-4 h-4" />
+                      ) : (
+                        <ArrowDownRight className="w-4 h-4" />
+                      )}
+                      {Math.abs(currentSalesData.change)}%
+                    </div>
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    ${currentSalesData.revenue.toFixed(2)}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {timeRange.charAt(0).toUpperCase() + timeRange.slice(1)}'s Revenue
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg p-6 border">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <ShoppingBag className="w-6 h-6 text-blue-600" />
+                    </div>
+                    <div className={`flex items-center gap-1 text-sm ${
+                      currentSalesData.change >= 0 ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {currentSalesData.change >= 0 ? (
+                        <ArrowUpRight className="w-4 h-4" />
+                      ) : (
+                        <ArrowDownRight className="w-4 h-4" />
+                      )}
+                      {Math.abs(currentSalesData.change)}%
+                    </div>
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {currentSalesData.orders}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    Orders {timeRange === 'today' ? 'Today' : `This ${timeRange}`}
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg p-6 border">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-2 bg-purple-100 rounded-lg">
+                      <CreditCard className="w-6 h-6 text-purple-600" />
+                    </div>
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    ${salesData.averageOrderValue.toFixed(2)}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    Average Order Value
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg p-6 border">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="p-2 bg-orange-100 rounded-lg">
+                      <Package className="w-6 h-6 text-orange-600" />
+                    </div>
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900">
+                    {salesData.topProduct.sold}
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {salesData.topProduct.name} sold
+                  </div>
+                </div>
+              </div>
+
+              {/* Time Range Toggle */}
+              <div className="flex justify-center">
+                <div className="bg-white rounded-lg p-1 border">
+                  {(['today', 'week', 'month'] as const).map((range) => (
+                    <button
+                      key={range}
+                      onClick={() => setTimeRange(range)}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                        timeRange === range
+                          ? 'bg-brand-green text-white'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      {range.charAt(0).toUpperCase() + range.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Business Health Snapshot */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-white rounded-lg p-6 border">
+                  <h3 className="text-lg font-semibold mb-4">Business Health</h3>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Inventory Alerts</span>
+                      <span className="font-semibold text-red-600">{businessHealth.inventoryAlerts} items</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Fulfillment Queue</span>
+                      <span className="font-semibold text-orange-600">{businessHealth.fulfillmentQueue} orders</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Profit Margin</span>
+                      <span className="font-semibold text-green-600">{businessHealth.profitMargin}%</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Pending Payouts</span>
+                      <span className="font-semibold text-blue-600">${businessHealth.pendingPayouts}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Churn Risk</span>
+                      <span className="font-semibold text-red-600">{businessHealth.churnRisk} customers</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg p-6 border">
+                  <h3 className="text-lg font-semibold mb-4">AI Insights</h3>
+                  <div className="space-y-3">
+                    {aiInsights.map((insight) => (
+                      <div key={insight.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+                        <div className={`p-1 rounded ${
+                          insight.type === 'suggestion' ? 'bg-blue-100 text-blue-600' :
+                          insight.type === 'warning' ? 'bg-yellow-100 text-yellow-600' :
+                          'bg-green-100 text-green-600'
+                        }`}>
+                          {getInsightIcon(insight.type)}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium text-sm">{insight.title}</h4>
+                          <p className="text-xs text-gray-600 mt-1">{insight.description}</p>
+                          {insight.action && (
+                            <button className="text-xs text-brand-green hover:text-brand-green/80 mt-2">
+                              {insight.action} →
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Actions */}
+              <div className="bg-white rounded-lg p-6 border">
+                <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                  {[
+                    { icon: Plus, label: 'Add Product', color: 'bg-green-100 text-green-600' },
+                    { icon: Gift, label: 'Create Discount', color: 'bg-purple-100 text-purple-600' },
+                    { icon: MessageSquare, label: 'Send Email', color: 'bg-blue-100 text-blue-600' },
+                    { icon: CreditCard, label: 'View Payouts', color: 'bg-orange-100 text-orange-600' },
+                    { icon: Download, label: 'Export Report', color: 'bg-gray-100 text-gray-600' }
+                  ].map((action, index) => {
+                    const Icon = action.icon;
+                    return (
+                      <button
+                        key={index}
+                        className="flex flex-col items-center gap-2 p-4 rounded-lg border hover:bg-gray-50 transition-colors"
+                      >
+                        <div className={`p-2 rounded-lg ${action.color}`}>
+                          <Icon className="w-6 h-6" />
+                        </div>
+                        <span className="text-sm font-medium text-center">{action.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Recent Orders & Messages */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-white rounded-lg p-6 border">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold">Recent Orders</h3>
+                    <Link href="/dashboard/vendor/orders" className="text-brand-green hover:text-brand-green/80 text-sm">
+                      View all →
+                    </Link>
+                  </div>
+                  <div className="space-y-3">
+                    {orders.slice(0, 3).map((order) => (
+                      <div key={order.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <img src={order.customerAvatar} alt={order.customerName} className="w-10 h-10 rounded-full" />
+                          <div>
+                            <h4 className="font-medium text-sm">{order.customerName}</h4>
+                            <p className="text-xs text-gray-600">${order.total} • {order.items.length} items</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusColor(order.status)}`}>
+                            {order.status.replace('-', ' ')}
+                          </span>
+                          <span className={`inline-block px-2 py-1 text-xs rounded-full ml-1 ${getPriorityColor(order.priority)}`}>
+                            {order.priority}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg p-6 border">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold">Messages</h3>
+                    <Link href="/dashboard/vendor/messages" className="text-brand-green hover:text-brand-green/80 text-sm">
+                      View all →
+                    </Link>
+                  </div>
+                  <div className="space-y-3">
+                    {messages.slice(0, 3).map((message) => (
+                      <div key={message.id} className={`flex items-center gap-3 p-3 border border-gray-200 rounded-lg ${
+                        message.unread ? 'bg-blue-50' : ''
+                      }`}>
+                        <img src={message.customerAvatar} alt={message.customerName} className="w-10 h-10 rounded-full" />
+                        <div className="flex-1">
+                          <h4 className="font-medium text-sm">{message.customerName}</h4>
+                          <p className="text-xs text-gray-600">{message.subject}</p>
+                          <p className="text-xs text-gray-500">{message.preview}</p>
+                        </div>
+                        {message.unread && (
+                          <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Leaderboard */}
+              <div className="bg-white rounded-lg p-6 border">
+                <h3 className="text-lg font-semibold mb-4">Achievements & Milestones</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="text-center p-4 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg">
+                    <Award className="w-8 h-8 text-yellow-600 mx-auto mb-2" />
+                    <div className="text-lg font-bold text-yellow-800">Top 10</div>
+                    <div className="text-sm text-yellow-700">Vendors in your category</div>
+                  </div>
+                  <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg">
+                    <Target className="w-8 h-8 text-green-600 mx-auto mb-2" />
+                    <div className="text-lg font-bold text-green-800">Best Day</div>
+                    <div className="text-sm text-green-700">May 12 — let's beat it!</div>
+                  </div>
+                  <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg">
+                    <Users className="w-8 h-8 text-purple-600 mx-auto mb-2" />
+                    <div className="text-lg font-bold text-purple-800">500+</div>
+                    <div className="text-sm text-purple-700">Customers served!</div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Placeholder for other tabs */}
+          {activeTab !== 'overview' && (
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="text-center py-12"
+            >
+              <div className="text-4xl font-bold text-gray-300 mb-4">
+                {activeTab.charAt(0).toUpperCase() + activeTab.slice(1).replace('-', ' ')}
+              </div>
+              <p className="text-gray-500">This module is coming soon...</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
   );
-}; 
+} 
