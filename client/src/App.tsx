@@ -49,6 +49,8 @@ import VendorDeliveryPage from './pages/VendorDeliveryPage';
 import CustomerOrdersPage from './pages/CustomerOrdersPage';
 import CheckoutPage from './pages/CheckoutPage';
 import CheckoutSuccessPage from './pages/CheckoutSuccessPage';
+import NotFoundPage from './pages/NotFoundPage';
+import MaintenancePage from './pages/MaintenancePage';
 import VendorAnalyticsPage from './pages/VendorAnalyticsPage';
 import VendorAnalyticsKpiPage from './pages/dashboard/vendor/analytics';
 import OverviewPage from './pages/vendor/OverviewPage';
@@ -56,6 +58,10 @@ import { VendorFinancialPage } from './pages/VendorFinancialPage';
 import VendorOnboardingPage from './pages/VendorOnboardingPage';
 import { NotFound } from './components/NotFound';
 import ProtectedRoute from './components/ProtectedRoute';
+
+// SEO-optimized pages
+import ArtisanSourdoughGeorgiaPage from './pages/seo/ArtisanSourdoughGeorgiaPage';
+import TopHandmadeSoapsAtlantaPage from './pages/seo/TopHandmadeSoapsAtlantaPage';
 
 function App() {
   return (
@@ -93,6 +99,14 @@ function App() {
             <Route path="/help" component={KnowledgeBasePage} />
             <Route path="/recipes" component={RecipeToolPage} />
             <Route path="/cart" component={CartPage} />
+            
+            {/* SEO-optimized pages */}
+            <Route path="/artisan-sourdough-in-georgia" component={ArtisanSourdoughGeorgiaPage} />
+            <Route path="/top-handmade-soaps-in-atlanta" component={TopHandmadeSoapsAtlantaPage} />
+            
+            {/* Error Pages */}
+            <Route path="/404" component={NotFoundPage} />
+            <Route path="/maintenance" component={MaintenancePage} />
             
             {/* Protected Dashboard Routes */}
             <Route path="/dashboard">

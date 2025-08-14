@@ -9,24 +9,7 @@ import {
   Search, Filter, Star, Clock, Users, Calendar, MapPin,
   ShoppingCart, Heart, Brain, Zap, Target, TrendingUp,
   BarChart3, PieChart, LineChart, Activity, ArrowUpRight,
-  ArrowDownRight, CheckCircle as CheckCircleIcon, AlertCircle,
-  Info, Clock as ClockIcon, Star as StarIcon, Heart as HeartIcon,
-  ShoppingCart as ShoppingCartIcon, Plus as PlusIcon, Edit as EditIcon,
-  Trash as TrashIcon, Save as SaveIcon, Copy as CopyIcon,
-  History as HistoryIcon, Eye as EyeIcon, Calculator as CalculatorIcon,
-  DollarSign as DollarSignIcon, Package as PackageIcon,
-  AlertTriangle as AlertTriangleIcon, CheckCircle as CheckCircleIcon2,
-  Camera as CameraIcon, Upload as UploadIcon, Download as DownloadIcon,
-  Share2 as Share2Icon, Settings as SettingsIcon, Grid as GridIcon,
-  List as ListIcon, Search as SearchIcon, Filter as FilterIcon,
-  Star as StarIcon2, Clock as ClockIcon2, Users as UsersIcon,
-  Calendar as CalendarIcon, MapPin as MapPinIcon,
-  ShoppingCart as ShoppingCartIcon2, Heart as HeartIcon2,
-  Brain as BrainIcon, Zap as ZapIcon, Target as TargetIcon,
-  TrendingUp as TrendingUpIcon, BarChart3 as BarChart3Icon,
-  PieChart as PieChartIcon, LineChart as LineChartIcon,
-  Activity as ActivityIcon, ArrowUpRight as ArrowUpRightIcon,
-  ArrowDownRight as ArrowDownRightIcon
+  ArrowDownRight, AlertCircle, Info
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 

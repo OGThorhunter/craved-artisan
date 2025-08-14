@@ -8,25 +8,7 @@ import {
   Star, Heart, TrendingUp, Sparkles, Brain, Zap, Target,
   AlertTriangle, CheckCircle, Info, X, ChevronDown, ChevronUp,
   Filter, Settings, Camera, QrCode, Receipt, Download, Print,
-  Send, ShoppingCart as ShoppingCartIcon, Plus as PlusIcon,
-  Minus as MinusIcon, Trash as TrashIcon, MapPin as MapPinIcon,
-  Clock as ClockIcon, Calendar as CalendarIcon, CreditCard as CreditCardIcon,
-  Wallet as WalletIcon, Gift as GiftIcon, AlertTriangle as AlertTriangleIcon,
-  CheckCircle as CheckCircleIcon, Info as InfoIcon, X as XIcon,
-  ChevronDown as ChevronDownIcon, ChevronUp as ChevronUpIcon,
-  Star as StarIcon, Heart as HeartIcon, Share2 as Share2Icon,
-  Copy as CopyIcon, MessageCircle as MessageCircleIcon,
-  Bell as BellIcon, Shield as ShieldIcon, Lock as LockIcon,
-  Eye as EyeIcon, EyeOff as EyeOffIcon, Truck as TruckIcon,
-  Package as PackageIcon, Users as UsersIcon, DollarSign as DollarSignIcon,
-  Percent as PercentIcon, Tag as TagIcon, Sparkles as SparklesIcon,
-  Brain as BrainIcon, Zap as ZapIcon, Target as TargetIcon,
-  TrendingUp as TrendingUpIcon, ArrowRight as ArrowRightIcon,
-  ArrowLeft as ArrowLeftIcon, Filter as FilterIcon, Search as SearchIcon,
-  Settings as SettingsIcon, HelpCircle as HelpCircleIcon,
-  Phone as PhoneIcon, Mail as MailIcon, Camera as CameraIcon,
-  QrCode as QrCodeIcon, Receipt as ReceiptIcon, Download as DownloadIcon,
-  Print as PrintIcon, Send as SendIcon
+  Send, Plus, Minus, Trash, CreditCard, Wallet, Gift, Share2, Copy, Bell, Shield, Lock, Eye, EyeOff, Truck, Package, DollarSign, Percent, Tag, ArrowRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 

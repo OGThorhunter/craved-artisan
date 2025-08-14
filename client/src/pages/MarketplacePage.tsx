@@ -1,26 +1,14 @@
 ﻿'use client';
 
-import { useState, useEffect } from 'react';
-import { Link } from 'wouter';
-import { 
-  Search, 
-  Filter, 
-  MapPin, 
-  Star, 
-  Heart, 
-  ShoppingCart, 
-  Clock, 
-  Users, 
-  Tag,
-  Grid,
-  List,
-  SlidersHorizontal,
-  SortAsc,
-  SortDesc,
-  X,
-  ChevronDown,
-  ChevronUp,
-  Star as StarFilled
+import { useState, useEffect, useRef } from 'react';
+import { Link, useLocation } from 'wouter';
+import {
+  Search, MapPin, Filter, Heart, Star, ShoppingCart, Clock, Calendar,
+  Users, Tag, Award, Shield, Truck, Package, MessageCircle, Share2,
+  ChevronDown, ChevronUp, X, Plus, Minus, Eye, EyeOff, Settings,
+  Bell, Gift, TrendingUp, Sparkles, Brain, Zap, Target, ArrowRight,
+  ArrowLeft, HelpCircle, Phone, Mail, Camera, QrCode, Receipt, Download, Print,
+  Send, Trash, Copy, Lock, DollarSign, Percent, AlertTriangle, CheckCircle, Info
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -30,292 +18,320 @@ interface Product {
   description: string;
   price: number;
   originalPrice?: number;
-  vendor: {
-    id: string;
-    name: string;
-    rating: number;
-    reviewCount: number;
-    location: string;
-    verified: boolean;
-  };
+  image: string;
+  vendorId: string;
+  vendorName: string;
+  vendorLogo: string;
   category: string;
-  subcategory: string;
-  images: string[];
   tags: string[];
-  inStock: boolean;
-  featured: boolean;
+  dietaryFlags: string[];
+  allergens: string[];
+  ingredients: string[];
+  macros: {
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+  };
+  stockLevel: number;
+  maxStock: number;
+  nextBatchDate?: string;
+  pickupLocations: string[];
+  deliveryZones: string[];
+  fulfillmentTypes: ('pickup' | 'delivery' | 'event')[];
+  prepInstructions: string;
+  storageInstructions: string;
   rating: number;
   reviewCount: number;
-  pickupOptions: string[];
-  deliveryOptions: string[];
-  allergens: string[];
-  dietary: string[];
-  createdAt: string;
-  updatedAt: string;
+  isVerified: boolean;
+  isFavorite: boolean;
+  distance?: number;
+  frequentlyBoughtWith: string[];
 }
 
-interface Category {
+interface Vendor {
   id: string;
   name: string;
-  icon: string;
-  count: number;
-  subcategories: string[];
+  logo: string;
+  description: string;
+  rating: number;
+  reviewCount: number;
+  isVerified: boolean;
+  isFavorite: boolean;
+  categories: string[];
+  tags: string[];
+  operatingArea: string[];
+  pickupLocations: Array<{
+    id: string;
+    name: string;
+    address: string;
+    hours: string;
+  }>;
+  deliveryZones: string[];
+  vacationMode: boolean;
+  vacationEndDate?: string;
+  featured: boolean;
+  distance?: number;
 }
 
 interface FilterState {
-  categories: string[];
-  priceRange: [number, number];
-  rating: number;
-  location: string;
-  dietary: string[];
+  search: string;
+  category: string;
+  dietaryFlags: string[];
   allergens: string[];
-  pickupOptions: string[];
-  deliveryOptions: string[];
-  inStock: boolean;
-  featured: boolean;
-  verifiedVendors: boolean;
+  priceRange: [number, number];
+  distance: number;
+  fulfillmentType: 'all' | 'pickup' | 'delivery' | 'event';
+  rating: number;
+  verifiedOnly: boolean;
+  inStockOnly: boolean;
+  sortBy: 'relevance' | 'price_low' | 'price_high' | 'rating' | 'distance' | 'newest';
 }
 
-export const MarketplacePage = () => {
+interface AISuggestion {
+  id: string;
+  type: 'search' | 'category' | 'bundle' | 'trending';
+  title: string;
+  description: string;
+  query: string;
+  icon: string;
+}
+
+export default function MarketplacePage() {
+  const [location] = useLocation();
   const [products, setProducts] = useState<Product[]>([]);
+  const [vendors, setVendors] = useState<Vendor[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [sortBy, setSortBy] = useState('featured');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [filters, setFilters] = useState<FilterState>({
-    categories: [],
-    priceRange: [0, 100],
-    rating: 0,
-    location: '',
-    dietary: [],
+    search: '',
+    category: '',
+    dietaryFlags: [],
     allergens: [],
-    pickupOptions: [],
-    deliveryOptions: [],
-    inStock: false,
-    featured: false,
-    verifiedVendors: false
+    priceRange: [0, 100],
+    distance: 25,
+    fulfillmentType: 'all',
+    rating: 0,
+    verifiedOnly: false,
+    inStockOnly: false,
+    sortBy: 'relevance'
   });
+  const [userZip, setUserZip] = useState('30248');
   const [showFilters, setShowFilters] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [wishlist, setWishlist] = useState<string[]>([]);
-  const [cart, setCart] = useState<{[key: string]: number}>({});
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState<AISuggestion[]>([]);
+  const [collections, setCollections] = useState<Array<{
+    id: string;
+    name: string;
+    description: string;
+    products: Product[];
+    seasonal: boolean;
+    endDate?: string;
+  }>>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const searchRef = useRef<HTMLInputElement>(null);
 
   // Mock data - replace with actual API calls
   useEffect(() => {
-    const mockProducts: Product[] = [
-      {
-        id: '1',
-        name: 'Artisan Sourdough Bread',
-        description: 'Traditional sourdough bread made with organic flour and natural starter. Perfect crust and tangy flavor.',
-        price: 6.50,
-        originalPrice: 8.00,
-        vendor: {
-          id: 'v1',
-          name: 'Rustic Bakes',
-          rating: 4.8,
-          reviewCount: 127,
-          location: 'Locust Grove, GA',
-          verified: true
-        },
-        category: 'Baked Goods',
-        subcategory: 'Bread',
-        images: ['/images/sourdough.jpg'],
-        tags: ['organic', 'sourdough', 'artisan', 'fresh'],
-        inStock: true,
-        featured: true,
-        rating: 4.9,
-        reviewCount: 89,
-        pickupOptions: ['Same Day', 'Next Day'],
-        deliveryOptions: ['Local Delivery'],
-        allergens: ['wheat', 'gluten'],
-        dietary: ['vegetarian'],
-        createdAt: '2024-01-15',
-        updatedAt: '2024-01-20'
-      },
-      {
-        id: '2',
-        name: 'Local Raw Honey',
-        description: 'Pure, raw honey from local beehives. Unfiltered and unpasteurized for maximum health benefits.',
-        price: 12.00,
-        vendor: {
-          id: 'v2',
-          name: 'Sweet Georgia Honey',
-          rating: 4.9,
-          reviewCount: 203,
-          location: 'McDonough, GA',
-          verified: true
-        },
-        category: 'Pantry',
-        subcategory: 'Sweeteners',
-        images: ['/images/honey.jpg'],
-        tags: ['raw', 'local', 'unfiltered', 'natural'],
-        inStock: true,
-        featured: true,
-        rating: 4.9,
-        reviewCount: 156,
-        pickupOptions: ['Same Day', 'Next Day'],
-        deliveryOptions: ['Local Delivery', 'Shipping'],
-        allergens: [],
-        dietary: ['vegan', 'gluten-free'],
-        createdAt: '2024-01-10',
-        updatedAt: '2024-01-18'
-      },
-      {
-        id: '3',
-        name: 'Fresh Goat Cheese',
-        description: 'Handcrafted goat cheese made from local goat milk. Creamy texture with a mild, tangy flavor.',
-        price: 8.50,
-        vendor: {
-          id: 'v3',
-          name: 'Dairy Delights',
-          rating: 4.7,
-          reviewCount: 89,
-          location: 'Stockbridge, GA',
-          verified: true
-        },
-        category: 'Dairy',
-        subcategory: 'Cheese',
-        images: ['/images/goat-cheese.jpg'],
-        tags: ['local', 'handcrafted', 'fresh', 'artisan'],
-        inStock: true,
-        featured: false,
-        rating: 4.7,
-        reviewCount: 67,
-        pickupOptions: ['Same Day'],
-        deliveryOptions: ['Local Delivery'],
-        allergens: ['milk'],
-        dietary: ['vegetarian'],
-        createdAt: '2024-01-12',
-        updatedAt: '2024-01-19'
-      },
-      {
-        id: '4',
-        name: 'Organic Heirloom Tomatoes',
-        description: 'Fresh, organic heirloom tomatoes grown without pesticides. Sweet and juicy with rich flavor.',
-        price: 4.50,
-        vendor: {
-          id: 'v4',
-          name: 'Green Thumb Gardens',
-          rating: 4.6,
-          reviewCount: 156,
-          location: 'Hampton, GA',
-          verified: true
-        },
-        category: 'Produce',
-        subcategory: 'Vegetables',
-        images: ['/images/tomatoes.jpg'],
-        tags: ['organic', 'heirloom', 'fresh', 'local'],
-        inStock: true,
-        featured: false,
-        rating: 4.6,
-        reviewCount: 134,
-        pickupOptions: ['Same Day', 'Next Day'],
-        deliveryOptions: ['Local Delivery'],
-        allergens: [],
-        dietary: ['vegan', 'gluten-free'],
-        createdAt: '2024-01-14',
-        updatedAt: '2024-01-21'
-      },
-      {
-        id: '5',
-        name: 'Handmade Soap Bars',
-        description: 'Natural handmade soap bars with essential oils. Gentle on skin and eco-friendly packaging.',
-        price: 5.00,
-        vendor: {
-          id: 'v5',
-          name: 'Pure Essentials',
-          rating: 4.8,
-          reviewCount: 234,
-          location: 'Griffin, GA',
-          verified: true
-        },
-        category: 'Home & Body',
-        subcategory: 'Soap',
-        images: ['/images/soap.jpg'],
-        tags: ['handmade', 'natural', 'essential oils', 'eco-friendly'],
-        inStock: true,
-        featured: true,
-        rating: 4.8,
-        reviewCount: 198,
-        pickupOptions: ['Next Day'],
-        deliveryOptions: ['Local Delivery', 'Shipping'],
-        allergens: [],
-        dietary: ['vegan'],
-        createdAt: '2024-01-08',
-        updatedAt: '2024-01-17'
-      }
-    ];
+    const loadMarketplaceData = async () => {
+      setIsLoading(true);
+      
+      // Simulate API delay
+      setTimeout(() => {
+        const mockProducts: Product[] = [
+          {
+            id: 'prod1',
+            name: 'Artisan Sourdough Bread',
+            description: 'Traditional sourdough bread made with organic flour and natural starter',
+            price: 8.50,
+            image: '/images/sourdough.jpg',
+            vendorId: 'vendor1',
+            vendorName: 'Rose Creek Bakery',
+            vendorLogo: '/images/rosecreek-logo.jpg',
+            category: 'Bread',
+            tags: ['artisan', 'organic', 'traditional'],
+            dietaryFlags: ['vegan', 'dairy-free'],
+            allergens: ['wheat', 'gluten'],
+            ingredients: ['organic flour', 'water', 'salt', 'sourdough starter'],
+            macros: { calories: 120, protein: 4, carbs: 25, fat: 1 },
+            stockLevel: 15,
+            maxStock: 20,
+            pickupLocations: ['Downtown Market'],
+            deliveryZones: ['30248', '30249'],
+            fulfillmentTypes: ['pickup', 'delivery'],
+            prepInstructions: 'Best served at room temperature',
+            storageInstructions: 'Store in a cool, dry place for up to 5 days',
+            rating: 4.8,
+            reviewCount: 127,
+            isVerified: true,
+            isFavorite: false,
+            distance: 2.3,
+            frequentlyBoughtWith: ['prod2', 'prod3']
+          },
+          {
+            id: 'prod2',
+            name: 'Chocolate Croissant',
+            description: 'Buttery croissant filled with rich dark chocolate',
+            price: 4.50,
+            image: '/images/croissant.jpg',
+            vendorId: 'vendor2',
+            vendorName: 'Sweet Dreams Pastry',
+            vendorLogo: '/images/sweetdreams-logo.jpg',
+            category: 'Pastries',
+            tags: ['chocolate', 'buttery', 'flaky'],
+            dietaryFlags: ['vegetarian'],
+            allergens: ['wheat', 'gluten', 'dairy', 'eggs'],
+            ingredients: ['flour', 'butter', 'chocolate', 'eggs', 'milk'],
+            macros: { calories: 280, protein: 6, carbs: 32, fat: 16 },
+            stockLevel: 8,
+            maxStock: 12,
+            pickupLocations: ['Sweet Dreams Store'],
+            deliveryZones: ['30248'],
+            fulfillmentTypes: ['pickup', 'delivery'],
+            prepInstructions: 'Warm in oven for 5 minutes for best taste',
+            storageInstructions: 'Store in airtight container for up to 3 days',
+            rating: 4.6,
+            reviewCount: 89,
+            isVerified: true,
+            isFavorite: true,
+            distance: 1.8,
+            frequentlyBoughtWith: ['prod1', 'prod4']
+          }
+        ];
 
-    const mockCategories: Category[] = [
-      {
-        id: 'baked-goods',
-        name: 'Baked Goods',
-        icon: 'ðŸ¥–',
-        count: 45,
-        subcategories: ['Bread', 'Pastries', 'Cookies', 'Cakes']
-      },
-      {
-        id: 'produce',
-        name: 'Produce',
-        icon: 'ðŸ¥¬',
-        count: 67,
-        subcategories: ['Vegetables', 'Fruits', 'Herbs', 'Mushrooms']
-      },
-      {
-        id: 'dairy',
-        name: 'Dairy & Eggs',
-        icon: 'ðŸ¥›',
-        count: 23,
-        subcategories: ['Milk', 'Cheese', 'Yogurt', 'Eggs']
-      },
-      {
-        id: 'pantry',
-        name: 'Pantry',
-        icon: 'ðŸ¯',
-        count: 34,
-        subcategories: ['Sweeteners', 'Oils', 'Grains', 'Preserves']
-      },
-      {
-        id: 'meat',
-        name: 'Meat & Seafood',
-        icon: 'ðŸ¥©',
-        count: 28,
-        subcategories: ['Beef', 'Pork', 'Chicken', 'Fish']
-      },
-      {
-        id: 'home-body',
-        name: 'Home & Body',
-        icon: 'ðŸ§¼',
-        count: 19,
-        subcategories: ['Soap', 'Candles', 'Skincare', 'Cleaning']
-      }
-    ];
+        const mockVendors: Vendor[] = [
+          {
+            id: 'vendor1',
+            name: 'Rose Creek Bakery',
+            logo: '/images/rosecreek-logo.jpg',
+            description: 'Artisan bread and pastries made with traditional methods',
+            rating: 4.8,
+            reviewCount: 127,
+            isVerified: true,
+            isFavorite: false,
+            categories: ['Bread', 'Pastries'],
+            tags: ['artisan', 'organic', 'traditional'],
+            operatingArea: ['30248', '30249', '30250'],
+            pickupLocations: [
+              {
+                id: 'pickup1',
+                name: 'Downtown Market',
+                address: '123 Main St, McDonough, GA 30248',
+                hours: 'Mon-Sat 8AM-6PM'
+              }
+            ],
+            deliveryZones: ['30248', '30249'],
+            vacationMode: false,
+            featured: true,
+            distance: 2.3
+          },
+          {
+            id: 'vendor2',
+            name: 'Sweet Dreams Pastry',
+            logo: '/images/sweetdreams-logo.jpg',
+            description: 'Handcrafted pastries and desserts',
+            rating: 4.6,
+            reviewCount: 89,
+            isVerified: true,
+            isFavorite: true,
+            categories: ['Pastries', 'Desserts'],
+            tags: ['handcrafted', 'gourmet'],
+            operatingArea: ['30248', '30249'],
+            pickupLocations: [
+              {
+                id: 'pickup2',
+                name: 'Sweet Dreams Store',
+                address: '456 Oak Ave, McDonough, GA 30248',
+                hours: 'Tue-Sun 7AM-7PM'
+              }
+            ],
+            deliveryZones: ['30248'],
+            vacationMode: false,
+            featured: false,
+            distance: 1.8
+          }
+        ];
 
-    setProducts(mockProducts);
-    setFilteredProducts(mockProducts);
-    setCategories(mockCategories);
+        const mockCollections = [
+          {
+            id: 'editors-picks',
+            name: "Editor's Picks",
+            description: 'Hand-selected favorites from our team',
+            products: mockProducts.slice(0, 2),
+            seasonal: false
+          },
+          {
+            id: 'back-to-school',
+            name: 'Back to School Lunch Kits',
+            description: 'Perfect packed lunches for busy families',
+            products: mockProducts.slice(0, 1),
+            seasonal: true,
+            endDate: '2024-09-15'
+          }
+        ];
+
+        const mockSuggestions: AISuggestion[] = [
+          {
+            id: 'holiday-gifts',
+            type: 'search',
+            title: 'Holiday Gifts Under $30',
+            description: 'Perfect artisan gifts for the food lover',
+            query: 'holiday gifts under 30',
+            icon: '🎁'
+          },
+          {
+            id: 'snack-packs',
+            type: 'category',
+            title: 'Snack Packs for Kids',
+            description: 'Healthy, portable snacks for busy families',
+            query: 'snack packs kids',
+            icon: '🍎'
+          }
+        ];
+
+        setProducts(mockProducts);
+        setVendors(mockVendors);
+        setCollections(mockCollections);
+        setAiSuggestions(mockSuggestions);
+        setIsLoading(false);
+      }, 1000);
+    };
+
+    loadMarketplaceData();
   }, []);
 
-  // Filter and sort products
+  // Apply filters and search
   useEffect(() => {
-    let filtered = [...products];
+    let filtered = products;
 
     // Search filter
-    if (searchQuery) {
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
       filtered = filtered.filter(product =>
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.vendor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+        product.name.toLowerCase().includes(searchLower) ||
+        product.description.toLowerCase().includes(searchLower) ||
+        product.vendorName.toLowerCase().includes(searchLower) ||
+        product.tags.some(tag => tag.toLowerCase().includes(searchLower))
       );
     }
 
     // Category filter
-    if (filters.categories.length > 0) {
+    if (filters.category) {
+      filtered = filtered.filter(product => product.category === filters.category);
+    }
+
+    // Dietary flags filter
+    if (filters.dietaryFlags.length > 0) {
       filtered = filtered.filter(product =>
-        filters.categories.includes(product.category)
+        filters.dietaryFlags.some(flag => product.dietaryFlags.includes(flag))
+      );
+    }
+
+    // Allergens filter (exclude)
+    if (filters.allergens.length > 0) {
+      filtered = filtered.filter(product =>
+        !filters.allergens.some(allergen => product.allergens.includes(allergen))
       );
     }
 
@@ -324,685 +340,625 @@ export const MarketplacePage = () => {
       product.price >= filters.priceRange[0] && product.price <= filters.priceRange[1]
     );
 
+    // Distance filter
+    if (filters.distance < 25) {
+      filtered = filtered.filter(product => 
+        product.distance && product.distance <= filters.distance
+      );
+    }
+
+    // Fulfillment type filter
+    if (filters.fulfillmentType !== 'all') {
+      filtered = filtered.filter(product =>
+        product.fulfillmentTypes.includes(filters.fulfillmentType as any)
+      );
+    }
+
     // Rating filter
     if (filters.rating > 0) {
       filtered = filtered.filter(product => product.rating >= filters.rating);
     }
 
-    // Location filter
-    if (filters.location) {
-      filtered = filtered.filter(product =>
-        product.vendor.location.toLowerCase().includes(filters.location.toLowerCase())
-      );
+    // Verified only filter
+    if (filters.verifiedOnly) {
+      filtered = filtered.filter(product => product.isVerified);
     }
 
-    // Dietary filter
-    if (filters.dietary.length > 0) {
-      filtered = filtered.filter(product =>
-        filters.dietary.some(diet => product.dietary.includes(diet))
-      );
+    // In stock only filter
+    if (filters.inStockOnly) {
+      filtered = filtered.filter(product => product.stockLevel > 0);
     }
 
-    // Allergen filter
-    if (filters.allergens.length > 0) {
-      filtered = filtered.filter(product =>
-        !filters.allergens.some(allergen => product.allergens.includes(allergen))
-      );
-    }
-
-    // Pickup options filter
-    if (filters.pickupOptions.length > 0) {
-      filtered = filtered.filter(product =>
-        filters.pickupOptions.some(option => product.pickupOptions.includes(option))
-      );
-    }
-
-    // Delivery options filter
-    if (filters.deliveryOptions.length > 0) {
-      filtered = filtered.filter(product =>
-        filters.deliveryOptions.some(option => product.deliveryOptions.includes(option))
-      );
-    }
-
-    // In stock filter
-    if (filters.inStock) {
-      filtered = filtered.filter(product => product.inStock);
-    }
-
-    // Featured filter
-    if (filters.featured) {
-      filtered = filtered.filter(product => product.featured);
-    }
-
-    // Verified vendors filter
-    if (filters.verifiedVendors) {
-      filtered = filtered.filter(product => product.vendor.verified);
-    }
-
-    // Sort products
+    // Sort results
     filtered.sort((a, b) => {
-      let comparison = 0;
-      
-      switch (sortBy) {
-        case 'price':
-          comparison = a.price - b.price;
-          break;
+      switch (filters.sortBy) {
+        case 'price_low':
+          return a.price - b.price;
+        case 'price_high':
+          return b.price - a.price;
         case 'rating':
-          comparison = b.rating - a.rating;
-          break;
+          return b.rating - a.rating;
+        case 'distance':
+          return (a.distance || 0) - (b.distance || 0);
         case 'newest':
-          comparison = new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-          break;
-        case 'name':
-          comparison = a.name.localeCompare(b.name);
-          break;
-        case 'featured':
+          return 0; // Would use creation date in real implementation
         default:
-          comparison = (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
-          break;
+          return 0; // Relevance would use AI scoring
       }
-
-      return sortOrder === 'asc' ? comparison : -comparison;
     });
 
     setFilteredProducts(filtered);
-  }, [products, searchQuery, filters, sortBy, sortOrder]);
+  }, [products, filters]);
 
-  const toggleWishlist = (productId: string) => {
-    setWishlist(prev => 
-      prev.includes(productId) 
-        ? prev.filter(id => id !== productId)
-        : [...prev, productId]
-    );
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchRef.current) {
+      setFilters(prev => ({ ...prev, search: searchRef.current?.value || '' }));
+    }
   };
 
-  const addToCart = (productId: string) => {
-    setCart(prev => ({
-      ...prev,
-      [productId]: (prev[productId] || 0) + 1
-    }));
+  const handleAISuggestion = (suggestion: AISuggestion) => {
+    setFilters(prev => ({ ...prev, search: suggestion.query }));
+    if (searchRef.current) {
+      searchRef.current.value = suggestion.query;
+    }
   };
 
-  const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      <span key={i} className="text-yellow-400">
-        {i < Math.floor(rating) ? <StarFilled className="w-4 h-4 fill-current" /> : <Star className="w-4 h-4" />}
-      </span>
+  const toggleFavorite = (productId: string) => {
+    setProducts(prev => prev.map(product =>
+      product.id === productId ? { ...product, isFavorite: !product.isFavorite } : product
     ));
   };
 
-  const ProductCard = ({ product }: { product: Product }) => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden"
-    >
-      <div className="relative">
-        <img
-          src={product.images[0] || '/images/placeholder.jpg'}
-          alt={product.name}
-          className="w-full h-48 object-cover"
-        />
-        {product.featured && (
-          <div className="absolute top-2 left-2 bg-brand-maroon text-white px-2 py-1 rounded text-xs font-medium">
-            Featured
-          </div>
-        )}
-        {product.originalPrice && (
-          <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded text-xs font-medium">
-            {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}% OFF
-          </div>
-        )}
-                 <button
-           onClick={() => toggleWishlist(product.id)}
-           className="absolute top-2 right-2 p-1 bg-white rounded-full shadow-md hover:bg-gray-50 transition-colors"
-           title={wishlist.includes(product.id) ? "Remove from wishlist" : "Add to wishlist"}
-         >
-          <Heart 
-            className={`w-4 h-4 ${wishlist.includes(product.id) ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} 
-          />
-        </button>
-      </div>
+  const addToCart = (product: Product) => {
+    // This would integrate with the cart system
+    console.log('Adding to cart:', product);
+  };
 
-      <div className="p-4">
-        <div className="flex items-start justify-between mb-2">
-          <h3 className="font-semibold text-gray-900 line-clamp-2">{product.name}</h3>
-        </div>
+  const getStockStatus = (product: Product) => {
+    if (product.stockLevel === 0) {
+      return {
+        status: 'out_of_stock',
+        text: 'Out of Stock',
+        color: 'text-red-600'
+      };
+    }
+    if (product.stockLevel <= 3) {
+      return {
+        status: 'low_stock',
+        text: `Only ${product.stockLevel} left`,
+        color: 'text-orange-600'
+      };
+    }
+    return {
+      status: 'in_stock',
+      text: 'In Stock',
+      color: 'text-green-600'
+    };
+  };
 
-        <p className="responsive-text text-gray-600 mb-3 line-clamp-2">{product.description}</p>
-
-        <div className="flex items-center mb-2">
-          <div className="flex items-center mr-2">
-            {renderStars(product.rating)}
-            <span className="text-xs text-gray-500 ml-1">({product.reviewCount})</span>
-          </div>
-        </div>
-
-        <div className="flex items-center mb-3">
-          <Link href={`/vendor/${product.vendor.id}`} className="text-sm text-brand-green hover:underline">
-            {product.vendor.name}
-          </Link>
-          {product.vendor.verified && (
-            <span className="ml-1 text-blue-500 text-xs">âœ“</span>
-          )}
-          <span className="text-xs text-gray-500 ml-2 flex items-center">
-            <MapPin className="w-3 h-3 mr-1" />
-            {product.vendor.location}
-          </span>
-        </div>
-
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center">
-            <span className="text-lg font-bold text-brand-maroon">${product.price.toFixed(2)}</span>
-            {product.originalPrice && (
-              <span className="responsive-text text-gray-500 line-through ml-2">${product.originalPrice.toFixed(2)}</span>
-            )}
-          </div>
-          <span className={`text-xs px-2 py-1 rounded ${product.inStock ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-            {product.inStock ? 'In Stock' : 'Out of Stock'}
-          </span>
-        </div>
-
-        <div className="flex flex-wrap gap-1 mb-3">
-          {product.tags.slice(0, 3).map(tag => (
-            <span key={tag} className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">
-              {tag}
-            </span>
-          ))}
-        </div>
-
-        <div className="flex gap-2">
-          <button
-            onClick={() => addToCart(product.id)}
-            disabled={!product.inStock}
-            className="flex-1 bg-brand-green text-white py-2 px-3 rounded responsive-text font-medium hover:bg-brand-green/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-          >
-            <ShoppingCart className="w-4 h-4 mr-1" />
-            Add to Cart
-          </button>
-          <Link
-            href={`/product/${product.id}`}
-            className="bg-gray-100 text-gray-700 py-2 px-3 rounded responsive-text font-medium hover:bg-gray-200 transition-colors"
-          >
-            View
-          </Link>
-        </div>
-      </div>
-    </motion.div>
-  );
-
-  const ProductListItem = ({ product }: { product: Product }) => (
-    <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 20 }}
-      className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 p-4"
-    >
-      <div className="flex gap-4">
-        <div className="relative flex-shrink-0">
-          <img
-            src={product.images[0] || '/images/placeholder.jpg'}
-            alt={product.name}
-            className="w-32 h-32 object-cover rounded"
-          />
-          {product.featured && (
-            <div className="absolute top-1 left-1 bg-brand-maroon text-white px-2 py-1 rounded text-xs font-medium">
-              Featured
-            </div>
-          )}
-        </div>
-
-        <div className="flex-1">
-          <div className="flex items-start justify-between mb-2">
-            <h3 className="font-semibold text-gray-900 text-lg">{product.name}</h3>
-                         <button
-               onClick={() => toggleWishlist(product.id)}
-               className="p-1 hover:bg-gray-100 rounded transition-colors"
-               title={wishlist.includes(product.id) ? "Remove from wishlist" : "Add to wishlist"}
-             >
-              <Heart 
-                className={`w-5 h-5 ${wishlist.includes(product.id) ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} 
-              />
-            </button>
-          </div>
-
-          <p className="text-gray-600 mb-3">{product.description}</p>
-
-          <div className="flex items-center mb-3">
-            <div className="flex items-center mr-4">
-              {renderStars(product.rating)}
-              <span className="responsive-text text-gray-500 ml-1">({product.reviewCount})</span>
-            </div>
-            <Link href={`/vendor/${product.vendor.id}`} className="text-sm text-brand-green hover:underline">
-              {product.vendor.name}
-            </Link>
-            {product.vendor.verified && (
-              <span className="ml-1 text-blue-500 text-xs">âœ“</span>
-            )}
-            <span className="responsive-text text-gray-500 ml-4 flex items-center">
-              <MapPin className="w-4 h-4 mr-1" />
-              {product.vendor.location}
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center">
-                <span className="text-xl font-bold text-brand-maroon">${product.price.toFixed(2)}</span>
-                {product.originalPrice && (
-                  <span className="responsive-text text-gray-500 line-through ml-2">${product.originalPrice.toFixed(2)}</span>
-                )}
-              </div>
-              <span className={`text-sm px-2 py-1 rounded ${product.inStock ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                {product.inStock ? 'In Stock' : 'Out of Stock'}
-              </span>
-            </div>
-
-            <div className="flex gap-2">
-              <button
-                onClick={() => addToCart(product.id)}
-                disabled={!product.inStock}
-                className="bg-brand-green text-white py-2 px-4 rounded font-medium hover:bg-brand-green/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-              >
-                <ShoppingCart className="w-4 h-4 mr-1" />
-                Add to Cart
-              </button>
-              <Link
-                href={`/product/${product.id}`}
-                className="bg-gray-100 text-gray-700 py-2 px-4 rounded font-medium hover:bg-gray-200 transition-colors"
-              >
-                View Details
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  );
+  const getSmartPlaceholder = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Looking for fresh morning bread?';
+    if (hour < 17) return 'Need lunch or afternoon treats?';
+    return 'Evening artisan delights?';
+  };
 
   return (
-    <div className="page-container bg-gray-50">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="container-responsive py-6">
-          <div className="flex items-center justify-between mb-6">
+      <div className="bg-white border-b">
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-between">
             <div>
-              <h1 className="responsive-heading text-gray-900">Marketplace</h1>
-              <p className="text-gray-600 mt-1">Discover local artisans and their handcrafted products</p>
+              <h1 className="text-3xl font-bold text-gray-900">Marketplace</h1>
+              <p className="text-gray-600">
+                Discover artisan vendors in {userZip}
+              </p>
             </div>
             <div className="flex items-center gap-4">
-              <div className="flex items-center bg-white border border-gray-300 rounded-lg px-3 py-2">
-                <Search className="w-5 h-5 text-gray-400 mr-2" />
-                <input
-                  type="text"
-                  placeholder="Search products, vendors..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="outline-none text-gray-900 placeholder-gray-500"
-                />
-              </div>
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center gap-2 bg-brand-green text-white responsive-button rounded-lg hover:bg-brand-green/80 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
               >
                 <Filter className="w-4 h-4" />
                 Filters
               </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2 rounded ${viewMode === 'grid' ? 'bg-brand-green text-white' : 'bg-gray-100 text-gray-600'}`}
+                >
+                  <div className="w-4 h-4 grid grid-cols-2 gap-0.5">
+                    <div className="bg-current rounded-sm" />
+                    <div className="bg-current rounded-sm" />
+                    <div className="bg-current rounded-sm" />
+                    <div className="bg-current rounded-sm" />
+                  </div>
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`p-2 rounded ${viewMode === 'list' ? 'bg-brand-green text-white' : 'bg-gray-100 text-gray-600'}`}
+                >
+                  <div className="w-4 h-4 space-y-1">
+                    <div className="bg-current rounded-sm h-0.5" />
+                    <div className="bg-current rounded-sm h-0.5" />
+                    <div className="bg-current rounded-sm h-0.5" />
+                  </div>
+                </button>
+              </div>
             </div>
-          </div>
-
-          {/* Categories */}
-          <div className="flex items-center gap-4 overflow-x-auto pb-2">
-            {categories.map(category => (
-              <button
-                key={category.id}
-                onClick={() => setFilters(prev => ({
-                  ...prev,
-                  categories: prev.categories.includes(category.name)
-                    ? prev.categories.filter(c => c !== category.name)
-                    : [...prev.categories, category.name]
-                }))}
-                className={`flex items-center gap-2 responsive-button rounded-lg whitespace-nowrap transition-colors ${
-                  filters.categories.includes(category.name)
-                    ? 'bg-brand-green text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                <span className="text-lg">{category.icon}</span>
-                <span className="font-medium">{category.name}</span>
-                <span className="text-sm opacity-75">({category.count})</span>
-              </button>
-            ))}
           </div>
         </div>
       </div>
 
-      <div className="container-responsive py-6">
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Filters Sidebar */}
-          <AnimatePresence>
-            {showFilters && (
-              <motion.div
-                initial={{ opacity: 0, x: -300 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -300 }}
-                className="lg:w-80 bg-white rounded-lg shadow-md p-6 h-fit lg:sticky lg:top-6"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Filters</h3>
-                                     <button
-                     onClick={() => setShowFilters(false)}
-                     className="lg:hidden p-1 hover:bg-gray-100 rounded"
-                     title="Close filters"
-                   >
-                    <X className="w-5 h-5" />
-                  </button>
+      {/* Search Bar */}
+      <div className="bg-white border-b">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <form onSubmit={handleSearch} className="relative">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <input
+              ref={searchRef}
+              type="text"
+              placeholder={getSmartPlaceholder()}
+              className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
+            />
+            <button
+              type="submit"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-brand-green text-white px-4 py-1.5 rounded-md hover:bg-brand-green/90"
+            >
+              Search
+            </button>
+          </form>
+        </div>
+      </div>
+
+      {/* AI Suggestions */}
+      {aiSuggestions.length > 0 && (
+        <div className="bg-gradient-to-r from-purple-50 to-blue-50 border-b">
+          <div className="max-w-7xl mx-auto px-4 py-4">
+            <div className="flex items-center gap-3 mb-3">
+              <Brain className="w-5 h-5 text-purple-600" />
+              <h3 className="font-semibold text-gray-900">Smart Suggestions</h3>
+            </div>
+            <div className="flex gap-3 overflow-x-auto pb-2">
+              {aiSuggestions.map((suggestion) => (
+                <button
+                  key={suggestion.id}
+                  onClick={() => handleAISuggestion(suggestion)}
+                  className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-purple-200 hover:border-purple-300 hover:bg-purple-50 transition-colors whitespace-nowrap"
+                >
+                  <span className="text-lg">{suggestion.icon}</span>
+                  <div className="text-left">
+                    <div className="font-medium text-gray-900 text-sm">{suggestion.title}</div>
+                    <div className="text-xs text-gray-600">{suggestion.description}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Filters */}
+      <AnimatePresence>
+        {showFilters && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="bg-white border-b overflow-hidden"
+          >
+            <div className="max-w-7xl mx-auto px-4 py-6">
+              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                {/* Category */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                  <select
+                    value={filters.category}
+                    onChange={(e) => setFilters(prev => ({ ...prev, category: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
+                  >
+                    <option value="">All Categories</option>
+                    <option value="Bread">Bread</option>
+                    <option value="Pastries">Pastries</option>
+                    <option value="Desserts">Desserts</option>
+                  </select>
+                </div>
+
+                {/* Dietary Flags */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Dietary Preferences</label>
+                  <div className="space-y-2">
+                    {['vegan', 'vegetarian', 'gluten-free', 'dairy-free'].map((flag) => (
+                      <label key={flag} className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={filters.dietaryFlags.includes(flag)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setFilters(prev => ({
+                                ...prev,
+                                dietaryFlags: [...prev.dietaryFlags, flag]
+                              }));
+                            } else {
+                              setFilters(prev => ({
+                                ...prev,
+                                dietaryFlags: prev.dietaryFlags.filter(f => f !== flag)
+                              }));
+                            }
+                          }}
+                          className="rounded border-gray-300 text-brand-green focus:ring-brand-green"
+                        />
+                        <span className="text-sm text-gray-700 capitalize">{flag.replace('-', ' ')}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Price Range */}
-                <div className="mb-6">
-                  <h4 className="font-medium text-gray-900 mb-3">Price Range</h4>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Price Range</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="number"
-                      placeholder="Min"
                       value={filters.priceRange[0]}
                       onChange={(e) => setFilters(prev => ({
                         ...prev,
                         priceRange: [parseFloat(e.target.value) || 0, prev.priceRange[1]]
                       }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-brand-green"
+                      className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                      placeholder="Min"
                     />
                     <span className="text-gray-500">-</span>
                     <input
                       type="number"
-                      placeholder="Max"
                       value={filters.priceRange[1]}
                       onChange={(e) => setFilters(prev => ({
                         ...prev,
                         priceRange: [prev.priceRange[0], parseFloat(e.target.value) || 100]
                       }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-brand-green"
+                      className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                      placeholder="Max"
                     />
                   </div>
                 </div>
 
-                {/* Rating Filter */}
-                <div className="mb-6">
-                  <h4 className="font-medium text-gray-900 mb-3">Minimum Rating</h4>
-                  <div className="flex items-center gap-2">
-                    {[1, 2, 3, 4, 5].map(rating => (
-                      <button
-                        key={rating}
-                        onClick={() => setFilters(prev => ({
-                          ...prev,
-                          rating: prev.rating === rating ? 0 : rating
-                        }))}
-                        className={`p-2 rounded ${
-                          filters.rating >= rating
-                            ? 'bg-yellow-100 text-yellow-600'
-                            : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
-                        }`}
-                      >
-                        <Star className="w-4 h-4" />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Dietary Preferences */}
-                <div className="mb-6">
-                  <h4 className="font-medium text-gray-900 mb-3">Dietary Preferences</h4>
-                  {['vegan', 'vegetarian', 'gluten-free', 'dairy-free'].map(diet => (
-                    <label key={diet} className="flex items-center mb-2">
-                      <input
-                        type="checkbox"
-                        checked={filters.dietary.includes(diet)}
-                        onChange={(e) => setFilters(prev => ({
-                          ...prev,
-                          dietary: e.target.checked
-                            ? [...prev.dietary, diet]
-                            : prev.dietary.filter(d => d !== diet)
-                        }))}
-                        className="mr-2"
-                      />
-                      <span className="text-sm text-gray-700 capitalize">{diet}</span>
-                    </label>
-                  ))}
-                </div>
-
-                {/* Allergens */}
-                <div className="mb-6">
-                  <h4 className="font-medium text-gray-900 mb-3">Exclude Allergens</h4>
-                  {['wheat', 'gluten', 'milk', 'eggs', 'nuts', 'soy'].map(allergen => (
-                    <label key={allergen} className="flex items-center mb-2">
-                      <input
-                        type="checkbox"
-                        checked={filters.allergens.includes(allergen)}
-                        onChange={(e) => setFilters(prev => ({
-                          ...prev,
-                          allergens: e.target.checked
-                            ? [...prev.allergens, allergen]
-                            : prev.allergens.filter(a => a !== allergen)
-                        }))}
-                        className="mr-2"
-                      />
-                      <span className="text-sm text-gray-700 capitalize">{allergen}</span>
-                    </label>
-                  ))}
-                </div>
-
-                {/* Pickup Options */}
-                <div className="mb-6">
-                  <h4 className="font-medium text-gray-900 mb-3">Pickup Options</h4>
-                  {['Same Day', 'Next Day', 'Weekend'].map(option => (
-                    <label key={option} className="flex items-center mb-2">
-                      <input
-                        type="checkbox"
-                        checked={filters.pickupOptions.includes(option)}
-                        onChange={(e) => setFilters(prev => ({
-                          ...prev,
-                          pickupOptions: e.target.checked
-                            ? [...prev.pickupOptions, option]
-                            : prev.pickupOptions.filter(o => o !== option)
-                        }))}
-                        className="mr-2"
-                      />
-                      <span className="text-sm text-gray-700">{option}</span>
-                    </label>
-                  ))}
-                </div>
-
-                {/* Other Filters */}
-                <div className="space-y-3">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={filters.inStock}
-                      onChange={(e) => setFilters(prev => ({
-                        ...prev,
-                        inStock: e.target.checked
-                      }))}
-                      className="mr-2"
-                    />
-                    <span className="text-sm text-gray-700">In Stock Only</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={filters.featured}
-                      onChange={(e) => setFilters(prev => ({
-                        ...prev,
-                        featured: e.target.checked
-                      }))}
-                      className="mr-2"
-                    />
-                    <span className="text-sm text-gray-700">Featured Products</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={filters.verifiedVendors}
-                      onChange={(e) => setFilters(prev => ({
-                        ...prev,
-                        verifiedVendors: e.target.checked
-                      }))}
-                      className="mr-2"
-                    />
-                    <span className="text-sm text-gray-700">Verified Vendors Only</span>
-                  </label>
-                </div>
-
-                {/* Clear Filters */}
-                <button
-                  onClick={() => setFilters({
-                    categories: [],
-                    priceRange: [0, 100],
-                    rating: 0,
-                    location: '',
-                    dietary: [],
-                    allergens: [],
-                    pickupOptions: [],
-                    deliveryOptions: [],
-                    inStock: false,
-                    featured: false,
-                    verifiedVendors: false
-                  })}
-                  className="w-full mt-6 bg-gray-100 text-gray-700 py-2 px-4 rounded font-medium hover:bg-gray-200 transition-colors"
-                >
-                  Clear All Filters
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Main Content */}
-          <div className="flex-1">
-            {/* Results Header */}
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-4">
-                <p className="text-gray-600">
-                  {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''} found
-                </p>
-                {Object.values(filters).some(value => 
-                  Array.isArray(value) ? value.length > 0 : value !== false && value !== 0 && value !== ''
-                ) && (
-                  <button
-                    onClick={() => setFilters({
-                      categories: [],
-                      priceRange: [0, 100],
-                      rating: 0,
-                      location: '',
-                      dietary: [],
-                      allergens: [],
-                      pickupOptions: [],
-                      deliveryOptions: [],
-                      inStock: false,
-                      featured: false,
-                      verifiedVendors: false
-                    })}
-                    className="text-sm text-brand-green hover:underline"
+                {/* Sort By */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
+                  <select
+                    value={filters.sortBy}
+                    onChange={(e) => setFilters(prev => ({ ...prev, sortBy: e.target.value as any }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
                   >
-                    Clear filters
-                  </button>
-                )}
+                    <option value="relevance">Relevance</option>
+                    <option value="price_low">Price: Low to High</option>
+                    <option value="price_high">Price: High to Low</option>
+                    <option value="rating">Highest Rated</option>
+                    <option value="distance">Nearest First</option>
+                    <option value="newest">Newest</option>
+                  </select>
+                </div>
               </div>
 
-              <div className="flex items-center gap-4">
-                {/* View Mode Toggle */}
-                <div className="flex items-center bg-white border border-gray-300 rounded-lg p-1">
-                  <button
-                    onClick={() => setViewMode('grid')}
-                    className={`p-2 rounded ${viewMode === 'grid' ? 'bg-brand-green text-white' : 'text-gray-500 hover:text-gray-700'}`}
-                  >
-                    <Grid className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setViewMode('list')}
-                    className={`p-2 rounded ${viewMode === 'list' ? 'bg-brand-green text-white' : 'text-gray-500 hover:text-gray-700'}`}
-                  >
-                    <List className="w-4 h-4" />
-                  </button>
-                </div>
-
-                {/* Sort */}
-                <div className="flex items-center gap-2">
-                                     <select
-                     value={sortBy}
-                     onChange={(e) => setSortBy(e.target.value)}
-                     className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green"
-                     title="Sort products by"
-                   >
-                    <option value="featured">Featured</option>
-                    <option value="price">Price</option>
-                    <option value="rating">Rating</option>
-                    <option value="newest">Newest</option>
-                    <option value="name">Name</option>
-                  </select>
-                                     <button
-                     onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
-                     className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-                     title={`Sort ${sortOrder === 'asc' ? 'descending' : 'ascending'}`}
-                   >
-                    {sortOrder === 'asc' ? <SortAsc className="w-4 h-4" /> : <SortDesc className="w-4 h-4" />}
-                  </button>
+              {/* Additional Filters */}
+              <div className="mt-6 pt-6 border-t">
+                <div className="flex items-center gap-6">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={filters.verifiedOnly}
+                      onChange={(e) => setFilters(prev => ({ ...prev, verifiedOnly: e.target.checked }))}
+                      className="rounded border-gray-300 text-brand-green focus:ring-brand-green"
+                    />
+                    <span className="text-sm text-gray-700">Verified vendors only</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={filters.inStockOnly}
+                      onChange={(e) => setFilters(prev => ({ ...prev, inStockOnly: e.target.checked }))}
+                      className="rounded border-gray-300 text-brand-green focus:ring-brand-green"
+                    />
+                    <span className="text-sm text-gray-700">In stock only</span>
+                  </label>
                 </div>
               </div>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-            {/* Products Grid/List */}
-            <AnimatePresence mode="wait">
-              {filteredProducts.length > 0 ? (
-                <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6' : 'space-y-4'}>
-                  {filteredProducts.map(product => (
-                    viewMode === 'grid' ? (
-                      <ProductCard key={product.id} product={product} />
-                    ) : (
-                      <ProductListItem key={product.id} product={product} />
-                    )
-                  ))}
-                </div>
-              ) : (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="text-center py-12"
-                >
-                  <div className="text-gray-400 mb-4">
-                    <Search className="w-16 h-16 mx-auto" />
+      {/* Collections */}
+      {collections.length > 0 && (
+        <div className="bg-white border-b">
+          <div className="max-w-7xl mx-auto px-4 py-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Curated Collections</h2>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {collections.map((collection) => (
+                <div key={collection.id} className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Award className="w-5 h-5 text-amber-600" />
+                    <h3 className="font-medium text-gray-900">{collection.name}</h3>
+                    {collection.seasonal && (
+                      <span className="px-2 py-1 bg-amber-100 text-amber-700 rounded-full text-xs">
+                        Seasonal
+                      </span>
+                    )}
                   </div>
-                  <h3 className="responsive-subheading text-gray-900 mb-2">No products found</h3>
-                  <p className="text-gray-600 mb-6">Try adjusting your search or filters to find what you're looking for.</p>
-                  <button
-                    onClick={() => {
-                      setSearchQuery('');
-                      setFilters({
-                        categories: [],
-                        priceRange: [0, 100],
-                        rating: 0,
-                        location: '',
-                        dietary: [],
-                        allergens: [],
-                        pickupOptions: [],
-                        deliveryOptions: [],
-                        inStock: false,
-                        featured: false,
-                        verifiedVendors: false
-                      });
-                    }}
-                    className="bg-brand-green text-white px-6 py-2 rounded-lg hover:bg-brand-green/80 transition-colors"
-                  >
-                    Clear Search & Filters
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  <p className="text-sm text-gray-600 mb-3">{collection.description}</p>
+                  <div className="flex gap-2">
+                    {collection.products.slice(0, 3).map((product) => (
+                      <img
+                        key={product.id}
+                        src={product.image}
+                        alt={product.name}
+                        className="w-12 h-12 rounded object-cover"
+                      />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
+      )}
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {isLoading ? (
+          <div className="text-center py-12">
+            <div className="w-8 h-8 border-2 border-brand-green border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-gray-600">Loading marketplace...</p>
+          </div>
+        ) : (
+          <>
+            {/* Results Header */}
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  {filteredProducts.length} products found
+                </h2>
+                {filters.search && (
+                  <p className="text-gray-600">Searching for "{filters.search}"</p>
+                )}
+              </div>
+              <div className="flex items-center gap-4 text-sm text-gray-600">
+                <span>Showing results near {userZip}</span>
+                <button
+                  onClick={() => {/* Would open location picker */}}
+                  className="text-brand-green hover:text-brand-green/80"
+                >
+                  Change location
+                </button>
+              </div>
+            </div>
+
+            {/* Products Grid */}
+            <div className={viewMode === 'grid' ? 'grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'space-y-4'}>
+              {filteredProducts.map((product) => (
+                <motion.div
+                  key={product.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`bg-white rounded-lg border overflow-hidden hover:shadow-lg transition-shadow ${
+                    viewMode === 'list' ? 'flex gap-4 p-4' : ''
+                  }`}
+                >
+                  {/* Product Image */}
+                  <div className={viewMode === 'list' ? 'w-32 h-32 flex-shrink-0' : 'aspect-square'}>
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+
+                  {/* Product Info */}
+                  <div className={viewMode === 'list' ? 'flex-1' : 'p-4'}>
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1">
+                        <h3 className="font-medium text-gray-900 mb-1">{product.name}</h3>
+                        <p className="text-sm text-gray-600 mb-2">{product.description}</p>
+                      </div>
+                      <button
+                        onClick={() => toggleFavorite(product.id)}
+                        className={`p-1 rounded-full ${
+                          product.isFavorite ? 'text-red-500' : 'text-gray-400'
+                        } hover:text-red-500`}
+                      >
+                        <Heart className={`w-5 h-5 ${product.isFavorite ? 'fill-current' : ''}`} />
+                      </button>
+                    </div>
+
+                    {/* Vendor Info */}
+                    <div className="flex items-center gap-2 mb-3">
+                      <img
+                        src={product.vendorLogo}
+                        alt={product.vendorName}
+                        className="w-6 h-6 rounded-full object-cover"
+                      />
+                      <span className="text-sm text-gray-600">{product.vendorName}</span>
+                      {product.isVerified && (
+                        <Shield className="w-4 h-4 text-blue-500" />
+                      )}
+                      {product.distance && (
+                        <span className="text-xs text-gray-500">{product.distance} mi</span>
+                      )}
+                    </div>
+
+                    {/* Tags */}
+                    <div className="flex flex-wrap gap-1 mb-3">
+                      {product.dietaryFlags.slice(0, 2).map((flag) => (
+                        <span key={flag} className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs">
+                          {flag}
+                        </span>
+                      ))}
+                      {product.tags.slice(0, 1).map((tag) => (
+                        <span key={tag} className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Price and Stock */}
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <span className="text-lg font-semibold text-gray-900">${product.price.toFixed(2)}</span>
+                        {product.originalPrice && (
+                          <span className="text-sm text-gray-500 line-through ml-2">
+                            ${product.originalPrice.toFixed(2)}
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <div className={`text-sm font-medium ${getStockStatus(product).color}`}>
+                          {getStockStatus(product).text}
+                        </div>
+                        <div className="flex items-center gap-1 text-sm text-gray-500">
+                          <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                          <span>{product.rating}</span>
+                          <span>({product.reviewCount})</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          setSelectedProduct(product);
+                          setShowProductModal(true);
+                        }}
+                        className="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm"
+                      >
+                        View Details
+                      </button>
+                      <button
+                        onClick={() => addToCart(product)}
+                        disabled={product.stockLevel === 0}
+                        className="flex-1 px-3 py-2 bg-brand-green text-white rounded-lg hover:bg-brand-green/90 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                      >
+                        Add to Cart
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* No Results */}
+            {filteredProducts.length === 0 && !isLoading && (
+              <div className="text-center py-12">
+                <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No products found</h3>
+                <p className="text-gray-600 mb-6">Try adjusting your filters or search terms</p>
+                <button
+                  onClick={() => setFilters({
+                    search: '',
+                    category: '',
+                    dietaryFlags: [],
+                    allergens: [],
+                    priceRange: [0, 100],
+                    distance: 25,
+                    fulfillmentType: 'all',
+                    rating: 0,
+                    verifiedOnly: false,
+                    inStockOnly: false,
+                    sortBy: 'relevance'
+                  })}
+                  className="px-6 py-3 bg-brand-green text-white rounded-lg hover:bg-brand-green/90"
+                >
+                  Clear All Filters
+                </button>
+              </div>
+            )}
+          </>
+        )}
       </div>
+
+      {/* Product Detail Modal */}
+      {showProductModal && selectedProduct && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-start justify-between mb-4">
+                <h2 className="text-xl font-bold text-gray-900">{selectedProduct.name}</h2>
+                <button
+                  onClick={() => setShowProductModal(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="grid gap-6 md:grid-cols-2">
+                {/* Product Image */}
+                <div>
+                  <img
+                    src={selectedProduct.image}
+                    alt={selectedProduct.name}
+                    className="w-full rounded-lg"
+                  />
+                </div>
+
+                {/* Product Details */}
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">Description</h3>
+                    <p className="text-gray-600">{selectedProduct.description}</p>
+                  </div>
+
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">Ingredients</h3>
+                    <p className="text-gray-600">{selectedProduct.ingredients.join(', ')}</p>
+                  </div>
+
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">Nutrition (per serving)</h3>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>Calories: {selectedProduct.macros.calories}</div>
+                      <div>Protein: {selectedProduct.macros.protein}g</div>
+                      <div>Carbs: {selectedProduct.macros.carbs}g</div>
+                      <div>Fat: {selectedProduct.macros.fat}g</div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-2">Allergens</h3>
+                    <div className="flex flex-wrap gap-1">
+                      {selectedProduct.allergens.map((allergen) => (
+                        <span key={allergen} className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs">
+                          {allergen}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => addToCart(selectedProduct)}
+                      disabled={selectedProduct.stockLevel === 0}
+                      className="flex-1 px-4 py-2 bg-brand-green text-white rounded-lg hover:bg-brand-green/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Add to Cart - ${selectedProduct.price.toFixed(2)}
+                    </button>
+                    <button
+                      onClick={() => toggleFavorite(selectedProduct.id)}
+                      className={`p-2 rounded-lg border ${
+                        selectedProduct.isFavorite ? 'text-red-500 border-red-200' : 'text-gray-400 border-gray-200'
+                      }`}
+                    >
+                      <Heart className={`w-5 h-5 ${selectedProduct.isFavorite ? 'fill-current' : ''}`} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
-};
-
-export default MarketplacePage; 
+} 
