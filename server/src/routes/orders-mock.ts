@@ -96,7 +96,7 @@ router.post('/checkout', requireAuth, requireRole(['CUSTOMER']), async (req, res
 
     // Verify user is creating order for themselves
     if (req.session.userId !== userId) {
-      return res.status(403).json({
+      return res.status(400).json({
         error: 'Unauthorized',
         message: 'You can only create orders for yourself'
       });
@@ -294,7 +294,7 @@ router.post('/checkout', requireAuth, requireRole(['CUSTOMER']), async (req, res
     });
 
     // Return success response
-    res.status(201).json({
+    return res.status(400).json({
       message: 'Order created successfully',
       order: {
         id: newOrder.id,
@@ -318,7 +318,7 @@ router.post('/checkout', requireAuth, requireRole(['CUSTOMER']), async (req, res
 
   } catch (error) {
     console.error('Checkout error:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to process checkout'
     });
@@ -330,7 +330,7 @@ router.get('/', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
   try {
     const userOrders = mockOrders.filter(order => order.userId === req.session.userId);
 
-    res.json({
+    return res.json({
       orders: userOrders.map(order => ({
         id: order.id,
         orderNumber: order.orderNumber,
@@ -374,7 +374,7 @@ router.get('/', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching orders:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to fetch orders'
     });
@@ -437,12 +437,12 @@ router.get('/history', requireAuth, requireRole(['CUSTOMER']), async (req, res) 
       }
     }));
 
-    res.json({
+    return res.json({
       orders: formattedOrders
     });
   } catch (error) {
     console.error('Error fetching order history:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to fetch order history'
     });
@@ -457,13 +457,13 @@ router.get('/:id', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
     const order = mockOrders.find(o => o.id === id && o.userId === req.session.userId);
 
     if (!order) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Order not found',
         message: 'Order does not exist or does not belong to you'
       });
     }
 
-          res.json({
+          return res.json({
         order: {
           id: order.id,
           orderNumber: order.orderNumber,
@@ -522,7 +522,7 @@ router.get('/:id', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching order:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to fetch order'
     });
@@ -539,7 +539,7 @@ router.post('/:id/confirm-delivery', requireAuth, requireRole(['VENDOR', 'ADMIN'
     const order = mockOrders.find(o => o.id === id);
     
     if (!order) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Order not found',
         message: 'Order does not exist'
       });
@@ -565,7 +565,7 @@ router.post('/:id/confirm-delivery', requireAuth, requireRole(['VENDOR', 'ADMIN'
     const mockPhone = '+15551234567';
     await sendDeliveryConfirmation(mockPhone, order.orderNumber);
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Delivery confirmed successfully',
       order: {
@@ -580,7 +580,7 @@ router.post('/:id/confirm-delivery', requireAuth, requireRole(['VENDOR', 'ADMIN'
     });
   } catch (error) {
     console.error('Error confirming delivery:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to confirm delivery'
     });
@@ -788,7 +788,7 @@ router.post('/checkout/test', async (req, res) => {
     });
 
     // Return success response
-    res.status(201).json({
+    return res.status(400).json({
       message: 'Order created successfully',
       order: {
         id: newOrder.id,
@@ -812,7 +812,7 @@ router.post('/checkout/test', async (req, res) => {
 
   } catch (error) {
     console.error('Checkout error:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to process checkout'
     });
@@ -881,12 +881,12 @@ router.get('/history/test', async (req, res) => {
       }
     }));
 
-    res.json({
+    return res.json({
       orders: formattedOrders
     });
   } catch (error) {
     console.error('Error fetching order history:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to fetch order history'
     });
@@ -903,7 +903,7 @@ router.post('/:id/confirm-delivery/test', async (req, res) => {
     const order = mockOrders.find(o => o.id === id);
     
     if (!order) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Order not found',
         message: 'Order does not exist'
       });
@@ -929,7 +929,7 @@ router.post('/:id/confirm-delivery/test', async (req, res) => {
     const mockPhone = '+15551234567';
     await sendDeliveryConfirmation(mockPhone, order.orderNumber);
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Delivery confirmed successfully',
       order: {
@@ -944,7 +944,7 @@ router.post('/:id/confirm-delivery/test', async (req, res) => {
     });
   } catch (error) {
     console.error('Error confirming delivery:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to confirm delivery'
     });
@@ -961,7 +961,7 @@ router.post('/:id/send-eta/test', async (req, res) => {
     const order = mockOrders.find(o => o.id === id);
     
     if (!order) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Order not found',
         message: 'Order does not exist'
       });
@@ -978,13 +978,13 @@ router.post('/:id/send-eta/test', async (req, res) => {
       order.orderNumber
     );
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Delivery ETA notification sent successfully'
     });
   } catch (error) {
     console.error('Error sending ETA notification:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to send ETA notification'
     });
@@ -1000,7 +1000,7 @@ router.get('/:id/receipt/test', async (req, res) => {
     const order = mockOrders.find(o => o.id === id);
     
     if (!order) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Order not found',
         message: 'Order does not exist'
       });
@@ -1145,7 +1145,7 @@ router.get('/:id/receipt/test', async (req, res) => {
     doc.end();
   } catch (error) {
     console.error('Error generating receipt:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to generate receipt'
     });

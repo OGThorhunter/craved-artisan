@@ -1,7 +1,7 @@
 import { Router } from "express";
 import Stripe from "stripe";
 import { env } from "../config/env";
-import { prisma } from "../db/prisma";
+import prisma from '/prisma';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2024-06-20" });
 
@@ -33,7 +33,7 @@ r.post("/connect/onboard", async (req, res) => {
     type: "account_onboarding",
   });
 
-  res.json({ url: link.url });
+  return res.json({ url: link.url });
 });
 
 // Read account status
@@ -53,7 +53,7 @@ r.get("/connect/status/:vendorId", async (req,res) => {
       detailsSubmitted: !!account.details_submitted
     }
   });
-  res.json({ connected: true, ...account });
+  return res.json({ connected: true, ...account });
 });
 
 export default r;

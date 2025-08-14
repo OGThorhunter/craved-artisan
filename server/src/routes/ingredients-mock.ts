@@ -92,7 +92,7 @@ const validateRequest = (schema: z.ZodSchema) => {
           errors: error.errors
         });
       }
-      res.status(400).json({ message: 'Invalid request data' });
+      return res.status(400).json({ message: 'Invalid request data' });
     }
   };
 };
@@ -100,13 +100,13 @@ const validateRequest = (schema: z.ZodSchema) => {
 // GET /api/ingredients - Get all ingredients for vendor
 router.get('/', (req, res) => {
   try {
-    res.json({
+    return res.json({
       message: 'Ingredients retrieved successfully',
       ingredients: ingredients
     });
   } catch (error) {
     console.error('Error fetching ingredients:', error);
-    res.status(500).json({ message: 'Failed to fetch ingredients' });
+    return res.status(400).json({ message: 'Failed to fetch ingredients' });
   }
 });
 
@@ -117,16 +117,16 @@ router.get('/:id', (req, res) => {
     const ingredient = ingredients.find(i => i.id === id);
     
     if (!ingredient) {
-      return res.status(404).json({ message: 'Ingredient not found' });
+      return res.status(400).json({ message: 'Ingredient not found' });
     }
     
-    res.json({
+    return res.json({
       message: 'Ingredient retrieved successfully',
       ingredient
     });
   } catch (error) {
     console.error('Error fetching ingredient:', error);
-    res.status(500).json({ message: 'Failed to fetch ingredient' });
+    return res.status(400).json({ message: 'Failed to fetch ingredient' });
   }
 });
 
@@ -143,13 +143,13 @@ router.post('/', validateRequest(createIngredientSchema), (req, res) => {
     
     ingredients.push(newIngredient);
     
-    res.status(201).json({
+    return res.status(400).json({
       message: 'Ingredient created successfully',
       ingredient: newIngredient
     });
   } catch (error) {
     console.error('Error creating ingredient:', error);
-    res.status(500).json({ message: 'Failed to create ingredient' });
+    return res.status(400).json({ message: 'Failed to create ingredient' });
   }
 });
 
@@ -160,7 +160,7 @@ router.put('/:id', validateRequest(updateIngredientSchema), (req, res) => {
     const ingredientIndex = ingredients.findIndex(i => i.id === id);
     
     if (ingredientIndex === -1) {
-      return res.status(404).json({ message: 'Ingredient not found' });
+      return res.status(400).json({ message: 'Ingredient not found' });
     }
     
     const updatedIngredient = {
@@ -171,13 +171,13 @@ router.put('/:id', validateRequest(updateIngredientSchema), (req, res) => {
     
     ingredients[ingredientIndex] = updatedIngredient;
     
-    res.json({
+    return res.json({
       message: 'Ingredient updated successfully',
       ingredient: updatedIngredient
     });
   } catch (error) {
     console.error('Error updating ingredient:', error);
-    res.status(500).json({ message: 'Failed to update ingredient' });
+    return res.status(400).json({ message: 'Failed to update ingredient' });
   }
 });
 
@@ -188,19 +188,19 @@ router.delete('/:id', (req, res) => {
     const ingredientIndex = ingredients.findIndex(i => i.id === id);
     
     if (ingredientIndex === -1) {
-      return res.status(404).json({ message: 'Ingredient not found' });
+      return res.status(400).json({ message: 'Ingredient not found' });
     }
     
     const deletedIngredient = ingredients[ingredientIndex];
     ingredients.splice(ingredientIndex, 1);
     
-    res.json({
+    return res.json({
       message: 'Ingredient deleted successfully',
       ingredient: deletedIngredient
     });
   } catch (error) {
     console.error('Error deleting ingredient:', error);
-    res.status(500).json({ message: 'Failed to delete ingredient' });
+    return res.status(400).json({ message: 'Failed to delete ingredient' });
   }
 });
 

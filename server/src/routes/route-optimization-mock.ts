@@ -186,7 +186,7 @@ router.post('/optimize', async (req, res) => {
       }
     };
 
-    res.json({
+    return res.json({
       success: true,
       optimizedRoute: {
         stops: optimizedStops,
@@ -197,7 +197,7 @@ router.post('/optimize', async (req, res) => {
 
   } catch (error) {
     console.error('Error optimizing route:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Failed to optimize route',
       message: 'Internal server error'
     });
@@ -245,14 +245,14 @@ router.get('/optimize/options', async (req, res) => {
       }
     ];
 
-    res.json({
+    return res.json({
       success: true,
       options: optimizationOptions
     });
 
   } catch (error) {
     console.error('Error fetching optimization options:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Failed to fetch optimization options'
     });
   }

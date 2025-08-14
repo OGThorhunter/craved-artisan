@@ -58,7 +58,7 @@ router.post('/register', validateRequest(registerSchema), async (req: Request, r
     req.session.userId = 'test-user-id';
 
     // Return mock user data
-    res.status(201).json({
+    return res.status(400).json({
       message: 'Account created successfully (TEST MODE)',
       user: {
         id: 'test-user-id',
@@ -76,7 +76,7 @@ router.post('/register', validateRequest(registerSchema), async (req: Request, r
 
   } catch (error) {
     console.error('Register error:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to create account'
     });
@@ -135,7 +135,7 @@ router.post('/login', validateRequest(loginSchema), async (req: Request, res: Re
     // Find user by email
     const user = mockUsers.find(u => u.email === email);
     if (!user) {
-      return res.status(401).json({
+      return res.status(400).json({
         error: 'Invalid credentials',
         message: 'Email or password is incorrect'
       });
@@ -146,7 +146,7 @@ router.post('/login', validateRequest(loginSchema), async (req: Request, res: Re
     const isPasswordValid = await bcrypt.compare(password, mockHashedPassword);
 
     if (!isPasswordValid) {
-      return res.status(401).json({
+      return res.status(400).json({
         error: 'Invalid credentials',
         message: 'Email or password is incorrect'
       });
@@ -166,7 +166,7 @@ router.post('/login', validateRequest(loginSchema), async (req: Request, res: Re
     req.session.save((err) => {
       if (err) {
         console.error('Session save error:', err);
-        return res.status(500).json({
+        return res.status(400).json({
           error: 'Session error',
           message: 'Failed to save session'
         });
@@ -175,7 +175,7 @@ router.post('/login', validateRequest(loginSchema), async (req: Request, res: Re
       console.log('Session saved successfully, userId:', req.session.userId, 'role:', req.session.user?.role);
       
       // Return mock user data
-      res.json({
+      return res.json({
         message: 'Login successful (TEST MODE)',
         user: {
           id: user.userId,
@@ -194,7 +194,7 @@ router.post('/login', validateRequest(loginSchema), async (req: Request, res: Re
 
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to authenticate'
     });
@@ -206,14 +206,14 @@ router.post('/logout', (req: Request, res: Response) => {
   req.session.destroy((err) => {
     if (err) {
       console.error('Logout error:', err);
-      return res.status(500).json({
+      return res.status(400).json({
         error: 'Internal server error',
         message: 'Failed to logout'
       });
     }
 
     res.clearCookie('connect.sid');
-    res.json({
+    return res.json({
       message: 'Logout successful'
     });
   });
@@ -240,7 +240,7 @@ router.get('/session', async (req: Request, res: Response) => {
     // Get user data from session
     const userData = req.session.user;
     
-    res.json({
+    return res.json({
       authenticated: true,
       user: {
         id: req.session.userId,
@@ -260,7 +260,7 @@ router.get('/session', async (req: Request, res: Response) => {
 
   } catch (error) {
     console.error('Session check error:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to check session'
     });

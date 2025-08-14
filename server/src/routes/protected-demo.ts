@@ -14,7 +14,7 @@ const mockUsers = {
 // Mock requireAuth middleware for demonstration
 const requireAuth = (req: Request, res: Response, next: NextFunction) => {
   if (!req.session.userId) {
-    return res.status(401).json({ 
+    return res.status(400).json({ 
       error: 'Authentication required',
       message: 'Please log in to access this resource'
     });
@@ -22,7 +22,7 @@ const requireAuth = (req: Request, res: Response, next: NextFunction) => {
 
   const user = mockUsers[req.session.userId as keyof typeof mockUsers];
   if (!user) {
-    return res.status(401).json({ 
+    return res.status(400).json({ 
       error: 'Invalid session',
       message: 'Please log in again'
     });
@@ -36,14 +36,14 @@ const requireAuth = (req: Request, res: Response, next: NextFunction) => {
 const requireRole = (allowedRoles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {
-      return res.status(401).json({ 
+      return res.status(400).json({ 
         error: 'Authentication required',
         message: 'Please log in to access this resource'
       });
     }
 
     if (!allowedRoles.includes(req.user.role)) {
-      return res.status(403).json({ 
+      return res.status(400).json({ 
         error: 'Access denied',
         message: 'You do not have permission to access this resource'
       });
@@ -55,7 +55,7 @@ const requireRole = (allowedRoles: string[]) => {
 
 // Example protected route that requires authentication
 router.get('/profile', requireAuth, (req: Request, res: Response) => {
-  res.json({
+  return res.json({
     message: 'Protected profile route',
     user: req.user,
     timestamp: new Date().toISOString()
@@ -64,7 +64,7 @@ router.get('/profile', requireAuth, (req: Request, res: Response) => {
 
 // Example route that requires VENDOR role
 router.get('/vendor-dashboard', requireAuth, requireRole(['VENDOR']), (req: Request, res: Response) => {
-  res.json({
+  return res.json({
     message: 'Vendor dashboard - only VENDOR users can access',
     user: req.user,
     dashboard: {
@@ -78,7 +78,7 @@ router.get('/vendor-dashboard', requireAuth, requireRole(['VENDOR']), (req: Requ
 
 // Example route that requires ADMIN role
 router.get('/admin-panel', requireAuth, requireRole(['ADMIN']), (req: Request, res: Response) => {
-  res.json({
+  return res.json({
     message: 'Admin panel - only ADMIN users can access',
     user: req.user,
     adminData: {
@@ -92,7 +92,7 @@ router.get('/admin-panel', requireAuth, requireRole(['ADMIN']), (req: Request, r
 
 // Example route that requires CUSTOMER role
 router.get('/customer-orders', requireAuth, requireRole(['CUSTOMER']), (req: Request, res: Response) => {
-  res.json({
+  return res.json({
     message: 'Customer orders - only CUSTOMER users can access',
     user: req.user,
     orders: [],
@@ -102,7 +102,7 @@ router.get('/customer-orders', requireAuth, requireRole(['CUSTOMER']), (req: Req
 
 // Example route that allows multiple roles
 router.get('/vendor-or-admin', requireAuth, requireRole(['VENDOR', 'ADMIN']), (req: Request, res: Response) => {
-  res.json({
+  return res.json({
     message: 'Vendor or Admin route - VENDOR and ADMIN users can access',
     user: req.user,
     data: {
@@ -114,7 +114,7 @@ router.get('/vendor-or-admin', requireAuth, requireRole(['VENDOR', 'ADMIN']), (r
 
 // Example route that requires specific role
 router.get('/supplier-only', requireAuth, requireRole(['SUPPLIER']), (req: Request, res: Response) => {
-  res.json({
+  return res.json({
     message: 'Supplier only route - only SUPPLIER users can access',
     user: req.user,
     supplierData: {
@@ -127,7 +127,7 @@ router.get('/supplier-only', requireAuth, requireRole(['SUPPLIER']), (req: Reque
 
 // Example route that requires EVENT_COORDINATOR role
 router.get('/event-management', requireAuth, requireRole(['EVENT_COORDINATOR']), (req: Request, res: Response) => {
-  res.json({
+  return res.json({
     message: 'Event management - only EVENT_COORDINATOR users can access',
     user: req.user,
     events: [],
@@ -137,7 +137,7 @@ router.get('/event-management', requireAuth, requireRole(['EVENT_COORDINATOR']),
 
 // Example route that requires DROPOFF role
 router.get('/dropoff-locations', requireAuth, requireRole(['DROPOFF']), (req: Request, res: Response) => {
-  res.json({
+  return res.json({
     message: 'Dropoff locations - only DROPOFF users can access',
     user: req.user,
     locations: [],

@@ -1,4 +1,4 @@
-import { prisma } from "../lib/prisma";
+import prisma from '../lib/prisma';
 
 type Range = { from?: Date; to?: Date };
 

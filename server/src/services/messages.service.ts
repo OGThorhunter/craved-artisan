@@ -1,45 +1,27 @@
-import { prisma } from "../lib/prisma";
+import prisma from '../lib/prisma';
 
-interface ListConversationsParams {
-  vendorId?: string;
-  customerId?: string;
-  status?: string;
-  q?: string;
-  limit?: number;
-  offset?: number;
-}
-
-interface CreateConversationParams {
-  vendorId: string;
+export interface CreateConversationParams {
+  vendorProfileId: string;
   customerId: string;
   subject?: string;
 }
 
-interface AddMessageParams {
+export interface AddMessageParams {
   conversationId: string;
-  senderRole: string;
+  senderRole: 'vendor' | 'customer';
   senderId: string;
   body: string;
   attachments?: string[];
 }
 
-export async function listConversations(params: ListConversationsParams) {
-  const { vendorId, customerId, status, q, limit = 30, offset = 0 } = params;
+export async function getConversations(vendorProfileId: string, { limit = 20, offset = 0 } = {}) {
+  // Conversation and Message models not available in current schema
+  throw new Error("Messaging functionality not available in current schema");
   
-  const where: any = {};
-  
-  if (vendorId) where.vendorId = vendorId;
-  if (customerId) where.customerId = customerId;
-  if (status && status !== 'all') where.status = status;
-  if (q) {
-    where.OR = [
-      { subject: { contains: q, mode: 'insensitive' } },
-      { messages: { some: { body: { contains: q, mode: 'insensitive' } } } }
-    ];
-  }
-  
+  // TODO: Restore when models are properly implemented
+  /*
   const conversations = await prisma.conversation.findMany({
-    where,
+    where: { vendorProfileId },
     include: {
       messages: {
         orderBy: { createdAt: 'desc' },
@@ -52,9 +34,15 @@ export async function listConversations(params: ListConversationsParams) {
   });
   
   return conversations;
+  */
 }
 
 export async function getConversation(id: string) {
+  // Conversation model not available in current schema
+  throw new Error("Messaging functionality not available in current schema");
+  
+  // TODO: Restore when models are properly implemented
+  /*
   const conversation = await prisma.conversation.findUnique({
     where: { id },
     include: {
@@ -68,23 +56,35 @@ export async function getConversation(id: string) {
   });
   
   return conversation;
+  */
 }
 
 export async function createConversation(params: CreateConversationParams) {
-  const { vendorId, customerId, subject } = params;
+  // Conversation model not available in current schema
+  throw new Error("Messaging functionality not available in current schema");
+  
+  // TODO: Restore when models are properly implemented
+  /*
+  const { vendorProfileId, customerId, subject } = params;
   
   const conversation = await prisma.conversation.create({
     data: {
-      vendorId,
+      vendorProfileId,
       customerId,
       subject: subject || `Conversation with ${customerId}`
     }
   });
   
   return conversation;
+  */
 }
 
 export async function addMessage(params: AddMessageParams) {
+  // Message and Conversation models not available in current schema
+  throw new Error("Messaging functionality not available in current schema");
+  
+  // TODO: Restore when models are properly implemented
+  /*
   const { conversationId, senderRole, senderId, body, attachments = [] } = params;
   
   // Analyze sentiment (naive implementation)
@@ -131,9 +131,15 @@ export async function addMessage(params: AddMessageParams) {
   });
   
   return message;
+  */
 }
 
 export async function markRead(conversationId: string, userId: string) {
+  // Message model not available in current schema
+  throw new Error("Messaging functionality not available in current schema");
+  
+  // TODO: Restore when models are properly implemented
+  /*
   // Mark all messages in the conversation as read by this user
   await prisma.message.updateMany({
     where: { conversationId },
@@ -143,6 +149,5 @@ export async function markRead(conversationId: string, userId: string) {
       }
     }
   });
-  
-  return { success: true };
+  */
 }

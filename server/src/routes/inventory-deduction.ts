@@ -177,7 +177,7 @@ const validateRequest = (schema: z.ZodSchema) => {
           errors: error.errors
         });
       }
-      res.status(400).json({ message: 'Invalid request data' });
+      return res.status(400).json({ message: 'Invalid request data' });
     }
   };
 };
@@ -329,14 +329,14 @@ router.post('/deduct', validateRequest(deductInventorySchema), (req, res) => {
     const result = deductInventory(productId, quantitySold);
     
     if (result.success) {
-      res.status(200).json({
+      return res.status(400).json({
         message: result.message,
         recipeName: result.recipeName,
         deductedIngredients: result.deductedIngredients,
         lowStockAlerts: result.lowStockAlerts
       });
     } else {
-      res.status(400).json({
+      return res.status(400).json({
         message: result.error,
         deductedIngredients: result.deductedIngredients,
         lowStockAlerts: result.lowStockAlerts
@@ -344,7 +344,7 @@ router.post('/deduct', validateRequest(deductInventorySchema), (req, res) => {
     }
   } catch (error) {
     console.error('Error in deduct inventory endpoint:', error);
-    res.status(500).json({ 
+    return res.status(400).json({ 
       message: 'Failed to deduct inventory',
       error: 'Internal server error'
     });
@@ -366,7 +366,7 @@ router.get('/status', (req, res) => {
 
     const lowStockItems = inventoryStatus.filter(item => item.isLowStock);
 
-    res.json({
+    return res.json({
       message: 'Inventory status retrieved successfully',
       totalIngredients: inventoryStatus.length,
       lowStockCount: lowStockItems.length,
@@ -375,7 +375,7 @@ router.get('/status', (req, res) => {
     });
   } catch (error) {
     console.error('Error getting inventory status:', error);
-    res.status(500).json({ message: 'Failed to get inventory status' });
+    return res.status(400).json({ message: 'Failed to get inventory status' });
   }
 });
 
@@ -403,13 +403,13 @@ router.get('/recipes', (req, res) => {
         })
     }));
 
-    res.json({
+    return res.json({
       message: 'Recipes with inventory information retrieved successfully',
       recipes: recipesWithProducts
     });
   } catch (error) {
     console.error('Error getting recipes with inventory:', error);
-    res.status(500).json({ message: 'Failed to get recipes with inventory' });
+    return res.status(400).json({ message: 'Failed to get recipes with inventory' });
   }
 });
 
@@ -426,7 +426,7 @@ router.post('/low-stock-recommendations', (req, res) => {
     
     const recommendations = getLowStockRecommendations(lowStockIngredients);
     
-    res.json({
+    return res.json({
       message: `Generated ${recommendations.length} recommendations for low stock items`,
       recommendations,
       summary: {
@@ -439,7 +439,7 @@ router.post('/low-stock-recommendations', (req, res) => {
     });
   } catch (error) {
     console.error('Error getting low stock recommendations:', error);
-    res.status(500).json({ 
+    return res.status(400).json({ 
       message: 'Failed to get recommendations',
       error: 'Internal server error'
     });

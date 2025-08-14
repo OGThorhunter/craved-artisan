@@ -1,9 +1,9 @@
 import Stripe from 'stripe';
-import { prisma } from '../lib/prisma';
+import prisma, { OrderStatus, Role } from '../lib/prisma';
 
 // Initialize Stripe with your secret key
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-12-18.acacia',
+  apiVersion: '2023-10-16',
 });
 
 // Commission rate (2%)
@@ -203,7 +203,7 @@ export class StripeService {
           stripeTransferId: transfers.map(t => t.id).join(','),
           commissionAmount: commissionAmount,
           vendorPayoutAmount: vendorPayoutAmount,
-          status: 'PAID',
+          status: OrderStatus.CONFIRMED,
         },
       });
 

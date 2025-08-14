@@ -78,7 +78,7 @@ router.post("/predict", requireAuth, async (req, res) => {
       predictedMargin >= 0.2 ? "📊 Standard Margin" :
       "⚠️ Low Margin";
 
-    res.json({ 
+    return res.json({ 
       predictedFulfillmentTime, 
       label,
       baseEstimate,
@@ -91,7 +91,7 @@ router.post("/predict", requireAuth, async (req, res) => {
 
   } catch (error) {
     console.error('Error predicting fulfillment time:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to predict fulfillment time'
     });

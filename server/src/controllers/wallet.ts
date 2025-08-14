@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { prisma } from '../lib/prisma';
+import prisma from '/prisma';
 import {
   getOrCreateWallet,
   getWalletBalance,

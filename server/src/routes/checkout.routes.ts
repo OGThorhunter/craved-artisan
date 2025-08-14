@@ -1,6 +1,6 @@
 import { Router } from "express";
 import Stripe from "stripe";
-import { prisma } from "../db/prisma";
+import prisma from '/prisma';
 import { env } from "../config/env";
 import { ensurePendingOrder, createOrUpdatePaymentIntent } from "../services/checkout.service";
 import { sendOrderConfirmation } from "../services/email.service";
@@ -17,7 +17,7 @@ r.post("/create-intent", async (req, res) => {
   const { cartId, customerId, zip, email, billingZip } = req.body;
   const order = await ensurePendingOrder(cartId, customerId, zip);
   const pi = await createOrUpdatePaymentIntent(order.id, email, billingZip);
-  res.json({ clientSecret: pi.client_secret, orderId: order.id });
+  return res.json({ clientSecret: pi.client_secret, orderId: order.id });
 });
 
 // Webhook: finalize order and create transfers per vendor
@@ -106,7 +106,7 @@ webhookRouter.post("/webhook", async (req, res) => {
     if (orderId) await prisma.order.update({ where: { id: orderId }, data: { status: "failed" } });
   }
 
-  res.json({ received: true });
+  return res.json({ received: true });
 });
 
 // Mount webhook router on main router

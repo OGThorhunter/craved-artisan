@@ -21,7 +21,7 @@ router.get("/conversations/:id", getConversation);
 // PATCH /api/messages/conversations/:id
 router.patch("/conversations/:id", (req, res) => {
   // TODO: Implement update conversation
-  res.status(501).json({ error: "Not implemented yet" });
+  return res.status(400).json({ error: "Not implemented yet" });
 });
 
 // POST /api/messages/conversations/:id/message

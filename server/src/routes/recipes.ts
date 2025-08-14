@@ -1,6 +1,6 @@
 import express from 'express';
 import { z } from 'zod';
-import { prisma } from '../lib/prisma';
+import prisma from '/prisma';
 import { requireAuth, requireRole } from '../middleware/auth';
 
 const router = express.Router();
@@ -62,7 +62,7 @@ router.get('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
     });
 
     if (!vendorProfile) {
-      return res.status(404).json({ message: 'Vendor profile not found' });
+      return res.status(400).json({ message: 'Vendor profile not found' });
     }
 
     const recipes = await prisma.recipe.findMany({
@@ -84,13 +84,13 @@ router.get('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
       orderBy: { name: 'asc' }
     });
 
-    res.json({
+    return res.json({
       recipes,
       count: recipes.length
     });
   } catch (error) {
     console.error('Error fetching recipes:', error);
-    res.status(500).json({ message: 'Failed to fetch recipes' });
+    return res.status(400).json({ message: 'Failed to fetch recipes' });
   }
 });
 
@@ -104,7 +104,7 @@ router.get('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
     });
 
     if (!vendorProfile) {
-      return res.status(404).json({ message: 'Vendor profile not found' });
+      return res.status(400).json({ message: 'Vendor profile not found' });
     }
 
     const recipe = await prisma.recipe.findFirst({
@@ -124,13 +124,13 @@ router.get('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
     });
 
     if (!recipe) {
-      return res.status(404).json({ message: 'Recipe not found' });
+      return res.status(400).json({ message: 'Recipe not found' });
     }
 
-    res.json({ recipe });
+    return res.json({ recipe });
   } catch (error) {
     console.error('Error fetching recipe:', error);
-    res.status(500).json({ message: 'Failed to fetch recipe' });
+    return res.status(400).json({ message: 'Failed to fetch recipe' });
   }
 });
 
@@ -144,7 +144,7 @@ router.get('/:id/ingredients', requireAuth, requireRole(['VENDOR']), async (req,
     });
 
     if (!vendorProfile) {
-      return res.status(404).json({ message: 'Vendor profile not found' });
+      return res.status(400).json({ message: 'Vendor profile not found' });
     }
 
     // Check if recipe exists and belongs to vendor
@@ -156,7 +156,7 @@ router.get('/:id/ingredients', requireAuth, requireRole(['VENDOR']), async (req,
     });
 
     if (!recipe) {
-      return res.status(404).json({ message: 'Recipe not found' });
+      return res.status(400).json({ message: 'Recipe not found' });
     }
 
     const recipeIngredients = await prisma.recipeIngredient.findMany({
@@ -167,13 +167,13 @@ router.get('/:id/ingredients', requireAuth, requireRole(['VENDOR']), async (req,
       orderBy: { ingredient: { name: 'asc' } }
     });
 
-    res.json({
+    return res.json({
       recipeIngredients,
       count: recipeIngredients.length
     });
   } catch (error) {
     console.error('Error fetching recipe ingredients:', error);
-    res.status(500).json({ message: 'Failed to fetch recipe ingredients' });
+    return res.status(400).json({ message: 'Failed to fetch recipe ingredients' });
   }
 });
 
@@ -185,7 +185,7 @@ router.post('/', requireAuth, requireRole(['VENDOR']), validateRequest(createRec
     });
 
     if (!vendorProfile) {
-      return res.status(404).json({ message: 'Vendor profile not found' });
+      return res.status(400).json({ message: 'Vendor profile not found' });
     }
 
     // If productId is provided, verify it belongs to the vendor
@@ -218,13 +218,13 @@ router.post('/', requireAuth, requireRole(['VENDOR']), validateRequest(createRec
       }
     });
 
-    res.status(201).json({
+    return res.status(400).json({
       message: 'Recipe created successfully',
       recipe
     });
   } catch (error) {
     console.error('Error creating recipe:', error);
-    res.status(500).json({ message: 'Failed to create recipe' });
+    return res.status(400).json({ message: 'Failed to create recipe' });
   }
 });
 
@@ -238,7 +238,7 @@ router.put('/:id', requireAuth, requireRole(['VENDOR']), validateRequest(updateR
     });
 
     if (!vendorProfile) {
-      return res.status(404).json({ message: 'Vendor profile not found' });
+      return res.status(400).json({ message: 'Vendor profile not found' });
     }
 
     // Check if recipe exists and belongs to vendor
@@ -250,7 +250,7 @@ router.put('/:id', requireAuth, requireRole(['VENDOR']), validateRequest(updateR
     });
 
     if (!existingRecipe) {
-      return res.status(404).json({ message: 'Recipe not found' });
+      return res.status(400).json({ message: 'Recipe not found' });
     }
 
     // If productId is provided, verify it belongs to the vendor
@@ -281,13 +281,13 @@ router.put('/:id', requireAuth, requireRole(['VENDOR']), validateRequest(updateR
       }
     });
 
-    res.json({
+    return res.json({
       message: 'Recipe updated successfully',
       recipe
     });
   } catch (error) {
     console.error('Error updating recipe:', error);
-    res.status(500).json({ message: 'Failed to update recipe' });
+    return res.status(400).json({ message: 'Failed to update recipe' });
   }
 });
 
@@ -301,7 +301,7 @@ router.delete('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => 
     });
 
     if (!vendorProfile) {
-      return res.status(404).json({ message: 'Vendor profile not found' });
+      return res.status(400).json({ message: 'Vendor profile not found' });
     }
 
     // Check if recipe exists and belongs to vendor
@@ -313,7 +313,7 @@ router.delete('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => 
     });
 
     if (!existingRecipe) {
-      return res.status(404).json({ message: 'Recipe not found' });
+      return res.status(400).json({ message: 'Recipe not found' });
     }
 
     // Delete recipe (recipe ingredients will be deleted due to CASCADE)
@@ -321,10 +321,10 @@ router.delete('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => 
       where: { id }
     });
 
-    res.json({ message: 'Recipe deleted successfully' });
+    return res.json({ message: 'Recipe deleted successfully' });
   } catch (error) {
     console.error('Error deleting recipe:', error);
-    res.status(500).json({ message: 'Failed to delete recipe' });
+    return res.status(400).json({ message: 'Failed to delete recipe' });
   }
 });
 
@@ -339,7 +339,7 @@ router.post('/:id/ingredients', requireAuth, requireRole(['VENDOR']), validateRe
     });
 
     if (!vendorProfile) {
-      return res.status(404).json({ message: 'Vendor profile not found' });
+      return res.status(400).json({ message: 'Vendor profile not found' });
     }
 
     // Check if recipe exists and belongs to vendor
@@ -351,7 +351,7 @@ router.post('/:id/ingredients', requireAuth, requireRole(['VENDOR']), validateRe
     });
 
     if (!recipe) {
-      return res.status(404).json({ message: 'Recipe not found' });
+      return res.status(400).json({ message: 'Recipe not found' });
     }
 
     // Verify all ingredients belong to the vendor
@@ -422,14 +422,14 @@ router.post('/:id/ingredients', requireAuth, requireRole(['VENDOR']), validateRe
       return createdIngredients;
     });
 
-    res.status(201).json({
+    return res.status(400).json({
       message: 'Ingredients added to recipe successfully',
       recipeIngredients,
       count: recipeIngredients.length
     });
   } catch (error) {
     console.error('Error adding ingredients to recipe:', error);
-    res.status(500).json({ message: 'Failed to add ingredients to recipe' });
+    return res.status(400).json({ message: 'Failed to add ingredients to recipe' });
   }
 });
 
@@ -443,7 +443,7 @@ router.delete('/:id/ingredients/:ingredientId', requireAuth, requireRole(['VENDO
     });
 
     if (!vendorProfile) {
-      return res.status(404).json({ message: 'Vendor profile not found' });
+      return res.status(400).json({ message: 'Vendor profile not found' });
     }
 
     // Check if recipe exists and belongs to vendor
@@ -455,7 +455,7 @@ router.delete('/:id/ingredients/:ingredientId', requireAuth, requireRole(['VENDO
     });
 
     if (!recipe) {
-      return res.status(404).json({ message: 'Recipe not found' });
+      return res.status(400).json({ message: 'Recipe not found' });
     }
 
     // Delete the recipe ingredient
@@ -468,10 +468,10 @@ router.delete('/:id/ingredients/:ingredientId', requireAuth, requireRole(['VENDO
       }
     });
 
-    res.json({ message: 'Ingredient removed from recipe successfully' });
+    return res.json({ message: 'Ingredient removed from recipe successfully' });
   } catch (error) {
     console.error('Error removing ingredient from recipe:', error);
-    res.status(500).json({ message: 'Failed to remove ingredient from recipe' });
+    return res.status(400).json({ message: 'Failed to remove ingredient from recipe' });
   }
 });
 
@@ -485,7 +485,7 @@ router.post('/:id/version', requireAuth, requireRole(['VENDOR']), async (req, re
     });
 
     if (!vendorProfile) {
-      return res.status(404).json({ message: 'Vendor profile not found' });
+      return res.status(400).json({ message: 'Vendor profile not found' });
     }
 
     // Get the recipe with all its ingredients and their current costs
@@ -504,7 +504,7 @@ router.post('/:id/version', requireAuth, requireRole(['VENDOR']), async (req, re
     });
 
     if (!recipe) {
-      return res.status(404).json({ message: 'Recipe not found' });
+      return res.status(400).json({ message: 'Recipe not found' });
     }
 
     if (recipe.recipeIngredients.length === 0) {
@@ -571,7 +571,7 @@ router.post('/:id/version', requireAuth, requireRole(['VENDOR']), async (req, re
       }
     });
 
-    res.status(201).json({
+    return res.status(400).json({
       message: `Recipe version ${nextVersion} created successfully`,
       recipeVersion: {
         id: recipeVersion.id,
@@ -600,7 +600,7 @@ router.post('/:id/version', requireAuth, requireRole(['VENDOR']), async (req, re
     });
   } catch (error) {
     console.error('Error creating recipe version:', error);
-    res.status(500).json({ message: 'Failed to create recipe version' });
+    return res.status(400).json({ message: 'Failed to create recipe version' });
   }
 });
 

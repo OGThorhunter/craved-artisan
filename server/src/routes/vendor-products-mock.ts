@@ -197,19 +197,19 @@ router.get('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
     if (req.session.userId === 'mock-user-id') {
       const vendorProducts = mockProducts.filter(product => product.vendorProfileId === 'mock-vendor-id');
       
-      res.json({
+      return res.json({
         products: vendorProducts,
         count: vendorProducts.length
       });
     } else {
-      res.json({
+      return res.json({
         products: [],
         count: 0
       });
     }
   } catch (error) {
     console.error('Error fetching vendor products:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to fetch products'
     });
@@ -224,7 +224,7 @@ router.post('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
     if (!validationResult.success) {
       return res.status(400).json({
         error: 'Validation failed',
-        details: validationResult.error.errors
+        details: validationResult.errors
       });
     }
 
@@ -232,7 +232,7 @@ router.post('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
 
     // Simulate vendor profile lookup
     if (req.session.userId !== 'mock-user-id') {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Vendor profile not found',
         message: 'Please create your vendor profile first'
       });
@@ -267,15 +267,15 @@ router.post('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
       updatedAt: new Date().toISOString()
     };
 
-    mockProducts.push(newProduct);
+    mockProducts.push({ ...newProduct, recipeId: null, onWatchlist: false, lastAiSuggestion: null, aiSuggestionNote: null });
 
-    res.status(201).json({
+    return res.status(400).json({
       message: 'Product created successfully',
       product: newProduct
     });
   } catch (error) {
     console.error('Error creating product:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to create product'
     });
@@ -289,7 +289,7 @@ router.get('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
 
     // Simulate vendor profile lookup
     if (req.session.userId !== 'mock-user-id') {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Vendor profile not found',
         message: 'Please create your vendor profile first'
       });
@@ -299,16 +299,16 @@ router.get('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
     const product = mockProducts.find(p => p.id === id && p.vendorProfileId === 'mock-vendor-id');
 
     if (!product) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Product not found',
         message: 'Product does not exist or does not belong to you'
       });
     }
 
-    res.json(product);
+    return res.json(product);
   } catch (error) {
     console.error('Error fetching product:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to fetch product'
     });
@@ -325,7 +325,7 @@ router.put('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
     if (!validationResult.success) {
       return res.status(400).json({
         error: 'Validation failed',
-        details: validationResult.error.errors
+        details: validationResult.errors
       });
     }
 
@@ -333,7 +333,7 @@ router.put('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
 
     // Simulate vendor profile lookup
     if (req.session.userId !== 'mock-user-id') {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Vendor profile not found',
         message: 'Please create your vendor profile first'
       });
@@ -343,7 +343,7 @@ router.put('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
     const productIndex = mockProducts.findIndex(p => p.id === id && p.vendorProfileId === 'mock-vendor-id');
 
     if (productIndex === -1) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Product not found',
         message: 'Product does not exist or does not belong to you'
       });
@@ -382,13 +382,13 @@ router.put('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
       updatedAt: new Date().toISOString()
     };
 
-    res.json({
+    return res.json({
       message: 'Product updated successfully',
       product: mockProducts[productIndex]
     });
   } catch (error) {
     console.error('Error updating product:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to update product'
     });
@@ -402,7 +402,7 @@ router.delete('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => 
 
     // Simulate vendor profile lookup
     if (req.session.userId !== 'mock-user-id') {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Vendor profile not found',
         message: 'Please create your vendor profile first'
       });
@@ -412,7 +412,7 @@ router.delete('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => 
     const productIndex = mockProducts.findIndex(p => p.id === id && p.vendorProfileId === 'mock-vendor-id');
 
     if (productIndex === -1) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Product not found',
         message: 'Product does not exist or does not belong to you'
       });
@@ -421,12 +421,12 @@ router.delete('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => 
     // Remove the product
     mockProducts.splice(productIndex, 1);
 
-    res.json({
+    return res.json({
       message: 'Product deleted successfully'
     });
   } catch (error) {
     console.error('Error deleting product:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to delete product'
     });
@@ -440,7 +440,7 @@ router.get('/:id/ai-suggestion', requireAuth, requireRole(['VENDOR']), async (re
 
     // Simulate vendor profile lookup
     if (req.session.userId !== 'mock-user-id') {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Vendor profile not found',
         message: 'Please create your vendor profile first'
       });
@@ -450,7 +450,7 @@ router.get('/:id/ai-suggestion', requireAuth, requireRole(['VENDOR']), async (re
     const product = mockProducts.find(p => p.id === id && p.vendorProfileId === 'mock-vendor-id');
 
     if (!product) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Product not found',
         message: 'Product does not exist or does not belong to you'
       });
@@ -485,7 +485,7 @@ router.get('/:id/ai-suggestion', requireAuth, requireRole(['VENDOR']), async (re
       };
     }
 
-    res.json({
+    return res.json({
       product: {
         id: product.id,
         name: product.name,
@@ -507,7 +507,7 @@ router.get('/:id/ai-suggestion', requireAuth, requireRole(['VENDOR']), async (re
     });
   } catch (error) {
     console.error('Error generating AI price suggestion:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to generate AI price suggestion'
     });
@@ -521,7 +521,7 @@ router.post('/:id/ai-suggest', requireAuth, requireRole(['VENDOR']), async (req,
 
     // Simulate vendor profile lookup
     if (req.session.userId !== 'mock-user-id') {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Vendor profile not found',
         message: 'Please create your vendor profile first'
       });
@@ -531,7 +531,7 @@ router.post('/:id/ai-suggest', requireAuth, requireRole(['VENDOR']), async (req,
     const product = mockProducts.find(p => p.id === id && p.vendorProfileId === 'mock-vendor-id');
 
     if (!product) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Product not found',
         message: 'Product does not exist or does not belong to you'
       });
@@ -572,7 +572,7 @@ router.post('/:id/ai-suggest', requireAuth, requireRole(['VENDOR']), async (req,
       };
     }
 
-    res.json({
+    return res.json({
       message: 'AI suggestion applied successfully',
       product: {
         id: product.id,
@@ -603,7 +603,7 @@ router.post('/:id/ai-suggest', requireAuth, requireRole(['VENDOR']), async (req,
     });
   } catch (error) {
     console.error('Error applying AI price suggestion:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to apply AI price suggestion'
     });
@@ -615,7 +615,7 @@ router.get('/alerts/margin', requireAuth, requireRole(['VENDOR']), async (req, r
   try {
     // Simulate vendor profile lookup
     if (req.session.userId !== 'mock-user-id') {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Vendor profile not found',
         message: 'Please create your vendor profile first'
       });
@@ -640,7 +640,7 @@ router.get('/alerts/margin', requireAuth, requireRole(['VENDOR']), async (req, r
       };
     });
 
-    res.json({
+    return res.json({
       products: productsWithMarginData,
       count: productsWithMarginData.length,
       summary: {
@@ -651,7 +651,7 @@ router.get('/alerts/margin', requireAuth, requireRole(['VENDOR']), async (req, r
     });
   } catch (error) {
     console.error('Error fetching products with margin alerts:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to fetch products with margin alerts'
     });

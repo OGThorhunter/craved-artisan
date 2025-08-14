@@ -59,7 +59,7 @@ router.post('/register', validateRequest(registerSchema), async (req: Request, r
     });
 
     if (existingUser) {
-      return res.status(409).json({
+      return res.status(400).json({
         error: 'User already exists',
         message: 'An account with this email already exists'
       });
@@ -99,7 +99,7 @@ router.post('/register', validateRequest(registerSchema), async (req: Request, r
     req.session.userId = result.user.id;
 
     // Return user data (without password)
-    res.status(201).json({
+    return res.status(400).json({
       message: 'Account created successfully',
       user: {
         id: result.user.id,
@@ -117,7 +117,7 @@ router.post('/register', validateRequest(registerSchema), async (req: Request, r
 
   } catch (error) {
     console.error('Register error:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to create account'
     });
@@ -138,7 +138,7 @@ router.post('/login', validateRequest(loginSchema), async (req: Request, res: Re
     });
 
     if (!user) {
-      return res.status(401).json({
+      return res.status(400).json({
         error: 'Invalid credentials',
         message: 'Email or password is incorrect'
       });
@@ -147,7 +147,7 @@ router.post('/login', validateRequest(loginSchema), async (req: Request, res: Re
     // Check password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return res.status(401).json({
+      return res.status(400).json({
         error: 'Invalid credentials',
         message: 'Email or password is incorrect'
       });
@@ -157,7 +157,7 @@ router.post('/login', validateRequest(loginSchema), async (req: Request, res: Re
     req.session.userId = user.id;
 
     // Return user data (without password)
-    res.json({
+    return res.json({
       message: 'Login successful',
       user: {
         id: user.id,
@@ -175,7 +175,7 @@ router.post('/login', validateRequest(loginSchema), async (req: Request, res: Re
 
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to authenticate'
     });
@@ -187,14 +187,14 @@ router.post('/logout', (req: Request, res: Response) => {
   req.session.destroy((err) => {
     if (err) {
       console.error('Logout error:', err);
-      return res.status(500).json({
+      return res.status(400).json({
         error: 'Internal server error',
         message: 'Failed to logout'
       });
     }
 
     res.clearCookie('connect.sid');
-    res.json({
+    return res.json({
       message: 'Logout successful'
     });
   });
@@ -211,13 +211,13 @@ router.get('/me', requireAuth, async (req: Request, res: Response) => {
     });
 
     if (!user) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'User not found',
         message: 'User account not found'
       });
     }
 
-    res.json({
+    return res.json({
       user: {
         id: user.id,
         email: user.email,
@@ -234,7 +234,7 @@ router.get('/me', requireAuth, async (req: Request, res: Response) => {
 
   } catch (error) {
     console.error('Get current user error:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to get user data'
     });
@@ -245,7 +245,7 @@ router.get('/me', requireAuth, async (req: Request, res: Response) => {
 router.get('/session', async (req: Request, res: Response) => {
   try {
     if (!req.session.userId) {
-      return res.status(401).json({
+      return res.status(400).json({
         authenticated: false,
         message: 'No active session'
       });
@@ -265,13 +265,13 @@ router.get('/session', async (req: Request, res: Response) => {
           console.error('Error destroying session:', err);
         }
       });
-      return res.status(401).json({
+      return res.status(400).json({
         authenticated: false,
         message: 'Invalid session'
       });
     }
 
-    res.json({
+    return res.json({
       authenticated: true,
       user: {
         id: user.id,
@@ -289,7 +289,7 @@ router.get('/session', async (req: Request, res: Response) => {
 
   } catch (error) {
     console.error('Session check error:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to check session'
     });

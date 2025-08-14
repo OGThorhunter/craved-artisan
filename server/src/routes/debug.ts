@@ -6,14 +6,14 @@ const router = Router();
 router.get('/cookies', (req: Request, res: Response) => {
   // Only allow in development
   if (process.env.NODE_ENV === 'production') {
-    return res.status(404).json({ error: 'Debug endpoints not available in production' });
+    return res.status(400).json({ error: 'Debug endpoints not available in production' });
   }
 
   const cookies = req.cookies || {};
   const signedCookies = req.signedCookies || {};
   const sessionCookie = req.sessionID;
 
-  res.json({
+  return res.json({
     timestamp: new Date().toISOString(),
     cookies,
     signedCookies,
@@ -29,7 +29,7 @@ router.get('/cookies', (req: Request, res: Response) => {
 router.get('/headers', (req: Request, res: Response) => {
   // Only allow in development
   if (process.env.NODE_ENV === 'production') {
-    return res.status(404).json({ error: 'Debug endpoints not available in production' });
+    return res.status(400).json({ error: 'Debug endpoints not available in production' });
   }
 
   // Capture response headers after they're set
@@ -53,7 +53,7 @@ router.get('/headers', (req: Request, res: Response) => {
     cookie: req.headers.cookie ? '[REDACTED]' : undefined
   };
 
-  res.json({
+  return res.json({
     timestamp: new Date().toISOString(),
     method: req.method,
     url: req.url,
@@ -71,7 +71,7 @@ router.get('/headers', (req: Request, res: Response) => {
 router.get('/cors-config', (req: Request, res: Response) => {
   // Only allow in development
   if (process.env.NODE_ENV === 'production') {
-    return res.status(404).json({ error: 'Debug endpoints not available in production' });
+    return res.status(400).json({ error: 'Debug endpoints not available in production' });
   }
 
   const allowedOrigins = [
@@ -86,7 +86,7 @@ router.get('/cors-config', (req: Request, res: Response) => {
     process.env.CLIENT_URL
   ].filter(Boolean);
 
-  res.json({
+  return res.json({
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
     allowedOrigins,
@@ -101,10 +101,10 @@ router.get('/cors-config', (req: Request, res: Response) => {
 router.get('/session-config', (req: Request, res: Response) => {
   // Only allow in development
   if (process.env.NODE_ENV === 'production') {
-    return res.status(404).json({ error: 'Debug endpoints not available in production' });
+    return res.status(400).json({ error: 'Debug endpoints not available in production' });
   }
 
-  res.json({
+  return res.json({
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
     sessionId: req.sessionID,

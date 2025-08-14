@@ -1,4 +1,4 @@
-import { prisma } from '../lib/prisma';
+import prisma from '/prisma';
 import PDFDocument from 'pdfkit';
 import { format, startOfYear, endOfYear } from 'date-fns';
 

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
-import { prisma } from '../lib/prisma';
+import prisma from '/prisma';
 import { vendorOverview, vendorBestSellers } from '../services/analytics.service';
 import { LRUCache } from 'lru-cache';
 

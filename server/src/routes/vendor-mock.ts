@@ -20,16 +20,16 @@ router.get('/profile', requireAuth, requireRole(['VENDOR']), async (req, res) =>
   try {
     // Simulate database lookup
     if (req.session.userId === 'dev-user-id') {
-      res.json(mockVendorProfile);
+      return res.json(mockVendorProfile);
     } else {
-      res.status(404).json({
+      return res.status(400).json({
         error: 'Vendor profile not found',
         message: 'No vendor profile exists for this user'
       });
     }
   } catch (error) {
     console.error('Error fetching vendor profile:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to fetch vendor profile'
     });
@@ -61,10 +61,10 @@ router.put('/profile', requireAuth, requireRole(['VENDOR']), async (req, res) =>
       updatedAt: new Date().toISOString()
     };
     
-    res.json(mockVendorProfile);
+    return res.json(mockVendorProfile);
   } catch (error) {
     console.error('Error updating vendor profile:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to update vendor profile'
     });
@@ -93,10 +93,10 @@ router.get('/:id/delivery-metrics/test', async (req, res) => {
       delayedDeliveries: 5
     };
 
-    res.json(mockDeliveryMetrics);
+    return res.json(mockDeliveryMetrics);
   } catch (error) {
     console.error('Error fetching mock delivery metrics:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to fetch delivery metrics'
     });

@@ -1,4 +1,4 @@
-import { prisma } from '../lib/prisma';
+import prisma from '/prisma';
 import { validateCostToMargin, calculateMarginWithAI } from '../utils/marginCalculator';
 
 // Mock market data - in production, this would come from external APIs or databases

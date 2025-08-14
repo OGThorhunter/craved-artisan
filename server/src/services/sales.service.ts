@@ -1,4 +1,4 @@
-import { prisma } from "../lib/prisma";
+import prisma from '../lib/prisma';
 import { consumeForRecipe, computeRecipeUnitCost } from "./inventory.service";
 
 export async function snapshotCogsForOrderItem(orderItemId: string) {
@@ -8,24 +8,24 @@ export async function snapshotCogsForOrderItem(orderItemId: string) {
   });
   if (!item) return;
 
-  const vendorId = item.order.vendor_id;
-  let cogsUnit = 0;
+  const vendorProfileId = item.product.vendorProfileId;
+  let cost = 0;
 
   if (item.product.recipeId) {
     // consume ingredients and compute cogs from inventory basis
-    cogsUnit = await consumeForRecipe(vendorId, item.product.recipeId, Number(item.quantity));
-    // cogsUnit is per 1 finished unit — above returns per unit; ensure we store per unit, not total
+    cost = await consumeForRecipe(vendorProfileId, item.product.recipeId, Number(item.quantity));
+    // cost is per 1 finished unit — above returns per unit; ensure we store per unit, not total
   } else {
     // fallback to static recipe cost (no live inventory impact)
     try {
-      cogsUnit = await computeRecipeUnitCost(item.product.recipeId!);
+      cost = await computeRecipeUnitCost(item.product.recipeId!);
     } catch { 
-      cogsUnit = 0; 
+      cost = 0; 
     }
   }
 
   await prisma.orderItem.update({ 
     where: { id: orderItemId }, 
-    data: { cogsUnit } 
+    data: { cost } 
   });
 }

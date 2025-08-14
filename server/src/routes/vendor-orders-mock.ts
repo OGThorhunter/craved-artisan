@@ -165,14 +165,14 @@ const mockVendorOrders: any[] = [
 ];
 
 // GET /api/vendor/orders - Get all orders for vendor's products
-router.get('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.get('/', requireAuth, requireRole(['VENDOR' as Role]), async (req, res) => {
   try {
-    res.json({
+    return res.json({
       orders: mockVendorOrders
     });
   } catch (error) {
     console.error('Error fetching vendor orders:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to fetch orders'
     });
@@ -180,7 +180,7 @@ router.get('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
 });
 
 // GET /api/vendor/orders/stats - Get order statistics
-router.get('/stats', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.get('/stats', requireAuth, requireRole(['VENDOR' as Role]), async (req, res) => {
   try {
     const totalOrders = mockVendorOrders.length;
     const pendingOrders = mockVendorOrders.filter(o => o.fulfillment.status === 'PENDING').length;
@@ -188,7 +188,7 @@ router.get('/stats', requireAuth, requireRole(['VENDOR']), async (req, res) => {
     const completedOrders = mockVendorOrders.filter(o => o.fulfillment.status === 'COMPLETED').length;
     const totalRevenue = mockVendorOrders.reduce((sum, order) => sum + order.subtotal, 0);
 
-    res.json({
+    return res.json({
       stats: {
         totalOrders,
         pendingOrders,
@@ -199,7 +199,7 @@ router.get('/stats', requireAuth, requireRole(['VENDOR']), async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching vendor order stats:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to fetch order statistics'
     });
@@ -207,20 +207,20 @@ router.get('/stats', requireAuth, requireRole(['VENDOR']), async (req, res) => {
 });
 
 // GET /api/vendor/orders/:id - Get specific order details
-router.get('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.get('/:id', requireAuth, requireRole(['VENDOR' as Role]), async (req, res) => {
   try {
     const { id } = req.params;
 
     const order = mockVendorOrders.find(o => o.id === id);
 
     if (!order) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Order not found',
         message: 'Order does not exist or does not contain your products'
       });
     }
 
-    res.json({
+    return res.json({
       order: {
         ...order,
         customer: {
@@ -238,7 +238,7 @@ router.get('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching vendor order:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to fetch order'
     });
@@ -246,7 +246,7 @@ router.get('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
 });
 
 // PATCH /api/vendor/orders/:id/fulfillment - Update fulfillment status
-router.patch('/:id/fulfillment', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.patch('/:id/fulfillment', requireAuth, requireRole(['VENDOR' as Role]), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -264,7 +264,7 @@ router.patch('/:id/fulfillment', requireAuth, requireRole(['VENDOR']), async (re
     const order = mockVendorOrders.find(o => o.id === id);
 
     if (!order) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Order not found',
         message: 'Order does not exist or does not contain your products'
       });
@@ -288,13 +288,13 @@ router.patch('/:id/fulfillment', requireAuth, requireRole(['VENDOR']), async (re
 
     order.updatedAt = new Date().toISOString();
 
-    res.json({
+    return res.json({
       message: 'Fulfillment updated successfully',
       fulfillment: order.fulfillment
     });
   } catch (error) {
     console.error('Error updating fulfillment:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to update fulfillment'
     });
@@ -302,7 +302,7 @@ router.patch('/:id/fulfillment', requireAuth, requireRole(['VENDOR']), async (re
 });
 
 // GET /api/vendor/orders/delivery-batches - Get orders grouped by delivery day
-router.get('/delivery-batches', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.get('/delivery-batches', requireAuth, requireRole(['VENDOR' as Role]), async (req, res) => {
   try {
     const { optimize = 'false' } = req.query;
     
@@ -453,7 +453,7 @@ router.get('/delivery-batches', requireAuth, requireRole(['VENDOR']), async (req
         }
       }
 
-      res.json({
+      return res.json({
         batches: optimizedBatches,
         totalOrders: 6,
         totalBatches: 5,
@@ -465,7 +465,7 @@ router.get('/delivery-batches', requireAuth, requireRole(['VENDOR']), async (req
         }
       });
     } else {
-      res.json({
+      return res.json({
         batches: mockBatches,
         totalOrders: 6,
         totalBatches: 5
@@ -474,7 +474,7 @@ router.get('/delivery-batches', requireAuth, requireRole(['VENDOR']), async (req
 
   } catch (error) {
     console.error('Error fetching delivery batches:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to fetch delivery batches'
     });
@@ -482,7 +482,7 @@ router.get('/delivery-batches', requireAuth, requireRole(['VENDOR']), async (req
 });
 
 // GET /api/vendor/orders/delivery-batches/:day/manifest - Generate batch manifest for delivery drivers
-router.get('/delivery-batches/:day/manifest', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.get('/delivery-batches/:day/manifest', requireAuth, requireRole(['VENDOR' as Role]), async (req, res) => {
   try {
     const { day } = req.params;
     const { format = 'pdf' } = req.query;
@@ -529,7 +529,7 @@ router.get('/delivery-batches/:day/manifest', requireAuth, requireRole(['VENDOR'
     const batchOrders = mockBatchData[day as keyof typeof mockBatchData] || [];
 
     if (batchOrders.length === 0) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'No orders found',
         message: `No orders found for ${day}`
       });
@@ -572,10 +572,10 @@ router.get('/delivery-batches/:day/manifest', requireAuth, requireRole(['VENDOR'
     };
 
     if (format === 'json') {
-      res.json(manifest);
+      return res.json(manifest);
     } else {
       // For PDF format, return the data that would be used to generate PDF
-      res.json({
+      return res.json({
         ...manifest,
         format: 'pdf',
         pdfUrl: `/api/vendor/orders/delivery-batches/${day}/manifest.pdf`
@@ -584,7 +584,7 @@ router.get('/delivery-batches/:day/manifest', requireAuth, requireRole(['VENDOR'
 
   } catch (error) {
     console.error('Error generating batch manifest:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to generate batch manifest'
     });
@@ -592,7 +592,7 @@ router.get('/delivery-batches/:day/manifest', requireAuth, requireRole(['VENDOR'
 });
 
 // PATCH /api/vendor/orders/delivery-batches/:day/status - Update batch status
-router.patch('/delivery-batches/:day/status', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.patch('/delivery-batches/:day/status', requireAuth, requireRole(['VENDOR' as Role]), async (req, res) => {
   try {
     const { day } = req.params;
     const { status, driverInfo } = req.body;
@@ -616,7 +616,7 @@ router.patch('/delivery-batches/:day/status', requireAuth, requireRole(['VENDOR'
       }
     };
 
-    res.json({
+    return res.json({
       success: true,
       message: `Batch status updated to ${status}`,
       batch: mockBatchStatus
@@ -624,7 +624,7 @@ router.patch('/delivery-batches/:day/status', requireAuth, requireRole(['VENDOR'
 
   } catch (error) {
     console.error('Error updating batch status:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to update batch status'
     });
@@ -632,7 +632,7 @@ router.patch('/delivery-batches/:day/status', requireAuth, requireRole(['VENDOR'
 });
 
 // GET /api/vendor/orders/delivery-batches/:day/status - Get batch status
-router.get('/delivery-batches/:day/status', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.get('/delivery-batches/:day/status', requireAuth, requireRole(['VENDOR' as Role]), async (req, res) => {
   try {
     const { day } = req.params;
 
@@ -664,11 +664,11 @@ router.get('/delivery-batches/:day/status', requireAuth, requireRole(['VENDOR'])
       }
     };
 
-    res.json(mockBatchStatus);
+    return res.json(mockBatchStatus);
 
   } catch (error) {
     console.error('Error fetching batch status:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to fetch batch status'
     });
@@ -769,10 +769,10 @@ router.get("/delivery-batches/:batchId", requireAuth, async (req, res) => {
       }
     };
 
-    res.json(mockBatch);
+    return res.json(mockBatch);
   } catch (error) {
     console.error('Error fetching delivery batch:', error);
-    res.status(500).json({ error: 'Failed to fetch delivery batch' });
+    return res.status(400).json({ error: 'Failed to fetch delivery batch' });
   }
 });
 
@@ -795,10 +795,10 @@ router.post("/orders/:orderId/deliver", requireAuth, async (req, res) => {
     // Simulate processing time
     await new Promise(resolve => setTimeout(resolve, 1000));
 
-    res.json(mockDeliveryResult);
+    return res.json(mockDeliveryResult);
   } catch (error) {
     console.error('Error marking order as delivered:', error);
-    res.status(500).json({ error: 'Failed to mark order as delivered' });
+    return res.status(400).json({ error: 'Failed to mark order as delivered' });
   }
 });
 

@@ -1,13 +1,13 @@
 import express from 'express';
 import { z } from 'zod';
-import { prisma } from '../lib/prisma';
+import prisma, { OrderStatus } from '../lib/prisma';
 import { requireAuth, requireRole } from '../middleware/auth';
 
 const router = express.Router();
 
 // Validation schemas
 const updateFulfillmentSchema = z.object({
-  status: z.enum(['PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'FAILED']),
+  status: z.enum([OrderStatus.PENDING, 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'FAILED']),
   trackingNumber: z.string().optional(),
   carrier: z.string().optional(),
   estimatedDelivery: z.string().datetime().optional(),
@@ -23,7 +23,7 @@ router.get('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
     });
 
     if (!vendorProfile) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Vendor profile not found',
         message: 'Please complete your vendor profile setup'
       });
@@ -58,8 +58,7 @@ router.get('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
         user: {
           select: {
             id: true,
-            firstName: true,
-            lastName: true,
+            name: true,
             email: true
           }
         }
@@ -72,11 +71,11 @@ router.get('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
     // Filter order items to only include vendor's products and group by order
     const vendorOrders = orders.map(order => {
       const vendorOrderItems = order.orderItems.filter(
-        item => item.product.vendorProfileId === vendorProfile.id
+        (item: any) => item.product.vendorProfileId === vendorProfile.id
       );
 
       const vendorSubtotal = vendorOrderItems.reduce(
-        (sum, item) => sum + Number(item.total), 0
+        (sum: number, item: any) => sum + Number(item.total), 0
       );
 
       return {
@@ -89,7 +88,7 @@ router.get('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
         updatedAt: order.updatedAt,
         customer: {
           id: order.user.id,
-          name: `${order.user.firstName} ${order.user.lastName}`,
+          name: `${order.user.name?.split(" ")[0] || ""} ${order.user.name?.split(" ")[1] || ""}`,
           email: order.user.email
         },
         shippingAddress: order.shippingAddress ? {
@@ -100,8 +99,8 @@ router.get('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
           city: order.shippingAddress.city,
           state: order.shippingAddress.state,
           postalCode: order.shippingAddress.postalCode
-        } : null,
-        items: vendorOrderItems.map(item => ({
+        } : undefined,
+        items: vendorOrderItems.map((item: any) => ({
           id: item.id,
           quantity: item.quantity,
           price: item.price,
@@ -123,16 +122,16 @@ router.get('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
           notes: order.fulfillments[0].notes,
           etaLabel: order.fulfillments[0].etaLabel,
           predictedHours: order.fulfillments[0].predictedHours
-        } : null
+        } : undefined
       };
     });
 
-    res.json({
+    return res.json({
       orders: vendorOrders
     });
   } catch (error) {
     console.error('Error fetching vendor orders:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to fetch orders'
     });
@@ -150,7 +149,7 @@ router.get('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
     });
 
     if (!vendorProfile) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Vendor profile not found',
         message: 'Please complete your vendor profile setup'
       });
@@ -184,20 +183,12 @@ router.get('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
         },
         fulfillments: true,
         shippingAddress: true,
-        user: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            phone: true
-          }
-        }
+        user: { select: { id: true, name: true, email: true } }
       }
     });
 
     if (!order) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Order not found',
         message: 'Order does not exist or does not contain your products'
       });
@@ -205,14 +196,14 @@ router.get('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
 
     // Filter to vendor's products only
     const vendorOrderItems = order.orderItems.filter(
-      item => item.product.vendorProfileId === vendorProfile.id
+      (item: any) => item.product.vendorProfileId === vendorProfile.id
     );
 
     const vendorSubtotal = vendorOrderItems.reduce(
-      (sum, item) => sum + Number(item.total), 0
+      (sum: number, item: any) => sum + Number(item.total), 0
     );
 
-    res.json({
+    return res.json({
       order: {
         id: order.id,
         orderNumber: order.orderNumber,
@@ -224,9 +215,8 @@ router.get('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
         updatedAt: order.updatedAt,
         customer: {
           id: order.user.id,
-          name: `${order.user.firstName} ${order.user.lastName}`,
-          email: order.user.email,
-          phone: order.user.phone
+          name: order.user.name || 'Unknown',
+          email: order.user.email
         },
         shippingAddress: order.shippingAddress ? {
           id: order.shippingAddress.id,
@@ -240,8 +230,8 @@ router.get('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
           postalCode: order.shippingAddress.postalCode,
           country: order.shippingAddress.country,
           phone: order.shippingAddress.phone
-        } : null,
-        items: vendorOrderItems.map(item => ({
+        } : undefined,
+        items: vendorOrderItems.map((item: any) => ({
           id: item.id,
           quantity: item.quantity,
           price: item.price,
@@ -264,12 +254,12 @@ router.get('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
           notes: order.fulfillments[0].notes,
           etaLabel: order.fulfillments[0].etaLabel,
           predictedHours: order.fulfillments[0].predictedHours
-        } : null
+        } : undefined
       }
     });
   } catch (error) {
     console.error('Error fetching vendor order:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to fetch order'
     });
@@ -286,7 +276,7 @@ router.patch('/:id/fulfillment', requireAuth, requireRole(['VENDOR']), async (re
     if (!validationResult.success) {
       return res.status(400).json({
         error: 'Invalid request data',
-        details: validationResult.error.errors
+        details: validationResult.errors
       });
     }
 
@@ -298,7 +288,7 @@ router.patch('/:id/fulfillment', requireAuth, requireRole(['VENDOR']), async (re
     });
 
     if (!vendorProfile) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Vendor profile not found',
         message: 'Please complete your vendor profile setup'
       });
@@ -322,7 +312,7 @@ router.patch('/:id/fulfillment', requireAuth, requireRole(['VENDOR']), async (re
     });
 
     if (!order) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Order not found',
         message: 'Order does not exist or does not contain your products'
       });
@@ -331,7 +321,7 @@ router.patch('/:id/fulfillment', requireAuth, requireRole(['VENDOR']), async (re
     // Update fulfillment
     const fulfillment = order.fulfillments[0];
     if (!fulfillment) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Fulfillment not found',
         message: 'No fulfillment record found for this order'
       });
@@ -343,9 +333,9 @@ router.patch('/:id/fulfillment', requireAuth, requireRole(['VENDOR']), async (re
         status,
         trackingNumber: trackingNumber || null,
         carrier: carrier || null,
-        estimatedDelivery: estimatedDelivery ? new Date(estimatedDelivery) : null,
+        estimatedDelivery: estimatedDelivery ? new Date(estimatedDelivery) : undefined,
         notes: notes || null,
-        actualDelivery: status === 'COMPLETED' ? new Date() : null
+        actualDelivery: status === 'COMPLETED' ? new Date() : undefined
       }
     });
 
@@ -354,13 +344,13 @@ router.patch('/:id/fulfillment', requireAuth, requireRole(['VENDOR']), async (re
       await prisma.order.update({
         where: { id },
         data: {
-          status: 'FULFILLED',
+          status: OrderStatus.CONFIRMED,
           deliveredAt: new Date()
         }
       });
     }
 
-    res.json({
+    return res.json({
       message: 'Fulfillment updated successfully',
       fulfillment: {
         id: updatedFulfillment.id,
@@ -375,7 +365,7 @@ router.patch('/:id/fulfillment', requireAuth, requireRole(['VENDOR']), async (re
     });
   } catch (error) {
     console.error('Error updating fulfillment:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to update fulfillment'
     });
@@ -391,7 +381,7 @@ router.get('/stats', requireAuth, requireRole(['VENDOR']), async (req, res) => {
     });
 
     if (!vendorProfile) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Vendor profile not found',
         message: 'Please complete your vendor profile setup'
       });
@@ -421,7 +411,7 @@ router.get('/stats', requireAuth, requireRole(['VENDOR']), async (req, res) => {
         },
         fulfillments: {
           some: {
-            status: 'PENDING'
+            status: OrderStatus.PENDING
           }
         }
       }
@@ -475,7 +465,7 @@ router.get('/stats', requireAuth, requireRole(['VENDOR']), async (req, res) => {
 
     const totalRevenue = revenueData._sum.total || 0;
 
-    res.json({
+    return res.json({
       stats: {
         totalOrders,
         pendingOrders,
@@ -486,7 +476,7 @@ router.get('/stats', requireAuth, requireRole(['VENDOR']), async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching vendor order stats:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to fetch order statistics'
     });
@@ -498,8 +488,8 @@ router.get('/delivery-batches', requireAuth, requireRole(['VENDOR']), async (req
   try {
     const orders = await prisma.order.findMany({
       where: {
-        status: { in: ['PENDING', 'CONFIRMED'] },
-        deliveryDay: { not: null }
+        status: { in: [OrderStatus.PENDING, 'CONFIRMED'] },
+        deliveryDay: { not: undefined }
       },
       include: {
         user: {
@@ -520,8 +510,7 @@ router.get('/delivery-batches', requireAuth, requireRole(['VENDOR']), async (req
         },
         shippingAddress: {
           select: {
-            firstName: true,
-            lastName: true,
+            name: true,
             city: true,
             state: true
           }
@@ -558,13 +547,13 @@ router.get('/delivery-batches', requireAuth, requireRole(['VENDOR']), async (req
         shippingZip: order.shippingZip,
         shippingCity: order.shippingAddress?.city,
         shippingState: order.shippingAddress?.state,
-        items: order.orderItems.map(item => ({
+        items: order.orderItems.map((item: any) => ({
           id: item.id,
           quantity: item.quantity,
           productName: item.product.name,
           productImage: item.product.imageUrl
         })),
-        fulfillmentStatus: order.fulfillments[0]?.status || 'PENDING',
+        fulfillmentStatus: order.fulfillments[0]?.status || OrderStatus.PENDING,
         etaLabel: order.fulfillments[0]?.etaLabel
       });
     });
@@ -579,7 +568,7 @@ router.get('/delivery-batches', requireAuth, requireRole(['VENDOR']), async (req
       }
     });
 
-    res.json({
+    return res.json({
       batches: sortedBatches,
       totalOrders: orders.length,
       totalBatches: Object.keys(sortedBatches).length
@@ -587,7 +576,7 @@ router.get('/delivery-batches', requireAuth, requireRole(['VENDOR']), async (req
 
   } catch (error) {
     console.error('Error fetching delivery batches:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to fetch delivery batches'
     });

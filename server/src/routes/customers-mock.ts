@@ -115,7 +115,7 @@ const validateRequest = (schema: z.ZodSchema) => {
           errors: error.errors
         });
       }
-      res.status(400).json({ message: 'Invalid request data' });
+      return res.status(400).json({ message: 'Invalid request data' });
     }
   };
 };
@@ -123,13 +123,13 @@ const validateRequest = (schema: z.ZodSchema) => {
 // GET /api/customers - Get all customers for vendor
 router.get('/', (req, res) => {
   try {
-    res.json({
+    return res.json({
       message: 'Customers retrieved successfully',
       customers: customers
     });
   } catch (error) {
     console.error('Error fetching customers:', error);
-    res.status(500).json({ message: 'Failed to fetch customers' });
+    return res.status(400).json({ message: 'Failed to fetch customers' });
   }
 });
 
@@ -144,7 +144,7 @@ router.get('/stats', (req, res) => {
       ? customers.reduce((sum, c) => sum + c.averageOrderValue, 0) / totalCustomers 
       : 0;
 
-    res.json({
+    return res.json({
       message: 'Customer statistics retrieved successfully',
       stats: {
         totalCustomers,
@@ -156,7 +156,7 @@ router.get('/stats', (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching customer stats:', error);
-    res.status(500).json({ message: 'Failed to fetch customer statistics' });
+    return res.status(400).json({ message: 'Failed to fetch customer statistics' });
   }
 });
 
@@ -167,16 +167,16 @@ router.get('/:id', (req, res) => {
     const customer = customers.find(c => c.id === id);
     
     if (!customer) {
-      return res.status(404).json({ message: 'Customer not found' });
+      return res.status(400).json({ message: 'Customer not found' });
     }
     
-    res.json({
+    return res.json({
       message: 'Customer retrieved successfully',
       customer
     });
   } catch (error) {
     console.error('Error fetching customer:', error);
-    res.status(500).json({ message: 'Failed to fetch customer' });
+    return res.status(400).json({ message: 'Failed to fetch customer' });
   }
 });
 
@@ -196,13 +196,13 @@ router.post('/', validateRequest(createCustomerSchema), (req, res) => {
     
     customers.push(newCustomer);
     
-    res.status(201).json({
+    return res.status(400).json({
       message: 'Customer created successfully',
       customer: newCustomer
     });
   } catch (error) {
     console.error('Error creating customer:', error);
-    res.status(500).json({ message: 'Failed to create customer' });
+    return res.status(400).json({ message: 'Failed to create customer' });
   }
 });
 
@@ -213,7 +213,7 @@ router.put('/:id', validateRequest(updateCustomerSchema), (req, res) => {
     const customerIndex = customers.findIndex(c => c.id === id);
     
     if (customerIndex === -1) {
-      return res.status(404).json({ message: 'Customer not found' });
+      return res.status(400).json({ message: 'Customer not found' });
     }
     
     const updatedCustomer = {
@@ -224,13 +224,13 @@ router.put('/:id', validateRequest(updateCustomerSchema), (req, res) => {
     
     customers[customerIndex] = updatedCustomer;
     
-    res.json({
+    return res.json({
       message: 'Customer updated successfully',
       customer: updatedCustomer
     });
   } catch (error) {
     console.error('Error updating customer:', error);
-    res.status(500).json({ message: 'Failed to update customer' });
+    return res.status(400).json({ message: 'Failed to update customer' });
   }
 });
 
@@ -241,19 +241,19 @@ router.delete('/:id', (req, res) => {
     const customerIndex = customers.findIndex(c => c.id === id);
     
     if (customerIndex === -1) {
-      return res.status(404).json({ message: 'Customer not found' });
+      return res.status(400).json({ message: 'Customer not found' });
     }
     
     const deletedCustomer = customers[customerIndex];
     customers.splice(customerIndex, 1);
     
-    res.json({
+    return res.json({
       message: 'Customer deleted successfully',
       customer: deletedCustomer
     });
   } catch (error) {
     console.error('Error deleting customer:', error);
-    res.status(500).json({ message: 'Failed to delete customer' });
+    return res.status(400).json({ message: 'Failed to delete customer' });
   }
 });
 

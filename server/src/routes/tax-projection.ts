@@ -43,9 +43,9 @@ router.post('/bulk-reminders', requireAuth, requireRole(['ADMIN']), bulkSendTaxR
 router.post('/cron/trigger', requireAuth, requireRole(['ADMIN']), async (req, res) => {
   try {
     const result = await manualTaxReminderCheck();
-    res.json(result);
+    return res.json(result);
   } catch (error) {
-    res.status(500).json({
+    return res.status(400).json({
       success: false,
       message: 'Failed to trigger tax reminder check'
     });
@@ -55,12 +55,12 @@ router.post('/cron/trigger', requireAuth, requireRole(['ADMIN']), async (req, re
 router.get('/cron/status', requireAuth, requireRole(['ADMIN']), (req, res) => {
   try {
     const status = getCronStatus();
-    res.json({
+    return res.json({
       success: true,
       status
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(400).json({
       success: false,
       message: 'Failed to get CRON status'
     });

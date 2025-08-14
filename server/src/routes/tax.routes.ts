@@ -1,6 +1,6 @@
 import { Router } from "express";
 import Stripe from "stripe";
-import { prisma } from "../db/prisma";
+import prisma from '/prisma';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2024-06-20" });
 const r = Router();
 
@@ -29,7 +29,7 @@ r.post("/quote", async (req, res) => {
     line_items,
   });
 
-  res.json({ amountSubtotal: calc.amount_subtotal, amountTax: calc.amount_tax, amountTotal: calc.amount_total, breakdown: calc.tax_breakdown });
+  return res.json({ amountSubtotal: calc.amount_subtotal, amountTax: calc.amount_tax, amountTotal: calc.amount_total, breakdown: calc.tax_breakdown });
 });
 
 export default r;

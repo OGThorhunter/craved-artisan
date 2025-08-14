@@ -1,10 +1,10 @@
 import express from 'express';
 import Stripe from 'stripe';
-import { prisma } from '../lib/prisma';
+import prisma, { OrderStatus, Role } from '../lib/prisma';
 
 // Initialize Stripe with your secret key
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { 
-  apiVersion: '2024-12-18.acacia' 
+  apiVersion: '2023-10-16' 
 });
 
 // Commission rate (2%)
@@ -108,12 +108,12 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       return;
     }
 
-    // Update order status to 'paid'
+    // Update order status to OrderStatus.CONFIRMED
     await prisma.order.update({
       where: { id: orderId },
       data: {
-        status: 'paid',
-        paidAt: new Date(),
+        status: OrderStatus.CONFIRMED,
+        
         stripePaymentIntentId: session.payment_intent as string,
       },
     });
@@ -279,8 +279,8 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
     await prisma.order.update({
       where: { id: order.id },
       data: {
-        status: 'paid',
-        paidAt: new Date(),
+        status: OrderStatus.CONFIRMED,
+        
       },
     });
 
@@ -418,7 +418,7 @@ async function sendVendorNotifications(order: any, session: Stripe.Checkout.Sess
       const vendorPayout = vendorTotal - vendorCommission;
 
       const emailData = {
-        to: vendor.email,
+        to: vendor.user?.email,
         subject: `New Order Received - ${order.orderNumber}`,
         template: 'vendor-order-notification',
         data: {
@@ -453,7 +453,7 @@ async function sendVendorPayoutConfirmation(vendorId: string, transfer: Stripe.T
       console.log(`Sending payout confirmation to vendor: ${vendorProfile.storeName}`);
       
       const emailData = {
-        to: vendorProfile.email,
+        to: vendorProfile.user?.email,
         subject: 'Payout Confirmation',
         template: 'vendor-payout-confirmation',
         data: {

@@ -11,7 +11,7 @@ export interface VendorDTO {
 
 export interface ProductDTO {
   id: string;
-  vendorId: string;
+  vendorProfileId: string;
   title: string;
   price: number;
   imageUrl: string;
@@ -25,10 +25,10 @@ export interface ProductDTO {
 export function mapVendor(v: VendorProfile & { user?: any }): VendorDTO {
   return {
     id: v.id,
-    name: v.business_name,
-    city: v.description ?? "", // Using description as city placeholder
-    state: v.category ?? "", // Using category as state placeholder
-    tagline: v.description,
+    name: v.storeName,
+    city: v.bio ?? "", // Using description as city placeholder
+    state: v.tags?.join(", ") ?? "", // Using category as state placeholder
+    tagline: v.bio ?? undefined,
     verified: false // Default to false since we don't have this field
   };
 }
@@ -39,12 +39,12 @@ export function mapVendor(v: VendorProfile & { user?: any }): VendorDTO {
 export function mapProduct(p: Product): ProductDTO {
   return {
     id: p.id,
-    vendorId: p.vendor_id,
+    vendorProfileId: p.vendorProfileId,
     title: p.name,
     price: Number(p.price),
     imageUrl: p.description ?? "", // Using description as imageUrl placeholder
-    tags: p.category ? [p.category] : [],
-    availability: p.stock_quantity > 10 ? "in_stock" : 
-                  p.stock_quantity > 0 ? "low" : "out"
+    tags: p.tags,
+    availability: p.stock > 10 ? "in_stock" : 
+                  p.stock > 0 ? "low" : "out"
   };
 }

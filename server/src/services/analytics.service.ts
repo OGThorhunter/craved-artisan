@@ -1,4 +1,4 @@
-import { prisma } from "../lib/prisma";
+import prisma from '../lib/prisma';
 
 /**
  * NOTE: We support 2 schemas:

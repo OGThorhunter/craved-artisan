@@ -1,6 +1,6 @@
 import express from 'express';
 import { z } from 'zod';
-import { prisma } from '../lib/prisma';
+import prisma from '/prisma';
 import { requireAuth, requireRole } from '../middleware/auth';
 import { sendDeliveryConfirmation, sendDeliveryETAWithTime } from '../utils/twilio';
 import PDFDocument from 'pdfkit';
@@ -48,7 +48,7 @@ router.post('/checkout', requireAuth, requireRole(['CUSTOMER']), async (req, res
 
     // Verify user is creating order for themselves
     if (req.session.userId !== userId) {
-      return res.status(403).json({
+      return res.status(400).json({
         error: 'Unauthorized',
         message: 'You can only create orders for yourself'
       });
@@ -63,7 +63,7 @@ router.post('/checkout', requireAuth, requireRole(['CUSTOMER']), async (req, res
     });
 
     if (!user) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'User not found',
         message: 'User does not exist'
       });
@@ -324,7 +324,7 @@ router.post('/checkout', requireAuth, requireRole(['CUSTOMER']), async (req, res
     });
 
     // Return success response
-    res.status(201).json({
+    return res.status(400).json({
       message: 'Order created successfully',
       order: {
         id: order.order.id,
@@ -348,7 +348,7 @@ router.post('/checkout', requireAuth, requireRole(['CUSTOMER']), async (req, res
 
   } catch (error) {
     console.error('Checkout error:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to process checkout'
     });
@@ -387,7 +387,7 @@ router.get('/', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
       }
     });
 
-    res.json({
+    return res.json({
       orders: orders.map(order => ({
         id: order.id,
         orderNumber: order.orderNumber,
@@ -429,7 +429,7 @@ router.get('/', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching orders:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to fetch orders'
     });
@@ -522,12 +522,12 @@ router.get('/history', requireAuth, requireRole(['CUSTOMER']), async (req, res) 
       } : null
     }));
 
-    res.json({
+    return res.json({
       orders: formattedOrders
     });
   } catch (error) {
     console.error('Error fetching order history:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to fetch order history'
     });
@@ -567,13 +567,13 @@ router.get('/:id', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
     });
 
     if (!order) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Order not found',
         message: 'Order does not exist or does not belong to you'
       });
     }
 
-    res.json({
+    return res.json({
       order: {
         id: order.id,
         orderNumber: order.orderNumber,
@@ -628,7 +628,7 @@ router.get('/:id', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching order:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to fetch order'
     });
@@ -660,7 +660,7 @@ router.post('/:id/confirm-delivery', requireAuth, requireRole(['VENDOR', 'ADMIN'
     });
     
     if (!order) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Order not found',
         message: 'Order does not exist'
       });
@@ -698,7 +698,7 @@ router.post('/:id/confirm-delivery', requireAuth, requireRole(['VENDOR', 'ADMIN'
       await sendDeliveryConfirmation(order.user.profile.phone, order.orderNumber);
     }
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Delivery confirmed successfully',
       order: {
@@ -713,7 +713,7 @@ router.post('/:id/confirm-delivery', requireAuth, requireRole(['VENDOR', 'ADMIN'
     });
   } catch (error) {
     console.error('Error confirming delivery:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to confirm delivery'
     });
@@ -749,7 +749,7 @@ router.post('/:id/send-eta', requireAuth, requireRole(['VENDOR', 'ADMIN']), asyn
     });
     
     if (!order) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Order not found',
         message: 'Order does not exist'
       });
@@ -770,13 +770,13 @@ router.post('/:id/send-eta', requireAuth, requireRole(['VENDOR', 'ADMIN']), asyn
       order.orderNumber
     );
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Delivery ETA notification sent successfully'
     });
   } catch (error) {
     console.error('Error sending ETA notification:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to send ETA notification'
     });
@@ -832,7 +832,7 @@ router.get('/:id/receipt', requireAuth, async (req, res) => {
     });
 
     if (!order) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Order not found',
         message: 'Order does not exist'
       });
@@ -840,7 +840,7 @@ router.get('/:id/receipt', requireAuth, async (req, res) => {
 
     // Verify user has access to this order
     if (req.session.userId !== order.userId && req.session.user.role !== 'ADMIN') {
-      return res.status(403).json({
+      return res.status(400).json({
         error: 'Unauthorized',
         message: 'You can only view receipts for your own orders'
       });
@@ -1000,7 +1000,7 @@ router.get('/:id/receipt', requireAuth, async (req, res) => {
     doc.end();
   } catch (error) {
     console.error('Error generating receipt:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to generate receipt'
     });

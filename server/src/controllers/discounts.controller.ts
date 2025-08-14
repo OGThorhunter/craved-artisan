@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { prisma } from '../lib/prisma';
+import prisma from '/prisma';
 
 export async function quickCoupon(req: Request, res: Response) {
   const userId = req.session?.user?.id || "dev-user-id";

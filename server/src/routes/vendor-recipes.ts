@@ -1,6 +1,6 @@
 import express from 'express';
 import { z } from 'zod';
-import { prisma } from '../lib/prisma';
+import prisma from '../lib/prisma';
 import { requireAuth, requireRole } from '../middleware/auth';
 
 const router = express.Router();
@@ -43,7 +43,7 @@ const validateRequest = (schema: z.ZodSchema) => {
       if (error instanceof z.ZodError) {
         return res.status(400).json({
           message: 'Validation error',
-          errors: error.errors.map(err => ({
+          errors: error.errors.map((err: any) => ({
             field: err.path.join('.'),
             message: err.message
           }))
@@ -62,7 +62,7 @@ router.get('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
     });
 
     if (!vendorProfile) {
-      return res.status(404).json({ message: 'Vendor profile not found' });
+      return res.status(400).json({ message: 'Vendor profile not found' });
     }
 
     const recipes = await prisma.recipe.findMany({
@@ -85,13 +85,13 @@ router.get('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
       orderBy: { name: 'asc' }
     });
 
-    res.json({
+    return res.json({
       recipes,
       count: recipes.length
     });
   } catch (error) {
     console.error('Error fetching recipes:', error);
-    res.status(500).json({ message: 'Failed to fetch recipes' });
+    return res.status(400).json({ message: 'Failed to fetch recipes' });
   }
 });
 
@@ -105,7 +105,7 @@ router.get('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
     });
 
     if (!vendorProfile) {
-      return res.status(404).json({ message: 'Vendor profile not found' });
+      return res.status(400).json({ message: 'Vendor profile not found' });
     }
 
     const recipe = await prisma.recipe.findFirst({
@@ -135,13 +135,13 @@ router.get('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
     });
 
     if (!recipe) {
-      return res.status(404).json({ message: 'Recipe not found' });
+      return res.status(400).json({ message: 'Recipe not found' });
     }
 
-    res.json({ recipe });
+    return res.json({ recipe });
   } catch (error) {
     console.error('Error fetching recipe:', error);
-    res.status(500).json({ message: 'Failed to fetch recipe' });
+    return res.status(400).json({ message: 'Failed to fetch recipe' });
   }
 });
 
@@ -153,7 +153,7 @@ router.post('/', requireAuth, requireRole(['VENDOR']), validateRequest(createRec
     });
 
     if (!vendorProfile) {
-      return res.status(404).json({ message: 'Vendor profile not found' });
+      return res.status(400).json({ message: 'Vendor profile not found' });
     }
 
     const recipe = await prisma.recipe.create({
@@ -172,13 +172,13 @@ router.post('/', requireAuth, requireRole(['VENDOR']), validateRequest(createRec
       }
     });
 
-    res.status(201).json({
+    return res.status(400).json({
       message: 'Recipe created successfully',
       recipe
     });
   } catch (error) {
     console.error('Error creating recipe:', error);
-    res.status(500).json({ message: 'Failed to create recipe' });
+    return res.status(400).json({ message: 'Failed to create recipe' });
   }
 });
 
@@ -192,7 +192,7 @@ router.put('/:id', requireAuth, requireRole(['VENDOR']), validateRequest(updateR
     });
 
     if (!vendorProfile) {
-      return res.status(404).json({ message: 'Vendor profile not found' });
+      return res.status(400).json({ message: 'Vendor profile not found' });
     }
 
     // Check if recipe exists and belongs to vendor
@@ -204,7 +204,7 @@ router.put('/:id', requireAuth, requireRole(['VENDOR']), validateRequest(updateR
     });
 
     if (!existingRecipe) {
-      return res.status(404).json({ message: 'Recipe not found' });
+      return res.status(400).json({ message: 'Recipe not found' });
     }
 
     const recipe = await prisma.recipe.update({
@@ -221,13 +221,13 @@ router.put('/:id', requireAuth, requireRole(['VENDOR']), validateRequest(updateR
       }
     });
 
-    res.json({
+    return res.json({
       message: 'Recipe updated successfully',
       recipe
     });
   } catch (error) {
     console.error('Error updating recipe:', error);
-    res.status(500).json({ message: 'Failed to update recipe' });
+    return res.status(400).json({ message: 'Failed to update recipe' });
   }
 });
 
@@ -241,7 +241,7 @@ router.delete('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => 
     });
 
     if (!vendorProfile) {
-      return res.status(404).json({ message: 'Vendor profile not found' });
+      return res.status(400).json({ message: 'Vendor profile not found' });
     }
 
     // Check if recipe exists and belongs to vendor
@@ -253,17 +253,17 @@ router.delete('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => 
     });
 
     if (!recipe) {
-      return res.status(404).json({ message: 'Recipe not found' });
+      return res.status(400).json({ message: 'Recipe not found' });
     }
 
     await prisma.recipe.delete({
       where: { id }
     });
 
-    res.json({ message: 'Recipe deleted successfully' });
+    return res.json({ message: 'Recipe deleted successfully' });
   } catch (error) {
     console.error('Error deleting recipe:', error);
-    res.status(500).json({ message: 'Failed to delete recipe' });
+    return res.status(400).json({ message: 'Failed to delete recipe' });
   }
 });
 
@@ -278,7 +278,7 @@ router.delete('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => 
            });
 
            if (!vendorProfile) {
-             return res.status(404).json({ message: 'Vendor profile not found' });
+             return res.status(400).json({ message: 'Vendor profile not found' });
            }
 
            // Get the recipe with all its ingredients and their current costs
@@ -297,7 +297,7 @@ router.delete('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => 
            });
 
            if (!recipe) {
-             return res.status(404).json({ message: 'Recipe not found' });
+             return res.status(400).json({ message: 'Recipe not found' });
            }
 
            if (recipe.recipeIngredients.length === 0) {
@@ -373,7 +373,7 @@ router.delete('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => 
              }
            });
 
-           res.status(201).json({
+           return res.status(400).json({
              message: `Recipe version ${nextVersion} created successfully`,
              recipeVersion: {
                id: recipeVersion.id,
@@ -404,7 +404,7 @@ router.delete('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => 
            });
          } catch (error) {
            console.error('Error creating recipe version:', error);
-           res.status(500).json({ message: 'Failed to create recipe version' });
+           return res.status(400).json({ message: 'Failed to create recipe version' });
          }
        });
 
@@ -418,7 +418,7 @@ router.delete('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => 
            });
 
            if (!vendorProfile) {
-             return res.status(404).json({ message: 'Vendor profile not found' });
+             return res.status(400).json({ message: 'Vendor profile not found' });
            }
 
            // Check if recipe exists and belongs to vendor
@@ -430,7 +430,7 @@ router.delete('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => 
            });
 
            if (!recipe) {
-             return res.status(404).json({ message: 'Recipe not found' });
+             return res.status(400).json({ message: 'Recipe not found' });
            }
 
            const versions = await prisma.recipeVersion.findMany({
@@ -500,13 +500,13 @@ router.delete('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => 
              };
            });
 
-           res.json({
+           return res.json({
              message: `Found ${versions.length} versions for recipe`,
              versions: versionsWithDeltas
            });
          } catch (error) {
            console.error('Error fetching recipe versions:', error);
-           res.status(500).json({ message: 'Failed to fetch recipe versions' });
+           return res.status(400).json({ message: 'Failed to fetch recipe versions' });
          }
        });
 
@@ -520,7 +520,7 @@ router.get('/:id/versions/:version', requireAuth, requireRole(['VENDOR']), async
     });
 
     if (!vendorProfile) {
-      return res.status(404).json({ message: 'Vendor profile not found' });
+      return res.status(400).json({ message: 'Vendor profile not found' });
     }
 
     // Check if recipe exists and belongs to vendor
@@ -532,7 +532,7 @@ router.get('/:id/versions/:version', requireAuth, requireRole(['VENDOR']), async
     });
 
     if (!recipe) {
-      return res.status(404).json({ message: 'Recipe not found' });
+      return res.status(400).json({ message: 'Recipe not found' });
     }
 
     const recipeVersion = await prisma.recipeVersion.findFirst({
@@ -558,7 +558,7 @@ router.get('/:id/versions/:version', requireAuth, requireRole(['VENDOR']), async
     });
 
     if (!recipeVersion) {
-      return res.status(404).json({ message: 'Recipe version not found' });
+      return res.status(400).json({ message: 'Recipe version not found' });
     }
 
     // Get previous version for cost delta calculation
@@ -576,7 +576,7 @@ router.get('/:id/versions/:version', requireAuth, requireRole(['VENDOR']), async
       ? (costDelta / Number(previousVersion.totalCost)) * 100
       : 0;
 
-    res.json({
+    return res.json({
       recipeVersion: {
         id: recipeVersion.id,
         version: recipeVersion.version,
@@ -608,7 +608,7 @@ router.get('/:id/versions/:version', requireAuth, requireRole(['VENDOR']), async
     });
   } catch (error) {
     console.error('Error fetching recipe version:', error);
-    res.status(500).json({ message: 'Failed to fetch recipe version' });
+    return res.status(400).json({ message: 'Failed to fetch recipe version' });
   }
 });
 

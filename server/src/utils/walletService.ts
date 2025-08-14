@@ -1,4 +1,4 @@
-import { prisma } from '../lib/prisma';
+import prisma, { OrderStatus, TaxAlertType, WalletTransactionType } from '../lib/prisma';
 
 export interface WalletTransaction {
   id: string;

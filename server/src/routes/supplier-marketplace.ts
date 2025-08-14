@@ -273,7 +273,7 @@ const validateRequest = (schema: z.ZodSchema) => {
           errors: error.errors
         });
       }
-      res.status(400).json({ message: 'Invalid request data' });
+      return res.status(400).json({ message: 'Invalid request data' });
     }
   };
 };
@@ -468,7 +468,7 @@ router.post('/search', validateRequest(searchIngredientsSchema), (req, res) => {
     
     const results = searchSupplierIngredients(ingredientName, preferredOnly, organicOnly, maxPrice);
     
-    res.json({
+    return res.json({
       message: `Found ${results.length} supplier options for "${ingredientName}"`,
       ingredientName,
       filters: { preferredOnly, organicOnly, maxPrice },
@@ -476,7 +476,7 @@ router.post('/search', validateRequest(searchIngredientsSchema), (req, res) => {
     });
   } catch (error) {
     console.error('Error in supplier search endpoint:', error);
-    res.status(500).json({ 
+    return res.status(400).json({ 
       message: 'Failed to search suppliers',
       error: 'Internal server error'
     });
@@ -491,7 +491,7 @@ router.get('/price-history/:ingredientName', (req, res) => {
     
     const history = getPriceHistory(ingredientName, Number(days));
     
-    res.json({
+    return res.json({
       message: `Price history for "${ingredientName}"`,
       ingredientName,
       days: Number(days),
@@ -508,7 +508,7 @@ router.get('/price-history/:ingredientName', (req, res) => {
     });
   } catch (error) {
     console.error('Error getting price history:', error);
-    res.status(500).json({ message: 'Failed to get price history' });
+    return res.status(400).json({ message: 'Failed to get price history' });
   }
 });
 
@@ -519,13 +519,13 @@ router.post('/track-price', validateRequest(trackPriceSchema), (req, res) => {
     
     const priceRecord = trackPriceChange(supplierInventoryId, pricePerUnit);
     
-    res.json({
+    return res.json({
       message: 'Price tracked successfully',
       priceRecord
     });
   } catch (error) {
     console.error('Error tracking price:', error);
-    res.status(500).json({ 
+    return res.status(400).json({ 
       message: 'Failed to track price',
       error: error instanceof Error ? error.message : 'Internal server error'
     });
@@ -545,7 +545,7 @@ router.post('/low-stock-recommendations', (req, res) => {
     
     const recommendations = getLowStockRecommendations(lowStockIngredients);
     
-    res.json({
+    return res.json({
       message: `Generated ${recommendations.length} recommendations for low stock items`,
       recommendations,
       summary: {
@@ -556,7 +556,7 @@ router.post('/low-stock-recommendations', (req, res) => {
     });
   } catch (error) {
     console.error('Error getting low stock recommendations:', error);
-    res.status(500).json({ 
+    return res.status(400).json({ 
       message: 'Failed to get recommendations',
       error: 'Internal server error'
     });
@@ -573,13 +573,13 @@ router.get('/suppliers', (req, res) => {
       results = results.filter(supplier => supplier.isActive);
     }
     
-    res.json({
+    return res.json({
       message: `Found ${results.length} suppliers`,
       suppliers: results
     });
   } catch (error) {
     console.error('Error getting suppliers:', error);
-    res.status(500).json({ message: 'Failed to get suppliers' });
+    return res.status(400).json({ message: 'Failed to get suppliers' });
   }
 });
 
@@ -622,13 +622,13 @@ router.get('/inventory', (req, res) => {
       };
     });
     
-    res.json({
+    return res.json({
       message: `Found ${enrichedResults.length} inventory items`,
       inventory: enrichedResults
     });
   } catch (error) {
     console.error('Error getting supplier inventory:', error);
-    res.status(500).json({ message: 'Failed to get supplier inventory' });
+    return res.status(400).json({ message: 'Failed to get supplier inventory' });
   }
 });
 

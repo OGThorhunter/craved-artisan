@@ -1,6 +1,6 @@
 import express from 'express';
 import { z } from 'zod';
-import { prisma } from '../lib/prisma';
+import prisma from '/prisma';
 import { requireAuth, requireRole } from '../middleware/auth';
 import { stripeService } from '../utils/stripe';
 import Stripe from 'stripe';
@@ -51,14 +51,14 @@ router.post('/create-payment-intent', requireAuth, requireRole(['CUSTOMER']), as
     });
 
     if (!order) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Order not found',
         message: 'Order does not exist'
       });
     }
 
     if (order.userId !== req.session.userId) {
-      return res.status(403).json({
+      return res.status(400).json({
         error: 'Unauthorized',
         message: 'You can only create payment intents for your own orders'
       });
@@ -93,13 +93,13 @@ router.post('/create-payment-intent', requireAuth, requireRole(['CUSTOMER']), as
       },
     });
 
-    res.json({
+    return res.json({
       clientSecret: paymentIntent.client_secret,
       paymentIntentId: paymentIntent.id,
     });
   } catch (error) {
     console.error('Error creating payment intent:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Payment intent creation failed',
       message: 'Unable to create payment intent'
     });
@@ -126,14 +126,14 @@ router.post('/create-connect-account', requireAuth, requireRole(['VENDOR']), asy
     });
 
     if (!vendorProfile) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Vendor profile not found',
         message: 'Vendor profile does not exist'
       });
     }
 
     if (vendorProfile.userId !== req.session.userId) {
-      return res.status(403).json({
+      return res.status(400).json({
         error: 'Unauthorized',
         message: 'You can only create Connect accounts for your own vendor profile'
       });
@@ -154,14 +154,14 @@ router.post('/create-connect-account', requireAuth, requireRole(['VENDOR']), asy
       businessName
     );
 
-    res.json({
+    return res.json({
       accountId: account.id,
       status: account.charges_enabled ? 'active' : 'pending',
       message: 'Stripe Connect account created successfully'
     });
   } catch (error) {
     console.error('Error creating Connect account:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Connect account creation failed',
       message: 'Unable to create Stripe Connect account'
     });
@@ -180,14 +180,14 @@ router.get('/onboarding-url/:vendorProfileId', requireAuth, requireRole(['VENDOR
     });
 
     if (!vendorProfile) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Vendor profile not found',
         message: 'Vendor profile does not exist'
       });
     }
 
     if (vendorProfile.userId !== req.session.userId) {
-      return res.status(403).json({
+      return res.status(400).json({
         error: 'Unauthorized',
         message: 'You can only access onboarding for your own vendor profile'
       });
@@ -203,13 +203,13 @@ router.get('/onboarding-url/:vendorProfileId', requireAuth, requireRole(['VENDOR
     // Generate onboarding URL
     const onboardingUrl = await stripeService.createOnboardingUrl(vendorProfileId);
 
-    res.json({
+    return res.json({
       onboardingUrl,
       accountStatus: vendorProfile.stripeAccountStatus,
     });
   } catch (error) {
     console.error('Error generating onboarding URL:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Onboarding URL generation failed',
       message: 'Unable to generate onboarding URL'
     });
@@ -228,14 +228,14 @@ router.get('/account-status/:vendorProfileId', requireAuth, requireRole(['VENDOR
     });
 
     if (!vendorProfile) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Vendor profile not found',
         message: 'Vendor profile does not exist'
       });
     }
 
     if (vendorProfile.userId !== req.session.userId) {
-      return res.status(403).json({
+      return res.status(400).json({
         error: 'Unauthorized',
         message: 'You can only access account status for your own vendor profile'
       });
@@ -244,10 +244,10 @@ router.get('/account-status/:vendorProfileId', requireAuth, requireRole(['VENDOR
     // Get account status
     const accountStatus = await stripeService.getVendorAccountStatus(vendorProfileId);
 
-    res.json(accountStatus);
+    return res.json(accountStatus);
   } catch (error) {
     console.error('Error getting account status:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Account status retrieval failed',
       message: 'Unable to retrieve account status'
     });
@@ -261,7 +261,7 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
 
   if (!webhookSecret) {
     console.error('STRIPE_WEBHOOK_SECRET not configured');
-    return res.status(500).json({ error: 'Webhook secret not configured' });
+    return res.status(400).json({ error: 'Webhook secret not configured' });
   }
 
   let event: Stripe.Event;
@@ -275,10 +275,10 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
 
   try {
     await stripeService.handleWebhook(event);
-    res.json({ received: true });
+    return res.json({ received: true });
   } catch (error) {
     console.error('Webhook handling failed:', error);
-    res.status(500).json({ error: 'Webhook handling failed' });
+    return res.status(400).json({ error: 'Webhook handling failed' });
   }
 });
 
@@ -286,13 +286,13 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
 router.get('/commission-rate', async (req, res) => {
   try {
     const commissionRate = stripeService.getCommissionRate();
-    res.json({
+    return res.json({
       commissionRate,
       percentage: (commissionRate * 100).toFixed(1) + '%',
     });
   } catch (error) {
     console.error('Error getting commission rate:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Commission rate retrieval failed',
       message: 'Unable to retrieve commission rate'
     });
@@ -314,7 +314,7 @@ router.post('/calculate-commission', async (req, res) => {
     const commissionAmount = stripeService.calculateCommission(amount);
     const vendorPayoutAmount = stripeService.calculateVendorPayout(amount);
 
-    res.json({
+    return res.json({
       originalAmount: amount,
       commissionAmount,
       vendorPayoutAmount,
@@ -323,7 +323,7 @@ router.post('/calculate-commission', async (req, res) => {
     });
   } catch (error) {
     console.error('Error calculating commission:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Commission calculation failed',
       message: 'Unable to calculate commission'
     });

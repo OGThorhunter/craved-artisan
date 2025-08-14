@@ -29,73 +29,98 @@ model User {
 }
 
 model VendorProfile {
-  id          String   @id @default(cuid())
-  user_id     String   @unique
-  business_name String
-  description String?
-  category    String?
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  storeName             String   // Changed from business_name
+  bio                   String?  // Changed from description
+  imageUrl              String?
+  slug                  String   @unique
+  stripeAccountId       String?
+  stripeAccountStatus   String?
+  stripeOnboardingUrl   String?
+  minMarginPercent      Decimal? @db.Decimal(5, 2)
+  marginOverrideEnabled Boolean  @default(false)
+  tags                  String[] @default([]) // Add vendor tags/categories
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   // Relations
-  user        User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   products    Product[]
   analyticsEvents AnalyticsEvent[]
+  fulfillmentWindows FulfillmentWindow[]
+  fulfillmentLocations FulfillmentLocation[]
+  conversations Conversation[]
+
+  @@index([userId])
 }
 
 model Product {
-  id             String   @id @default(cuid())
-  vendor_id      String
-  name           String
-  description    String?
-  price          Decimal  @db.Decimal(10, 2)
-  taxCode        String?  // optional: Stripe Tax code like txcd_xxx
-  category       String?
-  stock_quantity Int      @default(0)
-  created_at     DateTime @default(now())
-  updated_at     DateTime @updatedAt
+  id                String   @id @default(cuid())
+  vendorProfileId   String   // Changed from vendor_id
+  name              String
+  description       String?
+  price             Decimal  @db.Decimal(10, 2)
+  cost              Decimal? @db.Decimal(10, 2) // Added cost field
+  imageUrl          String?
+  tags              String[] @default([]) // Changed from category
+  stock             Int      @default(0) // Changed from stock_quantity
+  isAvailable       Boolean  @default(true)
+  targetMargin      Decimal? @db.Decimal(5, 2)
+  marginAlert       Boolean  @default(false)
+  alertNote         String?
+  onWatchlist       Boolean  @default(false)
+  lastAiSuggestion  DateTime?
+  aiSuggestionNote  String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   // Relations
-  vendor        VendorProfile @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
+  vendor        VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
   orderItems    OrderItem[]
   cartItems     CartItem[]
   analyticsEvents AnalyticsEvent[]
   recipeId      String?      // link to Recipe
   recipe        Recipe?      @relation(fields: [recipeId], references: [id])
 
-  @@index([vendor_id])
-  @@index([created_at])
+  @@index([vendorProfileId])
+  @@index([createdAt])
 }
 
 model Order {
   id              String   @id @default(cuid())
-  customerId      String
+  userId          String   // Changed from customerId to match services
   zip             String?
-  status          String   @default("pending") // pending|paid|failed|refunded|cancelled
+  status          OrderStatus @default(PENDING)
   paymentIntentId String?  // pi_*
   transferGroup   String?  // order_<id>
-  total           Decimal  @db.Decimal(10, 2) @default(0)
+  subtotal        Decimal  @db.Decimal(10, 2) @default(0)
+  shippingAddressId String? // Add shipping address reference
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   // Relations
-  user         User       @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   orderItems   OrderItem[]
   analyticsEvents AnalyticsEvent[]
   fulfillments OrderFulfillment[]
   events       OrderEvent[]
+  shippingAddress ShippingAddress? @relation(fields: [shippingAddressId], references: [id])
 
-  @@index([customerId, createdAt])
+  @@index([userId, createdAt])
 }
 
 // Inventory and Recipe Models
 model Ingredient {
   id          String   @id @default(cuid())
-  vendorId    String
+  vendorProfileId String // Changed from vendorId
   name        String
+  description String?
   unit        String        // "g","kg","ml","l","unit"
   costPerUnit Decimal       @db.Decimal(10, 4) // cost per 1 unit
   tags        String[]      @default([])
+  isAvailable Boolean       @default(true)
+  supplier    String?
   preferredSupplierId String?
   leadTimeDays       Int?      // default null -> use global
   minOrderQty        Decimal?  @db.Decimal(10, 4) // optional MOQ
@@ -105,15 +130,15 @@ model Ingredient {
   // Relations
   inventory   IngredientInventory[]
   transactions InventoryTx[]
-  recipeItems RecipeItem[]
+  recipeIngredients RecipeIngredient[]
   preferredSupplier Supplier? @relation("PreferredSupplier", fields: [preferredSupplierId], references: [id])
 
-  @@index([vendorId, name])
+  @@index([vendorProfileId, name])
 }
 
 model IngredientInventory {
   id          String   @id @default(cuid())
-  vendorId    String
+  vendorProfileId String // Changed from vendorId
   ingredientId String
   quantity    Decimal   @db.Decimal(10, 4) // current on-hand in 'unit'
   costBasis   Decimal   @db.Decimal(10, 4) // weighted avg cost per unit
@@ -121,13 +146,13 @@ model IngredientInventory {
 
   ingredient  Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
 
-  @@unique([vendorId, ingredientId])
-  @@index([vendorId, ingredientId])
+  @@unique([vendorProfileId, ingredientId])
+  @@index([vendorProfileId, ingredientId])
 }
 
 model InventoryTx {
   id          String   @id @default(cuid())
-  vendorId    String
+  vendorProfileId String // Changed from vendorId
   ingredientId String
   type        String   // "purchase" | "sale" | "adjustment" | "waste"
   quantity    Decimal  @db.Decimal(10, 4) // + for purchase/adjustment; - for sale/waste
@@ -136,24 +161,27 @@ model InventoryTx {
   createdAt   DateTime @default(now())
 
   ingredient  Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
-  @@index([vendorId, ingredientId, type, createdAt])
+  @@index([vendorProfileId, ingredientId, type, createdAt])
 }
 
 model Recipe {
-  id        String   @id @default(cuid())
-  vendorId  String
-  name      String
-  yieldQty  Decimal   @db.Decimal(10, 4) // how many "units" of finished product per batch
-  unit      String    // finished unit label ("loaf","bar","jar")
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id                String   @id @default(cuid())
+  vendorProfileId   String   // Changed from vendorId
+  name              String
+  description       String?
+  instructions      String?
+  yield             Decimal   @db.Decimal(10, 4) // Changed from yieldQty
+  unit              String    // finished unit label ("loaf","bar","jar")
+  isActive          Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
-  items     RecipeItem[]
-  products  Product[] // if Product already exists; else use relation field below
-  @@index([vendorId, name])
+  recipeIngredients RecipeIngredient[] // Changed from items
+  products          Product[] // if Product already exists; else use relation field below
+  @@index([vendorProfileId, name])
 }
 
-model RecipeItem {
+model RecipeIngredient {
   id           String   @id @default(cuid())
   recipeId     String
   ingredientId String
@@ -170,11 +198,11 @@ model OrderItem {
   id         String  @id @default(cuid())
   orderId    String
   productId  String
-  vendorId   String
+  vendorProfileId String // Changed from vendorId
   quantity   Int
   unitPrice  Decimal @db.Decimal(10, 2)
   cogsUnit   Decimal? @db.Decimal(10, 4) // COGS snapshot at sale time
-  subtotal   Decimal @db.Decimal(10, 2)
+  total      Decimal @db.Decimal(10, 2) // Changed from subtotal
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -183,36 +211,36 @@ model OrderItem {
   product    Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@index([orderId])
-  @@index([vendorId])
+  @@index([vendorProfileId])
 }
 
 // New Analytics Event Model for Conversion Funnel Tracking
 model AnalyticsEvent {
   id          String   @id @default(cuid())
-  vendor_id   String
-  user_id     String?
-  product_id  String?
-  order_id    String?
-  event_type  String   // page_view, add_to_cart, checkout_started, purchase_completed, cart_abandoned
-  event_data  Json?    // Additional event-specific data
-  session_id  String?  // To track user sessions
-  created_at  DateTime @default(now())
+  vendorProfileId String // Changed from vendor_id
+  userId      String? // Changed from user_id
+  productId   String? // Changed from product_id
+  orderId     String? // Changed from order_id
+  eventType   String   // Changed from event_type - page_view, add_to_cart, checkout_started, purchase_completed, cart_abandoned
+  eventData   Json?    // Changed from event_data - Additional event-specific data
+  sessionId   String?  // Changed from session_id - To track user sessions
+  createdAt   DateTime @default(now()) // Changed from created_at
 
   // Relations
-  vendor      VendorProfile @relation(fields: [vendor_id], references: [id], onDelete: Cascade)
-  user        User?         @relation(fields: [user_id], references: [id], onDelete: SetNull)
-  product     Product?      @relation(fields: [product_id], references: [id], onDelete: SetNull)
-  order       Order?        @relation(fields: [order_id], references: [id], onDelete: SetNull)
+  vendor      VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  user        User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  product     Product?      @relation(fields: [productId], references: [id], onDelete: SetNull)
+  order       Order?        @relation(fields: [orderId], references: [id], onDelete: SetNull)
 
-  @@index([vendor_id, event_type, created_at])
-  @@index([session_id])
-  @@index([created_at])
+  @@index([vendorProfileId, eventType, createdAt])
+  @@index([sessionId])
+  @@index([createdAt])
 }
 
 // Messaging & Customer Service Models
 model Conversation {
   id            String   @id @default(cuid())
-  vendorId      String
+  vendorProfileId String // Changed from vendorId
   customerId    String
   subject       String?
   status        String   @default("open") // open|awaiting_customer|awaiting_vendor|resolved|archived
@@ -221,10 +249,12 @@ model Conversation {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  // Relations
+  vendor        VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
   messages      Message[]
   issues        OrderIssue[]
 
-  @@index([vendorId, status, lastMessageAt])
+  @@index([vendorProfileId, status, lastMessageAt])
   @@index([customerId, lastMessageAt])
 }
 
@@ -259,7 +289,7 @@ model OrderIssue {
 
 model DiscountCode {
   id          String   @id @default(cuid())
-  vendorId    String
+  vendorProfileId String // Changed from vendorId
   code        String   @unique
   amountType  String   // percent|fixed
   amount      Decimal  @db.Decimal(10, 2)
@@ -269,12 +299,12 @@ model DiscountCode {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  @@index([vendorId, code])
+  @@index([vendorProfileId, code])
 }
 
 model Supplier {
   id        String   @id @default(cuid())
-  vendorId  String
+  vendorProfileId String // Changed from vendorId
   name      String
   contact   String?
   createdAt DateTime @default(now())
@@ -282,12 +312,12 @@ model Supplier {
   // Relations
   preferredIngredients Ingredient[] @relation("PreferredSupplier")
 
-  @@index([vendorId, name])
+  @@index([vendorProfileId, name])
 }
 
 // Checkout and Payment Models
 model VendorStripeAccount {
-  vendorId        String   @id
+  vendorProfileId String   @id // Changed from vendorId
   accountId       String   @unique       // acct_*
   chargesEnabled  Boolean  @default(false)
   payoutsEnabled  Boolean  @default(false)
@@ -303,6 +333,8 @@ model Cart {
   updatedAt  DateTime @updatedAt
   items      CartItem[]
 
+
+
   @@index([customerId])
 }
 
@@ -310,7 +342,7 @@ model CartItem {
   id        String  @id @default(cuid())
   cartId    String
   productId String
-  vendorId  String
+  vendorProfileId String // Changed from vendorId
   qty       Int
   unitPrice Decimal @db.Decimal(10, 2)
   note      String?
@@ -319,13 +351,13 @@ model CartItem {
   product Product @relation(fields: [productId], references: [id])
 
   @@index([cartId])
-  @@index([vendorId])
+  @@index([vendorProfileId])
 }
 
 // Fulfillment & Order Lifecycle Models
 model FulfillmentLocation {
   id        String  @id @default(cuid())
-  vendorId  String
+  vendorProfileId String // Changed from vendorId
   name      String
   type      String   // "pickup" | "dropoff" | "delivery_hub"
   address1  String?
@@ -336,14 +368,16 @@ model FulfillmentLocation {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  windows   FulfillmentWindow[]
+  // Relations
+  vendor     VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  windows    FulfillmentWindow[]
   fulfillments OrderFulfillment[]
-  @@index([vendorId, zip])
+  @@index([vendorProfileId, zip])
 }
 
 model FulfillmentWindow {
   id         String  @id @default(cuid())
-  vendorId   String
+  vendorProfileId String // Changed from vendorId
   locationId String?
   kind       String   // "pickup" | "delivery"
   // weekly recurrence (cron-ish): 0=Sun .. 6=Sat
@@ -353,14 +387,16 @@ model FulfillmentWindow {
   capacity   Int?     // optional cap per window
   active     Boolean  @default(true)
 
+  // Relations
+  vendor     VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
   location   FulfillmentLocation? @relation(fields: [locationId], references: [id])
-  @@index([vendorId, kind, weekday])
+  @@index([vendorProfileId, kind, weekday])
 }
 
 model OrderFulfillment {
   id         String  @id @default(cuid())
   orderId    String
-  vendorId   String
+  vendorProfileId String // Changed from vendorId
   method     String  // "pickup" | "delivery" | "ship"
   locationId String?
   date       DateTime
@@ -370,7 +406,7 @@ model OrderFulfillment {
   location   FulfillmentLocation? @relation(fields: [locationId], references: [id])
   order      Order @relation(fields: [orderId], references: [id])
 
-  @@index([orderId, vendorId])
+  @@index([orderId, vendorProfileId])
 }
 
 model OrderEvent {
@@ -389,7 +425,7 @@ model OrderEvent {
 // CRM Models
 model CustomerProfile {
   id           String   @id @default(cuid())
-  vendorId     String
+  vendorProfileId String // Changed from vendorId
   userId       String?          // if the buyer has an account
   email        String?
   phone        String?
@@ -408,26 +444,26 @@ model CustomerProfile {
   notes        ContactNote[]
   tasks        CRMTask[]
 
-  @@index([vendorId, email])
-  @@index([vendorId, phone])
-  @@index([vendorId, lastName, firstName])
+  @@index([vendorProfileId, email])
+  @@index([vendorProfileId, phone])
+  @@index([vendorProfileId, lastName, firstName])
 }
 
 model ContactNote {
   id         String   @id @default(cuid())
-  vendorId   String
+  vendorProfileId String // Changed from vendorId
   contactId  String
   authorId   String
   body       String
   createdAt  DateTime @default(now())
 
   contact    CustomerProfile @relation(fields: [contactId], references: [id])
-  @@index([vendorId, contactId, createdAt])
+  @@index([vendorProfileId, contactId, createdAt])
 }
 
 model CRMTask {
   id         String   @id @default(cuid())
-  vendorId   String
+  vendorProfileId String // Changed from vendorId
   contactId  String
   title      String
   status     String   @default("open")  // open|in_progress|done
@@ -437,17 +473,67 @@ model CRMTask {
   updatedAt  DateTime @updatedAt
 
   contact    CustomerProfile @relation(fields: [contactId], references: [id])
-  @@index([vendorId, status, dueDate])
+  @@index([vendorProfileId, status, dueDate])
 }
 
 model Segment {
   id        String   @id @default(cuid())
-  vendorId  String
+  vendorProfileId String // Changed from vendorId
   name      String
   // simple JSON rules, e.g. { "any":[ {"field":"tags","op":"has","value":"VIP"}, {"field":"totalOrders","op":">=","value":3 } ] }
   rulesJson Json
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([vendorId, name])
+  @@index([vendorProfileId, name])
+}
+
+
+model ShippingAddress {
+  id          String   @id @default(cuid())
+  firstName   String?
+  lastName    String?
+  company     String?
+  address1    String?
+  address2    String?
+  city        String?
+  state       String?
+  postalCode  String?
+  country     String?
+  phone       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  orders      Order[]
+
+  @@index([postalCode])
+}
+
+
+
+// Enums
+enum OrderStatus {
+  PENDING
+  PAID
+  CANCELLED
+  FAILED
+  REFUNDED
+}
+
+enum Role {
+  VENDOR
+  ADMIN
+  CUSTOMER
+}
+
+enum TaxAlertType {
+  OVERDUE
+  REMINDER
+  PAYMENT_CONFIRMED
+}
+
+enum WalletTransactionType {
+  DEBIT
+  CREDIT
 }

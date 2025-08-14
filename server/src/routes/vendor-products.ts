@@ -137,7 +137,7 @@ router.get('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
     });
 
     if (!vendorProfile) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Vendor profile not found',
         message: 'Please create your vendor profile first'
       });
@@ -149,13 +149,13 @@ router.get('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
       orderBy: { createdAt: 'desc' }
     });
 
-    res.json({
+    return res.json({
       products,
       count: products.length
     });
   } catch (error) {
     console.error('Error fetching vendor products:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to fetch products'
     });
@@ -170,7 +170,7 @@ router.post('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
     if (!validationResult.success) {
       return res.status(400).json({
         error: 'Validation failed',
-        details: validationResult.error.errors
+        details: validationResult.errors
       });
     }
 
@@ -182,7 +182,7 @@ router.post('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
     });
 
     if (!vendorProfile) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Vendor profile not found',
         message: 'Please create your vendor profile first'
       });
@@ -202,7 +202,7 @@ router.post('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
       marginAlert = marginCalculation.isAlertTriggered;
       alertNote = marginCalculation.isAlertTriggered 
         ? generateAlertNote(productData.price, productData.cost, productData.targetMargin)
-        : null;
+        : undefined;
     }
 
     // Create the product
@@ -216,13 +216,13 @@ router.post('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
       }
     });
 
-    res.status(201).json({
+    return res.status(400).json({
       message: 'Product created successfully',
       product
     });
   } catch (error) {
     console.error('Error creating product:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to create product'
     });
@@ -240,7 +240,7 @@ router.get('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
     });
 
     if (!vendorProfile) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Vendor profile not found',
         message: 'Please create your vendor profile first'
       });
@@ -255,16 +255,16 @@ router.get('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
     });
 
     if (!product) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Product not found',
         message: 'Product does not exist or does not belong to you'
       });
     }
 
-    res.json(product);
+    return res.json(product);
   } catch (error) {
     console.error('Error fetching product:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to fetch product'
     });
@@ -281,7 +281,7 @@ router.put('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
     if (!validationResult.success) {
       return res.status(400).json({
         error: 'Validation failed',
-        details: validationResult.error.errors
+        details: validationResult.errors
       });
     }
 
@@ -293,7 +293,7 @@ router.put('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
     });
 
     if (!vendorProfile) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Vendor profile not found',
         message: 'Please create your vendor profile first'
       });
@@ -308,7 +308,7 @@ router.put('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
     });
 
     if (!currentProduct) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Product not found',
         message: 'Product does not exist or does not belong to you'
       });
@@ -335,7 +335,7 @@ router.put('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
       marginAlert = marginCalculation.isAlertTriggered;
       alertNote = marginCalculation.isAlertTriggered 
         ? generateAlertNote(Number(price), cost || 0, targetMargin)
-        : null;
+        : undefined;
     }
 
     // Update the product and ensure it belongs to this vendor
@@ -352,7 +352,7 @@ router.put('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
     });
 
     if (product.count === 0) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Product not found',
         message: 'Product does not exist or does not belong to you'
       });
@@ -366,13 +366,13 @@ router.put('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
       }
     });
 
-    res.json({
+    return res.json({
       message: 'Product updated successfully',
       product: updatedProduct
     });
   } catch (error) {
     console.error('Error updating product:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to update product'
     });
@@ -390,7 +390,7 @@ router.get('/:id/margin', requireAuth, requireRole(['VENDOR']), async (req, res)
     });
 
     if (!vendorProfile) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Vendor profile not found',
         message: 'Please create your vendor profile first'
       });
@@ -416,7 +416,7 @@ router.get('/:id/margin', requireAuth, requireRole(['VENDOR']), async (req, res)
     });
 
     if (!product) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Product not found',
         message: 'Product does not exist or does not belong to you'
       });
@@ -454,13 +454,13 @@ router.get('/:id/margin', requireAuth, requireRole(['VENDOR']), async (req, res)
     }
 
     // Suggest price if targetMargin is set
-    let suggestedPrice: number | null = null;
+    let suggestedPrice: number | undefined = null;
     if (product.targetMargin !== null && product.targetMargin !== undefined) {
       const targetMarginDecimal = product.targetMargin / 100;
       suggestedPrice = unitCost / (1 - targetMarginDecimal);
     }
 
-    res.json({
+    return res.json({
       product: {
         id: product.id,
         name: product.name,
@@ -475,12 +475,12 @@ router.get('/:id/margin', requireAuth, requireRole(['VENDOR']), async (req, res)
       marginAnalysis: {
         currentMargin: Math.round(currentMargin * 100) / 100, // Round to 2 decimal places
         status: status,
-        suggestedPrice: suggestedPrice ? Math.round(suggestedPrice * 100) / 100 : null
+        suggestedPrice: suggestedPrice ? Math.round(suggestedPrice * 100) / 100 : undefined
       }
     });
   } catch (error) {
     console.error('Error calculating product margin:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to calculate product margin'
     });
@@ -498,7 +498,7 @@ router.delete('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => 
     });
 
     if (!vendorProfile) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Vendor profile not found',
         message: 'Please create your vendor profile first'
       });
@@ -513,18 +513,18 @@ router.delete('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => 
     });
 
     if (product.count === 0) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Product not found',
         message: 'Product does not exist or does not belong to you'
       });
     }
 
-    res.json({
+    return res.json({
       message: 'Product deleted successfully'
     });
   } catch (error) {
     console.error('Error deleting product:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to delete product'
     });
@@ -542,7 +542,7 @@ router.get('/:id/ai-suggestion', requireAuth, requireRole(['VENDOR']), async (re
     });
 
     if (!vendorProfile) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Vendor profile not found',
         message: 'Please create your vendor profile first'
       });
@@ -568,7 +568,7 @@ router.get('/:id/ai-suggestion', requireAuth, requireRole(['VENDOR']), async (re
     });
 
     if (!product) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Product not found',
         message: 'Product does not exist or does not belong to you'
       });
@@ -622,7 +622,7 @@ router.get('/:id/ai-suggestion', requireAuth, requireRole(['VENDOR']), async (re
       }
     });
 
-    res.json({
+    return res.json({
       product: {
         id: product.id,
         name: product.name,
@@ -644,7 +644,7 @@ router.get('/:id/ai-suggestion', requireAuth, requireRole(['VENDOR']), async (re
     });
   } catch (error) {
     console.error('Error generating AI price suggestion:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to generate AI price suggestion'
     });
@@ -662,7 +662,7 @@ router.post('/:id/ai-suggest', requireAuth, requireRole(['VENDOR']), async (req,
     });
 
     if (!vendorProfile) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Vendor profile not found',
         message: 'Please create your vendor profile first'
       });
@@ -688,7 +688,7 @@ router.post('/:id/ai-suggest', requireAuth, requireRole(['VENDOR']), async (req,
     });
 
     if (!product) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Product not found',
         message: 'Product does not exist or does not belong to you'
       });
@@ -748,7 +748,7 @@ router.post('/:id/ai-suggest', requireAuth, requireRole(['VENDOR']), async (req,
       }
     });
 
-    res.json({
+    return res.json({
       message: 'AI suggestion applied successfully',
       product: {
         id: updatedProduct.id,
@@ -779,7 +779,7 @@ router.post('/:id/ai-suggest', requireAuth, requireRole(['VENDOR']), async (req,
     });
   } catch (error) {
     console.error('Error applying AI price suggestion:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to apply AI price suggestion'
     });
@@ -795,7 +795,7 @@ router.get('/low-margin', requireAuth, requireRole(['VENDOR']), async (req, res)
     });
 
     if (!vendorProfile) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Vendor profile not found',
         message: 'Please create your vendor profile first'
       });
@@ -864,14 +864,14 @@ router.get('/low-margin', requireAuth, requireRole(['VENDOR']), async (req, res)
       product => product.marginAnalysis.status === 'danger' || product.marginAnalysis.status === 'warning'
     );
 
-    res.json({
+    return res.json({
       lowMarginProducts,
       count: lowMarginProducts.length,
       totalProducts: products.length
     });
   } catch (error) {
     console.error('Error fetching low margin products:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to fetch low margin products'
     });
@@ -887,7 +887,7 @@ router.get('/ingredient-price-alerts', requireAuth, requireRole(['VENDOR']), asy
     });
 
     if (!vendorProfile) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Vendor profile not found',
         message: 'Please create your vendor profile first'
       });
@@ -897,7 +897,7 @@ router.get('/ingredient-price-alerts', requireAuth, requireRole(['VENDOR']), asy
     const products = await prisma.product.findMany({
       where: { 
         vendorProfileId: vendorProfile.id,
-        recipeId: { not: null }
+        recipeId: { not: undefined }
       },
       include: {
         recipe: {
@@ -946,13 +946,13 @@ router.get('/ingredient-price-alerts', requireAuth, requireRole(['VENDOR']), asy
       }
     }
 
-    res.json({
+    return res.json({
       alerts,
       count: alerts.length
     });
   } catch (error) {
     console.error('Error fetching ingredient price alerts:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to fetch ingredient price alerts'
     });
@@ -977,7 +977,7 @@ router.post('/batch-update-pricing', requireAuth, requireRole(['VENDOR']), async
     });
 
     if (!vendorProfile) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Vendor profile not found',
         message: 'Please create your vendor profile first'
       });
@@ -1062,7 +1062,7 @@ router.post('/batch-update-pricing', requireAuth, requireRole(['VENDOR']), async
       }
     }
 
-    res.json({
+    return res.json({
       message: 'Batch pricing update completed',
       updatedProducts,
       skippedProducts,
@@ -1074,7 +1074,7 @@ router.post('/batch-update-pricing', requireAuth, requireRole(['VENDOR']), async
     });
   } catch (error) {
     console.error('Error in batch pricing update:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to update pricing'
     });
@@ -1090,7 +1090,7 @@ router.get('/alerts/margin', requireAuth, requireRole(['VENDOR']), async (req, r
     });
 
     if (!vendorProfile) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Vendor profile not found',
         message: 'Please create your vendor profile first'
       });
@@ -1119,7 +1119,7 @@ router.get('/alerts/margin', requireAuth, requireRole(['VENDOR']), async (req, r
       };
     });
 
-    res.json({
+    return res.json({
       products: productsWithMarginData,
       count: productsWithMarginData.length,
       summary: {
@@ -1130,7 +1130,7 @@ router.get('/alerts/margin', requireAuth, requireRole(['VENDOR']), async (req, r
     });
   } catch (error) {
     console.error('Error fetching products with margin alerts:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to fetch products with margin alerts'
     });

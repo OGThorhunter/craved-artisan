@@ -275,7 +275,7 @@ router.get('/:vendorId', async (req, res) => {
     const vendor = mockVendors[vendorId];
     
     if (!vendor) {
-      return res.status(404).json({
+      return res.status(400).json({
         success: false,
         error: 'Vendor not found',
         message: `No vendor found with ID: ${vendorId}`
@@ -283,7 +283,7 @@ router.get('/:vendorId', async (req, res) => {
     }
 
     // Return vendor data
-    res.json({
+    return res.json({
       success: true,
       data: vendor
     });
@@ -298,7 +298,7 @@ router.get('/:vendorId', async (req, res) => {
     }
 
     console.error('Error fetching vendor:', error);
-    res.status(500).json({
+    return res.status(400).json({
       success: false,
       error: 'Internal server error',
       message: 'Failed to fetch vendor data'
@@ -314,7 +314,7 @@ router.get('/:vendorId/products', async (req, res) => {
     const vendor = mockVendors[vendorId];
     
     if (!vendor) {
-      return res.status(404).json({
+      return res.status(400).json({
         success: false,
         error: 'Vendor not found'
       });
@@ -375,7 +375,7 @@ router.get('/:vendorId/products', async (req, res) => {
     const total = products.length;
     const paginatedProducts = products.slice(parseInt(offset.toString()), parseInt(offset.toString()) + parseInt(limit.toString()));
 
-    res.json({
+    return res.json({
       success: true,
       data: {
         products: paginatedProducts,
@@ -398,7 +398,7 @@ router.get('/:vendorId/products', async (req, res) => {
     }
 
     console.error('Error fetching vendor products:', error);
-    res.status(500).json({
+    return res.status(400).json({
       success: false,
       error: 'Internal server error'
     });
@@ -413,7 +413,7 @@ router.get('/:vendorId/reviews', async (req, res) => {
     const vendor = mockVendors[vendorId];
     
     if (!vendor) {
-      return res.status(404).json({
+      return res.status(400).json({
         success: false,
         error: 'Vendor not found'
       });
@@ -425,7 +425,7 @@ router.get('/:vendorId/reviews', async (req, res) => {
     const total = reviews.length;
     const paginatedReviews = reviews.slice(parseInt(offset.toString()), parseInt(offset.toString()) + parseInt(limit.toString()));
 
-    res.json({
+    return res.json({
       success: true,
       data: {
         reviews: paginatedReviews,
@@ -448,7 +448,7 @@ router.get('/:vendorId/reviews', async (req, res) => {
     }
 
     console.error('Error fetching vendor reviews:', error);
-    res.status(500).json({
+    return res.status(400).json({
       success: false,
       error: 'Internal server error'
     });
@@ -463,7 +463,7 @@ router.post('/:vendorId/follow', async (req, res) => {
     const vendor = mockVendors[vendorId];
     
     if (!vendor) {
-      return res.status(404).json({
+      return res.status(400).json({
         success: false,
         error: 'Vendor not found'
       });
@@ -471,7 +471,7 @@ router.post('/:vendorId/follow', async (req, res) => {
 
     // TODO: Implement actual follow logic with user authentication
     // For now, just return success
-    res.json({
+    return res.json({
       success: true,
       message: 'Successfully followed vendor',
       data: {
@@ -490,7 +490,7 @@ router.post('/:vendorId/follow', async (req, res) => {
     }
 
     console.error('Error following vendor:', error);
-    res.status(500).json({
+    return res.status(400).json({
       success: false,
       error: 'Internal server error'
     });
@@ -505,14 +505,14 @@ router.delete('/:vendorId/follow', async (req, res) => {
     const vendor = mockVendors[vendorId];
     
     if (!vendor) {
-      return res.status(404).json({
+      return res.status(400).json({
         success: false,
         error: 'Vendor not found'
       });
     }
 
     // TODO: Implement actual unfollow logic with user authentication
-    res.json({
+    return res.json({
       success: true,
       message: 'Successfully unfollowed vendor',
       data: {
@@ -531,7 +531,7 @@ router.delete('/:vendorId/follow', async (req, res) => {
     }
 
     console.error('Error unfollowing vendor:', error);
-    res.status(500).json({
+    return res.status(400).json({
       success: false,
       error: 'Internal server error'
     });
@@ -549,7 +549,7 @@ router.get('/:vendorId/analytics/trends', async (req, res) => {
     const vendor = mockVendors[vendorId];
     
     if (!vendor) {
-      return res.status(404).json({
+      return res.status(400).json({
         success: false,
         error: 'Vendor not found'
       });
@@ -621,7 +621,7 @@ router.get('/:vendorId/analytics/trends', async (req, res) => {
 
     const trends = generateMockTrends(range);
 
-    res.json({
+    return res.json({
       success: true,
       data: trends,
       meta: {
@@ -642,7 +642,7 @@ router.get('/:vendorId/analytics/trends', async (req, res) => {
     }
 
     console.error('Error fetching analytics trends:', error);
-    res.status(500).json({
+    return res.status(400).json({
       success: false,
       error: 'Internal server error'
     });

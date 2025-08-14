@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { prisma } from '../lib/prisma';
+import prisma from '/prisma';
 import { upsertPurchase } from '../services/inventory.service';
 
 export async function listIngredients(req: Request, res: Response) {

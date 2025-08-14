@@ -1,6 +1,6 @@
 import express from 'express';
 import { z } from 'zod';
-import { prisma } from '../lib/prisma';
+import prisma from '/prisma';
 import { requireAuth, requireRole } from '../middleware/auth';
 import { isVendorOwnerOrAdmin } from '../middleware/isVendorOwnerOrAdmin';
 import { Parser } from 'json2csv';
@@ -44,7 +44,7 @@ router.get('/:id/financials', requireAuth, requireRole(['VENDOR', 'ADMIN']), isV
     });
 
     if (!vendor) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Vendor not found',
         message: 'Vendor does not exist'
       });
@@ -119,7 +119,7 @@ router.get('/:id/financials', requireAuth, requireRole(['VENDOR', 'ADMIN']), isV
     const latestSnapshot = snapshots[0];
     const currentNetWorth = latestSnapshot?.equity || 0;
 
-    res.json({
+    return res.json({
       vendor: {
         id: vendor.id,
         storeName: vendor.storeName
@@ -143,7 +143,7 @@ router.get('/:id/financials', requireAuth, requireRole(['VENDOR', 'ADMIN']), isV
     });
   } catch (error) {
     console.error('Error fetching vendor financials:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to fetch vendor financials'
     });
@@ -162,7 +162,7 @@ router.get('/:id/financials/export.csv', requireAuth, requireRole(['VENDOR', 'AD
     });
 
     if (!vendor) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Vendor not found',
         message: 'Vendor does not exist'
       });
@@ -174,7 +174,7 @@ router.get('/:id/financials/export.csv', requireAuth, requireRole(['VENDOR', 'AD
     });
 
     if (entries.length === 0) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'No financial data found',
         message: 'No financial snapshots available for export'
       });
@@ -188,7 +188,7 @@ router.get('/:id/financials/export.csv', requireAuth, requireRole(['VENDOR', 'AD
     return res.send(csv);
   } catch (error) {
     console.error('Error exporting financial data:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to export financial data'
     });
@@ -207,7 +207,7 @@ router.get('/:id/financials/export.pdf', requireAuth, requireRole(['VENDOR', 'AD
     });
 
     if (!vendor) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Vendor not found',
         message: 'Vendor does not exist'
       });
@@ -219,7 +219,7 @@ router.get('/:id/financials/export.pdf', requireAuth, requireRole(['VENDOR', 'AD
     });
 
     if (entries.length === 0) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'No financial data found',
         message: 'No financial snapshots available for export'
       });
@@ -518,7 +518,7 @@ router.get('/:id/financials/export.pdf', requireAuth, requireRole(['VENDOR', 'AD
     doc.end();
   } catch (error) {
     console.error('Error exporting financial data as PDF:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to export financial data as PDF'
     });
@@ -538,7 +538,7 @@ router.post('/:id/financials/generate', requireAuth, requireRole(['VENDOR', 'ADM
     });
 
     if (!vendor) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Vendor not found',
         message: 'Vendor does not exist'
       });
@@ -659,7 +659,7 @@ router.post('/:id/financials/generate', requireAuth, requireRole(['VENDOR', 'ADM
       }
     });
 
-    res.status(201).json({
+    return res.status(400).json({
       message: 'Financial snapshot generated successfully',
       snapshot,
       period: {
@@ -677,7 +677,7 @@ router.post('/:id/financials/generate', requireAuth, requireRole(['VENDOR', 'ADM
     });
   } catch (error) {
     console.error('Error generating financial snapshot:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to generate financial snapshot'
     });
@@ -695,10 +695,10 @@ router.get('/snapshots', requireAuth, requireRole(['VENDOR', 'ADMIN']), async (r
       take: 100, // Limit to last 100 snapshots
     });
 
-    res.json({ snapshots });
+    return res.json({ snapshots });
   } catch (error) {
     console.error('Error fetching financial snapshots:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to fetch financial snapshots'
     });
@@ -719,16 +719,16 @@ router.get('/snapshots/:id', requireAuth, requireRole(['VENDOR', 'ADMIN']), asyn
     });
 
     if (!snapshot) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Financial snapshot not found',
         message: 'Snapshot does not exist or you do not have access'
       });
     }
 
-    res.json({ snapshot });
+    return res.json({ snapshot });
   } catch (error) {
     console.error('Error fetching financial snapshot:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to fetch financial snapshot'
     });
@@ -748,7 +748,7 @@ router.post('/snapshots', requireAuth, requireRole(['VENDOR', 'ADMIN']), async (
       }
     });
 
-    res.status(201).json({ snapshot });
+    return res.status(400).json({ snapshot });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
@@ -759,7 +759,7 @@ router.post('/snapshots', requireAuth, requireRole(['VENDOR', 'ADMIN']), async (
     }
 
     console.error('Error creating financial snapshot:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to create financial snapshot'
     });
@@ -782,7 +782,7 @@ router.put('/snapshots/:id', requireAuth, requireRole(['VENDOR', 'ADMIN']), asyn
     });
 
     if (!existingSnapshot) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Financial snapshot not found',
         message: 'Snapshot does not exist or you do not have access'
       });
@@ -793,7 +793,7 @@ router.put('/snapshots/:id', requireAuth, requireRole(['VENDOR', 'ADMIN']), asyn
       data: validatedData
     });
 
-    res.json({ snapshot });
+    return res.json({ snapshot });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
@@ -804,7 +804,7 @@ router.put('/snapshots/:id', requireAuth, requireRole(['VENDOR', 'ADMIN']), asyn
     }
 
     console.error('Error updating financial snapshot:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to update financial snapshot'
     });
@@ -826,7 +826,7 @@ router.delete('/snapshots/:id', requireAuth, requireRole(['VENDOR', 'ADMIN']), a
     });
 
     if (!existingSnapshot) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Financial snapshot not found',
         message: 'Snapshot does not exist or you do not have access'
       });
@@ -836,10 +836,10 @@ router.delete('/snapshots/:id', requireAuth, requireRole(['VENDOR', 'ADMIN']), a
       where: { id }
     });
 
-    res.json({ message: 'Financial snapshot deleted successfully' });
+    return res.json({ message: 'Financial snapshot deleted successfully' });
   } catch (error) {
     console.error('Error deleting financial snapshot:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to delete financial snapshot'
     });
@@ -897,7 +897,7 @@ router.get('/analytics', requireAuth, requireRole(['VENDOR', 'ADMIN']), async (r
       cashFlow: snapshot.cashIn - snapshot.cashOut
     }));
 
-    res.json({
+    return res.json({
       analytics: {
         totalRevenue,
         totalProfit,
@@ -910,7 +910,7 @@ router.get('/analytics', requireAuth, requireRole(['VENDOR', 'ADMIN']), async (r
     });
   } catch (error) {
     console.error('Error fetching financial analytics:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to fetch financial analytics'
     });
@@ -929,7 +929,7 @@ router.post('/:id/financials/import', requireAuth, requireRole(['VENDOR', 'ADMIN
     });
 
     if (!vendor) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Vendor not found',
         message: 'Vendor does not exist'
       });
@@ -1000,7 +1000,7 @@ router.post('/:id/financials/import', requireAuth, requireRole(['VENDOR', 'ADMIN
       }
     }
 
-    res.json({ 
+    return res.json({ 
       message: '✅ Financial data imported successfully',
       importedCount: importedSnapshots.length,
       totalRows: records.length,
@@ -1008,7 +1008,7 @@ router.post('/:id/financials/import', requireAuth, requireRole(['VENDOR', 'ADMIN
     });
   } catch (error) {
     console.error('Error importing financial data:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to import financial data'
     });
@@ -1028,7 +1028,7 @@ router.get('/:id/financials/insights', requireAuth, requireRole(['VENDOR', 'ADMI
     });
 
     if (!vendor) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Vendor not found',
         message: 'Vendor does not exist'
       });
@@ -1145,7 +1145,7 @@ router.get('/:id/financials/insights', requireAuth, requireRole(['VENDOR', 'ADMI
       }
     }
 
-    res.json({
+    return res.json({
       topGains,
       costTrend: {
         trend: costTrendTrend,
@@ -1169,7 +1169,7 @@ router.get('/:id/financials/insights', requireAuth, requireRole(['VENDOR', 'ADMI
 
   } catch (error) {
     console.error('Error generating financial insights:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to generate financial insights'
     });
@@ -1188,7 +1188,7 @@ router.get('/:vendorId/financials/summary', requireAuth, requireRole(['VENDOR', 
     });
 
     if (!vendor) {
-      return res.status(404).json({
+      return res.status(400).json({
         error: 'Vendor not found',
         message: 'Vendor does not exist'
       });
@@ -1210,10 +1210,10 @@ router.get('/:vendorId/financials/summary', requireAuth, requireRole(['VENDOR', 
       cogs: d.cogs,
     }));
 
-    res.json({ revenueVsProfit, cogsTrend });
+    return res.json({ revenueVsProfit, cogsTrend });
   } catch (error) {
     console.error('Error fetching financial summary:', error);
-    res.status(500).json({
+    return res.status(400).json({
       error: 'Internal server error',
       message: 'Failed to fetch financial summary'
     });
@@ -1235,7 +1235,7 @@ router.patch('/:id/financials/:snapshotId', requireAuth, requireRole(['VENDOR', 
     });
 
     if (!existingSnapshot) {
-      return res.status(404).json({ error: 'Financial snapshot not found' });
+      return res.status(400).json({ error: 'Financial snapshot not found' });
     }
 
     // Update the financial snapshot
@@ -1244,10 +1244,10 @@ router.patch('/:id/financials/:snapshotId', requireAuth, requireRole(['VENDOR', 
       data: updateData
     });
 
-    res.json(updatedSnapshot);
+    return res.json(updatedSnapshot);
   } catch (error) {
     console.error('Error updating financial snapshot:', error);
-    res.status(500).json({ error: 'Failed to update financial snapshot' });
+    return res.status(400).json({ error: 'Failed to update financial snapshot' });
   }
 });
 

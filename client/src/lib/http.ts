@@ -75,3 +75,32 @@ export const api = {
     return { data };
   }
 };
+
+// Legacy export for backward compatibility
+export const httpJson = {
+  async get(path: string): Promise<any> {
+    const response = await http(path, { method: 'GET' });
+    return await response.json();
+  },
+  
+  async post(path: string, body?: any): Promise<any> {
+    const response = await http(path, { 
+      method: 'POST', 
+      body: body ? JSON.stringify(body) : undefined 
+    });
+    return await response.json();
+  },
+  
+  async put(path: string, body?: any): Promise<any> {
+    const response = await http(path, { 
+      method: 'PUT', 
+      body: body ? JSON.stringify(body) : undefined 
+    });
+    return await response.json();
+  },
+  
+  async delete(path: string): Promise<any> {
+    const response = await http(path, { method: 'DELETE' });
+    return await response.json();
+  }
+};

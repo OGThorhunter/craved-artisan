@@ -1,4 +1,4 @@
-import { prisma } from "../lib/prisma";
+import prisma from '../lib/prisma';
 import { financialConfig } from "../config/env";
 
 type Range = { from?: Date; to?: Date };

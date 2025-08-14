@@ -127,7 +127,7 @@ const validateRequest = (schema: z.ZodSchema) => {
           errors: error.errors
         });
       }
-      res.status(400).json({ message: 'Invalid request data' });
+      return res.status(400).json({ message: 'Invalid request data' });
     }
   };
 };
@@ -141,13 +141,13 @@ router.get('/', (req, res) => {
       ingredients: recipeIngredients.filter(ri => ri.recipeId === recipe.id)
     }));
 
-    res.json({
+    return res.json({
       message: 'Recipes retrieved successfully',
       recipes: vendorRecipes
     });
   } catch (error) {
     console.error('Error fetching recipes:', error);
-    res.status(500).json({ message: 'Failed to fetch recipes' });
+    return res.status(400).json({ message: 'Failed to fetch recipes' });
   }
 });
 
@@ -158,12 +158,12 @@ router.get('/:id', (req, res) => {
     const recipe = recipes.find(r => r.id === id);
     
     if (!recipe) {
-      return res.status(404).json({ message: 'Recipe not found' });
+      return res.status(400).json({ message: 'Recipe not found' });
     }
     
     const ingredients = recipeIngredients.filter(ri => ri.recipeId === id);
     
-    res.json({
+    return res.json({
       message: 'Recipe retrieved successfully',
       recipe: {
         ...recipe,
@@ -172,7 +172,7 @@ router.get('/:id', (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching recipe:', error);
-    res.status(500).json({ message: 'Failed to fetch recipe' });
+    return res.status(400).json({ message: 'Failed to fetch recipe' });
   }
 });
 
@@ -207,7 +207,7 @@ router.post('/', validateRequest(createRecipeSchema), (req, res) => {
     
     recipeIngredients.push(...newRecipeIngredients);
     
-    res.status(201).json({
+    return res.status(400).json({
       message: 'Recipe created successfully',
       recipe: {
         ...newRecipe,
@@ -216,7 +216,7 @@ router.post('/', validateRequest(createRecipeSchema), (req, res) => {
     });
   } catch (error) {
     console.error('Error creating recipe:', error);
-    res.status(500).json({ message: 'Failed to create recipe' });
+    return res.status(400).json({ message: 'Failed to create recipe' });
   }
 });
 
@@ -227,7 +227,7 @@ router.put('/:id', validateRequest(updateRecipeSchema), (req, res) => {
     const recipeIndex = recipes.findIndex(r => r.id === id);
     
     if (recipeIndex === -1) {
-      return res.status(404).json({ message: 'Recipe not found' });
+      return res.status(400).json({ message: 'Recipe not found' });
     }
     
     const updatedRecipe = {
@@ -238,13 +238,13 @@ router.put('/:id', validateRequest(updateRecipeSchema), (req, res) => {
     
     recipes[recipeIndex] = updatedRecipe;
     
-    res.json({
+    return res.json({
       message: 'Recipe updated successfully',
       recipe: updatedRecipe
     });
   } catch (error) {
     console.error('Error updating recipe:', error);
-    res.status(500).json({ message: 'Failed to update recipe' });
+    return res.status(400).json({ message: 'Failed to update recipe' });
   }
 });
 
@@ -255,7 +255,7 @@ router.delete('/:id', (req, res) => {
     const recipeIndex = recipes.findIndex(r => r.id === id);
     
     if (recipeIndex === -1) {
-      return res.status(404).json({ message: 'Recipe not found' });
+      return res.status(400).json({ message: 'Recipe not found' });
     }
     
     const deletedRecipe = recipes[recipeIndex];
@@ -264,13 +264,13 @@ router.delete('/:id', (req, res) => {
     // Remove associated recipe ingredients
     recipeIngredients = recipeIngredients.filter(ri => ri.recipeId !== id);
     
-    res.json({
+    return res.json({
       message: 'Recipe deleted successfully',
       recipe: deletedRecipe
     });
   } catch (error) {
     console.error('Error deleting recipe:', error);
-    res.status(500).json({ message: 'Failed to delete recipe' });
+    return res.status(400).json({ message: 'Failed to delete recipe' });
   }
 });
 
@@ -281,18 +281,18 @@ router.get('/:id/ingredients', (req, res) => {
     const recipe = recipes.find(r => r.id === id);
     
     if (!recipe) {
-      return res.status(404).json({ message: 'Recipe not found' });
+      return res.status(400).json({ message: 'Recipe not found' });
     }
     
     const ingredients = recipeIngredients.filter(ri => ri.recipeId === id);
     
-    res.json({
+    return res.json({
       message: 'Recipe ingredients retrieved successfully',
       ingredients
     });
   } catch (error) {
     console.error('Error fetching recipe ingredients:', error);
-    res.status(500).json({ message: 'Failed to fetch recipe ingredients' });
+    return res.status(400).json({ message: 'Failed to fetch recipe ingredients' });
   }
 });
 
