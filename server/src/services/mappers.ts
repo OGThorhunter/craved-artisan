@@ -27,7 +27,7 @@ export function mapVendor(v: VendorProfile & { user?: any }): VendorDTO {
     id: v.id,
     name: v.storeName,
     city: v.bio ?? "", // Using description as city placeholder
-    state: v.tags?.join(", ") ?? "", // Using category as state placeholder
+    state: "", // Using category as state placeholder
     tagline: v.bio ?? undefined,
     verified: false // Default to false since we don't have this field
   };

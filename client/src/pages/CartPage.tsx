@@ -10,7 +10,7 @@ import {
   Package, Users, DollarSign, Percent, Tag, Sparkles,
   Brain, Zap, Target, TrendingUp, ArrowRight, ArrowLeft,
   Filter, Search, Settings, HelpCircle, Phone, Mail,
-  Camera, QrCode, Receipt, Download, Print, Send
+  Camera, QrCode, Receipt, Download, Send
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 

@@ -2,9 +2,9 @@ import { Request, Response, NextFunction } from 'express';
 
 // Mock Role enum
 enum Role {
-  CUSTOMER = 'CUSTOMER',
-  VENDOR = 'VENDOR',
-  ADMIN = 'ADMIN',
+  CUSTOMER = Role.CUSTOMER,
+  VENDOR = Role.VENDOR,
+  ADMIN = Role.ADMIN,
   SUPPLIER = 'SUPPLIER',
   EVENT_COORDINATOR = 'EVENT_COORDINATOR',
   DROPOFF = 'DROPOFF'
@@ -72,7 +72,7 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
 
     // Attach user to request
     (req as any).user = user;
-    next();
+    return next();
   } catch (error) {
     console.error('Auth middleware error:', error);
     res.status(500).json({
@@ -112,7 +112,7 @@ export const requireRole = (allowedRoles: Role[]) => {
 
       // Attach user to request
       (req as any).user = user;
-      next();
+      return next();
     } catch (error) {
       console.error('Role middleware error:', error);
       res.status(500).json({

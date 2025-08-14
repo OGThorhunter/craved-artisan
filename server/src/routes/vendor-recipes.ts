@@ -38,7 +38,7 @@ const validateRequest = (schema: z.ZodSchema) => {
     try {
       const validatedData = schema.parse(req.body);
       req.body = validatedData;
-      next();
+      return next();
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({
@@ -55,7 +55,7 @@ const validateRequest = (schema: z.ZodSchema) => {
 };
 
 // GET /api/vendor/recipes - Get all recipes for the vendor
-router.get('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.get('/', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     const vendorProfile = await prisma.vendorProfile.findUnique({
       where: { userId: req.session.userId! }
@@ -96,7 +96,7 @@ router.get('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
 });
 
 // GET /api/vendor/recipes/:id - Get a specific recipe
-router.get('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.get('/:id', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -146,7 +146,7 @@ router.get('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
 });
 
 // POST /api/vendor/recipes - Create a new recipe
-router.post('/', requireAuth, requireRole(['VENDOR']), validateRequest(createRecipeSchema), async (req, res) => {
+router.post('/', requireAuth, requireRole([Role.VENDOR]), validateRequest(createRecipeSchema), async (req, res) => {
   try {
     const vendorProfile = await prisma.vendorProfile.findUnique({
       where: { userId: req.session.userId! }
@@ -183,7 +183,7 @@ router.post('/', requireAuth, requireRole(['VENDOR']), validateRequest(createRec
 });
 
 // PUT /api/vendor/recipes/:id - Update a recipe
-router.put('/:id', requireAuth, requireRole(['VENDOR']), validateRequest(updateRecipeSchema), async (req, res) => {
+router.put('/:id', requireAuth, requireRole([Role.VENDOR]), validateRequest(updateRecipeSchema), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -232,7 +232,7 @@ router.put('/:id', requireAuth, requireRole(['VENDOR']), validateRequest(updateR
 });
 
 // DELETE /api/vendor/recipes/:id - Delete a recipe
-router.delete('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.delete('/:id', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -268,7 +268,7 @@ router.delete('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => 
 });
 
        // POST /api/vendor/recipes/:id/version - Create a snapshot version of a recipe
-       router.post('/:id/version', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+       router.post('/:id/version', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
          try {
            const { id } = req.params;
            const { notes } = req.body; // Optional version notes
@@ -316,7 +316,7 @@ router.delete('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => 
            const ingredientVersions = [];
 
            for (const recipeIngredient of recipe.recipeIngredients) {
-             const ingredientCost = recipeIngredient.quantity * recipeIngredient.ingredient.costPerUnit;
+             const ingredientCost = Number(recipeIngredient.quantity) * Number(recipeIngredient.ingredient.costPerUnit);
              totalCost += ingredientCost;
 
              ingredientVersions.push({
@@ -344,7 +344,7 @@ router.delete('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => 
                totalCost,
                notes,
                recipeId: id,
-               editorId: req.session.userId!, // Track who created this version
+                               editorId: req.session.userId!, // Track who created this version
                recipeIngredientVersions: {
                  create: ingredientVersions
                }
@@ -390,7 +390,7 @@ router.delete('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => 
                notes: recipeVersion.notes,
                createdAt: recipeVersion.createdAt,
                updatedAt: recipeVersion.updatedAt,
-               editor: recipeVersion.editor,
+               editorId: recipeVersion.editorId,
                ingredients: recipeVersion.recipeIngredientVersions.map(ing => ({
                  id: ing.id,
                  quantity: ing.quantity,
@@ -409,7 +409,7 @@ router.delete('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => 
        });
 
        // GET /api/vendor/recipes/:id/versions - Get all versions of a recipe
-       router.get('/:id/versions', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+       router.get('/:id/versions', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
          try {
            const { id } = req.params;
 
@@ -511,7 +511,7 @@ router.delete('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => 
        });
 
 // GET /api/vendor/recipes/:id/versions/:version - Get a specific version
-router.get('/:id/versions/:version', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.get('/:id/versions/:version', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     const { id, version } = req.params;
 
@@ -592,7 +592,7 @@ router.get('/:id/versions/:version', requireAuth, requireRole(['VENDOR']), async
         notes: recipeVersion.notes,
         createdAt: recipeVersion.createdAt,
         updatedAt: recipeVersion.updatedAt,
-        editor: recipeVersion.editor,
+                 editorId: req.session.userId!,
         costDelta,
         costDeltaPercent,
         ingredients: recipeVersion.recipeIngredientVersions.map(ing => ({

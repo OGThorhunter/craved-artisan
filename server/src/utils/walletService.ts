@@ -3,7 +3,7 @@ import prisma, { OrderStatus, TaxAlertType, WalletTransactionType } from '../lib
 export interface WalletTransaction {
   id: string;
   vendorId: string;
-  type: 'debit' | 'credit';
+  type: WalletTransactionType.DEBIT | WalletTransactionType.CREDIT;
   source: string;
   amount: number;
   description?: string;
@@ -31,7 +31,7 @@ export interface LabelPrintRequest {
 export interface LabelPrint {
   id: string;
   vendorId: string;
-  type: string;
+  type: WalletTransactionType;
   quantity: number;
   cost: number;
   status: string;
@@ -103,7 +103,7 @@ export async function addFundsToWallet(
     const transaction = await tx.walletTransaction.create({
       data: {
         vendorId,
-        type: 'credit',
+        type: WalletTransactionType.CREDIT,
         source,
         amount,
         description,
@@ -157,7 +157,7 @@ export async function deductFundsFromWallet(
     const transaction = await tx.walletTransaction.create({
       data: {
         vendorId,
-        type: 'debit',
+        type: WalletTransactionType.DEBIT,
         source,
         amount,
         description,
@@ -244,7 +244,7 @@ export async function processLabelPrint(request: LabelPrintRequest): Promise<Lab
     await tx.walletTransaction.create({
       data: {
         vendorId,
-        type: 'debit',
+        type: WalletTransactionType.DEBIT,
         source: 'Label Print',
         amount: cost,
         description: `${type} label print (${quantity} labels)`,
@@ -291,7 +291,7 @@ export async function generateLabelFile(labelPrintId: string): Promise<string> {
   await prisma.labelPrint.update({
     where: { id: labelPrintId },
     data: {
-      status: 'completed',
+      status: FulfillmentStatus.COMPLETED,
       fileUrl
     }
   });
@@ -366,7 +366,7 @@ export async function refundLabelPrint(labelPrintId: string): Promise<WalletTran
     throw new Error('Label print not found');
   }
 
-  if (labelPrint.status !== 'failed') {
+  if (labelPrint.status !== FulfillmentStatus.FAILED) {
     throw new Error('Can only refund failed label prints');
   }
 

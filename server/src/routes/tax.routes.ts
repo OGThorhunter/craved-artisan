@@ -1,7 +1,7 @@
 import { Router } from "express";
 import Stripe from "stripe";
-import prisma from '/prisma';
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2024-06-20" });
+import prisma from '../lib/prisma';
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2023-10-16" });
 const r = Router();
 
 r.post("/quote", async (req, res) => {
@@ -18,7 +18,7 @@ r.post("/quote", async (req, res) => {
     if (!p) continue;
     line_items.push({
       amount: Math.round(Number(p.price) * li.quantity * 100),
-      tax_code: p.taxCode || undefined,
+      tax_code: p.taxCode || undefined || undefined,
       reference: p.id,
     });
   }
@@ -29,7 +29,7 @@ r.post("/quote", async (req, res) => {
     line_items,
   });
 
-  return res.json({ amountSubtotal: calc.amount_subtotal, amountTax: calc.amount_tax, amountTotal: calc.amount_total, breakdown: calc.tax_breakdown });
+  return res.json({ amountSubtotal: calc.amount_total, amountTax: calc.amount_total, amountTotal: calc.amount_total, breakdown: calc.tax_breakdown });
 });
 
 export default r;

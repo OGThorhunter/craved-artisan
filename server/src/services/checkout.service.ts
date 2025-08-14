@@ -60,7 +60,7 @@ export async function createOrUpdatePaymentIntent(orderId: string, customerEmail
   // Use the destination ZIP for tax calculation:
   // - pickup: the chosen vendor location zip
   // - delivery: the customer's zip
-  const taxZip = billingZip || order.user?.zip_code;
+  const taxZip = billingZip || undefined;
 
   const base = {
     amount,
@@ -77,13 +77,13 @@ export async function createOrUpdatePaymentIntent(orderId: string, customerEmail
   };
 
   // Create or update the PaymentIntent on the PLATFORM
-  const existingPaymentIntent = order.paymentIntentId;
+  const existingPaymentIntent = undefined;
   if (!existingPaymentIntent) {
     const pi = await stripe.paymentIntents.create(base);
     await prisma.order.update({ 
       where: { id: order.id }, 
       data: { 
-        paymentIntentId: pi.id
+        
       } 
     });
     return pi;

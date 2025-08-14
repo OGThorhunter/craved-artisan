@@ -1,5 +1,6 @@
 import express from 'express';
 import { requireAuth, requireRole } from '../middleware/auth-mock';
+import { Role } from '../lib/prisma';
 
 const router = express.Router();
 
@@ -16,7 +17,7 @@ let mockVendorProfile = {
 };
 
 // GET /api/vendor/profile
-router.get('/profile', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.get('/profile', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     // Simulate database lookup
     if (req.session.userId === 'dev-user-id') {
@@ -37,7 +38,7 @@ router.get('/profile', requireAuth, requireRole(['VENDOR']), async (req, res) =>
 });
 
 // PUT /api/vendor/profile
-router.put('/profile', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.put('/profile', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     const { storeName, bio, imageUrl } = req.body;
     

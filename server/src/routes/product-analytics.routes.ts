@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { getProductOverview } from "../controllers/product-analytics.controller";
 import { zRange } from "../validation/analytics";
-import { validateQuery } from "../validation/common";
+import { validateBody, validateQuery, validateParams } from '../validation/common';
 
 const router = Router();
 

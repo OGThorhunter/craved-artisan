@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import prisma from '/prisma';
+import prisma from '../lib/prisma';
 import PDFDocument from 'pdfkit';
 import { format } from 'date-fns';
 

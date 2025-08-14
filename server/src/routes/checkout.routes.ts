@@ -1,6 +1,6 @@
 import { Router } from "express";
 import Stripe from "stripe";
-import prisma from '/prisma';
+import prisma from '../lib/prisma';
 import { env } from "../config/env";
 import { ensurePendingOrder, createOrUpdatePaymentIntent } from "../services/checkout.service";
 import { sendOrderConfirmation } from "../services/email.service";

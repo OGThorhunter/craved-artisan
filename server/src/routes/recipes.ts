@@ -1,7 +1,8 @@
 import express from 'express';
 import { z } from 'zod';
-import prisma from '/prisma';
+import prisma from '../lib/prisma';
 import { requireAuth, requireRole } from '../middleware/auth';
+import { Role } from '../lib/prisma';
 
 const router = express.Router();
 
@@ -38,12 +39,12 @@ const validateRequest = (schema: z.ZodSchema) => {
     try {
       const validatedData = schema.parse(req.body);
       req.body = validatedData;
-      next();
+      return next();
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({
           message: 'Validation error',
-          errors: error.errors.map(err => ({
+          errors: error.errors.map((err: any) => ({
             field: err.path.join('.'),
             message: err.message
           }))
@@ -55,7 +56,7 @@ const validateRequest = (schema: z.ZodSchema) => {
 };
 
 // GET /api/recipes - Get all recipes for the vendor
-router.get('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.get('/', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     const vendorProfile = await prisma.vendorProfile.findUnique({
       where: { userId: req.session.userId! }
@@ -95,7 +96,7 @@ router.get('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
 });
 
 // GET /api/recipes/:id - Get a specific recipe
-router.get('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.get('/:id', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -135,7 +136,7 @@ router.get('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
 });
 
 // GET /api/recipes/:id/ingredients - Get all ingredients for a recipe
-router.get('/:id/ingredients', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.get('/:id/ingredients', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -178,7 +179,7 @@ router.get('/:id/ingredients', requireAuth, requireRole(['VENDOR']), async (req,
 });
 
 // POST /api/recipes - Create a new recipe
-router.post('/', requireAuth, requireRole(['VENDOR']), validateRequest(createRecipeSchema), async (req, res) => {
+router.post('/', requireAuth, requireRole([Role.VENDOR]), validateRequest(createRecipeSchema), async (req, res) => {
   try {
     const vendorProfile = await prisma.vendorProfile.findUnique({
       where: { userId: req.session.userId! }
@@ -229,7 +230,7 @@ router.post('/', requireAuth, requireRole(['VENDOR']), validateRequest(createRec
 });
 
 // PUT /api/recipes/:id - Update a recipe
-router.put('/:id', requireAuth, requireRole(['VENDOR']), validateRequest(updateRecipeSchema), async (req, res) => {
+router.put('/:id', requireAuth, requireRole([Role.VENDOR]), validateRequest(updateRecipeSchema), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -292,7 +293,7 @@ router.put('/:id', requireAuth, requireRole(['VENDOR']), validateRequest(updateR
 });
 
 // DELETE /api/recipes/:id - Delete a recipe
-router.delete('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.delete('/:id', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -329,7 +330,7 @@ router.delete('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => 
 });
 
 // POST /api/recipes/:id/ingredients - Batch add ingredients to a recipe
-router.post('/:id/ingredients', requireAuth, requireRole(['VENDOR']), validateRequest(batchAddIngredientsSchema), async (req, res) => {
+router.post('/:id/ingredients', requireAuth, requireRole([Role.VENDOR]), validateRequest(batchAddIngredientsSchema), async (req, res) => {
   try {
     const { id } = req.params;
     const { ingredients } = req.body;
@@ -371,7 +372,7 @@ router.post('/:id/ingredients', requireAuth, requireRole(['VENDOR']), validateRe
     }
 
     // Create recipe ingredients in a transaction
-    const recipeIngredients = await prisma.$transaction(async (tx) => {
+    const recipeIngredients = await prisma.$transaction(async (tx: any) => {
       const createdIngredients = [];
 
       for (const ingredientData of ingredients) {
@@ -434,7 +435,7 @@ router.post('/:id/ingredients', requireAuth, requireRole(['VENDOR']), validateRe
 });
 
 // DELETE /api/recipes/:id/ingredients/:ingredientId - Remove an ingredient from a recipe
-router.delete('/:id/ingredients/:ingredientId', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.delete('/:id/ingredients/:ingredientId', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     const { id, ingredientId } = req.params;
 
@@ -476,7 +477,7 @@ router.delete('/:id/ingredients/:ingredientId', requireAuth, requireRole(['VENDO
 });
 
 // POST /api/recipes/:id/version - Create a snapshot version of a recipe
-router.post('/:id/version', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.post('/:id/version', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -587,7 +588,7 @@ router.post('/:id/version', requireAuth, requireRole(['VENDOR']), async (req, re
         totalCost: recipeVersion.totalCost,
         createdAt: recipeVersion.createdAt,
         updatedAt: recipeVersion.updatedAt,
-        ingredients: recipeVersion.recipeIngredientVersions.map(ing => ({
+        ingredients: recipeVersion.recipeIngredientVersions.map((ing: any) => ({
           id: ing.id,
           quantity: ing.quantity,
           unit: ing.unit,

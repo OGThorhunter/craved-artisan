@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import prisma from '/prisma';
+import prisma from '../lib/prisma';
 
 export async function healthz(_req: Request, res: Response) { 
   res.json({ ok: true, ts: new Date().toISOString() }); 

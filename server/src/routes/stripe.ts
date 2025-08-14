@@ -1,9 +1,10 @@
 import express from 'express';
 import { z } from 'zod';
-import prisma from '/prisma';
+import prisma from '../lib/prisma';
 import { requireAuth, requireRole } from '../middleware/auth';
 import { stripeService } from '../utils/stripe';
 import Stripe from 'stripe';
+import { Role } from '../lib/prisma';
 
 const router = express.Router();
 
@@ -21,7 +22,7 @@ const createConnectAccountSchema = z.object({
 });
 
 // POST /api/stripe/create-payment-intent - Create payment intent for order
-router.post('/create-payment-intent', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
+router.post('/create-payment-intent', requireAuth, requireRole([Role.CUSTOMER]), async (req, res) => {
   try {
     const validationResult = createPaymentIntentSchema.safeParse(req.body);
     if (!validationResult.success) {
@@ -37,7 +38,7 @@ router.post('/create-payment-intent', requireAuth, requireRole(['CUSTOMER']), as
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: {
-        user: true,
+        user: { select: { id: true, email: true, profile: true } },
         orderItems: {
           include: {
             product: {
@@ -65,7 +66,7 @@ router.post('/create-payment-intent', requireAuth, requireRole(['CUSTOMER']), as
     }
 
     // Verify all vendors are connected to Stripe
-    const vendorsNotConnected = order.orderItems.filter(item => 
+    const vendorsNotConnected = order.orderItems.filter((item: any) => 
       !item.product.vendorProfile.stripeAccountId
     );
 
@@ -73,7 +74,7 @@ router.post('/create-payment-intent', requireAuth, requireRole(['CUSTOMER']), as
       return res.status(400).json({
         error: 'Vendors not connected',
         message: 'Some vendors are not connected to Stripe. Please contact support.',
-        vendors: vendorsNotConnected.map(item => ({
+        vendors: vendorsNotConnected.map((item: any) => ({
           productId: item.product.id,
           vendorId: item.product.vendorProfile.id,
           vendorName: item.product.vendorProfile.storeName,
@@ -107,7 +108,7 @@ router.post('/create-payment-intent', requireAuth, requireRole(['CUSTOMER']), as
 });
 
 // POST /api/stripe/create-connect-account - Create Stripe Connect account for vendor
-router.post('/create-connect-account', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.post('/create-connect-account', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     const validationResult = createConnectAccountSchema.safeParse(req.body);
     if (!validationResult.success) {
@@ -122,7 +123,7 @@ router.post('/create-connect-account', requireAuth, requireRole(['VENDOR']), asy
     // Verify vendor profile belongs to authenticated user
     const vendorProfile = await prisma.vendorProfile.findUnique({
       where: { id: vendorProfileId },
-      include: { user: true },
+      include: { user: { select: { id: true, email: true, profile: true } } },
     });
 
     if (!vendorProfile) {
@@ -156,7 +157,7 @@ router.post('/create-connect-account', requireAuth, requireRole(['VENDOR']), asy
 
     return res.json({
       accountId: account.id,
-      status: account.charges_enabled ? 'active' : 'pending',
+      status: account.charges_enabled ? 'active' : FulfillmentStatus.PENDING,
       message: 'Stripe Connect account created successfully'
     });
   } catch (error) {
@@ -169,14 +170,14 @@ router.post('/create-connect-account', requireAuth, requireRole(['VENDOR']), asy
 });
 
 // GET /api/stripe/onboarding-url/:vendorProfileId - Get onboarding URL for vendor
-router.get('/onboarding-url/:vendorProfileId', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.get('/onboarding-url/:vendorProfileId', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     const { vendorProfileId } = req.params;
 
     // Verify vendor profile belongs to authenticated user
     const vendorProfile = await prisma.vendorProfile.findUnique({
       where: { id: vendorProfileId },
-      include: { user: true },
+      include: { user: { select: { id: true, email: true, profile: true } } },
     });
 
     if (!vendorProfile) {
@@ -217,14 +218,14 @@ router.get('/onboarding-url/:vendorProfileId', requireAuth, requireRole(['VENDOR
 });
 
 // GET /api/stripe/account-status/:vendorProfileId - Get vendor's Stripe account status
-router.get('/account-status/:vendorProfileId', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.get('/account-status/:vendorProfileId', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     const { vendorProfileId } = req.params;
 
     // Verify vendor profile belongs to authenticated user
     const vendorProfile = await prisma.vendorProfile.findUnique({
       where: { id: vendorProfileId },
-      include: { user: true },
+      include: { user: { select: { id: true, email: true, profile: true } } },
     });
 
     if (!vendorProfile) {

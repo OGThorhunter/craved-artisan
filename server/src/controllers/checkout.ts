@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import prisma from '/prisma';
+import prisma from '../lib/prisma';
 
 // Initialize Stripe with your secret key
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { 

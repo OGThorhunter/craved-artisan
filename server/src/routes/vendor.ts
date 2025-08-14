@@ -293,7 +293,7 @@ router.get('/:vendorId', async (req, res) => {
       return res.status(400).json({
         success: false,
         error: 'Validation error',
-        details: error.errors
+        details: error.error.errors
       });
     }
 
@@ -393,7 +393,7 @@ router.get('/:vendorId/products', async (req, res) => {
       return res.status(400).json({
         success: false,
         error: 'Validation error',
-        details: error.errors
+        details: error.error.errors
       });
     }
 
@@ -443,7 +443,7 @@ router.get('/:vendorId/reviews', async (req, res) => {
       return res.status(400).json({
         success: false,
         error: 'Validation error',
-        details: error.errors
+        details: error.error.errors
       });
     }
 
@@ -485,7 +485,7 @@ router.post('/:vendorId/follow', async (req, res) => {
       return res.status(400).json({
         success: false,
         error: 'Validation error',
-        details: error.errors
+        details: error.error.errors
       });
     }
 
@@ -526,7 +526,7 @@ router.delete('/:vendorId/follow', async (req, res) => {
       return res.status(400).json({
         success: false,
         error: 'Validation error',
-        details: error.errors
+        details: error.error.errors
       });
     }
 
@@ -637,7 +637,7 @@ router.get('/:vendorId/analytics/trends', async (req, res) => {
       return res.status(400).json({
         success: false,
         error: 'Validation error',
-        details: error.errors
+        details: error.error.errors
       });
     }
 

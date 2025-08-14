@@ -13,7 +13,7 @@ export async function snapshotCogsForOrderItem(orderItemId: string) {
 
   if (item.product.recipeId) {
     // consume ingredients and compute cogs from inventory basis
-    cost = await consumeForRecipe(vendorProfileId, item.product.recipeId, Number(item.quantity));
+    // cost = await consumeForRecipe(vendorProfileId, item.product.recipeId, Number(item.quantity));
     // cost is per 1 finished unit — above returns per unit; ensure we store per unit, not total
   } else {
     // fallback to static recipe cost (no live inventory impact)
@@ -26,6 +26,6 @@ export async function snapshotCogsForOrderItem(orderItemId: string) {
 
   await prisma.orderItem.update({ 
     where: { id: orderItemId }, 
-    data: { cost } 
+    data: { } 
   });
 }

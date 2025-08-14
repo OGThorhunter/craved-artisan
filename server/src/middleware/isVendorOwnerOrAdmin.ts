@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import prisma from '/prisma';
+import prisma from '../lib/prisma';
 
 export const isVendorOwnerOrAdmin = async (req: Request, res: Response, next: NextFunction) => {
   try {

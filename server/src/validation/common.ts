@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 import type { Request, Response, NextFunction } from 'express';
 
 export const zLimitOffset = z.object({
@@ -10,7 +10,7 @@ export const zId = z.object({
   id: z.string().min(1) 
 });
 
-export function validateQuery<T extends z.ZodTypeAny>(schema: T) {
+export async export function validateQuery<T extends z.ZodTypeAny>(schema: T) {
   return (req: Request, res: Response, next: NextFunction) => {
     const result = schema.safeParse(req.query);
     if (!result.success) {
@@ -19,12 +19,12 @@ export function validateQuery<T extends z.ZodTypeAny>(schema: T) {
         details: result.error.flatten()
       });
     }
-    req.query = result.data;
+    req.query = result.data as any;
     next();
   };
 }
 
-export function validateParams<T extends z.ZodTypeAny>(schema: T) {
+export async export function validateParams<T extends z.ZodTypeAny>(schema: T) {
   return (req: Request, res: Response, next: NextFunction) => {
     const result = schema.safeParse(req.params);
     if (!result.success) {
@@ -33,7 +33,7 @@ export function validateParams<T extends z.ZodTypeAny>(schema: T) {
         details: result.error.flatten()
       });
     }
-    req.params = result.data;
+    req.params = result.data as any;
     next();
   };
 }

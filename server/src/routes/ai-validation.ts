@@ -1,5 +1,6 @@
 import express from 'express';
 import { requireAuth, requireRole } from '../middleware/auth';
+import { Role } from '../lib/prisma';
 import {
   validateProductPricing,
   validateBulkPricing,
@@ -9,8 +10,8 @@ import {
 const router = express.Router();
 
 // AI Cost-to-Margin Validation Routes
-router.post('/validate-pricing', requireAuth, requireRole(['VENDOR', 'ADMIN']), validateProductPricing);
-router.post('/validate-bulk-pricing', requireAuth, requireRole(['VENDOR', 'ADMIN']), validateBulkPricing);
-router.get('/market-insights', requireAuth, requireRole(['VENDOR', 'ADMIN']), getMarketInsights);
+router.post('/validate-pricing', requireAuth, requireRole([Role.VENDOR, Role.ADMIN]), validateProductPricing);
+router.post('/validate-bulk-pricing', requireAuth, requireRole([Role.VENDOR, Role.ADMIN]), validateBulkPricing);
+router.get('/market-insights', requireAuth, requireRole([Role.VENDOR, Role.ADMIN]), getMarketInsights);
 
 export default router; 

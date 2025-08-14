@@ -1,9 +1,9 @@
 import { Router } from "express";
 import Stripe from "stripe";
-import { env } from "../config/env";
-import prisma from '/prisma';
+import env from "../config/env";
+import prisma from '../lib/prisma';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2024-06-20" });
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: "2023-10-16" });
 
 const r = Router();
 

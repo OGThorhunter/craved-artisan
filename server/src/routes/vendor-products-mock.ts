@@ -2,6 +2,7 @@ import express from 'express';
 import { requireAuth, requireRole } from '../middleware/auth-mock';
 import { z } from 'zod';
 import { calculateMargin, generateAlertNote } from '../utils/marginCalculator';
+import { Role } from '../lib/prisma';
 
 const router = express.Router();
 
@@ -121,11 +122,11 @@ let mockProducts = [
     isAvailable: true,
     targetMargin: 35.0,
     marginAlert: false,
-    alertNote: null,
+    alertNote: undefined,
     recipeId: 'mock-recipe-1',
     onWatchlist: false,
-    lastAiSuggestion: null,
-    aiSuggestionNote: null,
+    lastAiSuggestion: undefined,
+    aiSuggestionNote: undefined,
     createdAt: new Date('2024-01-15').toISOString(),
     updatedAt: new Date('2024-01-15').toISOString()
   },
@@ -164,10 +165,10 @@ let mockProducts = [
     targetMargin: 25.0,
     marginAlert: true,
     alertNote: '⚠️ Margin Alert: Margin (10.0%) below minimum (15%); Cost ratio (90.0%) too high (>70%). Suggestions: Consider increasing price or reducing costs; Review ingredient costs and supplier pricing',
-    recipeId: null,
+    recipeId: undefined,
     onWatchlist: false,
-    lastAiSuggestion: null,
-    aiSuggestionNote: null,
+    lastAiSuggestion: undefined,
+    aiSuggestionNote: undefined,
     createdAt: new Date('2024-01-20').toISOString(),
     updatedAt: new Date('2024-01-20').toISOString()
   }
@@ -191,7 +192,7 @@ const createProductSchema = z.object({
 const updateProductSchema = createProductSchema.partial();
 
 // GET /api/vendor/products - Get all products for the authenticated vendor
-router.get('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.get('/', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     // Simulate vendor profile lookup
     if (req.session.userId === 'mock-user-id') {
@@ -217,14 +218,14 @@ router.get('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
 });
 
 // POST /api/vendor/products - Create a new product
-router.post('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.post('/', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     // Validate request body
     const validationResult = createProductSchema.safeParse(req.body);
     if (!validationResult.success) {
       return res.status(400).json({
         error: 'Validation failed',
-        details: validationResult.errors
+        details: validationResult.error.errors
       });
     }
 
@@ -240,7 +241,7 @@ router.post('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
 
     // Calculate margin and check for alerts if cost is provided
     let marginAlert = false;
-    let alertNote = null;
+    let alertNote = undefined;
     
     if (productData.cost && productData.price) {
       const marginCalculation = calculateMargin(
@@ -252,7 +253,7 @@ router.post('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
       marginAlert = marginCalculation.isAlertTriggered;
       alertNote = marginCalculation.isAlertTriggered 
         ? generateAlertNote(productData.price, productData.cost, productData.targetMargin)
-        : null;
+        : undefined;
     }
 
     // Create the product
@@ -267,7 +268,7 @@ router.post('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
       updatedAt: new Date().toISOString()
     };
 
-    mockProducts.push({ ...newProduct, recipeId: null, onWatchlist: false, lastAiSuggestion: null, aiSuggestionNote: null });
+    mockProducts.push({ ...newProduct, recipeId: undefined, onWatchlist: false, lastAiSuggestion: undefined, aiSuggestionNote: undefined });
 
     return res.status(400).json({
       message: 'Product created successfully',
@@ -283,7 +284,7 @@ router.post('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
 });
 
 // GET /api/vendor/products/:id - Get a specific product by ID
-router.get('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.get('/:id', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -316,7 +317,7 @@ router.get('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
 });
 
 // PUT /api/vendor/products/:id - Update a product by ID
-router.put('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.put('/:id', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -325,7 +326,7 @@ router.put('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
     if (!validationResult.success) {
       return res.status(400).json({
         error: 'Validation failed',
-        details: validationResult.errors
+        details: validationResult.error.errors
       });
     }
 
@@ -370,7 +371,7 @@ router.put('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
       marginAlert = marginCalculation.isAlertTriggered;
       alertNote = marginCalculation.isAlertTriggered 
         ? generateAlertNote(price, cost || 0, targetMargin)
-        : null;
+        : undefined;
     }
 
     // Update the product
@@ -396,7 +397,7 @@ router.put('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
 });
 
 // DELETE /api/vendor/products/:id - Delete a product by ID
-router.delete('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.delete('/:id', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -434,7 +435,7 @@ router.delete('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => 
 });
 
 // GET /api/vendor/products/:id/ai-suggestion - Get AI-powered price suggestion
-router.get('/:id/ai-suggestion', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.get('/:id/ai-suggestion', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -515,7 +516,7 @@ router.get('/:id/ai-suggestion', requireAuth, requireRole(['VENDOR']), async (re
 });
 
 // POST /api/vendor/products/:id/ai-suggest - Apply AI price suggestion and update product
-router.post('/:id/ai-suggest', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.post('/:id/ai-suggest', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -611,7 +612,7 @@ router.post('/:id/ai-suggest', requireAuth, requireRole(['VENDOR']), async (req,
 });
 
 // GET /api/vendor/products/alerts/margin - Get products with margin alerts
-router.get('/alerts/margin', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.get('/alerts/margin', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     // Simulate vendor profile lookup
     if (req.session.userId !== 'mock-user-id') {

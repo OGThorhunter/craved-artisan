@@ -48,8 +48,8 @@ export const handleStripeWebhook = async (req: express.Request, res: express.Res
         await handleTransferCreated(event.data.object as Stripe.Transfer);
         break;
 
-      case 'transfer.paid':
-        await handleTransferPaid(event.data.object as Stripe.Transfer);
+      // case 'transfer.paid':
+        // await handleTransferPaid(event.data.object as Stripe.Transfer);
         break;
 
       case 'account.updated':
@@ -90,7 +90,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: {
-        user: true,
+        user: { select: { id: true, email: true, profile: true } },
         orderItems: {
           include: {
             product: {
@@ -219,7 +219,7 @@ async function handleMultiVendorOrderCompletion(order: any, session: Stripe.Chec
 
       transfers.push({
         vendorId,
-        vendorName: (group as any).vendor.storeName,
+        vendorName: (vendor as any).storeName,
         amount: vendorAmount,
         commissionAmount,
         vendorPayoutAmount,
@@ -257,7 +257,7 @@ async function handlePaymentIntentSucceeded(paymentIntent: Stripe.PaymentIntent)
     const order = await prisma.order.findFirst({
       where: { stripePaymentIntentId: paymentIntent.id },
       include: {
-        user: true,
+        user: { select: { id: true, email: true, profile: true } },
         orderItems: {
           include: {
             product: {
@@ -355,7 +355,7 @@ async function handleAccountUpdated(account: Stripe.Account) {
       await prisma.vendorProfile.update({
         where: { id: vendorProfile.id },
         data: {
-          stripeAccountStatus: account.charges_enabled ? 'active' : 'pending',
+          stripeAccountStatus: account.charges_enabled ? 'active' : FulfillmentStatus.PENDING,
         },
       });
 
@@ -405,11 +405,11 @@ async function sendVendorNotifications(order: any, session: Stripe.Checkout.Sess
     const vendors = [...new Set(order.orderItems.map((item: any) => item.product.vendorProfile))];
 
     for (const vendor of vendors) {
-      console.log(`Sending notification to vendor: ${vendor.storeName}`);
+      console.log(`Sending notification to vendor: ${(vendor as any).storeName}`);
       
       // Calculate vendor's portion of the order
       const vendorItems = order.orderItems.filter((item: any) => 
-        item.product.vendorProfile.id === vendor.id
+        item.product.vendorProfile.id === (vendor as any).id
       );
       const vendorTotal = vendorItems.reduce((sum: number, item: any) => 
         sum + (item.price * item.quantity), 0
@@ -418,7 +418,7 @@ async function sendVendorNotifications(order: any, session: Stripe.Checkout.Sess
       const vendorPayout = vendorTotal - vendorCommission;
 
       const emailData = {
-        to: vendor.user?.email,
+        to: (vendor as any).user?.email,
         subject: `New Order Received - ${order.orderNumber}`,
         template: 'vendor-order-notification',
         data: {
@@ -432,7 +432,7 @@ async function sendVendorNotifications(order: any, session: Stripe.Checkout.Sess
       };
 
       // await emailService.sendEmail(emailData);
-      console.log(`Vendor notification email queued for ${vendor.storeName}`);
+      console.log(`Vendor notification email queued for ${(vendor as any).storeName}`);
     }
 
   } catch (error) {

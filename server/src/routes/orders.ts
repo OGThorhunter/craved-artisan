@@ -1,9 +1,10 @@
 import express from 'express';
 import { z } from 'zod';
-import prisma from '/prisma';
+import prisma from '../lib/prisma';
 import { requireAuth, requireRole } from '../middleware/auth';
 import { sendDeliveryConfirmation, sendDeliveryETAWithTime } from '../utils/twilio';
 import PDFDocument from 'pdfkit';
+import { Role } from '../lib/prisma';
 
 const router = express.Router();
 
@@ -33,7 +34,7 @@ const checkoutSchema = z.object({
 });
 
 // POST /api/orders/checkout - Create a new order from cart items
-router.post('/checkout', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
+router.post('/checkout', requireAuth, requireRole([Role.CUSTOMER]), async (req, res) => {
   try {
     // Validate request body
     const validationResult = checkoutSchema.safeParse(req.body);
@@ -73,7 +74,7 @@ router.post('/checkout', requireAuth, requireRole(['CUSTOMER']), async (req, res
     let finalShippingAddressId = shippingAddressId;
     if (!finalShippingAddressId) {
       // Get default shipping address or create one
-      const defaultAddress = user.addresses.find(addr => addr.isDefault && addr.type === 'SHIPPING');
+      const defaultAddress = user.addresses.find((addr: any) => addr.isDefault && addr.type === 'SHIPPING');
       if (!defaultAddress) {
         return res.status(400).json({
           error: 'Shipping address required',
@@ -84,7 +85,7 @@ router.post('/checkout', requireAuth, requireRole(['CUSTOMER']), async (req, res
     }
 
     // Validate all products exist and are available
-    const productIds = items.map(item => item.productId);
+    const productIds = items.map((item: any) => item.productId);
     const products = await prisma.product.findMany({
       where: {
         id: { in: productIds },
@@ -258,12 +259,12 @@ router.post('/checkout', requireAuth, requireRole(['CUSTOMER']), async (req, res
     const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
 
     // Create order with transaction to ensure data consistency
-    const order = await prisma.$transaction(async (tx) => {
+    const order = await prisma.$transaction(async (tx: any) => {
       // Create the order
       const newOrder = await tx.order.create({
         data: {
           orderNumber,
-          status: 'PENDING',
+          status: FulfillmentStatus.PENDING,
           subtotal: calculatedSubtotal,
           tax: calculatedTax,
           shipping: calculatedShipping,
@@ -278,7 +279,7 @@ router.post('/checkout', requireAuth, requireRole(['CUSTOMER']), async (req, res
 
       // Create order items
       const orderItems = await Promise.all(
-        items.map(item =>
+        items.map((item: any) =>
           tx.orderItem.create({
             data: {
               quantity: item.quantity,
@@ -293,7 +294,7 @@ router.post('/checkout', requireAuth, requireRole(['CUSTOMER']), async (req, res
 
       // Update product stock levels
       await Promise.all(
-        items.map(item =>
+        items.map((item: any) =>
           tx.product.update({
             where: { id: item.productId },
             data: {
@@ -309,10 +310,10 @@ router.post('/checkout', requireAuth, requireRole(['CUSTOMER']), async (req, res
       const fulfillment = await tx.fulfillment.create({
         data: {
           fulfillmentType: 'SHIPPING',
-          status: 'PENDING',
+          status: FulfillmentStatus.PENDING,
           orderId: newOrder.id,
-          etaLabel: prediction?.label || null,
-          predictedHours: prediction?.baseEstimate || null
+          etaLabel: prediction?.label || undefined,
+          predictedHours: prediction?.baseEstimate || undefined
         }
       });
 
@@ -333,7 +334,7 @@ router.post('/checkout', requireAuth, requireRole(['CUSTOMER']), async (req, res
         total: order.order.total,
         createdAt: order.order.createdAt
       },
-      items: order.orderItems.map(item => ({
+      items: order.orderItems.map((item: any) => ({
         productId: item.productId,
         quantity: item.quantity,
         price: item.price,
@@ -356,7 +357,7 @@ router.post('/checkout', requireAuth, requireRole(['CUSTOMER']), async (req, res
 });
 
 // GET /api/orders - Get user's orders
-router.get('/', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
+router.get('/', requireAuth, requireRole([Role.CUSTOMER]), async (req, res) => {
   try {
     const orders = await prisma.order.findMany({
       where: {
@@ -380,7 +381,7 @@ router.get('/', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
             notes: true
           }
         },
-        shippingAddress: true
+        shippingAddress: { select: { id: true, address1: true, city: true, state: true, postalCode: true } }
       },
       orderBy: {
         createdAt: 'desc'
@@ -398,7 +399,7 @@ router.get('/', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
         total: order.total,
         createdAt: order.createdAt,
         updatedAt: order.updatedAt,
-        items: order.orderItems.map(item => ({
+        items: order.orderItems.map((item: any) => ({
           id: item.id,
           quantity: item.quantity,
           price: item.price,
@@ -415,7 +416,7 @@ router.get('/', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
           type: order.fulfillments[0].fulfillmentType,
           trackingNumber: order.fulfillments[0].trackingNumber,
           estimatedDelivery: order.fulfillments[0].estimatedDelivery
-        } : null,
+        } : undefined,
         shippingAddress: order.shippingAddress ? {
           id: order.shippingAddress.id,
           firstName: order.shippingAddress.firstName,
@@ -424,7 +425,7 @@ router.get('/', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
           city: order.shippingAddress.city,
           state: order.shippingAddress.state,
           postalCode: order.shippingAddress.postalCode
-        } : null
+        } : undefined
       }))
     });
   } catch (error) {
@@ -437,7 +438,7 @@ router.get('/', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
 });
 
 // GET /api/orders/history - Get customer order history
-router.get('/history', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
+router.get('/history', requireAuth, requireRole([Role.CUSTOMER]), async (req, res) => {
   try {
     const orders = await prisma.order.findMany({
       where: { userId: req.session.userId },
@@ -469,7 +470,7 @@ router.get('/history', requireAuth, requireRole(['CUSTOMER']), async (req, res) 
              notes: true
            }
          },
-        shippingAddress: true
+        shippingAddress: { select: { id: true, address1: true, city: true, state: true, postalCode: true } }
       }
     });
 
@@ -485,7 +486,7 @@ router.get('/history', requireAuth, requireRole(['CUSTOMER']), async (req, res) 
       deliveryDay: order.deliveryDay,
       createdAt: order.createdAt,
       updatedAt: order.updatedAt,
-      items: order.orderItems.map(item => ({
+      items: order.orderItems.map((item: any) => ({
         id: item.id,
         quantity: item.quantity,
         price: item.price,
@@ -506,7 +507,7 @@ router.get('/history', requireAuth, requireRole(['CUSTOMER']), async (req, res) 
         estimatedDelivery: order.fulfillments[0].estimatedDelivery,
         actualDelivery: order.fulfillments[0].actualDelivery,
         notes: order.fulfillments[0].notes
-      } : null,
+      } : undefined,
       shippingAddress: order.shippingAddress ? {
         id: order.shippingAddress.id,
         firstName: order.shippingAddress.firstName,
@@ -519,7 +520,7 @@ router.get('/history', requireAuth, requireRole(['CUSTOMER']), async (req, res) 
         postalCode: order.shippingAddress.postalCode,
         country: order.shippingAddress.country,
         phone: order.shippingAddress.phone
-      } : null
+      } : undefined
     }));
 
     return res.json({
@@ -535,7 +536,7 @@ router.get('/history', requireAuth, requireRole(['CUSTOMER']), async (req, res) 
 });
 
 // GET /api/orders/:id - Get specific order
-router.get('/:id', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
+router.get('/:id', requireAuth, requireRole([Role.CUSTOMER]), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -562,7 +563,7 @@ router.get('/:id', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
             notes: true
           }
         },
-        shippingAddress: true
+        shippingAddress: { select: { id: true, address1: true, city: true, state: true, postalCode: true } }
       }
     });
 
@@ -588,7 +589,7 @@ router.get('/:id', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
         deliveredAt: order.deliveredAt,
         createdAt: order.createdAt,
         updatedAt: order.updatedAt,
-        items: order.orderItems.map(item => ({
+        items: order.orderItems.map((item: any) => ({
           id: item.id,
           quantity: item.quantity,
           price: item.price,
@@ -610,7 +611,7 @@ router.get('/:id', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
           estimatedDelivery: order.fulfillments[0].estimatedDelivery,
           actualDelivery: order.fulfillments[0].actualDelivery,
           notes: order.fulfillments[0].notes
-        } : null,
+        } : undefined,
         shippingAddress: order.shippingAddress ? {
           id: order.shippingAddress.id,
           firstName: order.shippingAddress.firstName,
@@ -623,7 +624,7 @@ router.get('/:id', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
           postalCode: order.shippingAddress.postalCode,
           country: order.shippingAddress.country,
           phone: order.shippingAddress.phone
-        } : null
+        } : undefined
       }
     });
   } catch (error) {
@@ -636,7 +637,7 @@ router.get('/:id', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
 });
 
 // POST /api/orders/:id/confirm-delivery - Confirm delivery with optional photo
-router.post('/:id/confirm-delivery', requireAuth, requireRole(['VENDOR', 'ADMIN']), async (req, res) => {
+router.post('/:id/confirm-delivery', requireAuth, requireRole([Role.VENDOR, Role.ADMIN]), async (req, res) => {
   try {
     const { id } = req.params;
     const { photoUrl } = req.body;
@@ -645,7 +646,7 @@ router.post('/:id/confirm-delivery', requireAuth, requireRole(['VENDOR', 'ADMIN'
     const order = await prisma.order.findUnique({
       where: { id },
       include: {
-        fulfillments: true,
+        fulfillments: { select: { id: true, status: true, trackingNumber: true, carrier: true, estimatedDelivery: true, actualDelivery: true, notes: true } },
         user: {
           select: {
             email: true,
@@ -670,10 +671,10 @@ router.post('/:id/confirm-delivery', requireAuth, requireRole(['VENDOR', 'ADMIN'
     const updatedOrder = await prisma.order.update({
       where: { id },
       data: {
-        deliveryStatus: 'delivered',
+        deliveryStatus: FulfillmentStatus.DELIVERED,
         deliveryTimestamp: new Date(),
-        deliveryPhotoUrl: photoUrl || null,
-        status: 'DELIVERED',
+        deliveryPhotoUrl: photoUrl || undefined,
+        status: FulfillmentStatus.DELIVERED,
         deliveredAt: new Date()
       }
     });
@@ -685,7 +686,7 @@ router.post('/:id/confirm-delivery', requireAuth, requireRole(['VENDOR', 'ADMIN'
           orderId: id
         },
         data: {
-          status: 'DELIVERED',
+          status: FulfillmentStatus.DELIVERED,
           actualDelivery: new Date()
         }
       });
@@ -721,7 +722,7 @@ router.post('/:id/confirm-delivery', requireAuth, requireRole(['VENDOR', 'ADMIN'
 });
 
 // POST /api/orders/:id/send-eta - Send delivery ETA notification
-router.post('/:id/send-eta', requireAuth, requireRole(['VENDOR', 'ADMIN']), async (req, res) => {
+router.post('/:id/send-eta', requireAuth, requireRole([Role.VENDOR, Role.ADMIN]), async (req, res) => {
   try {
     const { id } = req.params;
     const { timeWindow } = req.body;
@@ -792,7 +793,7 @@ router.get('/:id/receipt', requireAuth, async (req, res) => {
     const order = await prisma.order.findUnique({
       where: { id },
       include: {
-        items: {
+        orderItems: {
           include: {
             product: {
               select: {
@@ -822,10 +823,10 @@ router.get('/:id/receipt', requireAuth, async (req, res) => {
         },
         shippingAddress: {
           select: {
-            street: true,
+            address1: true,
             city: true,
             state: true,
-            zipCode: true
+            postalCode: true
           }
         }
       }
@@ -878,7 +879,7 @@ router.get('/:id/receipt', requireAuth, async (req, res) => {
        .text(`Order Number: ${order.orderNumber}`)
        .text(`Order Date: ${order.createdAt.toLocaleDateString()}`)
        .text(`Status: ${order.status}`)
-       .text(`Delivery Status: ${order.deliveryStatus || 'Pending'}`);
+       .text(`Delivery Status: ${order.deliveryStatus || FulfillmentStatus.PENDING}`);
     
     if (order.deliveryTimestamp) {
       doc.text(`Delivered: ${order.deliveryTimestamp.toLocaleDateString()} at ${order.deliveryTimestamp.toLocaleTimeString()}`);
@@ -924,7 +925,7 @@ router.get('/:id/receipt', requireAuth, async (req, res) => {
       doc.fontSize(10)
          .font('Helvetica')
          .text(`${order.shippingAddress.street}`)
-         .text(`${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.zipCode}`);
+         .text(`${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.postalCode}`);
       
       doc.moveDown(0.5);
     }
@@ -939,7 +940,7 @@ router.get('/:id/receipt', requireAuth, async (req, res) => {
     let yPosition = doc.y;
     const itemStartY = yPosition;
 
-    order.items.forEach((item, index) => {
+    order.orderItems.forEach((item: any, index: any) => {
       const itemName = item.product?.name || `Product ${index + 1}`;
       const itemDescription = item.product?.description || '';
       

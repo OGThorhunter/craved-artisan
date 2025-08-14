@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { requireAuth, requireRole } from '../middleware/auth-mock';
 import { sendDeliveryConfirmation, sendDeliveryETAWithTime } from '../utils/twilio';
 import PDFDocument from 'pdfkit';
+import { Role } from '../lib/prisma';
 
 const router = express.Router();
 
@@ -36,7 +37,7 @@ const mockOrders: any[] = [
   {
     id: 'order-1',
     orderNumber: 'ORD-1234567890-ABC123',
-    status: 'PENDING',
+    status: FulfillmentStatus.PENDING,
     subtotal: 51.98,
     tax: 4.42,
     shipping: 0,
@@ -46,9 +47,9 @@ const mockOrders: any[] = [
     shippingAddressId: 'mock-address-id',
     shippingZip: '97201',
     deliveryDay: 'Monday',
-    deliveryStatus: 'pending',
-    deliveryTimestamp: null,
-    deliveryPhotoUrl: null,
+    deliveryStatus: FulfillmentStatus.PENDING,
+    deliveryTimestamp: undefined,
+    deliveryPhotoUrl: undefined,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     orderItems: [
@@ -64,13 +65,13 @@ const mockOrders: any[] = [
     fulfillment: {
       id: 'fulfillment-1',
       fulfillmentType: 'SHIPPING',
-      status: 'PENDING',
+      status: FulfillmentStatus.PENDING,
       orderId: 'order-1',
-      trackingNumber: null,
-      carrier: null,
-      estimatedDelivery: null,
-      actualDelivery: null,
-      notes: null,
+      trackingNumber: undefined,
+      carrier: undefined,
+      estimatedDelivery: undefined,
+      actualDelivery: undefined,
+      notes: undefined,
       etaLabel: '⚡ Fast Fulfillment',
       predictedHours: 24,
       createdAt: new Date().toISOString(),
@@ -81,7 +82,7 @@ const mockOrders: any[] = [
 let orderCounter = 2;
 
 // POST /api/orders/checkout - Create a new order from cart items
-router.post('/checkout', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
+router.post('/checkout', requireAuth, requireRole([Role.CUSTOMER]), async (req, res) => {
   try {
     // Validate request body
     const validationResult = checkoutSchema.safeParse(req.body);
@@ -245,7 +246,7 @@ router.post('/checkout', requireAuth, requireRole(['CUSTOMER']), async (req, res
     const newOrder = {
       id: `order-${orderCounter++}`,
       orderNumber,
-      status: 'PENDING',
+      status: FulfillmentStatus.PENDING,
       subtotal: calculatedSubtotal,
       tax: calculatedTax,
       shipping: calculatedShipping,
@@ -273,15 +274,15 @@ router.post('/checkout', requireAuth, requireRole(['CUSTOMER']), async (req, res
     const fulfillment = {
       id: `fulfillment-${orderCounter}`,
       fulfillmentType: 'SHIPPING',
-      status: 'PENDING',
+      status: FulfillmentStatus.PENDING,
       orderId: newOrder.id,
-      trackingNumber: null,
-      carrier: null,
-      estimatedDelivery: null,
-      actualDelivery: null,
-      notes: null,
-      etaLabel: prediction?.label || null,
-      predictedHours: prediction?.baseEstimate || null,
+      trackingNumber: undefined,
+      carrier: undefined,
+      estimatedDelivery: undefined,
+      actualDelivery: undefined,
+      notes: undefined,
+      etaLabel: prediction?.label || undefined,
+      predictedHours: prediction?.baseEstimate || undefined,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -326,7 +327,7 @@ router.post('/checkout', requireAuth, requireRole(['CUSTOMER']), async (req, res
 });
 
 // GET /api/orders - Get user's orders
-router.get('/', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
+router.get('/', requireAuth, requireRole([Role.CUSTOMER]), async (req, res) => {
   try {
     const userOrders = mockOrders.filter(order => order.userId === req.session.userId);
 
@@ -349,7 +350,7 @@ router.get('/', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
           product: {
             id: item.productId,
             name: `Product ${item.productId.slice(-4)}`,
-            imageUrl: null
+            imageUrl: undefined
           }
         })),
         fulfillment: {
@@ -382,7 +383,7 @@ router.get('/', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
 });
 
 // GET /api/orders/history - Get customer order history
-router.get('/history', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
+router.get('/history', requireAuth, requireRole([Role.CUSTOMER]), async (req, res) => {
   try {
     const customerOrders = mockOrders
       .filter(order => order.userId === req.session.userId)
@@ -408,7 +409,7 @@ router.get('/history', requireAuth, requireRole(['CUSTOMER']), async (req, res) 
         product: {
           id: item.productId,
           name: `Product ${item.productId.slice(-4)}`,
-          imageUrl: null,
+          imageUrl: undefined,
           price: item.price
         }
       })),
@@ -426,14 +427,14 @@ router.get('/history', requireAuth, requireRole(['CUSTOMER']), async (req, res) 
         id: order.shippingAddressId,
         firstName: 'John',
         lastName: 'Doe',
-        company: null,
+        company: undefined,
         address1: '123 Main St',
-        address2: null,
+        address2: undefined,
         city: 'Portland',
         state: 'OR',
         postalCode: '97201',
         country: 'US',
-        phone: null
+        phone: undefined
       }
     }));
 
@@ -450,7 +451,7 @@ router.get('/history', requireAuth, requireRole(['CUSTOMER']), async (req, res) 
 });
 
 // GET /api/orders/:id - Get specific order
-router.get('/:id', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
+router.get('/:id', requireAuth, requireRole([Role.CUSTOMER]), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -489,7 +490,7 @@ router.get('/:id', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
             id: item.productId,
             name: `Product ${item.productId.slice(-4)}`,
             description: 'Mock product description',
-            imageUrl: null,
+            imageUrl: undefined,
             price: item.price
           }
         })),
@@ -509,14 +510,14 @@ router.get('/:id', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
           id: order.shippingAddressId,
           firstName: 'John',
           lastName: 'Doe',
-          company: null,
+          company: undefined,
           address1: '123 Main St',
-          address2: null,
+          address2: undefined,
           city: 'Portland',
           state: 'OR',
           postalCode: '97201',
           country: 'US',
-          phone: null
+          phone: undefined
         }
       }
     });
@@ -530,7 +531,7 @@ router.get('/:id', requireAuth, requireRole(['CUSTOMER']), async (req, res) => {
 });
 
 // POST /api/orders/:id/confirm-delivery - Confirm delivery with optional photo
-router.post('/:id/confirm-delivery', requireAuth, requireRole(['VENDOR', 'ADMIN']), async (req, res) => {
+router.post('/:id/confirm-delivery', requireAuth, requireRole([Role.VENDOR, Role.ADMIN]), async (req, res) => {
   try {
     const { id } = req.params;
     const { photoUrl } = req.body;
@@ -546,15 +547,15 @@ router.post('/:id/confirm-delivery', requireAuth, requireRole(['VENDOR', 'ADMIN'
     }
 
     // Update order delivery status
-    order.deliveryStatus = 'delivered';
+    order.deliveryStatus = FulfillmentStatus.DELIVERED;
     order.deliveryTimestamp = new Date().toISOString();
-    order.deliveryPhotoUrl = photoUrl || null;
-    order.status = 'DELIVERED';
+    order.deliveryPhotoUrl = photoUrl || undefined;
+    order.status = FulfillmentStatus.DELIVERED;
     order.deliveredAt = new Date().toISOString();
 
     // Update fulfillment status
     if (order.fulfillment) {
-      order.fulfillment.status = 'DELIVERED';
+      order.fulfillment.status = FulfillmentStatus.DELIVERED;
       order.fulfillment.actualDelivery = new Date().toISOString();
     }
 
@@ -736,7 +737,7 @@ router.post('/checkout/test', async (req, res) => {
     const newOrder = {
       id: `order-${orderCounter++}`,
       orderNumber,
-      status: 'PENDING',
+      status: FulfillmentStatus.PENDING,
       subtotal: subtotal,
       tax: tax,
       shipping: shipping,
@@ -746,9 +747,9 @@ router.post('/checkout/test', async (req, res) => {
       shippingAddressId: shippingAddressId || 'mock-address-id',
       shippingZip: mockShippingZip,
       deliveryDay,
-      deliveryStatus: 'pending',
-      deliveryTimestamp: null,
-      deliveryPhotoUrl: null,
+      deliveryStatus: FulfillmentStatus.PENDING,
+      deliveryTimestamp: undefined,
+      deliveryPhotoUrl: undefined,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -767,15 +768,15 @@ router.post('/checkout/test', async (req, res) => {
     const fulfillment = {
       id: `fulfillment-${orderCounter}`,
       fulfillmentType: 'SHIPPING',
-      status: 'PENDING',
+      status: FulfillmentStatus.PENDING,
       orderId: newOrder.id,
-      trackingNumber: null,
-      carrier: null,
-      estimatedDelivery: null,
-      actualDelivery: null,
-      notes: null,
-      etaLabel: prediction?.label || null,
-      predictedHours: prediction?.baseEstimate || null,
+      trackingNumber: undefined,
+      carrier: undefined,
+      estimatedDelivery: undefined,
+      actualDelivery: undefined,
+      notes: undefined,
+      etaLabel: prediction?.label || undefined,
+      predictedHours: prediction?.baseEstimate || undefined,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
@@ -832,7 +833,7 @@ router.get('/history/test', async (req, res) => {
       total: order.total,
       shippingZip: order.shippingZip || '97201',
       deliveryDay: order.deliveryDay || 'Thursday',
-      deliveryStatus: order.deliveryStatus || 'pending',
+      deliveryStatus: order.deliveryStatus || FulfillmentStatus.PENDING,
       deliveryTimestamp: order.deliveryTimestamp,
       deliveryPhotoUrl: order.deliveryPhotoUrl,
       notes: order.notes,
@@ -850,7 +851,7 @@ router.get('/history/test', async (req, res) => {
           id: item.productId,
           name: `Product ${item.productId.slice(-4)}`,
           description: 'Mock product description',
-          imageUrl: null,
+          imageUrl: undefined,
           price: item.price
         }
       })),
@@ -870,14 +871,14 @@ router.get('/history/test', async (req, res) => {
         id: order.shippingAddressId,
         firstName: 'John',
         lastName: 'Doe',
-        company: null,
+        company: undefined,
         address1: '123 Main St',
-        address2: null,
+        address2: undefined,
         city: 'Portland',
         state: 'OR',
         postalCode: '97201',
         country: 'US',
-        phone: null
+        phone: undefined
       }
     }));
 
@@ -910,15 +911,15 @@ router.post('/:id/confirm-delivery/test', async (req, res) => {
     }
 
     // Update order delivery status
-    order.deliveryStatus = 'delivered';
+    order.deliveryStatus = FulfillmentStatus.DELIVERED;
     order.deliveryTimestamp = new Date().toISOString();
-    order.deliveryPhotoUrl = photoUrl || null;
-    order.status = 'DELIVERED';
+    order.deliveryPhotoUrl = photoUrl || undefined;
+    order.status = FulfillmentStatus.DELIVERED;
     order.deliveredAt = new Date().toISOString();
 
     // Update fulfillment status
     if (order.fulfillment) {
-      order.fulfillment.status = 'DELIVERED';
+      order.fulfillment.status = FulfillmentStatus.DELIVERED;
       order.fulfillment.actualDelivery = new Date().toISOString();
     }
 
@@ -1038,7 +1039,7 @@ router.get('/:id/receipt/test', async (req, res) => {
        .text(`Order Number: ${order.orderNumber}`)
        .text(`Order Date: ${new Date(order.createdAt).toLocaleDateString()}`)
        .text(`Status: ${order.status}`)
-       .text(`Delivery Status: ${order.deliveryStatus || 'Pending'}`);
+       .text(`Delivery Status: ${order.deliveryStatus || FulfillmentStatus.PENDING}`);
     
     if (order.deliveryTimestamp) {
       const deliveryDate = new Date(order.deliveryTimestamp);

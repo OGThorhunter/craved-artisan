@@ -1,7 +1,8 @@
 import express from 'express';
 import { z } from 'zod';
-import prisma from '/prisma';
+import prisma from '../lib/prisma';
 import { requireAuth, requireRole } from '../middleware/auth';
+import { Role } from '../lib/prisma';
 
 const router = express.Router();
 
@@ -23,7 +24,7 @@ const validateRequest = (schema: z.ZodSchema) => {
     try {
       const validatedData = schema.parse(req.body);
       req.body = validatedData;
-      next();
+      return next();
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({
@@ -40,7 +41,7 @@ const validateRequest = (schema: z.ZodSchema) => {
 };
 
 // GET /api/ingredients - Get all ingredients for the vendor
-router.get('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.get('/', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     const vendorProfile = await prisma.vendorProfile.findUnique({
       where: { userId: req.session.userId! }
@@ -66,7 +67,7 @@ router.get('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
 });
 
 // GET /api/ingredients/:id - Get a specific ingredient
-router.get('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.get('/:id', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -97,7 +98,7 @@ router.get('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
 });
 
 // POST /api/ingredients - Create a new ingredient
-router.post('/', requireAuth, requireRole(['VENDOR']), validateRequest(createIngredientSchema), async (req, res) => {
+router.post('/', requireAuth, requireRole([Role.VENDOR]), validateRequest(createIngredientSchema), async (req, res) => {
   try {
     const vendorProfile = await prisma.vendorProfile.findUnique({
       where: { userId: req.session.userId! }
@@ -125,7 +126,7 @@ router.post('/', requireAuth, requireRole(['VENDOR']), validateRequest(createIng
 });
 
 // PUT /api/ingredients/:id - Update an ingredient
-router.put('/:id', requireAuth, requireRole(['VENDOR']), validateRequest(updateIngredientSchema), async (req, res) => {
+router.put('/:id', requireAuth, requireRole([Role.VENDOR]), validateRequest(updateIngredientSchema), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -165,7 +166,7 @@ router.put('/:id', requireAuth, requireRole(['VENDOR']), validateRequest(updateI
 });
 
 // DELETE /api/ingredients/:id - Delete an ingredient
-router.delete('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.delete('/:id', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     const { id } = req.params;
 

@@ -13,7 +13,7 @@ export interface TaxProjection {
   selfEmploymentTax: number;
   incomeTax: number;
   dueDate: Date;
-  status: 'upcoming' | 'overdue' | 'paid' | 'estimated';
+  status: 'upcoming' | TaxAlertType.OVERDUE | 'paid' | 'estimated';
   daysUntilDue: number;
   alertLevel: 'none' | 'low' | 'medium' | 'high' | 'critical';
 }
@@ -25,8 +25,8 @@ export interface TaxAlert {
   year: number;
   estimatedAmount: number;
   dueDate: Date;
-  alertType: 'reminder' | 'overdue' | 'payment_confirmed';
-  status: 'pending' | 'sent' | 'failed';
+  alertType: TaxAlertType.REMINDER | TaxAlertType.OVERDUE | TaxAlertType.PAYMENT_CONFIRMED;
+  status: FulfillmentStatus.PENDING | 'sent' | FulfillmentStatus.FAILED;
   sentAt?: Date;
   createdAt: Date;
 }
@@ -147,7 +147,7 @@ export async function getUpcomingTaxObligations(vendorId: string): Promise<TaxPr
   
   return projections.filter(projection => {
     // Include upcoming and overdue obligations
-    return projection.dueDate >= now || projection.status === 'overdue';
+    return projection.dueDate >= now || projection.status === TaxAlertType.OVERDUE;
   }).slice(0, 4); // Return next 4 obligations
 }
 
@@ -160,7 +160,7 @@ export async function createTaxAlert(
   year: number,
   estimatedAmount: number,
   dueDate: Date,
-  alertType: 'reminder' | 'overdue' | 'payment_confirmed'
+  alertType: TaxAlertType.REMINDER | TaxAlertType.OVERDUE | TaxAlertType.PAYMENT_CONFIRMED
 ): Promise<TaxAlert> {
   try {
     const alert = await prisma.taxAlert.create({
@@ -171,7 +171,7 @@ export async function createTaxAlert(
         estimatedAmount,
         dueDate,
         alertType,
-        status: 'pending'
+        status: FulfillmentStatus.PENDING
       }
     });
 
@@ -190,7 +190,7 @@ export async function sendTaxReminder(vendorId: string, projection: TaxProjectio
     // Get vendor information
     const vendor = await prisma.vendorProfile.findUnique({
       where: { id: vendorId },
-      include: { user: true }
+      include: { user: { select: { id: true, email: true, profile: true } } }
     });
 
     if (!vendor || !vendor.user) {
@@ -204,7 +204,7 @@ export async function sendTaxReminder(vendorId: string, projection: TaxProjectio
       projection.year,
       projection.estimatedTax,
       projection.dueDate,
-      'reminder'
+      TaxAlertType.REMINDER
     );
 
     // TODO: Integrate with email service (SendGrid, AWS SES, etc.)
@@ -223,8 +223,8 @@ export async function sendTaxReminder(vendorId: string, projection: TaxProjectio
         vendorId,
         quarter: projection.quarter,
         year: projection.year,
-        alertType: 'reminder',
-        status: 'pending'
+        alertType: TaxAlertType.REMINDER,
+        status: FulfillmentStatus.PENDING
       },
       data: {
         status: 'sent',
@@ -242,11 +242,11 @@ export async function sendTaxReminder(vendorId: string, projection: TaxProjectio
         vendorId,
         quarter: projection.quarter,
         year: projection.year,
-        alertType: 'reminder',
-        status: 'pending'
+        alertType: TaxAlertType.REMINDER,
+        status: FulfillmentStatus.PENDING
       },
       data: {
-        status: 'failed'
+        status: FulfillmentStatus.FAILED
       }
     });
 
@@ -425,8 +425,8 @@ function calculateIncomeTax(netIncome: number): number {
   return tax;
 }
 
-function determineTaxStatus(dueDate: Date, daysUntilDue: number): 'upcoming' | 'overdue' | 'paid' | 'estimated' {
-  if (daysUntilDue < 0) return 'overdue';
+function determineTaxStatus(dueDate: Date, daysUntilDue: number): 'upcoming' | TaxAlertType.OVERDUE | 'paid' | 'estimated' {
+  if (daysUntilDue < 0) return TaxAlertType.OVERDUE;
   if (daysUntilDue <= 30) return 'upcoming';
   return 'estimated';
 }
@@ -515,7 +515,7 @@ export async function confirmTaxPayment(
     year,
     paidAmount,
     new Date(),
-    'payment_confirmed'
+    TaxAlertType.PAYMENT_CONFIRMED
   );
 
   // Update any pending alerts to sent
@@ -524,7 +524,7 @@ export async function confirmTaxPayment(
       vendorId,
       quarter,
       year,
-      status: 'pending'
+      status: FulfillmentStatus.PENDING
     },
     data: {
       status: 'sent',

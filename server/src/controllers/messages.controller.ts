@@ -34,10 +34,10 @@ export async function list(req: Request, res: Response) {
       offset: offset ? parseInt(offset as string) : undefined
     });
 
-    res.json(conversations);
+    return res.json(conversations);
   } catch (error) {
     console.error('Error listing conversations:', error);
-    res.status(500).json({ error: 'Failed to list conversations' });
+    return res.status(500).json({ error: 'Failed to list conversations' });
   }
 }
 
@@ -60,10 +60,10 @@ export async function get(req: Request, res: Response) {
       return res.status(403).json({ error: 'Access denied' });
     }
 
-    res.json(conversation);
+    return res.json(conversation);
   } catch (error) {
     console.error('Error getting conversation:', error);
-    res.status(500).json({ error: 'Failed to get conversation' });
+    return res.status(500).json({ error: 'Failed to get conversation' });
   }
 }
 
@@ -86,10 +86,10 @@ export async function create(req: Request, res: Response) {
       subject
     });
 
-    res.status(201).json(conversation);
+    return res.status(201).json(conversation);
   } catch (error) {
     console.error('Error creating conversation:', error);
-    res.status(500).json({ error: 'Failed to create conversation' });
+    return res.status(500).json({ error: 'Failed to create conversation' });
   }
 }
 
@@ -127,14 +127,14 @@ export async function postMessage(req: Request, res: Response) {
       message
     });
 
-    res.status(201).json(message);
+    return res.status(201).json(message);
   } catch (error) {
     console.error('Error posting message:', error);
-    res.status(500).json({ error: 'Failed to post message' });
+    return res.status(500).json({ error: 'Failed to post message' });
   }
 }
 
-export async function markRead(req: Request, res: Response) {
+export async export async function markRead(req: Request, res: Response) {
   const userId = req.session?.user?.id || "dev-user-id";
   const role = req.session?.user?.role || "vendor";
   const { id: conversationId } = req.params;
@@ -154,9 +154,9 @@ export async function markRead(req: Request, res: Response) {
     }
 
     await markRead(conversationId, userId);
-    res.json({ success: true });
+    return res.json({ success: true });
   } catch (error) {
     console.error('Error marking as read:', error);
-    res.status(500).json({ error: 'Failed to mark as read' });
+    return res.status(500).json({ error: 'Failed to mark as read' });
   }
 }

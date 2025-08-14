@@ -1,12 +1,13 @@
 import express from 'express';
 import { z } from 'zod';
 import { requireAuth, requireRole } from '../middleware/auth-mock';
+import { Role } from '../lib/prisma';
 
 // Define Role enum to match auth-mock
 enum Role {
-  CUSTOMER = 'CUSTOMER',
-  VENDOR = 'VENDOR',
-  ADMIN = 'ADMIN',
+  CUSTOMER = Role.CUSTOMER,
+  VENDOR = Role.VENDOR,
+  ADMIN = Role.ADMIN,
   SUPPLIER = 'SUPPLIER',
   EVENT_COORDINATOR = 'EVENT_COORDINATOR',
   DROPOFF = 'DROPOFF'
@@ -46,7 +47,7 @@ async function optimizeDeliveryRoute(orders: any[]) {
 
 // Validation schemas
 const updateFulfillmentSchema = z.object({
-  status: z.enum(['PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'FAILED']),
+  status: z.enum([FulfillmentStatus.PENDING, FulfillmentStatus.IN_PROGRESS, FulfillmentStatus.COMPLETED, 'CANCELLED', FulfillmentStatus.FAILED]),
   trackingNumber: z.string().optional(),
   carrier: z.string().optional(),
   estimatedDelivery: z.string().datetime().optional(),
@@ -58,7 +59,7 @@ const mockVendorOrders: any[] = [
   {
     id: 'order-1',
     orderNumber: 'ORD-1234567890-ABC12',
-    status: 'PENDING',
+    status: FulfillmentStatus.PENDING,
     subtotal: 89.97,
     total: 97.61,
     createdAt: '2024-01-15T10:30:00Z',
@@ -103,7 +104,7 @@ const mockVendorOrders: any[] = [
     ],
     fulfillment: {
       id: 'fulfillment-1',
-      status: 'PENDING',
+      status: FulfillmentStatus.PENDING,
       type: 'SHIPPING',
       trackingNumber: null,
       carrier: null,
@@ -117,7 +118,7 @@ const mockVendorOrders: any[] = [
   {
     id: 'order-2',
     orderNumber: 'ORD-1234567891-DEF34',
-    status: 'IN_PROGRESS',
+    status: FulfillmentStatus.IN_PROGRESS,
     subtotal: 45.99,
     total: 49.89,
     createdAt: '2024-01-14T15:45:00Z',
@@ -151,7 +152,7 @@ const mockVendorOrders: any[] = [
     ],
     fulfillment: {
       id: 'fulfillment-2',
-      status: 'IN_PROGRESS',
+      status: FulfillmentStatus.IN_PROGRESS,
       type: 'SHIPPING',
       trackingNumber: '1Z999AA1234567890',
       carrier: 'UPS',
@@ -165,7 +166,7 @@ const mockVendorOrders: any[] = [
 ];
 
 // GET /api/vendor/orders - Get all orders for vendor's products
-router.get('/', requireAuth, requireRole(['VENDOR' as Role]), async (req, res) => {
+router.get('/', requireAuth, requireRole([Role.VENDOR as Role]), async (req, res) => {
   try {
     return res.json({
       orders: mockVendorOrders
@@ -180,12 +181,12 @@ router.get('/', requireAuth, requireRole(['VENDOR' as Role]), async (req, res) =
 });
 
 // GET /api/vendor/orders/stats - Get order statistics
-router.get('/stats', requireAuth, requireRole(['VENDOR' as Role]), async (req, res) => {
+router.get('/stats', requireAuth, requireRole([Role.VENDOR as Role]), async (req, res) => {
   try {
     const totalOrders = mockVendorOrders.length;
-    const pendingOrders = mockVendorOrders.filter(o => o.fulfillment.status === 'PENDING').length;
-    const inProgressOrders = mockVendorOrders.filter(o => o.fulfillment.status === 'IN_PROGRESS').length;
-    const completedOrders = mockVendorOrders.filter(o => o.fulfillment.status === 'COMPLETED').length;
+    const pendingOrders = mockVendorOrders.filter(o => o.fulfillment.status === FulfillmentStatus.PENDING).length;
+    const inProgressOrders = mockVendorOrders.filter(o => o.fulfillment.status === FulfillmentStatus.IN_PROGRESS).length;
+    const completedOrders = mockVendorOrders.filter(o => o.fulfillment.status === FulfillmentStatus.COMPLETED).length;
     const totalRevenue = mockVendorOrders.reduce((sum, order) => sum + order.subtotal, 0);
 
     return res.json({
@@ -207,7 +208,7 @@ router.get('/stats', requireAuth, requireRole(['VENDOR' as Role]), async (req, r
 });
 
 // GET /api/vendor/orders/:id - Get specific order details
-router.get('/:id', requireAuth, requireRole(['VENDOR' as Role]), async (req, res) => {
+router.get('/:id', requireAuth, requireRole([Role.VENDOR as Role]), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -246,7 +247,7 @@ router.get('/:id', requireAuth, requireRole(['VENDOR' as Role]), async (req, res
 });
 
 // PATCH /api/vendor/orders/:id/fulfillment - Update fulfillment status
-router.patch('/:id/fulfillment', requireAuth, requireRole(['VENDOR' as Role]), async (req, res) => {
+router.patch('/:id/fulfillment', requireAuth, requireRole([Role.VENDOR as Role]), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -278,11 +279,11 @@ router.patch('/:id/fulfillment', requireAuth, requireRole(['VENDOR' as Role]), a
       carrier: carrier || null,
       estimatedDelivery: estimatedDelivery || null,
       notes: notes || null,
-      actualDelivery: status === 'COMPLETED' ? new Date().toISOString() : null
+      actualDelivery: status === FulfillmentStatus.COMPLETED ? new Date().toISOString() : null
     };
 
     // Update order status if fulfillment is completed
-    if (status === 'COMPLETED') {
+    if (status === FulfillmentStatus.COMPLETED) {
       order.status = 'FULFILLED';
     }
 
@@ -302,7 +303,7 @@ router.patch('/:id/fulfillment', requireAuth, requireRole(['VENDOR' as Role]), a
 });
 
 // GET /api/vendor/orders/delivery-batches - Get orders grouped by delivery day
-router.get('/delivery-batches', requireAuth, requireRole(['VENDOR' as Role]), async (req, res) => {
+router.get('/delivery-batches', requireAuth, requireRole([Role.VENDOR as Role]), async (req, res) => {
   try {
     const { optimize = 'false' } = req.query;
     
@@ -312,7 +313,7 @@ router.get('/delivery-batches', requireAuth, requireRole(['VENDOR' as Role]), as
         {
           id: 'order-1',
           orderNumber: 'ORD-1234567890-ABC',
-          status: 'PENDING',
+          status: FulfillmentStatus.PENDING,
           total: 89.97,
           createdAt: '2025-08-02T10:00:00Z',
           customerName: 'John Smith',
@@ -324,7 +325,7 @@ router.get('/delivery-batches', requireAuth, requireRole(['VENDOR' as Role]), as
             { id: 'item-1', quantity: 2, productName: 'Handcrafted Ceramic Mug', productImage: null },
             { id: 'item-2', quantity: 1, productName: 'Artisan Soap', productImage: null }
           ],
-          fulfillmentStatus: 'PENDING',
+          fulfillmentStatus: FulfillmentStatus.PENDING,
           etaLabel: '⚡ Fast Fulfillment'
         },
         {
@@ -341,7 +342,7 @@ router.get('/delivery-batches', requireAuth, requireRole(['VENDOR' as Role]), as
           items: [
             { id: 'item-3', quantity: 1, productName: 'Wooden Cutting Board', productImage: null }
           ],
-          fulfillmentStatus: 'PENDING',
+          fulfillmentStatus: FulfillmentStatus.PENDING,
           etaLabel: '📦 Standard'
         }
       ],
@@ -349,7 +350,7 @@ router.get('/delivery-batches', requireAuth, requireRole(['VENDOR' as Role]), as
         {
           id: 'order-3',
           orderNumber: 'ORD-1234567892-GHI',
-          status: 'PENDING',
+          status: FulfillmentStatus.PENDING,
           total: 34.98,
           createdAt: '2025-08-02T14:15:00Z',
           customerName: 'Mike Wilson',
@@ -361,7 +362,7 @@ router.get('/delivery-batches', requireAuth, requireRole(['VENDOR' as Role]), as
             { id: 'item-4', quantity: 1, productName: 'Handcrafted Ceramic Mug', productImage: null },
             { id: 'item-5', quantity: 1, productName: 'Artisan Soap', productImage: null }
           ],
-          fulfillmentStatus: 'PENDING',
+          fulfillmentStatus: FulfillmentStatus.PENDING,
           etaLabel: '⚡ Fast Fulfillment'
         }
       ],
@@ -381,7 +382,7 @@ router.get('/delivery-batches', requireAuth, requireRole(['VENDOR' as Role]), as
             { id: 'item-6', quantity: 1, productName: 'Wooden Cutting Board', productImage: null },
             { id: 'item-7', quantity: 2, productName: 'Artisan Soap', productImage: null }
           ],
-          fulfillmentStatus: 'PENDING',
+          fulfillmentStatus: FulfillmentStatus.PENDING,
           etaLabel: '📦 Standard'
         }
       ],
@@ -389,7 +390,7 @@ router.get('/delivery-batches', requireAuth, requireRole(['VENDOR' as Role]), as
         {
           id: 'order-5',
           orderNumber: 'ORD-1234567894-MNO',
-          status: 'PENDING',
+          status: FulfillmentStatus.PENDING,
           total: 25.99,
           createdAt: '2025-08-02T18:20:00Z',
           customerName: 'David Brown',
@@ -400,7 +401,7 @@ router.get('/delivery-batches', requireAuth, requireRole(['VENDOR' as Role]), as
           items: [
             { id: 'item-8', quantity: 1, productName: 'Handcrafted Ceramic Mug', productImage: null }
           ],
-          fulfillmentStatus: 'PENDING',
+          fulfillmentStatus: FulfillmentStatus.PENDING,
           etaLabel: '⚡ Fast Fulfillment'
         }
       ],
@@ -421,7 +422,7 @@ router.get('/delivery-batches', requireAuth, requireRole(['VENDOR' as Role]), as
             { id: 'item-10', quantity: 3, productName: 'Artisan Soap', productImage: null },
             { id: 'item-11', quantity: 1, productName: 'Handcrafted Ceramic Mug', productImage: null }
           ],
-          fulfillmentStatus: 'PENDING',
+          fulfillmentStatus: FulfillmentStatus.PENDING,
           etaLabel: '📦 Standard'
         }
       ]
@@ -482,7 +483,7 @@ router.get('/delivery-batches', requireAuth, requireRole(['VENDOR' as Role]), as
 });
 
 // GET /api/vendor/orders/delivery-batches/:day/manifest - Generate batch manifest for delivery drivers
-router.get('/delivery-batches/:day/manifest', requireAuth, requireRole(['VENDOR' as Role]), async (req, res) => {
+router.get('/delivery-batches/:day/manifest', requireAuth, requireRole([Role.VENDOR as Role]), async (req, res) => {
   try {
     const { day } = req.params;
     const { format = 'pdf' } = req.query;
@@ -493,7 +494,7 @@ router.get('/delivery-batches/:day/manifest', requireAuth, requireRole(['VENDOR'
         {
           id: 'order-1',
           orderNumber: 'ORD-1234567890-ABC',
-          status: 'PENDING',
+          status: FulfillmentStatus.PENDING,
           customerName: 'John Smith',
           customerEmail: 'john@example.com',
           customerPhone: '+1-555-0123',
@@ -592,7 +593,7 @@ router.get('/delivery-batches/:day/manifest', requireAuth, requireRole(['VENDOR'
 });
 
 // PATCH /api/vendor/orders/delivery-batches/:day/status - Update batch status
-router.patch('/delivery-batches/:day/status', requireAuth, requireRole(['VENDOR' as Role]), async (req, res) => {
+router.patch('/delivery-batches/:day/status', requireAuth, requireRole([Role.VENDOR as Role]), async (req, res) => {
   try {
     const { day } = req.params;
     const { status, driverInfo } = req.body;
@@ -612,7 +613,7 @@ router.patch('/delivery-batches/:day/status', requireAuth, requireRole(['VENDOR'
         packedAt: status === 'PACKED' ? new Date().toISOString() : null,
         loadedAt: status === 'LOADED' ? new Date().toISOString() : null,
         outForDeliveryAt: status === 'OUT_FOR_DELIVERY' ? new Date().toISOString() : null,
-        completedAt: status === 'COMPLETED' ? new Date().toISOString() : null
+        completedAt: status === FulfillmentStatus.COMPLETED ? new Date().toISOString() : null
       }
     };
 
@@ -632,7 +633,7 @@ router.patch('/delivery-batches/:day/status', requireAuth, requireRole(['VENDOR'
 });
 
 // GET /api/vendor/orders/delivery-batches/:day/status - Get batch status
-router.get('/delivery-batches/:day/status', requireAuth, requireRole(['VENDOR' as Role]), async (req, res) => {
+router.get('/delivery-batches/:day/status', requireAuth, requireRole([Role.VENDOR as Role]), async (req, res) => {
   try {
     const { day } = req.params;
 

@@ -7,6 +7,7 @@ import PDFDocument from 'pdfkit';
 import multer from 'multer';
 import { parse } from 'csv-parse/sync';
 import { ChartJSNodeCanvas } from 'chartjs-node-canvas';
+import { Role } from '../lib/prisma';
 
 const router = express.Router();
 
@@ -276,7 +277,7 @@ const createFinancialSnapshotSchema = z.object({
 const updateFinancialSnapshotSchema = createFinancialSnapshotSchema.partial();
 
 // GET /api/vendors/:id/financials/test - Get financial snapshots for a specific vendor with range filtering
-router.get('/:id/financials/test', requireAuth, requireRole(['VENDOR', 'ADMIN']), isVendorOwnerOrAdmin, async (req, res) => {
+router.get('/:id/financials/test', requireAuth, requireRole([Role.VENDOR, Role.ADMIN]), isVendorOwnerOrAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const { range = 'monthly', year, quarter } = req.query;
@@ -386,7 +387,7 @@ router.get('/:id/financials/test', requireAuth, requireRole(['VENDOR', 'ADMIN'])
 });
 
 // GET /api/vendors/:id/financials/export.csv/test - Export financial data as CSV
-router.get('/:id/financials/export.csv/test', requireAuth, requireRole(['VENDOR', 'ADMIN']), isVendorOwnerOrAdmin, async (req, res) => {
+router.get('/:id/financials/export.csv/test', requireAuth, requireRole([Role.VENDOR, Role.ADMIN]), isVendorOwnerOrAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     
@@ -426,7 +427,7 @@ router.get('/:id/financials/export.csv/test', requireAuth, requireRole(['VENDOR'
 });
 
 // GET /api/vendors/:id/financials/export.pdf/test - Export financial data as PDF with charts
-router.get('/:id/financials/export.pdf/test', requireAuth, requireRole(['VENDOR', 'ADMIN']), isVendorOwnerOrAdmin, async (req, res) => {
+router.get('/:id/financials/export.pdf/test', requireAuth, requireRole([Role.VENDOR, Role.ADMIN]), isVendorOwnerOrAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     
@@ -751,7 +752,7 @@ router.get('/:id/financials/export.pdf/test', requireAuth, requireRole(['VENDOR'
 });
 
 // POST /api/vendors/:id/financials/generate/test - Generate financial snapshot automatically
-router.post('/:id/financials/generate/test', requireAuth, requireRole(['VENDOR', 'ADMIN']), isVendorOwnerOrAdmin, async (req, res) => {
+router.post('/:id/financials/generate/test', requireAuth, requireRole([Role.VENDOR, Role.ADMIN]), isVendorOwnerOrAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const { period = 'monthly', notes } = req.body;
@@ -1076,7 +1077,7 @@ router.get('/analytics/test', async (req, res) => {
 });
 
 // POST /api/vendors/:id/financials/import/test - Mock upload and import CSV/Excel financial data
-router.post('/:id/financials/import/test', requireAuth, requireRole(['VENDOR', 'ADMIN']), isVendorOwnerOrAdmin, upload.single('file'), async (req, res) => {
+router.post('/:id/financials/import/test', requireAuth, requireRole([Role.VENDOR, Role.ADMIN]), isVendorOwnerOrAdmin, upload.single('file'), async (req, res) => {
   try {
     const { id } = req.params;
     
@@ -1169,7 +1170,7 @@ router.post('/:id/financials/import/test', requireAuth, requireRole(['VENDOR', '
 });
 
 // GET /api/vendors/:id/financials/insights/test - Get financial insights and analytics (Mock)
-router.get('/:id/financials/insights/test', requireAuth, requireRole(['VENDOR', 'ADMIN']), isVendorOwnerOrAdmin, async (req, res) => {
+router.get('/:id/financials/insights/test', requireAuth, requireRole([Role.VENDOR, Role.ADMIN]), isVendorOwnerOrAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const { year, quarter } = req.query;
@@ -1321,7 +1322,7 @@ router.get('/:id/financials/insights/test', requireAuth, requireRole(['VENDOR', 
 });
 
 // GET /api/vendors/:vendorId/financials/summary/test - Get financial summary data for charts (Mock)
-router.get('/:vendorId/financials/summary/test', requireAuth, requireRole(['VENDOR', 'ADMIN']), isVendorOwnerOrAdmin, async (req, res) => {
+router.get('/:vendorId/financials/summary/test', requireAuth, requireRole([Role.VENDOR, Role.ADMIN]), isVendorOwnerOrAdmin, async (req, res) => {
   try {
     const { vendorId } = req.params;
     
@@ -1351,7 +1352,7 @@ router.get('/:vendorId/financials/summary/test', requireAuth, requireRole(['VEND
 });
 
 // PATCH endpoint for inline editing of financial snapshots
-router.patch('/:id/financials/:snapshotId/test', requireAuth, requireRole(['VENDOR', 'ADMIN']), isVendorOwnerOrAdmin, async (req, res) => {
+router.patch('/:id/financials/:snapshotId/test', requireAuth, requireRole([Role.VENDOR, Role.ADMIN]), isVendorOwnerOrAdmin, async (req, res) => {
   try {
     const { id, snapshotId } = req.params;
     const updateData = req.body;

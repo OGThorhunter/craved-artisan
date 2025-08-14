@@ -2,12 +2,13 @@ import express from 'express';
 import { z } from 'zod';
 import prisma, { OrderStatus } from '../lib/prisma';
 import { requireAuth, requireRole } from '../middleware/auth';
+import { Role } from '../lib/prisma';
 
 const router = express.Router();
 
 // Validation schemas
 const updateFulfillmentSchema = z.object({
-  status: z.enum([OrderStatus.PENDING, 'IN_PROGRESS', 'COMPLETED', 'CANCELLED', 'FAILED']),
+  status: z.enum([OrderStatus.PENDING, FulfillmentStatus.IN_PROGRESS, FulfillmentStatus.COMPLETED, 'CANCELLED', FulfillmentStatus.FAILED]),
   trackingNumber: z.string().optional(),
   carrier: z.string().optional(),
   estimatedDelivery: z.string().datetime().optional(),
@@ -15,7 +16,7 @@ const updateFulfillmentSchema = z.object({
 });
 
 // GET /api/vendor/orders - Get all orders for vendor's products
-router.get('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.get('/', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     // Get vendor's profile ID
     const vendorProfile = await prisma.vendorProfile.findFirst({
@@ -53,8 +54,8 @@ router.get('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
             }
           }
         },
-        fulfillments: true,
-        shippingAddress: true,
+        fulfillments: { select: { id: true, status: true, trackingNumber: true, carrier: true, estimatedDelivery: true, actualDelivery: true, notes: true } },
+        shippingAddress: { select: { id: true, address1: true, city: true, state: true, postalCode: true } },
         user: {
           select: {
             id: true,
@@ -139,7 +140,7 @@ router.get('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
 });
 
 // GET /api/vendor/orders/:id - Get specific order details
-router.get('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.get('/:id', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -181,8 +182,8 @@ router.get('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
             }
           }
         },
-        fulfillments: true,
-        shippingAddress: true,
+        fulfillments: { select: { id: true, status: true, trackingNumber: true, carrier: true, estimatedDelivery: true, actualDelivery: true, notes: true } },
+        shippingAddress: { select: { id: true, address1: true, city: true, state: true, postalCode: true } },
         user: { select: { id: true, name: true, email: true } }
       }
     });
@@ -267,7 +268,7 @@ router.get('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
 });
 
 // PATCH /api/vendor/orders/:id/fulfillment - Update fulfillment status
-router.patch('/:id/fulfillment', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.patch('/:id/fulfillment', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -276,7 +277,7 @@ router.patch('/:id/fulfillment', requireAuth, requireRole(['VENDOR']), async (re
     if (!validationResult.success) {
       return res.status(400).json({
         error: 'Invalid request data',
-        details: validationResult.errors
+        details: validationResult.error.errors
       });
     }
 
@@ -307,7 +308,7 @@ router.patch('/:id/fulfillment', requireAuth, requireRole(['VENDOR']), async (re
         }
       },
       include: {
-        fulfillments: true
+        fulfillments: { select: { id: true, status: true, trackingNumber: true, carrier: true, estimatedDelivery: true, actualDelivery: true, notes: true } }
       }
     });
 
@@ -331,16 +332,16 @@ router.patch('/:id/fulfillment', requireAuth, requireRole(['VENDOR']), async (re
       where: { id: fulfillment.id },
       data: {
         status,
-        trackingNumber: trackingNumber || null,
-        carrier: carrier || null,
+        trackingNumber: trackingNumber || undefined,
+        carrier: carrier || undefined,
         estimatedDelivery: estimatedDelivery ? new Date(estimatedDelivery) : undefined,
-        notes: notes || null,
-        actualDelivery: status === 'COMPLETED' ? new Date() : undefined
+        notes: notes || undefined,
+        actualDelivery: status === FulfillmentStatus.COMPLETED ? new Date() : undefined
       }
     });
 
     // Update order status if fulfillment is completed
-    if (status === 'COMPLETED') {
+    if (status === FulfillmentStatus.COMPLETED) {
       await prisma.order.update({
         where: { id },
         data: {
@@ -373,7 +374,7 @@ router.patch('/:id/fulfillment', requireAuth, requireRole(['VENDOR']), async (re
 });
 
 // GET /api/vendor/orders/stats - Get order statistics
-router.get('/stats', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.get('/stats', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     // Get vendor's profile ID
     const vendorProfile = await prisma.vendorProfile.findFirst({
@@ -428,7 +429,7 @@ router.get('/stats', requireAuth, requireRole(['VENDOR']), async (req, res) => {
         },
         fulfillments: {
           some: {
-            status: 'IN_PROGRESS'
+            status: FulfillmentStatus.IN_PROGRESS
           }
         }
       }
@@ -445,7 +446,7 @@ router.get('/stats', requireAuth, requireRole(['VENDOR']), async (req, res) => {
         },
         fulfillments: {
           some: {
-            status: 'COMPLETED'
+            status: FulfillmentStatus.COMPLETED
           }
         }
       }
@@ -484,7 +485,7 @@ router.get('/stats', requireAuth, requireRole(['VENDOR']), async (req, res) => {
 });
 
 // GET /api/vendor/orders/delivery-batches - Get orders grouped by delivery day
-router.get('/delivery-batches', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.get('/delivery-batches', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     const orders = await prisma.order.findMany({
       where: {
@@ -508,13 +509,7 @@ router.get('/delivery-batches', requireAuth, requireRole(['VENDOR']), async (req
             }
           }
         },
-        shippingAddress: {
-          select: {
-            name: true,
-            city: true,
-            state: true
-          }
-        },
+        shippingAddress: { select: { city: true, state: true } },
         fulfillments: {
           select: {
             status: true,
@@ -547,14 +542,14 @@ router.get('/delivery-batches', requireAuth, requireRole(['VENDOR']), async (req
         shippingZip: order.shippingZip,
         shippingCity: order.shippingAddress?.city,
         shippingState: order.shippingAddress?.state,
-        items: order.orderItems.map((item: any) => ({
+        items: order.orderItems?.map((item: any) => ({
           id: item.id,
           quantity: item.quantity,
           productName: item.product.name,
           productImage: item.product.imageUrl
         })),
-        fulfillmentStatus: order.fulfillments[0]?.status || OrderStatus.PENDING,
-        etaLabel: order.fulfillments[0]?.etaLabel
+        fulfillmentStatus: order.fulfillments?.[0]?.status || OrderStatus.PENDING,
+        etaLabel: order.fulfillments?.[0]?.etaLabel
       });
     });
 

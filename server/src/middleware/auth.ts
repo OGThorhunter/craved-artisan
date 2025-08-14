@@ -54,7 +54,7 @@ export const requireAuth = async (
 
     // Attach user to request
     req.user = user;
-    next();
+    return next();
   } catch (error) {
     console.error('Auth middleware error:', error);
     res.status(500).json({ 
@@ -81,7 +81,7 @@ export const requireRole = (allowedRoles: Role[]) => {
       });
     }
 
-    next();
+    return next();
   };
 };
 
@@ -118,10 +118,10 @@ export const optionalAuth = async (
         req.user = user;
       }
     }
-    next();
+    return next();
   } catch (error) {
     console.error('Optional auth middleware error:', error);
     // Don't fail the request, just continue without user
-    next();
+    return next();
   }
 }; 

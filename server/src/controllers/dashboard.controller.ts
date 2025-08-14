@@ -3,7 +3,7 @@ import dayjs from "dayjs";
 import { vendorOverview, vendorBestSellers } from "../services/analytics.service";
 import { pnl } from "../services/financials.service";
 import { restockSuggestions } from "../services/restock.service";
-import prisma from '/prisma';
+import prisma from '../lib/prisma';
 
 const cache = new LRUCache<string, any>({ ttl: 30_000, max: 300 });
 

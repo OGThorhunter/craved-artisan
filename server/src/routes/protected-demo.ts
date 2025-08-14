@@ -1,4 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
+import { Role } from '../lib/prisma';
 
 const router = Router();
 
@@ -63,7 +64,7 @@ router.get('/profile', requireAuth, (req: Request, res: Response) => {
 });
 
 // Example route that requires VENDOR role
-router.get('/vendor-dashboard', requireAuth, requireRole(['VENDOR']), (req: Request, res: Response) => {
+router.get('/vendor-dashboard', requireAuth, requireRole([Role.VENDOR]), (req: Request, res: Response) => {
   return res.json({
     message: 'Vendor dashboard - only VENDOR users can access',
     user: req.user,
@@ -77,7 +78,7 @@ router.get('/vendor-dashboard', requireAuth, requireRole(['VENDOR']), (req: Requ
 });
 
 // Example route that requires ADMIN role
-router.get('/admin-panel', requireAuth, requireRole(['ADMIN']), (req: Request, res: Response) => {
+router.get('/admin-panel', requireAuth, requireRole([Role.ADMIN]), (req: Request, res: Response) => {
   return res.json({
     message: 'Admin panel - only ADMIN users can access',
     user: req.user,
@@ -91,7 +92,7 @@ router.get('/admin-panel', requireAuth, requireRole(['ADMIN']), (req: Request, r
 });
 
 // Example route that requires CUSTOMER role
-router.get('/customer-orders', requireAuth, requireRole(['CUSTOMER']), (req: Request, res: Response) => {
+router.get('/customer-orders', requireAuth, requireRole([Role.CUSTOMER]), (req: Request, res: Response) => {
   return res.json({
     message: 'Customer orders - only CUSTOMER users can access',
     user: req.user,
@@ -101,7 +102,7 @@ router.get('/customer-orders', requireAuth, requireRole(['CUSTOMER']), (req: Req
 });
 
 // Example route that allows multiple roles
-router.get('/vendor-or-admin', requireAuth, requireRole(['VENDOR', 'ADMIN']), (req: Request, res: Response) => {
+router.get('/vendor-or-admin', requireAuth, requireRole([Role.VENDOR, Role.ADMIN]), (req: Request, res: Response) => {
   return res.json({
     message: 'Vendor or Admin route - VENDOR and ADMIN users can access',
     user: req.user,

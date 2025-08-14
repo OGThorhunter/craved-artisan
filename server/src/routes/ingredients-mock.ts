@@ -84,12 +84,12 @@ const validateRequest = (schema: z.ZodSchema) => {
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
       schema.parse(req.body);
-      next();
+      return next();
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({
           message: 'Validation error',
-          errors: error.errors
+          errors: error.error.errors
         });
       }
       return res.status(400).json({ message: 'Invalid request data' });

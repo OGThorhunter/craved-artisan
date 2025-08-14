@@ -1,14 +1,15 @@
 import dayjs from "dayjs";
 import prisma from '../lib/prisma';
 
+// Fulfillment functionality temporarily disabled - models not available in current schema
 export async function getVendorAvailability(vendorProfileId: string, { days = 21, zip }: { days?: number; zip?: string }) {
-  // Pull windows and (optionally) filter locations by ZIP if provided
   // FulfillmentWindow and FulfillmentLocation models not available in current schema
+  throw new Error("Fulfillment functionality not available in current schema");
+  // TODO: Restore when models are properly implemented
+  /*
   const [windows, locs] = await Promise.all([
-    // prisma.fulfillmentWindow.findMany({ where: { vendorProfileId, active: true } }),
-    // prisma.fulfillmentLocation.findMany({ where: { vendorProfileId, active: true, ...(zip ? { zip } : {}) } })
-    Promise.resolve([]), // Placeholder for windows
-    Promise.resolve([])  // Placeholder for locations
+    prisma.fulfillmentWindow.findMany({ where: { vendorProfileId, active: true } }),
+    prisma.fulfillmentLocation.findMany({ where: { vendorProfileId, active: true, ...(zip ? { zip } : {}) } })
   ]);
   const locMap = new Map(locs.map((l: any) => [l.id, l]));
 
@@ -27,20 +28,24 @@ export async function getVendorAvailability(vendorProfileId: string, { days = 21
 
   // TODO: enforce capacity based on existing OrderFulfillment for that vendor/date window.
   return out;
+  */
 }
 
 export async function scheduleOrderForVendors(orderId: string, selections: Array<{
   vendorProfileId: string; method: "pickup"|"delivery"|"ship"; date: string; locationId?: string; fee?: number; notes?: string;
 }>) {
   // OrderFulfillment and OrderEvent models not available in current schema
+  throw new Error("Fulfillment functionality not available in current schema");
+  // TODO: Restore when models are properly implemented
+  /*
   const rows = selections.map(s => ({
     orderId, vendorProfileId: s.vendorProfileId, method: s.method, date: new Date(s.date),
     locationId: s.locationId ?? null, fee: s.fee ?? 0, notes: s.notes ?? null
   }));
   
-  // TODO: Restore when models are properly implemented
-  // await prisma.orderFulfillment.createMany({ data: rows });
-  // await prisma.orderEvent.create({ data: { orderId, type: "scheduled", message: "Fulfillment scheduled" } });
+  await prisma.orderFulfillment.createMany({ data: rows });
+  await prisma.orderEvent.create({ data: { orderId, type: "scheduled", message: "Fulfillment scheduled" } });
   
   return true;
+  */
 }

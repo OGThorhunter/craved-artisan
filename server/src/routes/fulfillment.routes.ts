@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { getVendorAvailability, scheduleOrderForVendors } from "../services/fulfillment.service";
-import prisma from '/prisma';
+import prisma from '../lib/prisma';
 const r = Router();
 
 // List upcoming windows for a vendor (zip-aware)

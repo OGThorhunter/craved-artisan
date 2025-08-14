@@ -5,7 +5,7 @@ import { Link } from 'wouter';
 import {
   Clock, Bell, Mail, Phone, MessageCircle, HelpCircle,
   AlertTriangle, CheckCircle, Info, X, ChevronDown, ChevronUp,
-  Settings, Camera, QrCode, Receipt, Download, Print, Send,
+  Settings, Camera, QrCode, Receipt, Download, Send,
   ShoppingCart, Users, Calendar, Star, Heart, TrendingUp,
   Sparkles, Brain, Zap, Target, ArrowRight, ArrowLeft,
   Filter, Search, Plus, Minus, Trash, MapPin, CreditCard, Wallet, Gift, Share2, Copy, Shield, Lock, Eye, EyeOff, Truck, Package, DollarSign, Percent, Tag

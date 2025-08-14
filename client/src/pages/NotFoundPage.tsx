@@ -7,7 +7,7 @@ import {
   MessageCircle, HelpCircle, Phone, Mail, MapPin, Clock,
   Star, Heart, TrendingUp, Sparkles, Brain, Zap, Target,
   AlertTriangle, CheckCircle, Info, X, ChevronDown, ChevronUp,
-  Filter, Settings, Camera, QrCode, Receipt, Download, Print,
+  Filter, Settings, Camera, QrCode, Receipt, Download,
   Send, Plus, Minus, Trash, CreditCard, Wallet, Gift, Share2, Copy, Bell, Shield, Lock, Eye, EyeOff, Truck, Package, DollarSign, Percent, Tag, ArrowRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';

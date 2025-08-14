@@ -33,7 +33,7 @@ let recipes = [
     difficulty: 'Hard',
     isActive: true,
     vendorProfileId: 'vendor-1',
-    productId: null,
+    productId: undefined,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   }
@@ -119,7 +119,7 @@ const validateRequest = (schema: z.ZodSchema) => {
   return (req: express.Request, res: express.Response, next: express.NextFunction) => {
     try {
       schema.parse(req.body);
-      next();
+      return next();
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({

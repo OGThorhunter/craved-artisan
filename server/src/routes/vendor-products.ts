@@ -3,6 +3,7 @@ import { requireAuth, requireRole } from '../middleware/auth';
 import prisma from '../lib/prisma';
 import { z } from 'zod';
 import { calculateMargin, generateAlertNote } from '../utils/marginCalculator';
+import { Role } from '../lib/prisma';
 
 const router = express.Router();
 
@@ -129,7 +130,7 @@ function suggestAiPrice(
 }
 
 // GET /api/vendor/products - Get all products for the authenticated vendor
-router.get('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.get('/', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     // First get the vendor profile for the authenticated user
     const vendorProfile = await prisma.vendorProfile.findUnique({
@@ -163,14 +164,14 @@ router.get('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
 });
 
 // POST /api/vendor/products - Create a new product
-router.post('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.post('/', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     // Validate request body
     const validationResult = createProductSchema.safeParse(req.body);
     if (!validationResult.success) {
       return res.status(400).json({
         error: 'Validation failed',
-        details: validationResult.errors
+        details: validationResult.error.errors
       });
     }
 
@@ -190,7 +191,7 @@ router.post('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
 
     // Calculate margin and check for alerts if cost is provided
     let marginAlert = false;
-    let alertNote = null;
+    let alertNote = undefined;
     
     if (productData.cost && productData.price) {
       const marginCalculation = calculateMargin(
@@ -230,7 +231,7 @@ router.post('/', requireAuth, requireRole(['VENDOR']), async (req, res) => {
 });
 
 // GET /api/vendor/products/:id - Get a specific product by ID
-router.get('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.get('/:id', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -272,7 +273,7 @@ router.get('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
 });
 
 // PUT /api/vendor/products/:id - Update a product by ID
-router.put('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.put('/:id', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -281,7 +282,7 @@ router.put('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
     if (!validationResult.success) {
       return res.status(400).json({
         error: 'Validation failed',
-        details: validationResult.errors
+        details: validationResult.error.errors
       });
     }
 
@@ -380,7 +381,7 @@ router.put('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
 });
 
 // GET /api/vendor/products/:id/margin - Calculate product margin and suggest pricing
-router.get('/:id/margin', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.get('/:id/margin', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -454,8 +455,8 @@ router.get('/:id/margin', requireAuth, requireRole(['VENDOR']), async (req, res)
     }
 
     // Suggest price if targetMargin is set
-    let suggestedPrice: number | undefined = null;
-    if (product.targetMargin !== null && product.targetMargin !== undefined) {
+    let suggestedPrice: number | undefined = undefined;
+    if (product.targetMargin !== undefined && product.targetMargin !== undefined) {
       const targetMarginDecimal = product.targetMargin / 100;
       suggestedPrice = unitCost / (1 - targetMarginDecimal);
     }
@@ -488,7 +489,7 @@ router.get('/:id/margin', requireAuth, requireRole(['VENDOR']), async (req, res)
 });
 
 // DELETE /api/vendor/products/:id - Delete a product by ID
-router.delete('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.delete('/:id', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -532,7 +533,7 @@ router.delete('/:id', requireAuth, requireRole(['VENDOR']), async (req, res) => 
 });
 
 // GET /api/vendor/products/:id/ai-suggestion - Get AI-powered price suggestion
-router.get('/:id/ai-suggestion', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.get('/:id/ai-suggestion', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -652,7 +653,7 @@ router.get('/:id/ai-suggestion', requireAuth, requireRole(['VENDOR']), async (re
 });
 
 // POST /api/vendor/products/:id/ai-suggest - Apply AI price suggestion and update product
-router.post('/:id/ai-suggest', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.post('/:id/ai-suggest', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -787,7 +788,7 @@ router.post('/:id/ai-suggest', requireAuth, requireRole(['VENDOR']), async (req,
 });
 
 // GET /api/vendor/products/low-margin - Get products with low margins
-router.get('/low-margin', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.get('/low-margin', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     // Get the vendor profile for the authenticated user
     const vendorProfile = await prisma.vendorProfile.findUnique({
@@ -879,7 +880,7 @@ router.get('/low-margin', requireAuth, requireRole(['VENDOR']), async (req, res)
 });
 
 // GET /api/vendor/products/ingredient-price-alerts - Get ingredient price change alerts
-router.get('/ingredient-price-alerts', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.get('/ingredient-price-alerts', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     // Get the vendor profile for the authenticated user
     const vendorProfile = await prisma.vendorProfile.findUnique({
@@ -960,7 +961,7 @@ router.get('/ingredient-price-alerts', requireAuth, requireRole(['VENDOR']), asy
 });
 
 // POST /api/vendor/products/batch-update-pricing - Batch update pricing based on target margins
-router.post('/batch-update-pricing', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.post('/batch-update-pricing', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     const { targetMargin, productIds } = req.body;
 
@@ -1082,7 +1083,7 @@ router.post('/batch-update-pricing', requireAuth, requireRole(['VENDOR']), async
 });
 
 // GET /api/vendor/products/alerts/margin - Get products with margin alerts
-router.get('/alerts/margin', requireAuth, requireRole(['VENDOR']), async (req, res) => {
+router.get('/alerts/margin', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
     // Get the vendor profile for the authenticated user
     const vendorProfile = await prisma.vendorProfile.findUnique({
