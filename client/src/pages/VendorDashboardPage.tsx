@@ -18,6 +18,7 @@ import {
   Info
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import InspirationalQuote from '@/components/InspirationalQuote';
 
 interface Vendor {
   id: string;
@@ -304,44 +305,9 @@ export default function VendorDashboardPage() {
   const currentSalesData = salesData[timeRange];
 
   return (
-    <div className="page-container bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <img src={vendor.avatar} alt={vendor.name} className="w-16 h-16 rounded-full" />
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">{vendor.storeName}</h1>
-                <p className="text-gray-600">Welcome back, {vendor.name}</p>
-              </div>
-              {vendor.verified && (
-                <div className="flex items-center gap-1 text-blue-600">
-                  <CheckCircle className="w-5 h-5" />
-                  <span className="text-sm font-medium">Verified</span>
-                </div>
-              )}
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-brand-green">${vendor.totalRevenue.toLocaleString()}</div>
-                <div className="text-sm text-gray-600">Total Revenue</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-brand-maroon">{vendor.totalOrders}</div>
-                <div className="text-sm text-gray-600">Total Orders</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">{vendor.totalCustomers}</div>
-                <div className="text-sm text-gray-600">Customers</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Navigation Tabs */}
-      <div className="bg-white border-b">
+    <div className="bg-white">
+      {/* Secondary Navigation Tabs */}
+      <div className="bg-blue-500 border-b border-blue-600 shadow-sm">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex overflow-x-auto">
             {[
@@ -357,11 +323,17 @@ export default function VendorDashboardPage() {
               return (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
+                  onClick={() => {
+                    if (tab.id === 'analytics') {
+                      window.location.href = '/dashboard/vendor/analytics';
+                    } else {
+                      setActiveTab(tab.id as any);
+                    }
+                  }}
                   className={`flex items-center gap-2 px-6 py-4 font-medium transition-colors whitespace-nowrap ${
                     activeTab === tab.id
-                      ? 'border-b-2 border-brand-green text-brand-green'
-                      : 'text-gray-500 hover:text-gray-700'
+                      ? 'border-b-2 border-white text-white'
+                      : 'text-blue-100 hover:text-white'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -385,28 +357,33 @@ export default function VendorDashboardPage() {
               className="space-y-8"
             >
               {/* Hero Banner */}
-              <div className="bg-gradient-to-r from-brand-green to-brand-maroon rounded-lg p-6 text-white">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h2 className="text-2xl font-bold mb-2">Dashboard Overview</h2>
-                    <p className="text-green-100">Track your business performance and stay ahead</p>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-center">
-                      <div className="text-3xl font-bold">{vendor.averageRating}</div>
-                      <div className="text-sm text-green-100">Average Rating</div>
+              <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-100 shadow-sm">
+                                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-2xl font-bold mb-2 text-gray-900">Dashboard Overview</h2>
+                      <p className="text-gray-600">Track your business performance and stay ahead</p>
                     </div>
-                    <div className="text-center">
-                      <div className="text-3xl font-bold">{vendor.reviewCount}</div>
-                      <div className="text-sm text-green-100">Reviews</div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-center">
+                        <div className="text-3xl font-bold text-gray-900">{vendor.averageRating}</div>
+                        <div className="text-sm text-gray-600">Average Rating</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-3xl font-bold text-gray-900">{vendor.reviewCount}</div>
+                        <div className="text-sm text-gray-600">Reviews</div>
+                      </div>
                     </div>
                   </div>
-                </div>
+              </div>
+
+              {/* Inspirational Quote */}
+              <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
+                <InspirationalQuote />
               </div>
 
               {/* Today's Performance Tiles */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="bg-white rounded-lg p-6 border">
+                <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
                   <div className="flex items-center justify-between mb-4">
                     <div className="p-2 bg-green-100 rounded-lg">
                       <DollarSign className="w-6 h-6 text-green-600" />
@@ -430,7 +407,7 @@ export default function VendorDashboardPage() {
                   </div>
                 </div>
 
-                <div className="bg-white rounded-lg p-6 border">
+                <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
                   <div className="flex items-center justify-between mb-4">
                     <div className="p-2 bg-blue-100 rounded-lg">
                       <ShoppingBag className="w-6 h-6 text-blue-600" />
@@ -454,7 +431,7 @@ export default function VendorDashboardPage() {
                   </div>
                 </div>
 
-                <div className="bg-white rounded-lg p-6 border">
+                <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
                   <div className="flex items-center justify-between mb-4">
                     <div className="p-2 bg-purple-100 rounded-lg">
                       <CreditCard className="w-6 h-6 text-purple-600" />
@@ -468,7 +445,7 @@ export default function VendorDashboardPage() {
                   </div>
                 </div>
 
-                <div className="bg-white rounded-lg p-6 border">
+                <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
                   <div className="flex items-center justify-between mb-4">
                     <div className="p-2 bg-orange-100 rounded-lg">
                       <Package className="w-6 h-6 text-orange-600" />
@@ -485,7 +462,7 @@ export default function VendorDashboardPage() {
 
               {/* Time Range Toggle */}
               <div className="flex justify-center">
-                <div className="bg-white rounded-lg p-1 border">
+                <div className="bg-[#F7F2EC] rounded-lg p-1 border border-gray-200 shadow-sm">
                   {(['today', 'week', 'month'] as const).map((range) => (
                     <button
                       key={range}
@@ -504,7 +481,7 @@ export default function VendorDashboardPage() {
 
               {/* Business Health Snapshot */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white rounded-lg p-6 border">
+                <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
                   <h3 className="text-lg font-semibold mb-4">Business Health</h3>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
@@ -530,7 +507,7 @@ export default function VendorDashboardPage() {
                   </div>
                 </div>
 
-                <div className="bg-white rounded-lg p-6 border">
+                <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
                   <h3 className="text-lg font-semibold mb-4">AI Insights</h3>
                   <div className="space-y-3">
                     {aiInsights.map((insight) => (
@@ -558,7 +535,7 @@ export default function VendorDashboardPage() {
               </div>
 
               {/* Quick Actions */}
-              <div className="bg-white rounded-lg p-6 border">
+              <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
                 <h3 className="text-lg font-semibold mb-4">Quick Actions</h3>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                   {[
@@ -572,7 +549,7 @@ export default function VendorDashboardPage() {
                     return (
                       <button
                         key={index}
-                        className="flex flex-col items-center gap-2 p-4 rounded-lg border hover:bg-gray-50 transition-colors"
+                        className="flex flex-col items-center gap-2 p-4 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors shadow-sm"
                       >
                         <div className={`p-2 rounded-lg ${action.color}`}>
                           <Icon className="w-6 h-6" />
@@ -586,7 +563,7 @@ export default function VendorDashboardPage() {
 
               {/* Recent Orders & Messages */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white rounded-lg p-6 border">
+                <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold">Recent Orders</h3>
                     <Link href="/dashboard/vendor/orders" className="text-brand-green hover:text-brand-green/80 text-sm">
@@ -595,7 +572,7 @@ export default function VendorDashboardPage() {
                   </div>
                   <div className="space-y-3">
                     {orders.slice(0, 3).map((order) => (
-                      <div key={order.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                      <div key={order.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-white shadow-sm">
                         <div className="flex items-center gap-3">
                           <img src={order.customerAvatar} alt={order.customerName} className="w-10 h-10 rounded-full" />
                           <div>
@@ -616,7 +593,7 @@ export default function VendorDashboardPage() {
                   </div>
                 </div>
 
-                <div className="bg-white rounded-lg p-6 border">
+                <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold">Messages</h3>
                     <Link href="/dashboard/vendor/messages" className="text-brand-green hover:text-brand-green/80 text-sm">
@@ -625,7 +602,7 @@ export default function VendorDashboardPage() {
                   </div>
                   <div className="space-y-3">
                     {messages.slice(0, 3).map((message) => (
-                      <div key={message.id} className={`flex items-center gap-3 p-3 border border-gray-200 rounded-lg ${
+                      <div key={message.id} className={`flex items-center gap-3 p-3 border border-gray-200 rounded-lg bg-white shadow-sm ${
                         message.unread ? 'bg-blue-50' : ''
                       }`}>
                         <img src={message.customerAvatar} alt={message.customerName} className="w-10 h-10 rounded-full" />
@@ -644,7 +621,7 @@ export default function VendorDashboardPage() {
               </div>
 
               {/* Leaderboard */}
-              <div className="bg-white rounded-lg p-6 border">
+              <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
                 <h3 className="text-lg font-semibold mb-4">Achievements & Milestones</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="text-center p-4 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-lg">

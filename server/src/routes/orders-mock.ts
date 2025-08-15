@@ -3,7 +3,17 @@ import { z } from 'zod';
 import { requireAuth, requireRole } from '../middleware/auth-mock';
 import { sendDeliveryConfirmation, sendDeliveryETAWithTime } from '../utils/twilio';
 import PDFDocument from 'pdfkit';
-import { Role } from '../lib/prisma';
+import { Role } from '../middleware/auth-mock';
+
+// Define FulfillmentStatus enum
+enum FulfillmentStatus {
+  PENDING = 'PENDING',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
+  FAILED = 'FAILED',
+  DELIVERED = 'DELIVERED'
+}
 
 const router = express.Router();
 
@@ -89,7 +99,7 @@ router.post('/checkout', requireAuth, requireRole([Role.CUSTOMER]), async (req, 
     if (!validationResult.success) {
       return res.status(400).json({
         error: 'Invalid request data',
-        details: validationResult.error.errors
+        details: validationResult.error.flatten()
       });
     }
 
@@ -596,7 +606,7 @@ router.post('/checkout/test', async (req, res) => {
     if (!validationResult.success) {
       return res.status(400).json({
         error: 'Invalid request data',
-        details: validationResult.error.errors
+        details: validationResult.error.flatten()
       });
     }
 
@@ -1144,6 +1154,9 @@ router.get('/:id/receipt/test', async (req, res) => {
 
     // End the document
     doc.end();
+    
+    // Note: No return statement needed here as doc.pipe(res) handles the response
+    return;
   } catch (error) {
     console.error('Error generating receipt:', error);
     return res.status(400).json({

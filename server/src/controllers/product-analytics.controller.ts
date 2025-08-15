@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import { productOverview } from '../services/product-analytics.service';
-import LRU from 'lru-cache';
+import { LRUCache } from 'lru-cache';
 
-const cache = new LRU<string, any>({ ttl: 30_000, max: 200 });
+const cache = new LRUCache<string, any>({ ttl: 30_000, max: 200 });
 
 export async function getProductOverview(req: Request, res: Response) {
   const { vendorId, productId } = req.params;

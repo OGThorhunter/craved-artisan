@@ -15,6 +15,9 @@ model User {
   email          String   @unique
   password       String
   name           String?
+  firstName      String?
+  lastName       String?
+  phone          String?
   zip_code       String?
   loyalty_member Boolean  @default(false)
   created_at     DateTime @default(now())
@@ -72,6 +75,7 @@ model Product {
   onWatchlist       Boolean  @default(false)
   lastAiSuggestion  DateTime?
   aiSuggestionNote  String?
+  taxCode           String?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -90,11 +94,20 @@ model Product {
 model Order {
   id              String   @id @default(cuid())
   userId          String   // Changed from customerId to match services
+  orderNumber     String   @unique // Add order number for display
   zip             String?
   status          OrderStatus @default(PENDING)
   paymentIntentId String?  // pi_*
   transferGroup   String?  // order_<id>
   subtotal        Decimal  @db.Decimal(10, 2) @default(0)
+  tax             Decimal  @db.Decimal(10, 2) @default(0)
+  shipping        Decimal  @db.Decimal(10, 2) @default(0)
+  total           Decimal  @db.Decimal(10, 2) @default(0)
+  shippingZip     String?
+  deliveryDay     String?
+  deliveryStatus  String?  // Add delivery status
+  deliveryTimestamp DateTime?
+  notes           String?
   shippingAddressId String? // Add shipping address reference
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -131,6 +144,7 @@ model Ingredient {
   inventory   IngredientInventory[]
   transactions InventoryTx[]
   recipeIngredients RecipeIngredient[]
+  recipeIngredientVersions RecipeIngredientVersion[]
   preferredSupplier Supplier? @relation("PreferredSupplier", fields: [preferredSupplierId], references: [id])
 
   @@index([vendorProfileId, name])
@@ -178,6 +192,7 @@ model Recipe {
 
   recipeIngredients RecipeIngredient[] // Changed from items
   products          Product[] // if Product already exists; else use relation field below
+  versions          RecipeVersion[] // Add versions relation
   @@index([vendorProfileId, name])
 }
 
@@ -192,6 +207,45 @@ model RecipeIngredient {
   ingredient Ingredient @relation(fields: [ingredientId], references: [id])
 
   @@index([recipeId, ingredientId])
+}
+
+model RecipeVersion {
+  id                String   @id @default(cuid())
+  recipeId          String
+  version           Int
+  name              String
+  description       String?
+  instructions      String?
+  yield             Decimal   @db.Decimal(10, 4)
+  yieldUnit         String
+  prepTime          Int?
+  cookTime          Int?
+  difficulty        String?
+  totalCost         Decimal   @db.Decimal(10, 4)
+  editorId          String
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relations
+  recipe                    Recipe @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  recipeIngredientVersions  RecipeIngredientVersion[]
+
+  @@index([recipeId, version])
+}
+
+model RecipeIngredientVersion {
+  id                String   @id @default(cuid())
+  recipeVersionId   String
+  ingredientId      String
+  quantity          Decimal   @db.Decimal(10, 4)
+  unit              String
+  notes             String?
+
+  // Relations
+  recipeVersion     RecipeVersion @relation(fields: [recipeVersionId], references: [id], onDelete: Cascade)
+  ingredient        Ingredient @relation(fields: [ingredientId], references: [id])
+
+  @@index([recipeVersionId, ingredientId])
 }
 
 model OrderItem {
@@ -397,10 +451,18 @@ model OrderFulfillment {
   id         String  @id @default(cuid())
   orderId    String
   vendorProfileId String // Changed from vendorId
+  status     String  @default("PENDING") // Add status field
   method     String  // "pickup" | "delivery" | "ship"
+  fulfillmentType String? // Add fulfillment type
   locationId String?
   date       DateTime
   fee        Decimal  @default(0)
+  trackingNumber String?
+  carrier    String?
+  estimatedDelivery DateTime?
+  actualDelivery DateTime?
+  etaLabel   String?
+  predictedHours Int?
   notes      String?
 
   location   FulfillmentLocation? @relation(fields: [locationId], references: [id])

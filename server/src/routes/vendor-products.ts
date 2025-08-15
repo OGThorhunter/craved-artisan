@@ -171,7 +171,7 @@ router.post('/', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
     if (!validationResult.success) {
       return res.status(400).json({
         error: 'Validation failed',
-        details: validationResult.error.errors
+        details: validationResult.error.flatten()
       });
     }
 
@@ -282,7 +282,7 @@ router.put('/:id', requireAuth, requireRole([Role.VENDOR]), async (req, res) => 
     if (!validationResult.success) {
       return res.status(400).json({
         error: 'Validation failed',
-        details: validationResult.error.errors
+        details: validationResult.error.flatten()
       });
     }
 

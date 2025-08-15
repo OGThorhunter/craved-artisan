@@ -7,6 +7,12 @@ import {
   markRead 
 } from '../services/messages.service';
 import { publish } from '../services/sse';
+import { Role } from '../lib/prisma';
+
+// Export aliases for the expected function names
+export const listConversations = list;
+export const getConversation = get;
+export const createConversation = create;
 
 export async function list(req: Request, res: Response) {
   const userId = req.session?.user?.id || "dev-user-id";
@@ -15,11 +21,11 @@ export async function list(req: Request, res: Response) {
 
   try {
     // Enforce access control
-    if (role === 'vendor') {
+    if (role === Role.VENDOR) {
       if (!vendorId || vendorId !== userId) {
         return res.status(403).json({ error: 'Access denied' });
       }
-    } else if (role === 'customer') {
+    } else if (role === Role.CUSTOMER) {
       if (!customerId || customerId !== userId) {
         return res.status(403).json({ error: 'Access denied' });
       }
@@ -54,9 +60,9 @@ export async function get(req: Request, res: Response) {
     }
 
     // Enforce access control
-    if (role === 'vendor' && conversation.vendorId !== userId) {
+    if (role === Role.VENDOR && conversation.vendorId !== userId) {
       return res.status(403).json({ error: 'Access denied' });
-    } else if (role === 'customer' && conversation.customerId !== userId) {
+    } else if (role === Role.CUSTOMER && conversation.customerId !== userId) {
       return res.status(403).json({ error: 'Access denied' });
     }
 
@@ -74,9 +80,9 @@ export async function create(req: Request, res: Response) {
 
   try {
     // Enforce access control
-    if (role === 'vendor' && vendorId !== userId) {
+    if (role === Role.VENDOR && vendorId !== userId) {
       return res.status(403).json({ error: 'Access denied' });
-    } else if (role === 'customer' && customerId !== userId) {
+    } else if (role === Role.CUSTOMER && customerId !== userId) {
       return res.status(403).json({ error: 'Access denied' });
     }
 
@@ -107,9 +113,9 @@ export async function postMessage(req: Request, res: Response) {
     }
 
     // Enforce access control
-    if (role === 'vendor' && conversation.vendorId !== userId) {
+    if (role === Role.VENDOR && conversation.vendorId !== userId) {
       return res.status(403).json({ error: 'Access denied' });
-    } else if (role === 'customer' && conversation.customerId !== userId) {
+    } else if (role === Role.CUSTOMER && conversation.customerId !== userId) {
       return res.status(403).json({ error: 'Access denied' });
     }
 
@@ -134,7 +140,7 @@ export async function postMessage(req: Request, res: Response) {
   }
 }
 
-export async export async function markRead(req: Request, res: Response) {
+export async function markRead(req: Request, res: Response) {
   const userId = req.session?.user?.id || "dev-user-id";
   const role = req.session?.user?.role || "vendor";
   const { id: conversationId } = req.params;
@@ -147,9 +153,9 @@ export async export async function markRead(req: Request, res: Response) {
     }
 
     // Enforce access control
-    if (role === 'vendor' && conversation.vendorId !== userId) {
+    if (role === Role.VENDOR && conversation.vendorId !== userId) {
       return res.status(403).json({ error: 'Access denied' });
-    } else if (role === 'customer' && conversation.customerId !== userId) {
+    } else if (role === Role.CUSTOMER && conversation.customerId !== userId) {
       return res.status(403).json({ error: 'Access denied' });
     }
 

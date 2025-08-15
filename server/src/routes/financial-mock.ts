@@ -7,7 +7,7 @@ import PDFDocument from 'pdfkit';
 import multer from 'multer';
 import { parse } from 'csv-parse/sync';
 import { ChartJSNodeCanvas } from 'chartjs-node-canvas';
-import { Role } from '../lib/prisma';
+import { Role } from '../middleware/auth-mock';
 
 const router = express.Router();
 

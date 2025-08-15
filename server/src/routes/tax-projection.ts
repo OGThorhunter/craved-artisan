@@ -1,6 +1,7 @@
 import express from 'express';
 import { requireAuth, requireRole } from '../middleware/auth';
 import { isVendorOwnerOrAdmin } from '../middleware/isVendorOwnerOrAdmin';
+import { Role } from '../lib/prisma';
 import {
   getQuarterlyProjection,
   getAllProjections,
@@ -32,15 +33,15 @@ router.post('/vendor/:vendorId/confirm-payment', requireAuth, isVendorOwnerOrAdm
 router.get('/vendor/:vendorId/alerts', requireAuth, isVendorOwnerOrAdmin, getTaxAlertsController);
 
 // Tax settings routes (admin only)
-router.get('/settings', requireAuth, requireRole(['ADMIN']), getTaxSettingsController);
-router.put('/settings', requireAuth, requireRole(['ADMIN']), updateTaxSettings);
-router.post('/settings/initialize', requireAuth, requireRole(['ADMIN']), initializeTaxSettingsController);
+router.get('/settings', requireAuth, requireRole([Role.ADMIN]), getTaxSettingsController);
+router.put('/settings', requireAuth, requireRole([Role.ADMIN]), updateTaxSettings);
+router.post('/settings/initialize', requireAuth, requireRole([Role.ADMIN]), initializeTaxSettingsController);
 
 // Bulk operations (admin only)
-router.post('/bulk-reminders', requireAuth, requireRole(['ADMIN']), bulkSendTaxReminders);
+router.post('/bulk-reminders', requireAuth, requireRole([Role.ADMIN]), bulkSendTaxReminders);
 
 // CRON job management (admin only)
-router.post('/cron/trigger', requireAuth, requireRole(['ADMIN']), async (req, res) => {
+router.post('/cron/trigger', requireAuth, requireRole([Role.ADMIN]), async (req, res) => {
   try {
     const result = await manualTaxReminderCheck();
     return res.json(result);
@@ -52,7 +53,7 @@ router.post('/cron/trigger', requireAuth, requireRole(['ADMIN']), async (req, re
   }
 });
 
-router.get('/cron/status', requireAuth, requireRole(['ADMIN']), (req, res) => {
+router.get('/cron/status', requireAuth, requireRole([Role.ADMIN]), (req, res) => {
   try {
     const status = getCronStatus();
     return res.json({

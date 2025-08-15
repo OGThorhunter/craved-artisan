@@ -17,16 +17,33 @@ export interface AnalyticsTrendsResponse {
 }
 
 export interface AnalyticsSummary {
-  vendorId: string;
-  vendorName: string;
   totalRevenue: number;
   totalOrders: number;
-  avgOrderValue: number;
-  thisMonthRevenue: number;
-  thisMonthOrders: number;
+  averageOrderValue: number;
+  conversionRate: number;
+  averageDeliveryTime: number;
+  averageRating: number;
+  totalReviews: number;
+  totalProductsSold: number;
+  totalCustomers: number;
+  totalRevenueByMonth: Array<{ month: string; revenue: number }>;
+  totalOrdersByMonth: Array<{ month: string; orders: number }>;
+  totalRevenueByProduct: Array<{ productName: string; revenue: number }>;
+  totalOrdersByProduct: Array<{ productName: string; orders: number }>;
+  totalCustomersByCountry: Array<{ country: string; customers: number }>;
+  totalRevenueByHour: Array<{ hour: string; revenue: number }>;
+  totalOrdersByHour: Array<{ hour: string; orders: number }>;
+  totalRevenueByDayOfWeek: Array<{ day: string; revenue: number }>;
+  totalOrdersByDayOfWeek: Array<{ day: string; orders: number }>;
 }
 
 export interface AnalyticsSummaryResponse {
   success: boolean;
   data: AnalyticsSummary;
+  meta: {
+    vendorId: string;
+    range: string;
+    dataPoints: number;
+    generatedAt: string;
+  };
 } 

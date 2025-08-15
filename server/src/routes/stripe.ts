@@ -28,7 +28,7 @@ router.post('/create-payment-intent', requireAuth, requireRole([Role.CUSTOMER]),
     if (!validationResult.success) {
       return res.status(400).json({
         error: 'Invalid request data',
-        details: validationResult.error.errors
+        details: validationResult.error.flatten()
       });
     }
 
@@ -114,7 +114,7 @@ router.post('/create-connect-account', requireAuth, requireRole([Role.VENDOR]), 
     if (!validationResult.success) {
       return res.status(400).json({
         error: 'Invalid request data',
-        details: validationResult.error.errors
+        details: validationResult.error.flatten()
       });
     }
 
@@ -157,7 +157,7 @@ router.post('/create-connect-account', requireAuth, requireRole([Role.VENDOR]), 
 
     return res.json({
       accountId: account.id,
-      status: account.charges_enabled ? 'active' : FulfillmentStatus.PENDING,
+      status: account.charges_enabled ? 'active' : 'PENDING',
       message: 'Stripe Connect account created successfully'
     });
   } catch (error) {

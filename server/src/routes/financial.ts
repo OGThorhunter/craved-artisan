@@ -517,6 +517,9 @@ router.get('/:id/financials/export.pdf', requireAuth, requireRole([Role.VENDOR, 
 
     // End the PDF
     doc.end();
+    
+    // Note: No return statement needed here as doc.pipe(res) handles the response
+    return;
   } catch (error) {
     console.error('Error exporting financial data as PDF:', error);
     return res.status(400).json({
@@ -755,7 +758,7 @@ router.post('/snapshots', requireAuth, requireRole([Role.VENDOR, Role.ADMIN]), a
       return res.status(400).json({
         error: 'Validation error',
         message: 'Invalid data provided',
-        details: error.errors
+        details: error.flatten()
       });
     }
 
@@ -800,7 +803,7 @@ router.put('/snapshots/:id', requireAuth, requireRole([Role.VENDOR, Role.ADMIN])
       return res.status(400).json({
         error: 'Validation error',
         message: 'Invalid data provided',
-        details: error.errors
+        details: error.flatten()
       });
     }
 

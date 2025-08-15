@@ -10,7 +10,7 @@ export const zId = z.object({
   id: z.string().min(1) 
 });
 
-export async export function validateQuery<T extends z.ZodTypeAny>(schema: T) {
+export function validateQuery<T extends z.ZodTypeAny>(schema: T) {
   return (req: Request, res: Response, next: NextFunction) => {
     const result = schema.safeParse(req.query);
     if (!result.success) {
@@ -20,11 +20,11 @@ export async export function validateQuery<T extends z.ZodTypeAny>(schema: T) {
       });
     }
     req.query = result.data as any;
-    next();
+    return next();
   };
 }
 
-export async export function validateParams<T extends z.ZodTypeAny>(schema: T) {
+export function validateParams<T extends z.ZodTypeAny>(schema: T) {
   return (req: Request, res: Response, next: NextFunction) => {
     const result = schema.safeParse(req.params);
     if (!result.success) {
@@ -34,6 +34,20 @@ export async export function validateParams<T extends z.ZodTypeAny>(schema: T) {
       });
     }
     req.params = result.data as any;
-    next();
+    return next();
+  };
+}
+
+export function validateBody<T extends z.ZodTypeAny>(schema: T) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const result = schema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({
+        error: "Bad Request", 
+        details: result.error.flatten()
+      });
+    }
+    req.body = result.data as any;
+    return next();
   };
 }

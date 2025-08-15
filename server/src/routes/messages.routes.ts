@@ -40,6 +40,9 @@ router.get("/stream", (req, res) => {
   import('../services/sse').then(({ subscribe }) => {
     subscribe(vendorId as string, res);
   });
+  
+  // Note: No return statement needed here as subscribe() handles the response
+  return;
 });
 
 export default router;

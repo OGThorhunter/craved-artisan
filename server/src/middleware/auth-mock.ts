@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 
 // Mock Role enum
-enum Role {
-  CUSTOMER = Role.CUSTOMER,
-  VENDOR = Role.VENDOR,
-  ADMIN = Role.ADMIN,
+export enum Role {
+  CUSTOMER = 'CUSTOMER',
+  VENDOR = 'VENDOR',
+  ADMIN = 'ADMIN',
   SUPPLIER = 'SUPPLIER',
   EVENT_COORDINATOR = 'EVENT_COORDINATOR',
   DROPOFF = 'DROPOFF'

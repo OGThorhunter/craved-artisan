@@ -1,4 +1,5 @@
 import prisma from '../lib/prisma';
+import { Role } from '../lib/prisma';
 
 export interface CreateConversationParams {
   vendorProfileId: string;
@@ -8,7 +9,7 @@ export interface CreateConversationParams {
 
 export interface AddMessageParams {
   conversationId: string;
-  senderRole: 'vendor' | 'customer';
+  senderRole: Role.VENDOR | Role.CUSTOMER;
   senderId: string;
   body: string;
   attachments?: string[];
@@ -116,9 +117,9 @@ export async function addMessage(params: AddMessageParams) {
   
   // Update conversation status and lastMessageAt
   let newStatus = 'open';
-  if (senderRole === 'vendor') {
+  if (senderRole === Role.VENDOR) {
     newStatus = 'awaiting_customer';
-  } else if (senderRole === 'customer') {
+  } else if (senderRole === Role.CUSTOMER) {
     newStatus = 'awaiting_vendor';
   }
   

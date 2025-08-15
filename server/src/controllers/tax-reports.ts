@@ -1,6 +1,7 @@
 import prisma from '../lib/prisma';
 import PDFDocument from 'pdfkit';
 import { format, startOfYear, endOfYear } from 'date-fns';
+import { Role } from '../lib/prisma';
 
 // 1099-K threshold for 2024 (may change annually)
 const NINE_K_THRESHOLD = 5000; // $5,000 threshold for 2024
@@ -73,7 +74,7 @@ export const generateTaxReport = async (req: any, res: any) => {
     }
 
     // Check authorization (vendor can only access their own reports)
-    if (req.session.userId !== vendor.userId && req.session.userRole !== 'ADMIN') {
+    if (req.session.userId !== vendor.userId && req.session.userRole !== Role.ADMIN) {
       return res.status(403).json({
         error: 'Unauthorized',
         message: 'You can only access your own tax reports'
@@ -184,7 +185,7 @@ export const generateForm1099K = async (req: any, res: any) => {
     }
 
     // Check authorization
-    if (req.session.userId !== vendor.userId && req.session.userRole !== 'ADMIN') {
+    if (req.session.userId !== vendor.userId && req.session.userRole !== Role.ADMIN) {
       return res.status(403).json({
         error: 'Unauthorized',
         message: 'You can only access your own 1099-K forms'
@@ -292,7 +293,7 @@ export const getTaxReportSummary = async (req: any, res: any) => {
     }
 
     // Check authorization
-    if (req.session.userId !== vendor.userId && req.session.userRole !== 'ADMIN') {
+    if (req.session.userId !== vendor.userId && req.session.userRole !== Role.ADMIN) {
       return res.status(403).json({
         error: 'Unauthorized',
         message: 'You can only access your own tax summary'

@@ -1,5 +1,14 @@
 import prisma, { OrderStatus, TaxAlertType, WalletTransactionType } from '../lib/prisma';
 
+// Define FulfillmentStatus enum
+enum FulfillmentStatus {
+  PENDING = 'PENDING',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
+  FAILED = 'FAILED'
+}
+
 export interface TaxProjection {
   quarter: string;
   year: number;

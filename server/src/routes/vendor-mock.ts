@@ -1,6 +1,6 @@
 import express from 'express';
 import { requireAuth, requireRole } from '../middleware/auth-mock';
-import { Role } from '../lib/prisma';
+import { Role } from '../middleware/auth-mock';
 
 const router = express.Router();
 

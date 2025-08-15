@@ -2,7 +2,7 @@ import express from 'express';
 import { requireAuth, requireRole } from '../middleware/auth-mock';
 import { z } from 'zod';
 import { calculateMargin, generateAlertNote } from '../utils/marginCalculator';
-import { Role } from '../lib/prisma';
+import { Role } from '../middleware/auth-mock';
 
 const router = express.Router();
 
@@ -225,7 +225,7 @@ router.post('/', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
     if (!validationResult.success) {
       return res.status(400).json({
         error: 'Validation failed',
-        details: validationResult.error.errors
+        details: validationResult.error.flatten()
       });
     }
 
@@ -326,7 +326,7 @@ router.put('/:id', requireAuth, requireRole([Role.VENDOR]), async (req, res) => 
     if (!validationResult.success) {
       return res.status(400).json({
         error: 'Validation failed',
-        details: validationResult.error.errors
+        details: validationResult.error.flatten()
       });
     }
 

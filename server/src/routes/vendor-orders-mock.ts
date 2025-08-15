@@ -1,16 +1,15 @@
 import express from 'express';
 import { z } from 'zod';
 import { requireAuth, requireRole } from '../middleware/auth-mock';
-import { Role } from '../lib/prisma';
+import { Role } from '../middleware/auth-mock';
 
-// Define Role enum to match auth-mock
-enum Role {
-  CUSTOMER = Role.CUSTOMER,
-  VENDOR = Role.VENDOR,
-  ADMIN = Role.ADMIN,
-  SUPPLIER = 'SUPPLIER',
-  EVENT_COORDINATOR = 'EVENT_COORDINATOR',
-  DROPOFF = 'DROPOFF'
+// Define FulfillmentStatus enum
+enum FulfillmentStatus {
+  PENDING = 'PENDING',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
+  FAILED = 'FAILED'
 }
 
 const router = express.Router();

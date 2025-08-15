@@ -9,22 +9,18 @@ const r = Router();
 
 // Create or refresh onboarding link
 r.post("/connect/onboard", async (req, res) => {
-  const vendorId = req.body.vendorId || req.session?.user?.vendorId;
+  const vendorId = req.body.vendorId || req.session?.userId;
   if (!vendorId) return res.status(400).json({ error: "vendorId required" });
 
-  let acct = await prisma.vendorStripeAccount.findUnique({ where: { vendorId } });
-  if (!acct) {
-    const account = await stripe.accounts.create({ 
-      type: "express", 
-      capabilities: { 
-        card_payments: {requested:true}, 
-        transfers: {requested:true} 
-      } 
-    });
-    acct = await prisma.vendorStripeAccount.create({ 
-      data: { vendorId, accountId: account.id } 
-    });
-  }
+  // TODO: Implement vendorStripeAccount model
+  const account = await stripe.accounts.create({ 
+    type: "express", 
+    capabilities: { 
+      card_payments: {requested:true}, 
+      transfers: {requested:true} 
+    } 
+  });
+  const acct = { accountId: account.id };
 
   const link = await stripe.accountLinks.create({
     account: acct.accountId,
@@ -38,22 +34,8 @@ r.post("/connect/onboard", async (req, res) => {
 
 // Read account status
 r.get("/connect/status/:vendorId", async (req,res) => {
-  const acct = await prisma.vendorStripeAccount.findUnique({ 
-    where: { vendorId: req.params.vendorId } 
-  });
-  if (!acct) return res.json({ connected: false });
-  
-  const account = await stripe.accounts.retrieve(acct.accountId);
-  // persist
-  await prisma.vendorStripeAccount.update({ 
-    where: { vendorId: req.params.vendorId }, 
-    data: {
-      chargesEnabled: !!account.charges_enabled, 
-      payoutsEnabled: !!account.payouts_enabled, 
-      detailsSubmitted: !!account.details_submitted
-    }
-  });
-  return res.json({ connected: true, ...account });
+  // TODO: Implement vendorStripeAccount model
+  return res.json({ connected: false, message: "Not implemented" });
 });
 
 export default r;

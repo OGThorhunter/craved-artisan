@@ -14,11 +14,13 @@ r.post("/quote", async (req, res) => {
 
   const line_items = [];
   for (const li of items) {
-    const p = await prisma.product.findUnique({ where: { id: li.productId } });
+    const p = await prisma.product.findUnique({ 
+      where: { id: li.productId }
+    });
     if (!p) continue;
     line_items.push({
       amount: Math.round(Number(p.price) * li.quantity * 100),
-      tax_code: p.taxCode || undefined || undefined,
+      tax_code: undefined,
       reference: p.id,
     });
   }

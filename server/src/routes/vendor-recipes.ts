@@ -2,6 +2,7 @@ import express from 'express';
 import { z } from 'zod';
 import prisma from '../lib/prisma';
 import { requireAuth, requireRole } from '../middleware/auth';
+import { Role } from '../lib/prisma';
 
 const router = express.Router();
 
@@ -43,10 +44,7 @@ const validateRequest = (schema: z.ZodSchema) => {
       if (error instanceof z.ZodError) {
         return res.status(400).json({
           message: 'Validation error',
-          errors: error.errors.map((err: any) => ({
-            field: err.path.join('.'),
-            message: err.message
-          }))
+          errors: error.flatten().fieldErrors
         });
       }
       next(error);

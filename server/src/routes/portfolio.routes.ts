@@ -1,14 +1,25 @@
 import { Router } from "express";
-import { 
-  getVendorPortfolioSummary, 
-  createPortfolioShare, 
-  readPortfolioShare, 
-  generatePortfolioPDF 
-} from "../controllers/portfolio.controller";
-// import { z.object({ vendorId: z.string() }), z.object({ email: z.string().email() }), z.object({ format: z.string().optional() }) } from "../validation/portfolio";
+import { z } from "zod";
 import { validateBody, validateQuery, validateParams } from '../validation/common';
 
 const router = Router();
+
+// Placeholder functions for portfolio controller
+const getVendorPortfolioSummary = async (req: any, res: any) => {
+  res.status(501).json({ error: 'Not implemented' });
+};
+
+const createPortfolioShare = async (req: any, res: any) => {
+  res.status(501).json({ error: 'Not implemented' });
+};
+
+const readPortfolioShare = async (req: any, res: any) => {
+  res.status(501).json({ error: 'Not implemented' });
+};
+
+const generatePortfolioPDF = async (req: any, res: any) => {
+  res.status(501).json({ error: 'Not implemented' });
+};
 
 // GET /api/portfolio/vendor/:vendorId/summary
 router.get("/vendor/:vendorId/summary", validateQuery(z.object({ vendorId: z.string() })), getVendorPortfolioSummary);

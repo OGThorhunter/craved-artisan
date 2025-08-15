@@ -6,6 +6,16 @@ import { sendDeliveryConfirmation, sendDeliveryETAWithTime } from '../utils/twil
 import PDFDocument from 'pdfkit';
 import { Role } from '../lib/prisma';
 
+// Define FulfillmentStatus enum
+enum FulfillmentStatus {
+  PENDING = 'PENDING',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
+  FAILED = 'FAILED',
+  DELIVERED = 'DELIVERED'
+}
+
 const router = express.Router();
 
 // Validation schemas
@@ -41,7 +51,7 @@ router.post('/checkout', requireAuth, requireRole([Role.CUSTOMER]), async (req, 
     if (!validationResult.success) {
       return res.status(400).json({
         error: 'Invalid request data',
-        details: validationResult.error.errors
+        details: validationResult.error.flatten()
       });
     }
 
@@ -412,10 +422,10 @@ router.get('/', requireAuth, requireRole([Role.CUSTOMER]), async (req, res) => {
         })),
         fulfillment: order.fulfillments[0] ? {
           id: order.fulfillments[0].id,
-          status: order.fulfillments[0].status,
-          type: order.fulfillments[0].fulfillmentType,
-          trackingNumber: order.fulfillments[0].trackingNumber,
-          estimatedDelivery: order.fulfillments[0].estimatedDelivery
+          method: order.fulfillments[0].method,
+          date: order.fulfillments[0].date,
+          fee: order.fulfillments[0].fee,
+          notes: order.fulfillments[0].notes
         } : undefined,
         shippingAddress: order.shippingAddress ? {
           id: order.shippingAddress.id,
@@ -461,16 +471,13 @@ router.get('/history', requireAuth, requireRole([Role.CUSTOMER]), async (req, re
            take: 1,
            select: {
              id: true,
-             status: true,
-             fulfillmentType: true,
-             trackingNumber: true,
-             carrier: true,
-             estimatedDelivery: true,
-             actualDelivery: true,
+             method: true,
+             date: true,
+             fee: true,
              notes: true
            }
          },
-        shippingAddress: { select: { id: true, address1: true, city: true, state: true, postalCode: true } }
+        shippingAddress: { select: { id: true, firstName: true, lastName: true, company: true, address1: true, address2: true, city: true, state: true, postalCode: true, country: true, phone: true } }
       }
     });
 
@@ -500,12 +507,9 @@ router.get('/history', requireAuth, requireRole([Role.CUSTOMER]), async (req, re
       })),
       fulfillment: order.fulfillments[0] ? {
         id: order.fulfillments[0].id,
-        status: order.fulfillments[0].status,
-        type: order.fulfillments[0].fulfillmentType,
-        trackingNumber: order.fulfillments[0].trackingNumber,
-        carrier: order.fulfillments[0].carrier,
-        estimatedDelivery: order.fulfillments[0].estimatedDelivery,
-        actualDelivery: order.fulfillments[0].actualDelivery,
+        method: order.fulfillments[0].method,
+        date: order.fulfillments[0].date,
+        fee: order.fulfillments[0].fee,
         notes: order.fulfillments[0].notes
       } : undefined,
       shippingAddress: order.shippingAddress ? {
@@ -546,24 +550,58 @@ router.get('/:id', requireAuth, requireRole([Role.CUSTOMER]), async (req, res) =
         userId: req.session.userId
       },
       include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            phone: true
+          }
+        },
         orderItems: {
           include: {
-            product: true
+            product: {
+              include: {
+                vendor: {
+                  select: {
+                    storeName: true,
+                    user: {
+                      select: {
+                        email: true
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         fulfillments: {
           select: {
             id: true,
             status: true,
-            fulfillmentType: true,
-            trackingNumber: true,
-            carrier: true,
-            estimatedDelivery: true,
-            actualDelivery: true,
+            method: true,
+            date: true,
+            fee: true,
             notes: true
           }
         },
-        shippingAddress: { select: { id: true, address1: true, city: true, state: true, postalCode: true } }
+        shippingAddress: { 
+          select: { 
+            id: true, 
+            firstName: true, 
+            lastName: true, 
+            company: true, 
+            address1: true, 
+            address2: true, 
+            city: true, 
+            state: true, 
+            postalCode: true, 
+            country: true, 
+            phone: true 
+          } 
+        }
       }
     });
 
@@ -605,11 +643,9 @@ router.get('/:id', requireAuth, requireRole([Role.CUSTOMER]), async (req, res) =
         fulfillment: order.fulfillments[0] ? {
           id: order.fulfillments[0].id,
           status: order.fulfillments[0].status,
-          type: order.fulfillments[0].fulfillmentType,
-          trackingNumber: order.fulfillments[0].trackingNumber,
-          carrier: order.fulfillments[0].carrier,
-          estimatedDelivery: order.fulfillments[0].estimatedDelivery,
-          actualDelivery: order.fulfillments[0].actualDelivery,
+          method: order.fulfillments[0].method,
+          date: order.fulfillments[0].date,
+          fee: order.fulfillments[0].fee,
           notes: order.fulfillments[0].notes
         } : undefined,
         shippingAddress: order.shippingAddress ? {
@@ -646,16 +682,24 @@ router.post('/:id/confirm-delivery', requireAuth, requireRole([Role.VENDOR, Role
     const order = await prisma.order.findUnique({
       where: { id },
       include: {
-        fulfillments: { select: { id: true, status: true, trackingNumber: true, carrier: true, estimatedDelivery: true, actualDelivery: true, notes: true } },
         user: {
           select: {
+            id: true,
             email: true,
-            profile: {
-              select: {
-                phone: true
-              }
-            }
+            firstName: true,
+            lastName: true,
+            phone: true
           }
+        },
+        fulfillments: { 
+          select: { 
+            id: true, 
+            status: true, 
+            method: true, 
+            date: true, 
+            fee: true, 
+            notes: true 
+          } 
         }
       }
     });
@@ -686,7 +730,7 @@ router.post('/:id/confirm-delivery', requireAuth, requireRole([Role.VENDOR, Role
           orderId: id
         },
         data: {
-          status: FulfillmentStatus.DELIVERED,
+          status: 'DELIVERED',
           actualDelivery: new Date()
         }
       });
@@ -694,9 +738,9 @@ router.post('/:id/confirm-delivery', requireAuth, requireRole([Role.VENDOR, Role
 
     // Send customer notifications
     console.log(`📧 Customer notification sent for order ${order.orderNumber} to ${order.user.email}`);
-    if (order.user.profile?.phone) {
+    if (order.user.phone) {
       // Send SMS notification via Twilio
-      await sendDeliveryConfirmation(order.user.profile.phone, order.orderNumber);
+              await sendDeliveryConfirmation(order.user.phone, order.orderNumber);
     }
 
     return res.json({
@@ -733,17 +777,24 @@ router.post('/:id/send-eta', requireAuth, requireRole([Role.VENDOR, Role.ADMIN])
       include: {
         user: {
           select: {
+            id: true,
             email: true,
-            profile: {
-              select: {
-                phone: true
-              }
-            }
+            firstName: true,
+            lastName: true,
+            phone: true
           }
         },
-        vendor: {
-          select: {
-            name: true
+        orderItems: {
+          include: {
+            product: {
+              include: {
+                vendor: {
+                  select: {
+                    name: true
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -756,7 +807,7 @@ router.post('/:id/send-eta', requireAuth, requireRole([Role.VENDOR, Role.ADMIN])
       });
     }
 
-    if (!order.user.profile?.phone) {
+    if (!order.user?.phone) {
       return res.status(400).json({
         error: 'No phone number',
         message: 'Customer does not have a phone number for SMS notifications'
@@ -765,8 +816,8 @@ router.post('/:id/send-eta', requireAuth, requireRole([Role.VENDOR, Role.ADMIN])
 
     // Send ETA notification via Twilio
     await sendDeliveryETAWithTime(
-      order.user.profile.phone,
-      order.vendor?.name || 'Rose Creek',
+      order.user.phone,
+      order.orderItems[0]?.product?.vendor?.storeName || 'Rose Creek',
       timeWindow || '3-5 PM',
       order.orderNumber
     );
@@ -793,6 +844,14 @@ router.get('/:id/receipt', requireAuth, async (req, res) => {
     const order = await prisma.order.findUnique({
       where: { id },
       include: {
+        user: {
+          select: {
+            email: true,
+            firstName: true,
+            lastName: true,
+            phone: true
+          }
+        },
         orderItems: {
           include: {
             product: {
@@ -803,30 +862,30 @@ router.get('/:id/receipt', requireAuth, async (req, res) => {
             }
           }
         },
-        vendor: {
+        fulfillments: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
           select: {
-            name: true,
-            email: true
-          }
-        },
-        user: {
-          select: {
-            email: true,
-            profile: {
-              select: {
-                firstName: true,
-                lastName: true,
-                phone: true
-              }
-            }
+            id: true,
+            method: true,
+            date: true,
+            fee: true,
+            notes: true
           }
         },
         shippingAddress: {
           select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            company: true,
             address1: true,
+            address2: true,
             city: true,
             state: true,
-            postalCode: true
+            postalCode: true,
+            country: true,
+            phone: true
           }
         }
       }
@@ -840,7 +899,7 @@ router.get('/:id/receipt', requireAuth, async (req, res) => {
     }
 
     // Verify user has access to this order
-    if (req.session.userId !== order.userId && req.session.user.role !== 'ADMIN') {
+    if (req.session.userId !== order.userId && req.user?.role !== Role.ADMIN) {
       return res.status(400).json({
         error: 'Unauthorized',
         message: 'You can only view receipts for your own orders'
@@ -894,8 +953,8 @@ router.get('/:id/receipt', requireAuth, async (req, res) => {
     
     doc.fontSize(10)
        .font('Helvetica')
-       .text(`Vendor: ${order.vendor?.name || 'Unknown'}`)
-       .text(`Email: ${order.vendor?.email || 'N/A'}`);
+                               .text(`Vendor: ${order.orderItems[0]?.product?.vendor?.storeName || 'Unknown'}`)
+        .text(`Email: ${order.orderItems[0]?.product?.vendor?.user?.email || 'N/A'}`);
     
     doc.moveDown(0.5);
 
@@ -904,15 +963,15 @@ router.get('/:id/receipt', requireAuth, async (req, res) => {
        .font('Helvetica-Bold')
        .text('Customer Information');
     
-    const customerName = order.user.profile 
-      ? `${order.user.profile.firstName || ''} ${order.user.profile.lastName || ''}`.trim()
+        const customerName = order.user.firstName || order.user.lastName
+      ? `${order.user.firstName || ''} ${order.user.lastName || ''}`.trim()
       : order.user.email;
     
     doc.fontSize(10)
        .font('Helvetica')
        .text(`Customer: ${customerName}`)
        .text(`Email: ${order.user.email}`)
-       .text(`Phone: ${order.user.profile?.phone || 'N/A'}`);
+               .text(`Phone: ${order.user.phone || 'N/A'}`);
     
     doc.moveDown(0.5);
 
@@ -924,8 +983,8 @@ router.get('/:id/receipt', requireAuth, async (req, res) => {
       
       doc.fontSize(10)
          .font('Helvetica')
-         .text(`${order.shippingAddress.street}`)
-         .text(`${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.postalCode}`);
+                   .text(`${order.shippingAddress.address1}`)
+          .text(`${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.postalCode}`);
       
       doc.moveDown(0.5);
     }
@@ -999,6 +1058,9 @@ router.get('/:id/receipt', requireAuth, async (req, res) => {
 
     // End the document
     doc.end();
+    
+    // Note: No return statement needed here as doc.pipe(res) handles the response
+    return;
   } catch (error) {
     console.error('Error generating receipt:', error);
     return res.status(400).json({

@@ -57,7 +57,7 @@ router.get('/vendor-or-admin', requireAuth, requireRole([Role.VENDOR, Role.ADMIN
     message: 'Vendor or Admin route - VENDOR and ADMIN users can access',
     user: req.user,
     data: {
-      permissions: req.user?.role === 'ADMIN' ? 'full' : 'limited'
+      permissions: req.user?.role === Role.ADMIN ? 'full' : 'limited'
     },
     timestamp: new Date().toISOString()
   });

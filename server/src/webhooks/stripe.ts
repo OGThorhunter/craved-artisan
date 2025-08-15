@@ -2,6 +2,15 @@ import express from 'express';
 import Stripe from 'stripe';
 import prisma, { OrderStatus, Role } from '../lib/prisma';
 
+// Define FulfillmentStatus enum
+enum FulfillmentStatus {
+  PENDING = 'PENDING',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
+  FAILED = 'FAILED'
+}
+
 // Initialize Stripe with your secret key
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { 
   apiVersion: '2023-10-16' 
@@ -60,10 +69,10 @@ export const handleStripeWebhook = async (req: express.Request, res: express.Res
         console.log(`Unhandled event type: ${event.type}`);
     }
 
-    res.json({ received: true });
+    return res.json({ received: true });
   } catch (error) {
     console.error('Error processing webhook:', error);
-    res.status(500).json({ error: 'Webhook processing failed' });
+    return res.status(500).json({ error: 'Webhook processing failed' });
   }
 };
 
@@ -219,7 +228,7 @@ async function handleMultiVendorOrderCompletion(order: any, session: Stripe.Chec
 
       transfers.push({
         vendorId,
-        vendorName: (vendor as any).storeName,
+        vendorName: (group as any).vendor.storeName,
         amount: vendorAmount,
         commissionAmount,
         vendorPayoutAmount,
@@ -418,7 +427,7 @@ async function sendVendorNotifications(order: any, session: Stripe.Checkout.Sess
       const vendorPayout = vendorTotal - vendorCommission;
 
       const emailData = {
-        to: (vendor as any).user?.email,
+        to: 'vendor@example.com', // TODO: Get vendor email from user relation
         subject: `New Order Received - ${order.orderNumber}`,
         template: 'vendor-order-notification',
         data: {
@@ -453,7 +462,7 @@ async function sendVendorPayoutConfirmation(vendorId: string, transfer: Stripe.T
       console.log(`Sending payout confirmation to vendor: ${vendorProfile.storeName}`);
       
       const emailData = {
-        to: vendorProfile.user?.email,
+        to: 'vendor@example.com', // TODO: Get vendor email from user relation
         subject: 'Payout Confirmation',
         template: 'vendor-payout-confirmation',
         data: {

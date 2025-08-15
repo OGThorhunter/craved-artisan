@@ -30,7 +30,7 @@ const requireAuth = (req: Request, res: Response, next: NextFunction) => {
   }
 
   req.user = user;
-  next();
+  return next();
 };
 
 // Mock requireRole middleware for demonstration
@@ -50,7 +50,7 @@ const requireRole = (allowedRoles: string[]) => {
       });
     }
 
-    next();
+    return next();
   };
 };
 
@@ -107,7 +107,7 @@ router.get('/vendor-or-admin', requireAuth, requireRole([Role.VENDOR, Role.ADMIN
     message: 'Vendor or Admin route - VENDOR and ADMIN users can access',
     user: req.user,
     data: {
-      permissions: req.user?.role === 'ADMIN' ? 'full' : 'limited'
+      permissions: req.user?.role === Role.ADMIN ? 'full' : 'limited'
     },
     timestamp: new Date().toISOString()
   });

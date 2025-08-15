@@ -1,6 +1,7 @@
 import express from 'express';
 import { requireAuth, requireRole } from '../middleware/auth';
 import { isVendorOwnerOrAdmin } from '../middleware/isVendorOwnerOrAdmin';
+import { Role } from '../lib/prisma';
 import {
   getWalletBalanceController,
   getWalletTransactionsController,
@@ -22,7 +23,7 @@ router.get('/vendor/:vendorId/balance', requireAuth, isVendorOwnerOrAdmin, getWa
 router.get('/vendor/:vendorId/transactions', requireAuth, isVendorOwnerOrAdmin, getWalletTransactionsController);
 
 // Admin-only wallet operations
-router.post('/vendor/:vendorId/add-funds', requireAuth, requireRole(['ADMIN']), addFundsController);
+router.post('/vendor/:vendorId/add-funds', requireAuth, requireRole([Role.ADMIN]), addFundsController);
 
 // Label print routes
 router.get('/label/cost', requireAuth, calculateLabelCostController);
@@ -34,6 +35,6 @@ router.get('/vendor/:vendorId/label/stats', requireAuth, isVendorOwnerOrAdmin, g
 router.get('/vendor/:vendorId/label/export', requireAuth, isVendorOwnerOrAdmin, exportLabelPrintHistoryController);
 
 // Admin-only label operations
-router.post('/label/:labelPrintId/refund', requireAuth, requireRole(['ADMIN']), refundLabelPrintController);
+router.post('/label/:labelPrintId/refund', requireAuth, requireRole([Role.ADMIN]), refundLabelPrintController);
 
 export default router; 

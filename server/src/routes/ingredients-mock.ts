@@ -89,7 +89,7 @@ const validateRequest = (schema: z.ZodSchema) => {
       if (error instanceof z.ZodError) {
         return res.status(400).json({
           message: 'Validation error',
-          errors: error.error.errors
+          errors: error.flatten()
         });
       }
       return res.status(400).json({ message: 'Invalid request data' });
