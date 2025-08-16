@@ -216,7 +216,7 @@ export default function NavHeader() {
   };
 
   return (
-    <header className={`fixed top-0 z-50 w-full transition-all duration-300 ${
+    <header className={`relative z-50 w-full transition-all duration-300 ${
       isScrolled 
         ? 'bg-white/80 backdrop-blur shadow-sm border-b border-border' 
         : 'bg-white/80 backdrop-blur shadow-sm border-b border-border'

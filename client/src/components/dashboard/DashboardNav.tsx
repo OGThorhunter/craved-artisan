@@ -6,7 +6,8 @@ import {
   Database,
   Users,
   Settings,
-  Home
+  Home,
+  Handshake
 } from 'lucide-react';
 
 const navItems = [
@@ -16,6 +17,7 @@ const navItems = [
   { label: 'Orders', href: '/dashboard/vendor/orders', icon: ShoppingCart },
   { label: 'Inventory', href: '/dashboard/vendor/inventory', icon: Database },
   { label: 'CRM', href: '/dashboard/vendor/crm', icon: Users },
+  { label: 'Relationships', href: '/dashboard/vendor/relationships', icon: Handshake },
   { label: 'Settings', href: '/dashboard/vendor/site-settings', icon: Settings },
 ];
 
@@ -27,13 +29,15 @@ export default function DashboardNav() {
     return location === path;
   };
 
+  console.log('DashboardNav rendered, current location:', location);
+
   return (
     <>
       {/* Secondary Navigation */}
-      <header className="bg-[#F0F8FF] border-b-2 border-[#5B6E02] shadow-md">
+      <header className="bg-[#F0F8FF] border-b-2 border-[#5B6E02] shadow-md relative z-50 min-h-[64px]">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
-                      <div className="flex space-x-4 lg:space-x-6 overflow-x-auto">
+            <div className="flex space-x-4 lg:space-x-6 overflow-x-auto">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isItemActive = isActive(item.href);

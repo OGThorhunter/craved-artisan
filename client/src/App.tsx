@@ -28,6 +28,11 @@ import VendorRecipeCreatePage from './pages/VendorRecipeCreatePage';
 import VendorRecipeEditPage from './pages/VendorRecipeEditPage';
 import RecipeVersionHistoryPage from './pages/RecipeVersionHistoryPage';
 import BatchPricingPage from './pages/BatchPricingPage';
+import VendorRelationshipsPage from './pages/vendor/VendorRelationshipsPage';
+import VendorEventsPage from './pages/vendor/VendorEventsPage';
+import VendorFinancialsPage from './pages/vendor/VendorFinancialsPage';
+import SiteEditorPage from './pages/vendor/SiteEditorPage';
+import DemoStorefrontPage from './pages/vendor/DemoStorefrontPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import EventCoordinatorDashboardPage from './pages/EventCoordinatorDashboardPage';
 import DropoffDashboardPage from './pages/DropoffDashboardPage';
@@ -167,7 +172,30 @@ function App() {
                 <VendorCRMPage />
               </ProtectedRoute>
             </Route>
-            <Route path="/dashboard/vendor/orders">
+            <Route path="/dashboard/vendor/relationships">
+              <ProtectedRoute role="VENDOR">
+                <VendorRelationshipsPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/dashboard/vendor/events">
+              <ProtectedRoute role="VENDOR">
+                <VendorEventsPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/dashboard/vendor/financials">
+              <ProtectedRoute role="VENDOR">
+                <VendorFinancialsPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/dashboard/vendor/site-editor">
+              <ProtectedRoute role="VENDOR">
+                <SiteEditorPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/store/:storeSlug">
+              <DemoStorefrontPage />
+            </Route>
+            <Route path="/dashboard/orders">
               <ProtectedRoute role="VENDOR">
                 <VendorOrdersPage />
               </ProtectedRoute>
