@@ -20,7 +20,6 @@ import VendorStorefrontPage from './pages/VendorStorefrontPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import DashboardPage from './pages/DashboardPage';
 import CustomerDashboardPage from './pages/CustomerDashboardPage';
-import VendorDashboardPage from './pages/VendorDashboardPage';
 import { VendorSettingsPage } from './pages/VendorSettingsPage';
 import VendorProductsPage from './pages/VendorProductsPage';
 import VendorInventoryPage from './pages/VendorInventoryPage';
@@ -53,7 +52,6 @@ import NotFoundPage from './pages/NotFoundPage';
 import MaintenancePage from './pages/MaintenancePage';
 import VendorAnalyticsPage from './pages/VendorAnalyticsPage';
 import VendorAnalyticsKpiPage from './pages/dashboard/vendor/analytics';
-import OverviewPage from './pages/vendor/OverviewPage';
 import { VendorFinancialPage } from './pages/VendorFinancialPage';
 import VendorOnboardingPage from './pages/VendorOnboardingPage';
 import { NotFound } from './components/NotFound';
@@ -121,7 +119,7 @@ function App() {
             </Route>
             <Route path="/dashboard/vendor">
               <ProtectedRoute role="VENDOR">
-                <VendorDashboardPage />
+                <VendorAnalyticsKpiPage />
               </ProtectedRoute>
             </Route>
             <Route path="/dashboard/event-coordinator">
@@ -149,11 +147,6 @@ function App() {
                 <CustomerOrdersPage />
               </ProtectedRoute>
             </Route>
-            <Route path="/dashboard/vendor">
-              <ProtectedRoute role="VENDOR">
-                <VendorDashboardPage />
-              </ProtectedRoute>
-            </Route>
             <Route path="/dashboard/vendor/site-settings">
               <ProtectedRoute role="VENDOR">
                 <VendorSettingsPage />
@@ -172,6 +165,11 @@ function App() {
             <Route path="/dashboard/vendor/crm">
               <ProtectedRoute role="VENDOR">
                 <VendorCRMPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/dashboard/vendor/orders">
+              <ProtectedRoute role="VENDOR">
+                <VendorOrdersPage />
               </ProtectedRoute>
             </Route>
             <Route path="/dashboard/vendor/recipes/create">
@@ -224,11 +222,7 @@ function App() {
                 <VendorAnalyticsKpiPage />
               </ProtectedRoute>
             </Route>
-            <Route path="/dashboard/vendor/overview">
-              <ProtectedRoute role="VENDOR">
-                <OverviewPage />
-              </ProtectedRoute>
-            </Route>
+
             <Route path="/vendor/financial">
               <ProtectedRoute role="VENDOR">
                 <VendorFinancialPage />

@@ -185,7 +185,7 @@ export default function VendorRecipeCreatePage() {
 
         {/* Recipe Form */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Basic Recipe Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>

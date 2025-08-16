@@ -113,7 +113,7 @@ const VendorWatchlistPage = () => {
   if (isLoading) {
     return (
       <VendorDashboardLayout>
-        <div className="p-6 flex items-center justify-center">
+        <div className="flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <p className="text-gray-600">Loading watchlist...</p>
@@ -126,7 +126,7 @@ const VendorWatchlistPage = () => {
   if (error) {
     return (
       <VendorDashboardLayout>
-        <div className="p-6 flex items-center justify-center">
+        <div className="flex items-center justify-center">
           <div className="text-center">
             <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
             <h2 className="responsive-subheading text-gray-900 mb-2">Error Loading Watchlist</h2>
@@ -171,7 +171,7 @@ const VendorWatchlistPage = () => {
 
         {/* Watchlist Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-lg shadow">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-blue-100 rounded-lg">
                 <Package className="h-6 w-6 text-blue-600" />
@@ -183,7 +183,7 @@ const VendorWatchlistPage = () => {
             </div>
           </div>
           
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-lg shadow">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-red-100 rounded-lg">
                 <AlertTriangle className="h-6 w-6 text-red-600" />
@@ -198,14 +198,13 @@ const VendorWatchlistPage = () => {
             </div>
           </div>
           
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-lg shadow">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-green-100 rounded-lg">
                 <Brain className="h-6 w-6 text-green-600" />
               </div>
               <div>
-                <p className="responsive-text font-medium text-gray-600">AI Suggestions</p>
-                <p className="responsive-heading text-gray-900">
+                <p className="text-lg font-semibold text-gray-900">
                   {products?.filter(p => p.lastAiSuggestion).length || 0}
                 </p>
               </div>
@@ -241,7 +240,7 @@ const VendorWatchlistPage = () => {
                   </div>
 
                   {/* Product Info */}
-                  <div className="p-6">
+                  <div>
                     <div className="flex items-start justify-between mb-3">
                       <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">
                         {product.name}
@@ -356,7 +355,7 @@ const VendorWatchlistPage = () => {
             })}
           </div>
         ) : (
-          <div className="bg-white rounded-lg shadow p-12 text-center">
+          <div className="bg-white rounded-lg shadow text-center">
             <Eye className="h-16 w-16 text-gray-400 mx-auto mb-4" />
             <h3 className="responsive-subheading text-gray-900 mb-2">No Products on Watchlist</h3>
             <p className="text-gray-600 mb-6">

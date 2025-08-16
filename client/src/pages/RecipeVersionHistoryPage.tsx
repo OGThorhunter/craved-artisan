@@ -160,8 +160,8 @@ const RecipeVersionHistoryPage: React.FC = () => {
   if (isLoading) {
     return (
       <VendorDashboardLayout>
-        <div className="p-6">
-          <div className="max-w-7xl mx-auto">
+        <div>
+          <div>
             <div className="animate-pulse">
               <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -182,8 +182,8 @@ const RecipeVersionHistoryPage: React.FC = () => {
   if (error) {
     return (
       <VendorDashboardLayout>
-        <div className="p-6">
-          <div className="max-w-7xl mx-auto">
+        <div>
+          <div>
             <div className="bg-red-50 border border-red-200 rounded-lg p-6">
               <div className="flex items-center">
                 <AlertTriangle className="h-6 w-6 text-red-400 mr-3" />
@@ -234,7 +234,7 @@ const RecipeVersionHistoryPage: React.FC = () => {
           {/* Version List */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="p-6 border-b border-gray-200">
+              <div className="border-b border-gray-200">
                 <h2 className="text-lg font-semibold text-gray-900">Versions</h2>
                 <p className="responsive-text text-gray-600 mt-1">
                   {versions.length} version{versions.length !== 1 ? 's' : ''} total

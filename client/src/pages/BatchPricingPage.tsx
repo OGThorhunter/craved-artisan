@@ -139,7 +139,7 @@ const BatchPricingPage: React.FC = () => {
 
         {/* Configuration Panel */}
         {showPreview && (
-          <div className="bg-white rounded-2xl shadow-sm p-6 mb-8">
+          <div className="bg-white rounded-2xl shadow-sm mb-8">
             <h2 className="responsive-subheading text-gray-900 mb-4">Pricing Configuration</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -198,7 +198,7 @@ const BatchPricingPage: React.FC = () => {
 
         {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-2xl shadow-sm p-6">
+          <div className="bg-white rounded-2xl shadow-sm">
             <div className="flex items-center">
               <div className="p-2 bg-blue-100 rounded-lg">
                 <Package className="w-6 h-6 text-blue-600" />
@@ -210,7 +210,7 @@ const BatchPricingPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm p-6">
+          <div className="bg-white rounded-2xl shadow-sm">
             <div className="flex items-center">
               <div className="p-2 bg-red-100 rounded-lg">
                 <AlertTriangle className="w-6 h-6 text-red-600" />
@@ -222,7 +222,7 @@ const BatchPricingPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm p-6">
+          <div className="bg-white rounded-2xl shadow-sm">
             <div className="flex items-center">
               <div className="p-2 bg-orange-100 rounded-lg">
                 <TrendingDown className="w-6 h-6 text-orange-600" />
@@ -234,7 +234,7 @@ const BatchPricingPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm p-6">
+          <div className="bg-white rounded-2xl shadow-sm">
             <div className="flex items-center">
               <div className="p-2 bg-green-100 rounded-lg">
                 <Target className="w-6 h-6 text-green-600" />
@@ -248,7 +248,7 @@ const BatchPricingPage: React.FC = () => {
         </div>
 
         {/* Low Margin Products */}
-        <div className="bg-white rounded-2xl shadow-sm p-6 mb-8">
+        <div className="bg-white rounded-2xl shadow-sm mb-8">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="responsive-subheading text-gray-900">Low Margin Products</h2>
@@ -327,7 +327,7 @@ const BatchPricingPage: React.FC = () => {
 
         {/* Price Alerts */}
         {priceAlertsData?.alerts?.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-sm p-6 mb-8">
+          <div className="bg-white rounded-2xl shadow-sm mb-8">
             <h2 className="responsive-subheading text-gray-900 mb-4">Ingredient Price Alerts</h2>
             <div className="space-y-4">
               {priceAlertsData.alerts.map((alert: any, index: number) => (
@@ -354,7 +354,7 @@ const BatchPricingPage: React.FC = () => {
         )}
 
         {/* Action Buttons */}
-        <div className="bg-white rounded-2xl shadow-sm p-6">
+        <div className="bg-white rounded-2xl shadow-sm">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="responsive-subheading text-gray-900">Batch Update Actions</h2>

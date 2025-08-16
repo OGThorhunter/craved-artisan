@@ -242,8 +242,8 @@ const VendorRecipeEditPage: React.FC = () => {
   if (isLoading) {
     return (
       <VendorDashboardLayout>
-        <div className="p-6">
-          <div className="max-w-7xl mx-auto">
+        <div>
+          <div>
             <div className="animate-pulse">
               <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -260,8 +260,8 @@ const VendorRecipeEditPage: React.FC = () => {
   if (error) {
     return (
       <VendorDashboardLayout>
-        <div className="p-6">
-          <div className="max-w-7xl mx-auto">
+        <div>
+          <div>
             <div className="bg-red-50 border border-red-200 rounded-lg p-6">
               <div className="flex items-center">
                 <AlertTriangle className="h-6 w-6 text-red-400 mr-3" />
@@ -296,7 +296,7 @@ const VendorRecipeEditPage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Recipe Form */}
           <div className="space-y-6">
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Recipe Details</h2>
               
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -523,7 +523,7 @@ const VendorRecipeEditPage: React.FC = () => {
             </div>
 
             {/* Ingredients Section */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-gray-900">Ingredients</h2>
                 <button

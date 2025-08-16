@@ -548,7 +548,7 @@ const VendorDeliveryBatchingPage: React.FC = () => {
   if (isLoading) {
     return (
       <VendorDashboardLayout>
-        <div className="p-6 flex items-center justify-center min-h-screen">
+        <div className="flex items-center justify-center min-h-screen">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         </div>
       </VendorDashboardLayout>
@@ -558,8 +558,8 @@ const VendorDeliveryBatchingPage: React.FC = () => {
   if (error) {
     return (
       <VendorDashboardLayout>
-        <div className="p-6">
-          <div className="max-w-7xl mx-auto">
+        <div>
+          <div>
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
               <p className="text-red-800">Error loading delivery batches: {error.message}</p>
             </div>
@@ -572,8 +572,8 @@ const VendorDeliveryBatchingPage: React.FC = () => {
   if (!batchedOrders) {
     return (
       <VendorDashboardLayout>
-        <div className="p-6">
-          <div className="max-w-7xl mx-auto">
+        <div>
+          <div>
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
               <p className="text-gray-600">No delivery batches found.</p>
             </div>
@@ -668,7 +668,7 @@ const VendorDeliveryBatchingPage: React.FC = () => {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white rounded-lg border p-6">
+        <div className="bg-white rounded-lg border">
           <div className="flex items-center gap-3">
             <Package className="h-6 w-6 text-blue-600" />
             <div>
@@ -677,7 +677,7 @@ const VendorDeliveryBatchingPage: React.FC = () => {
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-lg border p-6">
+        <div className="bg-white rounded-lg border">
           <div className="flex items-center gap-3">
             <Calendar className="h-6 w-6 text-green-600" />
             <div>
@@ -686,7 +686,7 @@ const VendorDeliveryBatchingPage: React.FC = () => {
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-lg border p-6">
+        <div className="bg-white rounded-lg border">
           <div className="flex items-center gap-3">
             <DollarSign className="h-6 w-6 text-purple-600" />
             <div>
@@ -703,7 +703,7 @@ const VendorDeliveryBatchingPage: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-lg border p-6 mb-8">
+      <div className="bg-white rounded-lg border mb-8">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
             <label htmlFor="search" className="block responsive-text font-medium text-gray-700 mb-2">
@@ -904,7 +904,7 @@ const VendorDeliveryBatchingPage: React.FC = () => {
       {/* Batch Status Modal */}
       {showStatusModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+          <div className="bg-white rounded-lg max-w-md w-full mx-4">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">Update Batch Status</h3>
               <button

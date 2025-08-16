@@ -225,7 +225,7 @@ const VendorDeliveryPage: React.FC = () => {
   if (isLoading) {
     return (
       <VendorDashboardLayout>
-        <div className="p-6 flex items-center justify-center min-h-screen">
+        <div className="flex items-center justify-center min-h-screen">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         </div>
       </VendorDashboardLayout>
@@ -235,7 +235,7 @@ const VendorDeliveryPage: React.FC = () => {
   if (error) {
     return (
       <VendorDashboardLayout>
-        <div className="p-6">
+        <div>
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
             <p className="text-red-800">Error loading delivery batch: {error.message}</p>
           </div>
@@ -247,7 +247,7 @@ const VendorDeliveryPage: React.FC = () => {
   if (!batch) {
     return (
       <VendorDashboardLayout>
-        <div className="p-6">
+        <div>
           <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
             <p className="text-gray-600">Delivery batch not found.</p>
           </div>
@@ -295,8 +295,8 @@ const VendorDeliveryPage: React.FC = () => {
       </div>
 
       {/* Driver Info */}
-      <div className="p-4 bg-blue-50 border-b">
-        <div className="flex items-center gap-3">
+      <div className="bg-blue-50 border-b">
+        <div className="flex items-center gap-3 p-4">
           <Truck className="h-5 w-5 text-blue-600" />
           <div className="flex-1">
             <p className="responsive-text font-medium text-blue-900">{batch.driverInfo.assignedDriver}</p>
@@ -306,8 +306,8 @@ const VendorDeliveryPage: React.FC = () => {
       </div>
 
       {/* Route Optimization Toggle */}
-      <div className="p-4 bg-white border-b">
-        <div className="flex items-center justify-between">
+      <div className="bg-white border-b">
+        <div className="flex items-center justify-between p-4">
           <div className="flex items-center gap-3">
             <Route className="h-5 w-5 text-green-600" />
             <div>
@@ -359,7 +359,7 @@ const VendorDeliveryPage: React.FC = () => {
       </div>
 
       {/* Delivery Stops */}
-      <div className="p-4 space-y-6">
+      <div className="space-y-6 p-4">
         {Object.entries(groupedOrders).map(([zipCode, orders]) => (
           <div key={zipCode} className="space-y-3">
             {/* ZIP Code Header */}
@@ -482,7 +482,7 @@ const VendorDeliveryPage: React.FC = () => {
       {showDeliveryModal && selectedOrder && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
+            <div>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold text-gray-900">Complete Delivery</h3>
                 <button

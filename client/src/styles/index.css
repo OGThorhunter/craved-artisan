@@ -1,13 +1,14 @@
+/* Tailwind CSS imports - these provide the base framework and cannot be scoped */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Print styles for manifest */
+/* Print styles for manifest - scoped to avoid DashboardNav interference */
 @media print {
-  body * {
+  .page-content body * {
     visibility: hidden;
   }
-  #manifest, #manifest * {
+  .page-content #manifest, .page-content #manifest * {
     visibility: visible;
   }
   #manifest {
@@ -18,8 +19,8 @@
     height: 100%;
   }
   
-  /* Ensure manifest content is properly formatted for print */
-  .manifest-content {
+  /* Ensure manifest content is properly formatted for print - scoped to avoid DashboardNav interference */
+  .page-content .manifest-content {
     font-family: Arial, sans-serif;
     font-size: 12px;
     line-height: 1.4;
@@ -27,24 +28,24 @@
     background: #fff;
   }
   
-  /* Hide non-essential elements during print */
-  .no-print {
+  /* Hide non-essential elements during print - scoped to avoid DashboardNav interference */
+  .page-content .no-print {
     display: none !important;
   }
   
-  /* Ensure tables are properly formatted */
-  table {
+  /* Ensure tables are properly formatted - scoped to avoid DashboardNav interference */
+  .page-content table {
     border-collapse: collapse;
     width: 100%;
   }
   
-  th, td {
+  .page-content th, .page-content td {
     border: 1px solid #000;
     padding: 4px 8px;
     text-align: left;
   }
   
-  th {
+  .page-content th {
     background-color: #f0f0f0 !important;
     font-weight: bold;
   }

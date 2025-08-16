@@ -51,7 +51,7 @@ const VendorAnalyticsPage: React.FC = () => {
   if (loading) {
     return (
       <VendorDashboardLayout>
-        <div className="p-6">
+        <div>
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
             <p className="mt-4 text-gray-600">Loading delivery analytics...</p>
@@ -64,7 +64,7 @@ const VendorAnalyticsPage: React.FC = () => {
   if (error) {
     return (
       <VendorDashboardLayout>
-        <div className="p-6">
+        <div>
           <div className="text-center">
             <div className="bg-red-50 border border-red-200 rounded-md p-4">
               <p className="text-red-800">{error}</p>
@@ -84,7 +84,7 @@ const VendorAnalyticsPage: React.FC = () => {
   if (!metrics) {
     return (
       <VendorDashboardLayout>
-        <div className="p-6">
+        <div>
           <div className="text-center">
             <p className="text-gray-600">No delivery data available</p>
           </div>
@@ -109,7 +109,7 @@ const VendorAnalyticsPage: React.FC = () => {
 
   return (
     <VendorDashboardLayout>
-      <div className="p-6 space-y-6">
+      <div className="space-y-6">
         {/* Header */}
         <div className="mb-8">
           <h1 className="responsive-heading text-gray-900">Delivery Analytics</h1>

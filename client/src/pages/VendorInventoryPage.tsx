@@ -158,7 +158,7 @@ export default function VendorInventoryPage() {
   if (isLoading) {
     return (
       <VendorDashboardLayout>
-        <div className="flex items-center justify-center p-6">
+        <div className="flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <p className="text-gray-600">Loading inventory...</p>
@@ -171,7 +171,7 @@ export default function VendorInventoryPage() {
   if (error) {
     return (
       <VendorDashboardLayout>
-        <div className="flex items-center justify-center p-6">
+        <div className="flex items-center justify-center">
           <div className="text-center">
             <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
             <h2 className="responsive-subheading text-gray-900 mb-2">Error Loading Inventory</h2>
@@ -214,8 +214,8 @@ export default function VendorInventoryPage() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
+          <div className="bg-white rounded-lg shadow">
+            <div className="flex items-center p-6">
               <div className="p-2 bg-blue-100 rounded-lg">
                 <Package className="w-6 h-6 text-blue-600" />
               </div>
@@ -226,8 +226,8 @@ export default function VendorInventoryPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
+          <div className="bg-white rounded-lg shadow">
+            <div className="flex items-center p-6">
               <div className="p-2 bg-green-100 rounded-lg">
                 <CheckCircle className="w-6 h-6 text-green-600" />
               </div>
@@ -238,8 +238,8 @@ export default function VendorInventoryPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
+          <div className="bg-white rounded-lg shadow">
+            <div className="flex items-center p-6">
               <div className="p-2 bg-orange-100 rounded-lg">
                 <AlertTriangle className="w-6 h-6 text-orange-600" />
               </div>
@@ -250,7 +250,7 @@ export default function VendorInventoryPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white rounded-lg shadow">
             <div className="flex items-center">
               <div className="p-2 bg-purple-100 rounded-lg">
                 <TrendingUp className="w-6 h-6 text-purple-600" />
@@ -273,8 +273,8 @@ export default function VendorInventoryPage() {
                 {editingIngredient ? 'Edit Ingredient' : 'Add New Ingredient'}
               </h3>
             </div>
-            <form onSubmit={handleSubmit(onSubmit)} className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
                 <div>
                   <label className="block responsive-text font-medium text-gray-700 mb-2">
                     Name *

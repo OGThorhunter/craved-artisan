@@ -223,8 +223,8 @@ export default function VendorAnalyticsPage() {
 
   return (
     <VendorDashboardLayout>
-      <div className="p-6 space-y-6 bg-white min-h-screen">
-        <div className="max-w-7xl mx-auto">
+      <div className="space-y-6">
+        <div>
           <Breadcrumbs />
           <div className="bg-[#F7F2EC] rounded-2xl shadow-sm p-6 mb-6 border border-gray-100">
             <div className="flex items-center justify-between mb-4">

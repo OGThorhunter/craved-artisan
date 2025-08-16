@@ -139,7 +139,7 @@ const VendorCRMPage = () => {
   if (isLoading) {
     return (
       <VendorDashboardLayout>
-        <div className="p-6 flex items-center justify-center">
+        <div className="flex items-center justify-center">
           <div className="text-center">
             <RefreshCw className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
             <p className="text-gray-600">Loading customers...</p>
@@ -151,7 +151,7 @@ const VendorCRMPage = () => {
 
   return (
     <VendorDashboardLayout>
-      <div className="p-6">
+      <div>
         {/* Header */}
         <div className="mb-8">
           <h1 className="responsive-heading text-gray-900">Customer Relationship Management</h1>
@@ -160,8 +160,8 @@ const VendorCRMPage = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center gap-3">
+          <div className="bg-white rounded-lg shadow-sm">
+            <div className="flex items-center gap-3 p-6">
               <div className="p-2 bg-blue-100 rounded-lg">
                 <Users className="h-6 w-6 text-blue-600" />
               </div>
@@ -172,8 +172,8 @@ const VendorCRMPage = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center gap-3">
+          <div className="bg-white rounded-lg shadow-sm">
+            <div className="flex items-center gap-3 p-6">
               <div className="p-2 bg-green-100 rounded-lg">
                 <TrendingUp className="h-6 w-6 text-green-600" />
               </div>
@@ -184,8 +184,8 @@ const VendorCRMPage = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center gap-3">
+          <div className="bg-white rounded-lg shadow-sm">
+            <div className="flex items-center gap-3 p-6">
               <div className="p-2 bg-purple-100 rounded-lg">
                 <Star className="h-6 w-6 text-purple-600" />
               </div>
@@ -196,8 +196,8 @@ const VendorCRMPage = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center gap-3">
+          <div className="bg-white rounded-lg shadow-sm">
+            <div className="flex items-center gap-3 p-6">
               <div className="p-2 bg-orange-100 rounded-lg">
                 <ShoppingBag className="h-6 w-6 text-orange-600" />
               </div>
@@ -208,8 +208,8 @@ const VendorCRMPage = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center gap-3">
+          <div className="bg-white rounded-lg shadow-sm">
+            <div className="flex items-center gap-3 p-6">
               <div className="p-2 bg-green-100 rounded-lg">
                 <DollarSign className="h-6 w-6 text-green-600" />
               </div>
@@ -222,8 +222,8 @@ const VendorCRMPage = () => {
         </div>
 
         {/* Filters and Search */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <div className="flex flex-col sm:flex-row gap-4">
+        <div className="bg-white rounded-lg shadow-sm mb-6">
+          <div className="flex flex-col sm:flex-row gap-4 p-6">
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -275,8 +275,8 @@ const VendorCRMPage = () => {
           ) : (
             filteredCustomers.map((customer) => (
               <div key={customer.id} className="bg-white rounded-lg shadow-sm border border-gray-200">
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-4">
+                <div>
+                  <div className="flex items-start justify-between mb-4 p-6">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="text-lg font-semibold text-gray-900">
@@ -378,8 +378,8 @@ const VendorCRMPage = () => {
       {selectedCustomer && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
+            <div className="border-b border-gray-200">
+              <div className="flex items-center justify-between p-6">
                 <h2 className="responsive-subheading text-gray-900">Customer Details</h2>
                 <button
                   onClick={() => setSelectedCustomer(null)}
@@ -393,8 +393,8 @@ const VendorCRMPage = () => {
               </div>
             </div>
 
-            <div className="p-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-6">
                 {/* Customer Info */}
                 <div>
                   <h3 className="responsive-subheading text-gray-900 mb-4">Customer Information</h3>
@@ -498,8 +498,8 @@ const VendorCRMPage = () => {
               )}
             </div>
 
-            <div className="p-6 border-t border-gray-200 bg-gray-50">
-              <div className="flex justify-end gap-3">
+            <div className="border-t border-gray-200 bg-gray-50">
+              <div className="flex justify-end gap-3 p-6">
                 <button
                   onClick={() => setSelectedCustomer(null)}
                   className="responsive-button text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"

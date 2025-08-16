@@ -10,7 +10,7 @@ import OptionalWidgets from '@/components/dashboard/vendor/OptionalWidgets';
 export default function VendorDashboardPage() {
   return (
     <VendorDashboardLayout>
-      <div className="space-y-6 p-6">
+      <div className="space-y-6">
         <SalesSnapshot />
         <BusinessHealth />
         <AIInsightsPanel />
