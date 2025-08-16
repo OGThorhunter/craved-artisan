@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm, Controller } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
+import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
 import { 
   ArrowLeft, 
   Save, 
@@ -240,38 +241,42 @@ const VendorRecipeEditPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="page-container bg-gray-50 p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="h-96 bg-gray-200 rounded"></div>
-              <div className="h-96 bg-gray-200 rounded"></div>
+      <VendorDashboardLayout>
+        <div className="p-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="animate-pulse">
+              <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="h-96 bg-gray-200 rounded"></div>
+                <div className="h-96 bg-gray-200 rounded"></div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </VendorDashboardLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="page-container bg-gray-50 p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-            <div className="flex items-center">
-              <AlertTriangle className="h-6 w-6 text-red-400 mr-3" />
-              <h3 className="responsive-subheading text-red-800">Error Loading Recipe</h3>
+      <VendorDashboardLayout>
+        <div className="p-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+              <div className="flex items-center">
+                <AlertTriangle className="h-6 w-6 text-red-400 mr-3" />
+                <h3 className="responsive-subheading text-red-800">Error Loading Recipe</h3>
+              </div>
+              <p className="mt-2 text-red-700">Failed to load recipe data. Please try again.</p>
             </div>
-            <p className="mt-2 text-red-700">Failed to load recipe data. Please try again.</p>
           </div>
         </div>
-      </div>
+      </VendorDashboardLayout>
     );
   }
 
   return (
-    <div className="page-container bg-gray-50 p-6">
+    <VendorDashboardLayout>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
@@ -635,7 +640,7 @@ const VendorRecipeEditPage: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
+    </VendorDashboardLayout>
   );
 };
 

@@ -1,6 +1,7 @@
 ﻿import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
+import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
 import { 
   DollarSign, 
   Target, 
@@ -109,7 +110,7 @@ const BatchPricingPage: React.FC = () => {
   };
 
   return (
-    <div className="page-container bg-gray-50 p-6">
+    <VendorDashboardLayout>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -384,7 +385,7 @@ const BatchPricingPage: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
+    </VendorDashboardLayout>
   );
 };
 

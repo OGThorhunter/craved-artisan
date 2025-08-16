@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useVendorOverviewDashboard } from "@/hooks/dashboard";
 import { Card, Button, Section, StatTile } from "@/components/ui";
+import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
 
 function DeltaBadge({ pct }: { pct:number }) {
   const color = pct > 0 ? "text-green-600" : pct < 0 ? "text-red-600" : "text-gray-700";
@@ -46,7 +47,7 @@ export default function OverviewPage(){
   }
 
   return (
-    <Section>
+    <VendorDashboardLayout>
       {/* Hero */}
       <Card tone="offwhite" className="p-6 flex items-center justify-between">
         <div>
@@ -168,6 +169,6 @@ export default function OverviewPage(){
         <div>Your best sales day: {data?.sales?.bestDay?.date ? new Date(data.sales.bestDay.date).toDateString() : "—"} — ${ (data?.sales?.bestDay?.revenue||0).toFixed(2) }</div>
         <div>You've served {data?.leaderboard?.totalCustomersServed||0} customers 🙌</div>
       </Card>
-    </Section>
+    </VendorDashboardLayout>
   );
 }

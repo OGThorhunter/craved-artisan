@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
 
 interface DeliveryMetrics {
   zipStats: Array<{
@@ -49,21 +50,21 @@ const VendorAnalyticsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="page-container bg-gray-50 py-8">
-        <div className="container-responsive">
+      <VendorDashboardLayout>
+        <div className="p-6">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
             <p className="mt-4 text-gray-600">Loading delivery analytics...</p>
           </div>
         </div>
-      </div>
+      </VendorDashboardLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="page-container bg-gray-50 py-8">
-        <div className="container-responsive">
+      <VendorDashboardLayout>
+        <div className="p-6">
           <div className="text-center">
             <div className="bg-red-50 border border-red-200 rounded-md p-4">
               <p className="text-red-800">{error}</p>
@@ -76,19 +77,19 @@ const VendorAnalyticsPage: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
+      </VendorDashboardLayout>
     );
   }
 
   if (!metrics) {
     return (
-      <div className="page-container bg-gray-50 py-8">
-        <div className="container-responsive">
+      <VendorDashboardLayout>
+        <div className="p-6">
           <div className="text-center">
             <p className="text-gray-600">No delivery data available</p>
           </div>
         </div>
-      </div>
+      </VendorDashboardLayout>
     );
   }
 
@@ -107,8 +108,8 @@ const VendorAnalyticsPage: React.FC = () => {
   }));
 
   return (
-    <div className="page-container bg-gray-50 py-8">
-      <div className="container-responsive">
+    <VendorDashboardLayout>
+      <div className="p-6 space-y-6">
         {/* Header */}
         <div className="mb-8">
           <h1 className="responsive-heading text-gray-900">Delivery Analytics</h1>
@@ -288,7 +289,7 @@ const VendorAnalyticsPage: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
+    </VendorDashboardLayout>
   );
 };
 

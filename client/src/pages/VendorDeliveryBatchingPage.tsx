@@ -4,6 +4,7 @@ import { Calendar, MapPin, Package, User, DollarSign, Clock, Filter, Route, File
 import toast from 'react-hot-toast';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
 
 interface OrderItem {
   id: string;
@@ -546,29 +547,39 @@ const VendorDeliveryBatchingPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
+      <VendorDashboardLayout>
+        <div className="p-6 flex items-center justify-center min-h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      </VendorDashboardLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="max-w-7xl mx-auto p-6">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-800">Error loading delivery batches: {error.message}</p>
+      <VendorDashboardLayout>
+        <div className="p-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-red-800">Error loading delivery batches: {error.message}</p>
+            </div>
+          </div>
         </div>
-      </div>
+      </VendorDashboardLayout>
     );
   }
 
   if (!batchedOrders) {
     return (
-      <div className="max-w-7xl mx-auto p-6">
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-          <p className="text-gray-600">No delivery batches found.</p>
+      <VendorDashboardLayout>
+        <div className="p-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <p className="text-gray-600">No delivery batches found.</p>
+            </div>
+          </div>
         </div>
-      </div>
+      </VendorDashboardLayout>
     );
   }
 
@@ -618,7 +629,7 @@ const VendorDeliveryBatchingPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
+    <VendorDashboardLayout>
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-4">
@@ -935,7 +946,7 @@ const VendorDeliveryBatchingPage: React.FC = () => {
           </div>
         </div>
       )}
-    </div>
+    </VendorDashboardLayout>
   );
 };
 

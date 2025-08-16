@@ -1,6 +1,7 @@
 ﻿import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'wouter';
+import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
 import { 
   AlertTriangle, 
   Brain, 
@@ -111,35 +112,39 @@ const VendorWatchlistPage = () => {
 
   if (isLoading) {
     return (
-      <div className="page-container bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading watchlist...</p>
+      <VendorDashboardLayout>
+        <div className="p-6 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading watchlist...</p>
+          </div>
         </div>
-      </div>
+      </VendorDashboardLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="page-container bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
-          <h2 className="responsive-subheading text-gray-900 mb-2">Error Loading Watchlist</h2>
-          <p className="text-gray-600 mb-4">Failed to load products on watchlist</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="responsive-button bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-          >
-            Try Again
-          </button>
+      <VendorDashboardLayout>
+        <div className="p-6 flex items-center justify-center">
+          <div className="text-center">
+            <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+            <h2 className="responsive-subheading text-gray-900 mb-2">Error Loading Watchlist</h2>
+            <p className="text-gray-600 mb-4">Failed to load products on watchlist</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="responsive-button bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            >
+              Try Again
+            </button>
+          </div>
         </div>
-      </div>
+      </VendorDashboardLayout>
     );
   }
 
   return (
-    <div className="page-container bg-gray-50">
+    <VendorDashboardLayout>
       <div className="container-responsive py-8">
         {/* Header */}
         <div className="mb-8">
@@ -366,7 +371,7 @@ const VendorWatchlistPage = () => {
           </div>
         )}
       </div>
-    </div>
+    </VendorDashboardLayout>
   );
 };
 

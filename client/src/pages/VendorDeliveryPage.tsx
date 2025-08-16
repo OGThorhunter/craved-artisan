@@ -1,6 +1,7 @@
 ﻿import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useLocation } from 'wouter';
+import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
 import { 
   MapPin, 
   Package, 
@@ -223,34 +224,40 @@ const VendorDeliveryPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
+      <VendorDashboardLayout>
+        <div className="p-6 flex items-center justify-center min-h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      </VendorDashboardLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="p-4">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-800">Error loading delivery batch: {error.message}</p>
+      <VendorDashboardLayout>
+        <div className="p-6">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <p className="text-red-800">Error loading delivery batch: {error.message}</p>
+          </div>
         </div>
-      </div>
+      </VendorDashboardLayout>
     );
   }
 
   if (!batch) {
     return (
-      <div className="p-4">
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-          <p className="text-gray-600">Delivery batch not found.</p>
+      <VendorDashboardLayout>
+        <div className="p-6">
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <p className="text-gray-600">Delivery batch not found.</p>
+          </div>
         </div>
-      </div>
+      </VendorDashboardLayout>
     );
   }
 
   return (
-    <div className="page-container bg-gray-50">
+    <VendorDashboardLayout>
       {/* Header */}
       <div className="bg-white shadow-sm border-b sticky top-0 z-10">
         <div className="p-4">
@@ -553,7 +560,7 @@ const VendorDeliveryPage: React.FC = () => {
           </div>
         </div>
       )}
-    </div>
+    </VendorDashboardLayout>
   );
 };
 

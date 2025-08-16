@@ -4,6 +4,7 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
 import { Link } from 'wouter';
 import axios from 'axios';
+import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
 import {
   Plus, Minus, Save, ArrowLeft, Package, ChefHat, 
   Clock, Users, BarChart3, AlertCircle
@@ -161,7 +162,7 @@ export default function VendorRecipeCreatePage() {
   }
 
   return (
-    <div className="page-container bg-gray-50 py-8">
+    <VendorDashboardLayout>
       <div className="max-w-4xl mx-auto responsive-padding">
         {/* Header */}
         <div className="mb-8">
@@ -468,6 +469,6 @@ export default function VendorRecipeCreatePage() {
           </form>
         </div>
       </div>
-    </div>
+    </VendorDashboardLayout>
   );
 } 

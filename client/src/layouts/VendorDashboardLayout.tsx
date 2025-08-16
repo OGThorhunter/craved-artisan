@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 import NavHeader from '@/components/NavHeader';
-import VendorTopNav from '@/components/dashboard/vendor/VendorTopNav';
+import DashboardNav from '@/components/dashboard/DashboardNav';
 
 export default function VendorDashboardLayout({ children }: { children: ReactNode }) {
   return (
@@ -9,8 +9,8 @@ export default function VendorDashboardLayout({ children }: { children: ReactNod
       <NavHeader />
       
       {/* Secondary Navigation - Dashboard-specific navigation */}
-      <div className="pt-16"> {/* Add top padding to account for fixed header */}
-        <VendorTopNav />
+      <div className="pt-20"> {/* Increased padding to account for fixed header */}
+        <DashboardNav />
       </div>
       
       {/* Main content area */}
