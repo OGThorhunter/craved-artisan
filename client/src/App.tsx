@@ -22,6 +22,7 @@ import DashboardPage from './pages/DashboardPage';
 import CustomerDashboardPage from './pages/CustomerDashboardPage';
 import { VendorSettingsPage } from './pages/VendorSettingsPage';
 import VendorProductsPage from './pages/VendorProductsPage';
+import EnhancedVendorProductsPage from './pages/EnhancedVendorProductsPage';
 import VendorInventoryPage from './pages/VendorInventoryPage';
 import VendorCRMPage from './pages/VendorCRMPage';
 import VendorRecipeCreatePage from './pages/VendorRecipeCreatePage';
@@ -31,7 +32,7 @@ import BatchPricingPage from './pages/BatchPricingPage';
 import VendorRelationshipsPage from './pages/vendor/VendorRelationshipsPage';
 import VendorEventsPage from './pages/vendor/VendorEventsPage';
 import VendorFinancialsPage from './pages/vendor/VendorFinancialsPage';
-import SiteEditorPage from './pages/vendor/SiteEditorPage';
+
 import DemoStorefrontPage from './pages/vendor/DemoStorefrontPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import EventCoordinatorDashboardPage from './pages/EventCoordinatorDashboardPage';
@@ -59,6 +60,7 @@ import VendorAnalyticsPage from './pages/VendorAnalyticsPage';
 import VendorAnalyticsKpiPage from './pages/dashboard/vendor/analytics';
 import { VendorFinancialPage } from './pages/VendorFinancialPage';
 import VendorOnboardingPage from './pages/VendorOnboardingPage';
+import TestDataPage from './pages/TestDataPage';
 import { NotFound } from './components/NotFound';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -87,6 +89,8 @@ function App() {
             <Route path="/vendor/:id" component={VendorPage} />
             <Route path="/product/:id" component={ProductPage} />
             <Route path="/vendors/:vendorId" component={VendorStorefrontPage} />
+            <Route path="/store/artisan-bakes-atlanta" component={DemoStorefrontPage} />
+            <Route path="/test-data" component={TestDataPage} />
             <Route path="/product/:productId" component={ProductDetailPage} />
             <Route path="/checkout" component={CheckoutPage} />
             <Route path="/checkout/success" component={CheckoutSuccessPage} />
@@ -162,6 +166,11 @@ function App() {
                 <VendorProductsPage />
               </ProtectedRoute>
             </Route>
+            <Route path="/dashboard/vendor/enhanced-products">
+              <ProtectedRoute role="VENDOR">
+                <EnhancedVendorProductsPage />
+              </ProtectedRoute>
+            </Route>
             <Route path="/dashboard/vendor/inventory">
               <ProtectedRoute role="VENDOR">
                 <VendorInventoryPage />
@@ -187,11 +196,7 @@ function App() {
                 <VendorFinancialsPage />
               </ProtectedRoute>
             </Route>
-            <Route path="/dashboard/vendor/site-editor">
-              <ProtectedRoute role="VENDOR">
-                <SiteEditorPage />
-              </ProtectedRoute>
-            </Route>
+
             <Route path="/store/:storeSlug">
               <DemoStorefrontPage />
             </Route>
@@ -250,6 +255,7 @@ function App() {
                 <VendorAnalyticsKpiPage />
               </ProtectedRoute>
             </Route>
+
 
             <Route path="/vendor/financial">
               <ProtectedRoute role="VENDOR">

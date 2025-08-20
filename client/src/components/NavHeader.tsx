@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { Menu, X, ShoppingCart, Search, Bell, MapPin, MessageCircle, Send, X as CloseIcon } from 'lucide-react';
 import logonobg from '/images/logonobg.png';
 import { useAuth } from '../contexts/AuthContext';
@@ -10,6 +10,7 @@ import { useZip } from '../contexts/ZipContext';
 export default function NavHeader() {
   const { user, isAuthenticated, logout } = useAuth();
   const { zip, updateZip, isValidZip, isUsingLocation, setUsingLocation } = useZip();
+  const [location] = useLocation();
   const [zipInput, setZipInput] = useState(zip);
   const [isMobileOpen, setMobileOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -113,6 +114,11 @@ export default function NavHeader() {
        }
     };
   }, [userMenuTimeout, cartTimeout, notificationsTimeout]);
+
+  // Hide NavHeader on storefront pages
+  if (location.startsWith('/store/')) {
+    return null;
+  }
 
   const handleZipSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -309,7 +315,7 @@ export default function NavHeader() {
               <Search className="h-5 w-5 text-[#2C2C2C] cursor-pointer" />
             </button>
             {isSearchOpen && (
-              <div className="absolute right-0 mt-2 w-80 bg-[#F7F2EC] text-[#2C2C2C] rounded shadow-md p-4 z-50 border-2 border-[#5B6E02]">
+              <div className="absolute right-0 mt-2 w-80 bg-[#F7F2EC] text-[#2C2C2C] rounded shadow-md p-4 z-[1000] border-2 border-[#5B6E02]">
                 <form onSubmit={handleSearch} className="space-y-3">
                   <input
                     type="text"
@@ -382,7 +388,7 @@ export default function NavHeader() {
             </button>
             {isCartOpen && (
               <div 
-                className="absolute right-0 mt-2 w-80 bg-[#F7F2EC] text-[#2C2C2C] rounded shadow-md p-4 z-50"
+                className="absolute right-0 mt-2 w-80 bg-[#F7F2EC] text-[#2C2C2C] rounded shadow-md p-4 z-[1000]"
                 onMouseEnter={() => {
                   if (cartTimeout) {
                     clearTimeout(cartTimeout);
@@ -507,7 +513,7 @@ export default function NavHeader() {
             </button>
             {isNotificationsOpen && (
               <div 
-                className="absolute right-0 mt-2 w-80 bg-[#F7F2EC] text-[#2C2C2C] rounded shadow-md p-4 z-50"
+                className="absolute right-0 mt-2 w-80 bg-[#F7F2EC] text-[#2C2C2C] rounded shadow-md p-4 z-[1000]"
                 onMouseEnter={() => {
                   if (notificationsTimeout) {
                     clearTimeout(notificationsTimeout);
@@ -620,7 +626,7 @@ export default function NavHeader() {
             </button>
             {isChatOpen && (
               <div 
-                className="absolute right-0 mt-2 w-96 bg-[#F7F2EC] text-[#2C2C2C] rounded shadow-md z-50"
+                className="absolute right-0 mt-2 w-96 bg-[#F7F2EC] text-[#2C2C2C] rounded shadow-md z-[1000]"
                 onMouseEnter={() => {
                   if (chatTimeout) {
                     clearTimeout(chatTimeout);
@@ -740,7 +746,7 @@ export default function NavHeader() {
                </button>
                {isUserMenuOpen && (
                  <div 
-                   className="absolute right-0 mt-2 w-40 bg-[#F7F2EC] text-[#2C2C2C] rounded shadow-md p-2 z-50"
+                   className="absolute right-0 mt-2 w-40 bg-[#F7F2EC] text-[#2C2C2C] rounded shadow-md p-2 z-[1000]"
                    onMouseEnter={() => {
                      if (userMenuTimeout) {
                        clearTimeout(userMenuTimeout);

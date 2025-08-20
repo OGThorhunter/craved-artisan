@@ -14,10 +14,8 @@ const DashboardPage: React.FC = () => {
 
   // Generate real storefront URL based on user data
   useEffect(() => {
-    if (user?.email) {
-      const storeSlug = user.email.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '-');
-      setStorefrontUrl(`https://craved-artisan.com/store/${storeSlug}`);
-    }
+    // Use the actual working storefront URL
+    setStorefrontUrl(`https://craved-artisan.com/store/artisan-bakes-atlanta`);
   }, [user]);
 
   const handleLogout = async () => {
@@ -102,7 +100,7 @@ const DashboardPage: React.FC = () => {
           <div className="flex items-center gap-3 mb-4">
             <div className="flex-1 bg-gray-50 border-2 border-gray-200 rounded-lg px-3 py-2">
               <span className="text-gray-600">https://craved-artisan.com/store/</span>
-              <span className="font-semibold text-[#5B6E02]">{user?.email?.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '-') || 'artisan-bakes-atlanta'}</span>
+              <span className="font-semibold text-[#5B6E02]">artisan-bakes-atlanta</span>
             </div>
             <button 
               onClick={handleCopyUrl}
@@ -113,10 +111,10 @@ const DashboardPage: React.FC = () => {
             </button>
           </div>
           <div className="flex gap-3">
-            <Link href="/dashboard/vendor/site-editor">
+            <Link href="/store/artisan-bakes-atlanta">
               <button className="bg-[#5B6E02] hover:bg-[#4A5A01] text-white px-4 py-2 rounded-lg transition-colors shadow-md hover:shadow-lg flex items-center gap-2">
                 <Edit className="w-4 h-4" />
-                Site Editor
+                Edit Store
               </button>
             </Link>
             <Link href="/store/artisan-bakes-atlanta">

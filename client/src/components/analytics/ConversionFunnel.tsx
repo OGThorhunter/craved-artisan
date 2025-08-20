@@ -53,7 +53,7 @@ const fetchConversionData = async (vendorId: string, range: string = 'monthly') 
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+      <div className="bg-[#F7F2EC] rounded-xl shadow-lg p-6 border border-gray-200">
         <div className="animate-pulse">
           <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -69,7 +69,7 @@ const fetchConversionData = async (vendorId: string, range: string = 'monthly') 
 
   if (error || !data) {
     return (
-      <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+      <div className="bg-[#F7F2EC] rounded-xl shadow-lg p-6 border border-gray-200">
         <div className="text-center text-gray-500">
           <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-red-400" />
           <p>Failed to load conversion funnel data</p>
@@ -155,7 +155,7 @@ const fetchConversionData = async (vendorId: string, range: string = 'monthly') 
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+    <div className="bg-[#F7F2EC] rounded-xl shadow-lg p-6 border border-gray-200">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
@@ -362,7 +362,7 @@ const fetchConversionData = async (vendorId: string, range: string = 'monthly') 
         </div>
 
         {/* Recommendations */}
-        <div className="mt-6 p-4 bg-white rounded-lg border border-red-200">
+        <div className="mt-6 p-4 bg-[#F7F2EC] rounded-lg border border-red-200">
           <h4 className="font-semibold text-red-900 mb-2">Quick Actions</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div className="flex items-start space-x-2">

@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -41,9 +41,9 @@ model VendorProfile {
   stripeAccountId       String?
   stripeAccountStatus   String?
   stripeOnboardingUrl   String?
-  minMarginPercent      Decimal? @db.Decimal(5, 2)
+  minMarginPercent      Float?
   marginOverrideEnabled Boolean  @default(false)
-  tags                  String[] @default([]) // Add vendor tags/categories
+  tags                  String? // Add vendor tags/categories (comma-separated)
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 
@@ -63,13 +63,13 @@ model Product {
   vendorProfileId   String   // Changed from vendor_id
   name              String
   description       String?
-  price             Decimal  @db.Decimal(10, 2)
-  cost              Decimal? @db.Decimal(10, 2) // Added cost field
+  price             Float
+  cost              Float? // Added cost field
   imageUrl          String?
-  tags              String[] @default([]) // Changed from category
+  tags              String? // Changed from category (comma-separated)
   stock             Int      @default(0) // Changed from stock_quantity
   isAvailable       Boolean  @default(true)
-  targetMargin      Decimal? @db.Decimal(5, 2)
+  targetMargin      Float?
   marginAlert       Boolean  @default(false)
   alertNote         String?
   onWatchlist       Boolean  @default(false)
@@ -99,10 +99,10 @@ model Order {
   status          OrderStatus @default(PENDING)
   paymentIntentId String?  // pi_*
   transferGroup   String?  // order_<id>
-  subtotal        Decimal  @db.Decimal(10, 2) @default(0)
-  tax             Decimal  @db.Decimal(10, 2) @default(0)
-  shipping        Decimal  @db.Decimal(10, 2) @default(0)
-  total           Decimal  @db.Decimal(10, 2) @default(0)
+  subtotal        Float  @default(0)
+  tax             Float  @default(0)
+  shipping        Float  @default(0)
+  total           Float  @default(0)
   shippingZip     String?
   deliveryDay     String?
   deliveryStatus  String?  // Add delivery status
@@ -130,13 +130,13 @@ model Ingredient {
   name        String
   description String?
   unit        String        // "g","kg","ml","l","unit"
-  costPerUnit Decimal       @db.Decimal(10, 4) // cost per 1 unit
-  tags        String[]      @default([])
+  costPerUnit Float       // cost per 1 unit
+  tags        String?      // comma-separated
   isAvailable Boolean       @default(true)
   supplier    String?
   preferredSupplierId String?
   leadTimeDays       Int?      // default null -> use global
-  minOrderQty        Decimal?  @db.Decimal(10, 4) // optional MOQ
+  minOrderQty        Float?  // optional MOQ
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -154,8 +154,8 @@ model IngredientInventory {
   id          String   @id @default(cuid())
   vendorProfileId String // Changed from vendorId
   ingredientId String
-  quantity    Decimal   @db.Decimal(10, 4) // current on-hand in 'unit'
-  costBasis   Decimal   @db.Decimal(10, 4) // weighted avg cost per unit
+  quantity    Float   // current on-hand in 'unit'
+  costBasis   Float   // weighted avg cost per unit
   updatedAt   DateTime @updatedAt
 
   ingredient  Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
@@ -169,8 +169,8 @@ model InventoryTx {
   vendorProfileId String // Changed from vendorId
   ingredientId String
   type        String   // "purchase" | "sale" | "adjustment" | "waste"
-  quantity    Decimal  @db.Decimal(10, 4) // + for purchase/adjustment; - for sale/waste
-  unitCost    Decimal  @db.Decimal(10, 4) // cost per unit at time of tx
+  quantity    Float  // + for purchase/adjustment; - for sale/waste
+  unitCost    Float  // cost per unit at time of tx
   note        String?
   createdAt   DateTime @default(now())
 
@@ -184,7 +184,7 @@ model Recipe {
   name              String
   description       String?
   instructions      String?
-  yield             Decimal   @db.Decimal(10, 4) // Changed from yieldQty
+  yield             Float   // Changed from yieldQty
   unit              String    // finished unit label ("loaf","bar","jar")
   isActive          Boolean   @default(true)
   createdAt         DateTime  @default(now())
@@ -200,8 +200,8 @@ model RecipeIngredient {
   id           String   @id @default(cuid())
   recipeId     String
   ingredientId String
-  qtyPerBatch  Decimal   @db.Decimal(10, 4) // in Ingredient.unit
-  wastePct     Decimal   @default(0) @db.Decimal(5, 4) // 0..1
+  qtyPerBatch  Float   // in Ingredient.unit
+  wastePct     Float   @default(0) // 0..1
 
   recipe     Recipe     @relation(fields: [recipeId], references: [id])
   ingredient Ingredient @relation(fields: [ingredientId], references: [id])
@@ -216,12 +216,12 @@ model RecipeVersion {
   name              String
   description       String?
   instructions      String?
-  yield             Decimal   @db.Decimal(10, 4)
+  yield             Float
   yieldUnit         String
   prepTime          Int?
   cookTime          Int?
   difficulty        String?
-  totalCost         Decimal   @db.Decimal(10, 4)
+  totalCost         Float
   editorId          String
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
@@ -237,7 +237,7 @@ model RecipeIngredientVersion {
   id                String   @id @default(cuid())
   recipeVersionId   String
   ingredientId      String
-  quantity          Decimal   @db.Decimal(10, 4)
+  quantity          Float
   unit              String
   notes             String?
 
@@ -254,9 +254,9 @@ model OrderItem {
   productId  String
   vendorProfileId String // Changed from vendorId
   quantity   Int
-  unitPrice  Decimal @db.Decimal(10, 2)
-  cogsUnit   Decimal? @db.Decimal(10, 4) // COGS snapshot at sale time
-  total      Decimal @db.Decimal(10, 2) // Changed from subtotal
+  unitPrice  Float
+  cogsUnit   Float? // COGS snapshot at sale time
+  total      Float // Changed from subtotal
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -298,7 +298,7 @@ model Conversation {
   customerId    String
   subject       String?
   status        String   @default("open") // open|awaiting_customer|awaiting_vendor|resolved|archived
-  tags          String[] @default([])
+  tags          String? // comma-separated
   lastMessageAt DateTime @default(now())
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -318,9 +318,9 @@ model Message {
   senderRole     String   // vendor|customer|system
   senderId       String
   body           String
-  attachments    String[] @default([])
+  attachments    String? // comma-separated URLs
   createdAt      DateTime @default(now())
-  readBy         String[] @default([]) // user ids who have read
+  readBy         String? // user ids who have read (comma-separated)
   sentiment      String?  // optional: positive|neutral|negative
 
   conversation   Conversation @relation(fields: [conversationId], references: [id])
@@ -346,7 +346,7 @@ model DiscountCode {
   vendorProfileId String // Changed from vendorId
   code        String   @unique
   amountType  String   // percent|fixed
-  amount      Decimal  @db.Decimal(10, 2)
+  amount      Float
   expiresAt   DateTime?
   maxUses     Int?
   uses        Int      @default(0)
@@ -398,7 +398,7 @@ model CartItem {
   productId String
   vendorProfileId String // Changed from vendorId
   qty       Int
-  unitPrice Decimal @db.Decimal(10, 2)
+  unitPrice Float
   note      String?
 
   cart   Cart    @relation(fields: [cartId], references: [id])
@@ -456,7 +456,7 @@ model OrderFulfillment {
   fulfillmentType String? // Add fulfillment type
   locationId String?
   date       DateTime
-  fee        Decimal  @default(0)
+  fee        Float  @default(0)
   trackingNumber String?
   carrier    String?
   estimatedDelivery DateTime?
@@ -496,7 +496,7 @@ model CustomerProfile {
   city         String?
   state        String?
   zip          String?
-  tags         String[] @default([])
+  tags         String? // comma-separated
   emailOptIn   Boolean  @default(false)
   smsOptIn     Boolean  @default(false)
   createdAt    DateTime @default(now())

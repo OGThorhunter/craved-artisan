@@ -19,10 +19,17 @@ const LoginPage: React.FC = () => {
       return;
     }
 
+    if (isLoading) {
+      return; // Prevent multiple submissions
+    }
+
     setIsLoading(true);
     clearError();
 
     try {
+      // Add a small delay to prevent rapid successive requests
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       await login(email, password);
       toast.success('Login successful!');
       
@@ -53,7 +60,7 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="page-container bg-gray-50 flex flex-col justify-center py-8 sm:py-12 responsive-padding">
+    <div className="page-content bg-gray-50 flex flex-col justify-center min-h-screen py-8 sm:py-12">
       <div className="form-responsive">
         <h2 className="mt-6 text-center responsive-heading text-gray-900">
           Sign in to your account

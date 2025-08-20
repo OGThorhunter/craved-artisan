@@ -116,7 +116,7 @@ const AIForecastWidget = () => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+            <div className="bg-[#F7F2EC] rounded-xl shadow-lg p-6 border border-gray-200">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center space-x-3">
@@ -275,27 +275,42 @@ const AIForecastWidget = () => {
         )}
       </div>
 
-      {/* AI Insights */}
-      <div className="mt-6 bg-blue-50 rounded-lg p-4 border border-blue-200">
-        <div className="flex items-start space-x-3">
-          <div className="flex-shrink-0">
-            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-              <span className="text-blue-600 text-sm font-bold">AI</span>
+              {/* AI Insights */}
+        <div className="mt-6 bg-blue-50 rounded-lg p-4 border border-blue-200">
+          <div className="flex items-start space-x-3">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                <span className="text-blue-600 text-sm font-bold">AI</span>
+              </div>
+            </div>
+            <div>
+              <h4 className="text-sm font-medium text-blue-900">AI Insights</h4>
+              <p className="text-sm text-blue-700 mt-1">
+                {forecastMetrics.trend === 'up' 
+                  ? `Based on recent trends, your ${forecastType} is projected to grow by ${Math.abs(forecastMetrics.growthRate).toFixed(1)}% next week. Consider increasing inventory or marketing efforts.`
+                  : forecastMetrics.trend === 'down'
+                  ? `Our AI detects a potential decline of ${Math.abs(forecastMetrics.growthRate).toFixed(1)}% in ${forecastType}. Review your pricing strategy and customer engagement.`
+                  : `Your ${forecastType} is expected to remain stable. Focus on maintaining current performance and exploring new growth opportunities.`
+                }
+              </p>
             </div>
           </div>
-          <div>
-            <h4 className="text-sm font-medium text-blue-900">AI Insights</h4>
-            <p className="text-sm text-blue-700 mt-1">
-              {forecastMetrics.trend === 'up' 
-                ? `Based on recent trends, your ${forecastType} is projected to grow by ${Math.abs(forecastMetrics.growthRate).toFixed(1)}% next week. Consider increasing inventory or marketing efforts.`
-                : forecastMetrics.trend === 'down'
-                ? `Our AI detects a potential decline of ${Math.abs(forecastMetrics.growthRate).toFixed(1)}% in ${forecastType}. Review your pricing strategy and customer engagement.`
-                : `Your ${forecastType} is expected to remain stable. Focus on maintaining current performance and exploring new growth opportunities.`
-              }
-            </p>
+        </div>
+        
+        {/* AI Disclaimer */}
+        <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+          <div className="flex items-start space-x-2">
+            <div className="flex-shrink-0 mt-0.5">
+              <svg className="w-4 h-4 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="text-sm text-amber-800">
+              <p className="font-medium">AI Forecast Disclaimer</p>
+              <p className="mt-1">AI predictions are based on historical data patterns and may not always be accurate. Please use these forecasts as guidance only and verify all predictions before making business decisions.</p>
+            </div>
           </div>
         </div>
-      </div>
     </div>
   );
 };

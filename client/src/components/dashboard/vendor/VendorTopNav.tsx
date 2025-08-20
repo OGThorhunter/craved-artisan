@@ -87,7 +87,7 @@ export default function VendorTopNav() {
                         
                         {/* Analytics Dropdown */}
                         {isAnalyticsOpen && (
-                          <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                          <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-[1000]">
                             <div className="py-2">
                               {item.subItems?.map((subItem) => {
                                 const SubIcon = subItem.icon;

@@ -123,7 +123,7 @@ export const Header = () => {
                 </button>
                 
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl py-2 z-50 border border-gray-200">
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl py-2 z-[1000] border border-gray-200">
                     <div className="px-4 py-3 text-sm text-brand-charcoal border-b border-gray-200 bg-brand-cream/50">
                       <div className="font-medium">{user?.profile?.firstName} {user?.profile?.lastName}</div>
                       <div className="text-brand-grey">{user?.email}</div>

@@ -4,7 +4,7 @@ import cors from 'cors';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import session from 'express-session';
-import pgSession from 'connect-pg-simple';
+// import pgSession from 'connect-pg-simple';
 import { createLogger, format, transports } from 'winston';
 import rateLimit from 'express-rate-limit';
 import { LRUCache } from 'lru-cache';
@@ -137,8 +137,8 @@ try {
   process.exit(1);
 }
 
-// Session store
-const PostgresStore = pgSession(session);
+// Session store - using default memory store for SQLite compatibility
+// const PostgresStore = pgSession(session);
 
 // Middleware
 // Use environment-specific helmet configuration
@@ -156,13 +156,8 @@ app.use(cors(corsWithLogging));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Session middleware
+// Session middleware - using default memory store for SQLite compatibility
 app.use(session({
-  store: new PostgresStore({
-    conString: env.DATABASE_URL,
-    tableName: 'sessions',
-    createTableIfMissing: true,
-  }),
   secret: env.SESSION_SECRET,
   resave: true,
   saveUninitialized: true,

@@ -99,7 +99,7 @@ router.post('/register', validateRequest(registerSchema), async (req: Request, r
     req.session.userId = result.user.id;
 
     // Return user data (without password)
-    return res.status(400).json({
+    return res.status(201).json({
       message: 'Account created successfully',
       user: {
         id: result.user.id,
@@ -157,7 +157,7 @@ router.post('/login', validateRequest(loginSchema), async (req: Request, res: Re
     req.session.userId = user.id;
 
     // Return user data (without password)
-    return res.json({
+    return res.status(200).json({
       message: 'Login successful',
       user: {
         id: user.id,
@@ -245,7 +245,7 @@ router.get('/me', requireAuth, async (req: Request, res: Response) => {
 router.get('/session', async (req: Request, res: Response) => {
   try {
     if (!req.session.userId) {
-      return res.status(400).json({
+      return res.status(200).json({
         authenticated: false,
         message: 'No active session'
       });
@@ -265,7 +265,7 @@ router.get('/session', async (req: Request, res: Response) => {
           console.error('Error destroying session:', err);
         }
       });
-      return res.status(400).json({
+      return res.status(200).json({
         authenticated: false,
         message: 'Invalid session'
       });
@@ -289,7 +289,7 @@ router.get('/session', async (req: Request, res: Response) => {
 
   } catch (error) {
     console.error('Session check error:', error);
-    return res.status(400).json({
+    return res.status(500).json({
       error: 'Internal server error',
       message: 'Failed to check session'
     });

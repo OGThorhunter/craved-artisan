@@ -24,7 +24,7 @@ const TrendChart = () => {
   const trends = data?.data || [];
 
   return (
-    <div className="p-4 bg-white shadow rounded-xl">
+            <div className="p-4 bg-[#F7F2EC] shadow rounded-xl">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold">Revenue & Orders</h2>
         <div className="space-x-2">

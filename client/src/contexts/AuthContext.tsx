@@ -215,7 +215,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       let errorMessage = 'Login failed';
       
       if (axios.isAxiosError(error)) {
-        errorMessage = error.response?.data?.message || error.response?.data?.error || 'Login failed';
+        if (error.response?.status === 429) {
+          errorMessage = 'Rate limit exceeded. Please wait a moment and try again.';
+        } else {
+          errorMessage = error.response?.data?.message || error.response?.data?.error || 'Login failed';
+        }
       } else if (error instanceof Error) {
         errorMessage = error.message;
       }

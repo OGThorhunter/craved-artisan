@@ -114,36 +114,44 @@ export default function VendorAnalyticsPage() {
           <div className="space-y-8">
             {/* Loading State */}
             {isLoading && (
-              <div className="flex items-center justify-center p-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                <span className="ml-2 text-gray-600">Loading analytics data...</span>
+              <div className="bg-[#F7F2EC] rounded-lg p-8 border border-gray-200">
+                <div className="flex items-center justify-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5B6E02]"></div>
+                  <span className="ml-2 text-gray-600">Loading analytics data...</span>
+                </div>
               </div>
             )}
             
             {/* Real-time Analytics Overview */}
             {!isLoading && flags.LIVE_ANALYTICS && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <KpiCard
-                  title="Total Revenue"
-                  value={`$${overviewData.totals.totalRevenue.toLocaleString()}`}
-                  icon={<DollarSign size={20} />}
-                  trend="+12.5%"
-                  trendDirection="up"
-                />
-                <KpiCard
-                  title="Total Orders"
-                  value={overviewData.totals.totalOrders.toLocaleString()}
-                  icon={<Package size={20} />}
-                  trend="+8.2%"
-                  trendDirection="up"
-                />
-                <KpiCard
-                  title="Avg Order Value"
-                  value={`$${overviewData.totals.avgOrderValue.toFixed(2)}`}
-                  icon={<TrendingUp size={20} />}
-                  trend="+5.1%"
-                  trendDirection="up"
-                />
+              <div className="bg-[#F7F2EC] rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Real-time Analytics Overview</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="bg-white rounded-lg p-4 border border-gray-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-gray-600"><DollarSign size={20} /></div>
+                      <span className="text-xs text-green-600">+12.5%</span>
+                    </div>
+                    <div className="text-2xl font-bold text-gray-900">${overviewData.totals.totalRevenue.toLocaleString()}</div>
+                    <div className="text-sm text-gray-600">Total Revenue</div>
+                  </div>
+                  <div className="bg-white rounded-lg p-4 border border-gray-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-gray-600"><Package size={20} /></div>
+                      <span className="text-xs text-green-600">+8.2%</span>
+                    </div>
+                    <div className="text-2xl font-bold text-gray-900">{overviewData.totals.totalOrders.toLocaleString()}</div>
+                    <div className="text-sm text-gray-600">Total Orders</div>
+                  </div>
+                  <div className="bg-white rounded-lg p-4 border border-gray-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-gray-600"><TrendingUp size={20} /></div>
+                      <span className="text-xs text-green-600">+5.1%</span>
+                    </div>
+                    <div className="text-2xl font-bold text-gray-900">${overviewData.totals.avgOrderValue.toFixed(2)}</div>
+                    <div className="text-sm text-gray-600">Avg Order Value</div>
+                  </div>
+                </div>
               </div>
             )}
             
@@ -241,10 +249,25 @@ export default function VendorAnalyticsPage() {
               </div>
             </div>
             <InspirationalQuote />
+            
+            {/* Financial Data Disclaimer */}
+            <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <div className="flex items-start space-x-2">
+                <div className="flex-shrink-0 mt-0.5">
+                  <svg className="w-4 h-4 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="text-sm text-amber-800">
+                  <p className="font-medium">Financial Data Disclaimer</p>
+                  <p className="mt-1">All financial data displayed is for informational purposes only. Users are responsible for verifying the accuracy and security of their financial information. This dashboard does not constitute financial advice.</p>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Tab Navigation */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
+          <div className="bg-[#F7F2EC] rounded-lg shadow-sm border border-gray-200 mb-6">
             <div className="border-b border-gray-200">
               <nav className="flex space-x-8 px-6">
                 {[
@@ -278,31 +301,33 @@ export default function VendorAnalyticsPage() {
           </div>
           
           {/* KPI Row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            {mockKpis.map((kpi, idx) => (
-              <KpiCard 
-                key={idx} 
-                label={kpi.label}
-                value={kpi.value}
-                delta={kpi.delta}
-                icon={icons[idx]}
-              />
-            ))}
+          <div className="bg-[#F7F2EC] rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Key Performance Indicators</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {mockKpis.map((kpi, idx) => (
+                <div key={idx} className="bg-white rounded-lg p-4 border border-gray-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="text-gray-600">{icons[idx]}</div>
+                    <span className="text-xs text-gray-500">{kpi.delta}</span>
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900">{kpi.value}</div>
+                  <div className="text-sm text-gray-600">{kpi.label}</div>
+                </div>
+              ))}
+            </div>
           </div>
           
           {/* Tab Content */}
-          <div className="tab-content">
-            {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#5B6E02] mx-auto mb-4"></div>
-                  <p className="text-gray-600">Loading analytics data...</p>
-                </div>
+          {isLoading ? (
+            <div className="bg-[#F7F2EC] rounded-lg py-12 border border-gray-200">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#5B6E02] mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading analytics data...</p>
               </div>
-            ) : (
-              renderTabContent()
-            )}
-          </div>
+            </div>
+          ) : (
+            renderTabContent()
+          )}
         </div>
       </div>
       
