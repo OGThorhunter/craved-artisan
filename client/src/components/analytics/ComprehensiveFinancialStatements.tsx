@@ -7,7 +7,8 @@ import { CashFlowStatement } from './CashFlowStatement';
 import { AccountsReceivableManagement } from './AccountsReceivableManagement';
 import { AccountsPayableManagement } from './AccountsPayableManagement';
 import { RecurringManager } from './RecurringManager';
-import { ComprehensiveFinancialsData } from '@/hooks/analytics/useFinancials';
+import { useFinancials } from '@/hooks/analytics/useFinancials';
+import type { ComprehensiveFinancialsData } from '@/hooks/analytics/useFinancials';
 
 type StatementTab = 'overview' | 'profit-loss' | 'balance-sheet' | 'cash-flow' | 'ar' | 'ap' | 'recurring';
 
