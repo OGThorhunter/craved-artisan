@@ -86,6 +86,7 @@ export interface BatchLaborUsage {
   cost: number;
 }
 
+// Ensure Product is exported at the top level
 export interface Product {
   id: string;
   name: string;

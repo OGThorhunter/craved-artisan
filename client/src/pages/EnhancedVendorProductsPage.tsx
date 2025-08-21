@@ -22,13 +22,15 @@ import {
   Users,
   Calendar,
   Calculator,
-  Zap
+  Zap,
+  ChefHat
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import VendorDashboardLayout from '../layouts/VendorDashboardLayout';
 import ProductionManager from '../components/vendor/ProductionManager';
-import { 
+import RecipeManager from '../components/vendor/RecipeManager';
+import type { 
   Product, 
   CreateProductForm, 
   MarginAnalysis, 
@@ -99,7 +101,7 @@ const fetchAiSuggestion = async (productId: string): Promise<AiSuggestionRespons
 const EnhancedVendorProductsPage: React.FC = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'products' | 'production' | 'analytics'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'production' | 'recipes' | 'analytics' | 'financials'>('products');
   const [showAddForm, setShowAddForm] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; product: Product | null }>({
@@ -229,7 +231,7 @@ const EnhancedVendorProductsPage: React.FC = () => {
       tags: '',
       stock: 0,
       isAvailable: true,
-      targetMargin: 0,
+      targetMargin: 30,
       recipeId: '',
       onWatchlist: false,
       lastAiSuggestion: 0,
@@ -247,7 +249,12 @@ const EnhancedVendorProductsPage: React.FC = () => {
       dietaryRestrictions: [],
       certifications: [],
       expirationDays: 7,
-      storageRequirements: 'Store in a cool, dry place'
+      storageRequirements: 'Store in a cool, dry place',
+      // Additional fields
+      isFeatured: false,
+      isSeasonal: false,
+      hasAllergens: false,
+      requiresRefrigeration: false
     }
   });
 
@@ -426,7 +433,9 @@ const EnhancedVendorProductsPage: React.FC = () => {
             {[
               { id: 'products', label: 'Products', icon: Package },
               { id: 'production', label: 'Production', icon: Factory },
-              { id: 'analytics', label: 'Analytics', icon: BarChart3 }
+              { id: 'recipes', label: 'Recipes', icon: ChefHat },
+              { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+              { id: 'financials', label: 'Financials', icon: DollarSign }
             ].map((tab) => {
               const Icon = tab.icon;
               return (
@@ -530,6 +539,150 @@ const EnhancedVendorProductsPage: React.FC = () => {
                       </div>
                     </div>
 
+                    {/* Enhanced Production Fields */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Min Stock Level
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          {...register('minStockLevel', { 
+                            min: { value: 0, message: 'Min stock must be non-negative' }
+                          })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="10"
+                        />
+                        {errors.minStockLevel && (
+                          <p className="text-red-500 text-sm mt-1">{errors.minStockLevel.message}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Max Stock Level
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          {...register('maxStockLevel', { 
+                            min: { value: 0, message: 'Max stock must be non-negative' }
+                          })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="100"
+                        />
+                        {errors.maxStockLevel && (
+                          <p className="text-red-500 text-sm mt-1">{errors.maxStockLevel.message}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Reorder Quantity
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          {...register('reorderQuantity', { 
+                            min: { value: 0, message: 'Reorder quantity must be non-negative' }
+                          })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="50"
+                        />
+                        {errors.reorderQuantity && (
+                          <p className="text-red-500 text-sm mt-1">{errors.reorderQuantity.message}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Production Lead Time (days)
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          {...register('productionLeadTime', { 
+                            min: { value: 0, message: 'Lead time must be non-negative' }
+                          })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="1"
+                        />
+                        {errors.productionLeadTime && (
+                          <p className="text-red-500 text-sm mt-1">{errors.productionLeadTime.message}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Batch Size
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          {...register('batchSize', { 
+                            min: { value: 1, message: 'Batch size must be at least 1' }
+                          })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="12"
+                        />
+                        {errors.batchSize && (
+                          <p className="text-red-500 text-sm mt-1">{errors.batchSize.message}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Production Frequency
+                        </label>
+                        <select
+                          {...register('productionFrequency')}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="daily">Daily</option>
+                          <option value="weekly">Weekly</option>
+                          <option value="bi-weekly">Bi-weekly</option>
+                          <option value="monthly">Monthly</option>
+                          <option value="on-demand">On-demand</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Quality & Compliance Fields */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Expiration Days
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          {...register('expirationDays', { 
+                            min: { value: 1, message: 'Expiration must be at least 1 day' }
+                          })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="7"
+                        />
+                        {errors.expirationDays && (
+                          <p className="text-red-500 text-sm mt-1">{errors.expirationDays.message}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Storage Requirements
+                        </label>
+                        <input
+                          type="text"
+                          {...register('storageRequirements')}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Store in a cool, dry place"
+                        />
+                      </div>
+                    </div>
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Description
@@ -583,15 +736,117 @@ const EnhancedVendorProductsPage: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        {...register('isAvailable')}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                      />
-                      <label className="ml-2 text-sm text-gray-700">
-                        Product is available for purchase
-                      </label>
+                    {/* Recipe and Advanced Settings */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Recipe (Optional)
+                        </label>
+                        <select
+                          {...register('recipeId')}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="">No recipe linked</option>
+                          {/* Recipe options would be populated from API */}
+                        </select>
+                        <p className="text-xs text-gray-500 mt-1">
+                          Link to a recipe for automatic cost calculation
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Target Margin (%)
+                        </label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          min="0"
+                          max="100"
+                          {...register('targetMargin', { 
+                            min: { value: 0, message: 'Target margin must be non-negative' },
+                            max: { value: 100, message: 'Target margin cannot exceed 100%' }
+                          })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="30.0"
+                        />
+                        {errors.targetMargin && (
+                          <p className="text-red-500 text-sm mt-1">{errors.targetMargin.message}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Product Status and Features */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-3">
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            {...register('isAvailable')}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          />
+                          <label className="ml-2 text-sm text-gray-700">
+                            Product is available for purchase
+                          </label>
+                        </div>
+                        
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            {...register('isFeatured')}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          />
+                          <label className="ml-2 text-sm text-gray-700">
+                            Feature this product prominently
+                          </label>
+                        </div>
+
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            {...register('isSeasonal')}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          />
+                          <label className="ml-2 text-sm text-gray-700">
+                            Seasonal product
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            {...register('onWatchlist')}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          />
+                          <label className="ml-2 text-sm text-gray-700">
+                            Add to cost watchlist
+                          </label>
+                        </div>
+
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            {...register('hasAllergens')}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          />
+                          <label className="ml-2 text-sm text-gray-700">
+                            Contains allergens
+                          </label>
+                        </div>
+
+                        <div className="flex items-center">
+                          <input
+                            type="checkbox"
+                            {...register('requiresRefrigeration')}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          />
+                          <label className="ml-2 text-sm text-gray-700">
+                            Requires refrigeration
+                          </label>
+                        </div>
+                      </div>
                     </div>
 
                     <div className="flex gap-3 pt-4">
@@ -714,6 +969,38 @@ const EnhancedVendorProductsPage: React.FC = () => {
                                       <span className="font-medium">{product.targetMargin}%</span>
                                     </div>
                                   )}
+                                  <div className="flex items-center gap-1">
+                                    <Factory className="h-4 w-4" />
+                                    <span>{product.batchSize || 'N/A'} per batch</span>
+                                  </div>
+                                </div>
+
+                                {/* Production Status */}
+                                <div className="flex items-center gap-4 text-xs text-gray-500 mb-2">
+                                  <div className="flex items-center gap-1">
+                                    <span className={`w-2 h-2 rounded-full ${
+                                      product.stock <= (product.minStockLevel || 0) ? 'bg-red-500' :
+                                      product.stock <= (product.minStockLevel || 0) * 1.5 ? 'bg-yellow-500' :
+                                      'bg-green-500'
+                                    }`}></span>
+                                    <span>Stock: {product.stock <= (product.minStockLevel || 0) ? 'Low' : 'Good'}</span>
+                                  </div>
+                                  {product.recipeId && (
+                                    <div className="flex items-center gap-1">
+                                      <ChefHat className="h-3 w-3" />
+                                      <span>Recipe linked</span>
+                                    </div>
+                                  )}
+                                  {product.isFeatured && (
+                                    <div className="flex items-center gap-1">
+                                      <span className="text-blue-500">⭐ Featured</span>
+                                    </div>
+                                  )}
+                                  {product.isSeasonal && (
+                                    <div className="flex items-center gap-1">
+                                      <span className="text-orange-500">🌱 Seasonal</span>
+                                    </div>
+                                  )}
                                 </div>
 
                                 {product.description && (
@@ -784,6 +1071,13 @@ const EnhancedVendorProductsPage: React.FC = () => {
             />
           )}
 
+          {activeTab === 'recipes' && (
+            <RecipeManager 
+              products={safeProducts}
+              onRecipeUpdate={handleProductionUpdate}
+            />
+          )}
+
           {activeTab === 'analytics' && (
             <div className="bg-white rounded-lg shadow-md p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Production Analytics</h2>
@@ -792,6 +1086,25 @@ const EnhancedVendorProductsPage: React.FC = () => {
               {/* Analytics content would go here */}
               <div className="text-center py-8 text-gray-500">
                 Production analytics features coming soon...
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'financials' && (
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Financial Management</h2>
+              <p className="text-gray-600">Track your business finances, margins, and profitability.</p>
+              
+              {/* Financial content would go here */}
+              <div className="text-center py-8 text-gray-500">
+                Financial management features coming soon...
+                <br />
+                <a 
+                  href="/dashboard/vendor/financials" 
+                  className="text-blue-600 hover:text-blue-800 underline mt-2 inline-block"
+                >
+                  Go to Full Financial Dashboard →
+                </a>
               </div>
             </div>
           )}

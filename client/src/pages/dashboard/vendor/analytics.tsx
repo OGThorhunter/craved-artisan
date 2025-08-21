@@ -2,18 +2,11 @@
 import { useState, useEffect } from "react";
 import { useLocation } from 'wouter';
 import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
-import { KpiCard } from "@/components/vendor/analytics/KpiCard";
-import { TrendChart } from "@/components/vendor/analytics/TrendChart";
+import { useUrlTab } from '@/hooks/useUrlTab';
 import ConversionFunnel from "@/components/analytics/ConversionFunnel";
-import { BestSellers } from "@/components/vendor/analytics/BestSellers";
-import { BestSellersList } from "@/components/vendor/analytics/BestSellersList";
 import EnhancedBestSellers from "@/components/analytics/EnhancedBestSellers";
 import { PerformanceKpis } from "@/components/vendor/analytics/PerformanceKpis";
 import { CustomerInsights } from "@/components/vendor/analytics/CustomerInsights";
-import { ProfitLossStatement } from "@/components/vendor/analytics/ProfitLossStatement";
-import EnhancedProfitLoss from "@/components/analytics/EnhancedProfitLoss";
-import { CashFlowChart } from "@/components/vendor/analytics/CashFlowChart";
-import { BalanceSheet } from "@/components/vendor/analytics/BalanceSheet";
 import { PortfolioBuilder } from "@/components/vendor/analytics/PortfolioBuilder";
 import { PriceOptimizer } from "@/components/vendor/analytics/PriceOptimizer";
 import { TaxSummary } from "@/components/vendor/analytics/TaxSummary";
@@ -21,9 +14,8 @@ import TrendChartNew from "@/components/charts/TrendChart";
 import InspirationalQuote from "@/components/InspirationalQuote";
 import AIForecastWidget from "@/components/analytics/AIForecastWidget";
 import AISummaryBuilder from "@/components/analytics/AISummaryBuilder";
-import InteractiveCashFlow from "@/components/analytics/InteractiveCashFlow";
 import { mockKpis } from "@/mock/analyticsData";
-import { DollarSign, TrendingUp, Package, Users } from "lucide-react";
+import { DollarSign, TrendingUp, Package } from "lucide-react";
 import { flags } from "@/lib/flags";
 import { 
   useVendorOverview, 
@@ -31,65 +23,79 @@ import {
   useMockVendorOverview,
   useMockVendorBestSellers 
 } from "@/hooks/analytics";
-import FinancialsTab from "@/pages/vendor/FinancialsTab";
+import { useFinancials } from "@/hooks/analytics/useFinancials";
 import ProductDeepDiveModal from "@/components/ProductDeepDiveModal";
 import { Breadcrumbs } from "@/components/dashboard/vendor/Breadcrumbs";
+import { ErrorCard } from "@/components/ui/ErrorCard";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { FinancialsPanel } from "@/components/analytics/FinancialsPanel";
+import { ComprehensiveFinancialStatements } from "@/components/analytics/ComprehensiveFinancialStatements";
 
-type TabType = 'insights' | 'financials' | 'taxes' | 'pricing' | 'portfolio';
+type TabType = 'insights' | 'financials' | 'financial-statements' | 'taxes' | 'pricing' | 'portfolio';
 
 export default function VendorAnalyticsPage() {
   const [location] = useLocation();
-  const [activeTab, setActiveTab] = useState<TabType>('insights');
   const [selectedProduct, setSelectedProduct] = useState<{ id: string; name: string } | null>(null);
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   
   // Use real vendor ID from context or mock for development
   const vendorId = 'dev-user-id'; // This should come from auth context in production
   
+  // Define allowed tabs with feature flag support
+  const TABS: TabType[] = ['insights', 'financials', 'financial-statements', 'taxes', 'pricing', 'portfolio'];
+  const { tab: activeTab, setTab, allowed: allowedTabs } = useUrlTab(
+    TABS,
+    'insights',
+    { 
+      financials: flags.LIVE_ANALYTICS && flags.FINANCIALS,
+      'financial-statements': flags.LIVE_ANALYTICS && flags.FINANCIALS
+    }
+  );
+  
+  // Debug tab changes
+  useEffect(() => {
+    console.log('=== TAB CHANGE DEBUG ===');
+    console.log('Active tab changed to:', activeTab);
+    console.log('Current URL:', window.location.href);
+  }, [activeTab]);
+  
   // Analytics data fetching with feature flag support
-  const overviewQuery = flags.LIVE_ANALYTICS 
-    ? useVendorOverview(vendorId, { interval: 'day' })
-    : useMockVendorOverview(vendorId, { interval: 'day' });
+  const overviewQuery = useVendorOverview(vendorId, { interval: 'day' });
+  const mockOverviewQuery = useMockVendorOverview(vendorId, { interval: 'day' });
     
-  const bestSellersQuery = flags.LIVE_ANALYTICS
-    ? useVendorBestSellers(vendorId, { limit: 10 })
-    : useMockVendorBestSellers(vendorId, { limit: 10 });
-  
-  // Extract data with safe defaults
-  const overviewData = overviewQuery.data || {
-    totals: { totalRevenue: 0, totalOrders: 0, avgOrderValue: 0 },
-    series: []
-  };
-  
-  const bestSellersData = bestSellersQuery.data || { items: [] };
-  
-  // Loading states
-  const isLoading = overviewQuery.isLoading || bestSellersQuery.isLoading;
+  const bestSellersQuery = useVendorBestSellers(vendorId, { limit: 10 });
+  const mockBestSellersQuery = useMockVendorBestSellers(vendorId, { limit: 10 });
 
-  // Parse URL parameters to determine active tab
+  // Financials data fetching - only enabled when financials tab is active
+  const financialsQuery = useFinancials(
+    { vendorId, range: 'month' }, 
+    activeTab === 'financials'
+  );
+  
+  // Extract data with safe defaults based on feature flags
+  const overviewData = flags.LIVE_ANALYTICS 
+    ? (overviewQuery.data || { totals: { totalRevenue: 0, totalOrders: 0, avgOrderValue: 0 }, series: [] })
+    : (mockOverviewQuery.data || { totals: { totalRevenue: 0, totalOrders: 0, avgOrderValue: 0 }, series: [] });
+  
+  const bestSellersData = flags.LIVE_ANALYTICS
+    ? (bestSellersQuery.data || { items: [] })
+    : (mockBestSellersQuery.data || { items: [] });
+  
+  // Loading states based on feature flags
+  const isLoading = flags.LIVE_ANALYTICS
+    ? (overviewQuery.isLoading || bestSellersQuery.isLoading)
+    : (mockOverviewQuery.isLoading || mockBestSellersQuery.isLoading);
+
+  // Debug information for development
   useEffect(() => {
     console.log('=== ANALYTICS PAGE DEBUG ===');
     console.log('Location changed to:', location);
-    console.log('Parsing URL parameters...');
-    
-    const urlParams = new URLSearchParams(location.split('?')[1]);
-    const tabParam = urlParams.get('tab') as TabType;
-    console.log('Tab parameter from URL:', tabParam);
-    
-    if (tabParam && ['insights', 'financials', 'taxes', 'pricing', 'portfolio'].includes(tabParam)) {
-      console.log('Setting active tab to:', tabParam);
-      setActiveTab(tabParam);
-    } else {
-      console.log('No valid tab parameter, defaulting to insights');
-      setActiveTab('insights');
-    }
-  }, [location]);
-
-  // Monitor activeTab changes
-  useEffect(() => {
-    console.log('=== ACTIVE TAB CHANGED ===');
-    console.log('Current active tab is now:', activeTab);
-  }, [activeTab]);
+    console.log('Active tab:', activeTab);
+    console.log('Feature flag LIVE_ANALYTICS:', flags.LIVE_ANALYTICS);
+    console.log('Feature flag FINANCIALS:', flags.FINANCIALS);
+    console.log('Allowed tabs:', allowedTabs);
+    console.log('Current URL:', window.location.href);
+  }, [location, activeTab, allowedTabs]);
 
   const icons = [
     <DollarSign key="revenue" size={20} />,
@@ -102,14 +108,26 @@ export default function VendorAnalyticsPage() {
   useEffect(() => {
     console.log('=== ANALYTICS DATA DEBUG ===');
     console.log('Feature flag LIVE_ANALYTICS:', flags.LIVE_ANALYTICS);
+    console.log('Feature flag FINANCIALS:', flags.FINANCIALS);
     console.log('Overview data:', overviewData);
     console.log('Best sellers data:', bestSellersData);
     console.log('Loading state:', isLoading);
-  }, [overviewData, bestSellersData, isLoading]);
+    console.log('Financials query state:', {
+      isLoading: financialsQuery.isLoading,
+      isError: financialsQuery.isError,
+      data: financialsQuery.data,
+      error: financialsQuery.error
+    });
+  }, [overviewData, bestSellersData, isLoading, financialsQuery.isLoading, financialsQuery.isError, financialsQuery.data, financialsQuery.error]);
 
   const renderTabContent = () => {
+    console.log('=== RENDER TAB CONTENT DEBUG ===');
+    console.log('Active tab:', activeTab);
+    console.log('Rendering content for tab:', activeTab);
+    
     switch (activeTab) {
       case 'insights':
+        console.log('Rendering insights tab content');
         return (
           <div className="space-y-8">
             {/* Loading State */}
@@ -187,7 +205,78 @@ export default function VendorAnalyticsPage() {
         );
       
       case 'financials':
-        return <FinancialsTab vendorId={vendorId} />;
+        console.log('Rendering financials tab content');
+        
+        // Error state
+        if (financialsQuery.isError) {
+          return (
+            <ErrorCard
+              title="Failed to Load Financial Data"
+              message="Unable to load financial information. Please check your connection and try again."
+              onRetry={() => financialsQuery.refetch()}
+            />
+          );
+        }
+        
+        // Loading state
+        if (!financialsQuery.data && financialsQuery.isLoading) {
+          return (
+            <div className="flex items-center justify-center p-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5B6E02]"></div>
+              <span className="ml-2 text-gray-600">Loading financial data...</span>
+            </div>
+          );
+        }
+        
+        // Empty state
+        if (!financialsQuery.data || financialsQuery.data.series.length === 0) {
+          return (
+            <EmptyState
+              title="No Financial Data Available"
+              message="No financial transactions found for the selected period. Try adjusting your date range or check back later."
+            />
+          );
+        }
+        
+        // Data loaded successfully
+        return <FinancialsPanel data={financialsQuery.data} />;
+      
+      case 'financial-statements':
+        console.log('Rendering financial statements tab content');
+        
+        // Error state
+        if (financialsQuery.isError) {
+          return (
+            <ErrorCard
+              title="Failed to Load Financial Data"
+              message="Unable to load financial information. Please check your connection and try again."
+              onRetry={() => financialsQuery.refetch()}
+            />
+          );
+        }
+        
+        // Loading state
+        if (!financialsQuery.data && financialsQuery.isLoading) {
+          return (
+            <div className="flex items-center justify-center p-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5B6E02]"></div>
+              <span className="ml-2 text-gray-600">Loading comprehensive financial data...</span>
+            </div>
+          );
+        }
+        
+        // Empty state
+        if (!financialsQuery.data || financialsQuery.data.series.length === 0) {
+          return (
+            <EmptyState
+              title="No Financial Data Available"
+              message="No financial transactions found for the selected period. Try adjusting your date range or check back later."
+            />
+          );
+        }
+        
+        // Data loaded successfully
+        return <ComprehensiveFinancialStatements data={financialsQuery.data} vendorId={vendorId} />;
       
       case 'taxes':
         return (
@@ -222,6 +311,7 @@ export default function VendorAnalyticsPage() {
     switch (tab) {
       case 'insights': return 'Insights';
       case 'financials': return 'Financials';
+      case 'financial-statements': return 'Financial Statements';
       case 'taxes': return 'Taxes';
       case 'pricing': return 'Pricing Optimizer';
       case 'portfolio': return 'Portfolio Builder';
@@ -273,23 +363,21 @@ export default function VendorAnalyticsPage() {
                 {[
                   { id: 'insights', label: 'Insights', icon: '📊' },
                   { id: 'financials', label: 'Financials', icon: '💰' },
+                  { id: 'financial-statements', label: 'Financial Statements', icon: '📋' },
                   { id: 'taxes', label: 'Taxes', icon: '📋' },
                   { id: 'pricing', label: 'Pricing Optimizer', icon: '🎯' },
                   { id: 'portfolio', label: 'Portfolio Builder', icon: '📈' }
                 ].map((tab) => (
                   <button
                     key={tab.id}
-                    onClick={() => {
-                      const newUrl = tab.id === 'insights' 
-                        ? '/dashboard/vendor/analytics'
-                        : `/dashboard/vendor/analytics?tab=${tab.id}`;
-                      window.history.pushState({}, '', newUrl);
-                      setActiveTab(tab.id as TabType);
-                    }}
+                    onClick={() => setTab(tab.id as TabType)}
+                    disabled={!allowedTabs.includes(tab.id as TabType)}
                     className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                       activeTab === tab.id
                         ? 'border-[#5B6E02] text-[#5B6E02]'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    } ${
+                      !allowedTabs.includes(tab.id as TabType) ? 'opacity-50 cursor-not-allowed' : ''
                     }`}
                   >
                     <span>{tab.icon}</span>

@@ -79,6 +79,23 @@ export default function FinancialsTab({ vendorId }: FinancialsTabProps) {
 
   const isLoading = pnlQuery.isLoading || cashFlowQuery.isLoading || balanceSheetQuery.isLoading;
 
+  // Debug logging
+  console.log('=== FINANCIALS TAB DEBUG ===');
+  console.log('Vendor ID:', vendorId);
+  console.log('Feature flag FINANCIALS:', flags.FINANCIALS);
+  console.log('Date range:', { from, to });
+  console.log('Loading states:', {
+    pnl: pnlQuery.isLoading,
+    cashFlow: cashFlowQuery.isLoading,
+    balanceSheet: balanceSheetQuery.isLoading,
+    overall: isLoading
+  });
+  console.log('Data:', {
+    pnl: pnlData,
+    cashFlow: cashFlowData,
+    balanceSheet: balanceSheetData
+  });
+
   // Export functions
   const exportPNL = () => {
     const params = new URLSearchParams();
@@ -103,6 +120,9 @@ export default function FinancialsTab({ vendorId }: FinancialsTabProps) {
       </div>
     );
   }
+
+  // Check if we have any meaningful data to display
+  const hasData = pnlData.revenue > 0 || cashFlowData.net !== 0 || balanceSheetData.equity !== 0;
 
   return (
     <div className="space-y-6">
@@ -333,8 +353,8 @@ export default function FinancialsTab({ vendorId }: FinancialsTabProps) {
         </div>
       </div>
 
-      {/* Empty State */}
-      {!pnlData.revenue && !cashFlowData.net && !balanceSheetData.equity && (
+      {/* Empty State - Only show when not loading and no data */}
+      {!hasData && !isLoading && (
         <div className="text-center py-12">
           <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">No Financial Data Available</h3>

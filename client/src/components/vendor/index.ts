@@ -24,5 +24,5 @@ export { TaxSummary } from './analytics/TaxSummary';
 
 // Re-export types for convenience
 export type { Vendor } from './VendorHeader';
-export type { Product } from './ProductCard';
+// Removed conflicting Product type re-export to fix import issues
 export type { Review } from './ReviewBlock'; 

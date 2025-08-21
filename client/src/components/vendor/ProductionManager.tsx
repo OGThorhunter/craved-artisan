@@ -19,15 +19,151 @@ import {
   Zap
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import { 
-  ProductionBatch, 
-  Product, 
-  Recipe, 
-  RawMaterial, 
-  LaborCost,
-  ProductionPlan,
-  CostAnalysis
-} from '../../types/products';
+
+// Local interfaces to avoid import issues
+interface Product {
+  id: string;
+  name: string;
+  description?: string;
+  price: number;
+  imageUrl?: string;
+  tags?: string[];
+  stock: number;
+  isAvailable: boolean;
+  targetMargin?: number;
+  recipeId?: string;
+  onWatchlist: boolean;
+  lastAiSuggestion?: number;
+  aiSuggestionNote?: string;
+  createdAt: string;
+  updatedAt: string;
+  category: 'bread' | 'pastry' | 'dessert' | 'beverage' | 'other';
+  unit: 'loaf' | 'piece' | 'dozen' | 'kg' | 'lb' | 'unit';
+  minStockLevel: number;
+  maxStockLevel: number;
+  reorderQuantity: number;
+  productionLeadTime: number;
+  currentCost: number;
+  costBreakdown: {
+    rawMaterials: number;
+    labor: number;
+    overhead: number;
+    packaging: number;
+  };
+  batchSize: number;
+  productionFrequency: 'daily' | 'weekly' | 'bi-weekly' | 'monthly' | 'on-demand';
+  lastProductionDate?: string;
+  nextProductionDate?: string;
+  allergens: string[];
+  dietaryRestrictions: string[];
+  certifications: string[];
+  expirationDays: number;
+  storageRequirements: string;
+  totalSold: number;
+  averageRating: number;
+  reviewCount: number;
+  isFeatured: boolean;
+  isSeasonal: boolean;
+  seasonalStartDate?: string;
+  seasonalEndDate?: string;
+}
+
+interface ProductionBatch {
+  id: string;
+  productId: string;
+  productName: string;
+  recipeId: string;
+  batchNumber: string;
+  plannedQuantity: number;
+  actualQuantity: number;
+  startDate: string;
+  completionDate?: string;
+  status: 'planned' | 'in-progress' | 'completed' | 'cancelled';
+  rawMaterialsUsed: BatchMaterialUsage[];
+  laborUsed: BatchLaborUsage[];
+  totalCost: number;
+  costPerUnit: number;
+  notes?: string;
+}
+
+interface BatchMaterialUsage {
+  rawMaterialId: string;
+  rawMaterialName: string;
+  plannedQuantity: number;
+  actualQuantity: number;
+  unit: string;
+  cost: number;
+  inventoryDeducted: boolean;
+}
+
+interface BatchLaborUsage {
+  laborCostId: string;
+  role: string;
+  plannedHours: number;
+  actualHours: number;
+  cost: number;
+}
+
+interface Recipe {
+  id: string;
+  name: string;
+  description: string;
+  version: string;
+  yield: number;
+  yieldUnit: string;
+  ingredients: RecipeIngredient[];
+  laborSteps: LaborStep[];
+  totalCost: number;
+  costPerUnit: number;
+  lastUpdated: string;
+  isActive: boolean;
+}
+
+interface RecipeIngredient {
+  rawMaterialId: string;
+  rawMaterialName: string;
+  quantity: number;
+  unit: string;
+  cost: number;
+}
+
+interface LaborStep {
+  laborCostId: string;
+  role: string;
+  hours: number;
+  cost: number;
+}
+
+interface RawMaterial {
+  id: string;
+  name: string;
+  category: 'grain' | 'dairy' | 'produce' | 'spice' | 'other';
+  unit: 'kg' | 'g' | 'l' | 'ml' | 'pcs' | 'oz' | 'lb';
+  costPerUnit: number;
+  supplier: string;
+  currentStock: number;
+  reorderPoint: number;
+  leadTime: number;
+  isActive: boolean;
+}
+
+interface ProductionPlan {
+  id: string;
+  date: string;
+  products: ProductionPlanItem[];
+  totalCost: number;
+  status: 'draft' | 'confirmed' | 'in-progress' | 'completed';
+  notes?: string;
+}
+
+interface ProductionPlanItem {
+  productId: string;
+  productName: string;
+  plannedQuantity: number;
+  recipeId: string;
+  estimatedCost: number;
+  priority: 'high' | 'medium' | 'low';
+}
 
 interface ProductionManagerProps {
   products: Product[];
@@ -39,14 +175,14 @@ const ProductionManager: React.FC<ProductionManagerProps> = ({ products, onProdu
   const [showBatchForm, setShowBatchForm] = useState(false);
   const [showPlanForm, setShowPlanForm] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState<ProductionBatch | null>(null);
-  const [selectedPlan, setSelectedBatch] = useState<ProductionPlan | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<ProductionPlan | null>(null);
   
   // Mock data - in real app, this would come from API
   const [productionBatches, setProductionBatches] = useState<ProductionBatch[]>([]);
   const [productionPlans, setProductionPlans] = useState<ProductionPlan[]>([]);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [rawMaterials, setRawMaterials] = useState<RawMaterial[]>([]);
-  const [laborCosts, setLaborCosts] = useState<LaborCost[]>([]);
+  const [laborCosts, setLaborCosts] = useState<any[]>([]); // Changed to any[] to avoid import issue
 
   // Form states
   const [batchForm, setBatchForm] = useState({

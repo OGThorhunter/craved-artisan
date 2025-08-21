@@ -41,16 +41,6 @@ import {
 } from 'lucide-react';
 
 import SimpleSiteEditor from '../../components/vendor/SimpleSiteEditor';
-import L from 'leaflet';
-import * as turf from '@turf/turf';
-
-// Fix for Leaflet marker icons in React
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-});
 
 // Default store data
 const defaultStoreData = {
@@ -1916,100 +1906,26 @@ const CoverageMap: React.FC<{
   city: string;
   state: string;
   upcomingEvents: any[];
-  siteSettings: any;
-}> = ({ coverageZips, city, state, upcomingEvents, siteSettings }) => {
+}> = ({ coverageZips, city, state, upcomingEvents }) => {
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<L.Map | null>(null);
 
   useEffect(() => {
     if (!mapRef.current) return;
 
-    // Initialize map
-    const map = L.map(mapRef.current).setView([33.7490, -84.3880], 10); // Atlanta coordinates
-    mapInstanceRef.current = map;
-
-    // Add tile layer
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
-
-    // Create coverage area polygon
-    const centerPoint = turf.point([-84.3880, 33.7490]); // Atlanta
-    const radius = 25; // 25 mile radius
-    const options = { units: 'miles' as turf.Units };
-    const circle = turf.circle(centerPoint, radius, options);
-    
-    L.geoJSON(circle as any, {
-      style: {
-        fillColor: siteSettings.linkColor,
-        fillOpacity: 0.2,
-        color: siteSettings.linkColor,
-        weight: 2
-      }
-    }).addTo(map);
-
-    // Add center marker
-    L.marker([33.7490, -84.3880])
-      .addTo(map)
-      .bindPopup(`${city}, ${state}<br>Service Center`);
-
-    // Add event markers
-    upcomingEvents.forEach((event) => {
-      const [lat, lng] = event.coordinates;
-      
-      // Create custom icon based on event type
-      const iconColor = event.type === 'Market' ? siteSettings.linkColor : siteSettings.buttonColor;
-      const icon = L.divIcon({
-        className: 'custom-marker',
-        html: `<div style="background-color: ${iconColor}; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
-        iconSize: [20, 20],
-        iconAnchor: [10, 10]
-      });
-      
-      const marker = L.marker([lat, lng], { icon })
-        .addTo(map)
-        .bindPopup(`
-          <div class="text-sm" style="min-width: 250px;">
-            <div class="font-bold text-lg mb-2" style="color: ${iconColor}; font-family: inherit;">${event.name}</div>
-            <div class="mb-2">
-              <strong>Date:</strong> ${new Date(event.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-            </div>
-            <div class="mb-2">
-              <strong>Time:</strong> ${event.time}
-            </div>
-            <div class="mb-2">
-              <strong>Address:</strong><br>
-              <span style="color: #6B7280;">${event.address}</span>
-            </div>
-            <div class="mb-2">
-              <strong>Description:</strong><br>
-              <span style="color: #6B7280;">${event.description}</span>
-            </div>
-            <div class="mb-2">
-              <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">${event.type}</span>
-              <span class="text-xs ml-2" style="color: #6B7280;">${event.available} spots left</span>
-            </div>
-            ${event.eventUrl ? `
-              <div class="mt-3">
-                <a href="${event.eventUrl}" target="_blank" rel="noopener noreferrer" 
-                   style="color: ${iconColor}; text-decoration: underline; font-weight: 500; font-family: inherit;">
-                  View Event Details →
-                </a>
-              </div>
-            ` : ''}
-          </div>
-        `, {
-          maxWidth: 300,
-          className: 'custom-popup'
-        });
-    });
-
-    return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-      }
-    };
-  }, [coverageZips, city, state, upcomingEvents, siteSettings]);
+    // Simple map placeholder for now
+    // In a real implementation, you would integrate with a mapping library like Leaflet
+    const mapContainer = mapRef.current;
+    mapContainer.innerHTML = `
+      <div class="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center">
+        <div class="text-center text-gray-500">
+          <div class="text-2xl mb-2">🗺️</div>
+          <div class="font-medium">Service Area Map</div>
+          <div class="text-sm">Covering ${city}, ${state}</div>
+          <div class="text-xs mt-1">${upcomingEvents.length} upcoming events</div>
+        </div>
+      </div>
+    `;
+  }, [coverageZips, city, state, upcomingEvents]);
 
   return <div ref={mapRef} className="w-full h-full" />;
 };
