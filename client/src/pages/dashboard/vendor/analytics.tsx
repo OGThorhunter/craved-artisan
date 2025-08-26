@@ -10,7 +10,7 @@ import { CustomerInsights } from "@/components/vendor/analytics/CustomerInsights
 import { PortfolioBuilder } from "@/components/vendor/analytics/PortfolioBuilder";
 import { PriceOptimizer } from "@/components/vendor/analytics/PriceOptimizer";
 import { TaxSummary } from "@/components/vendor/analytics/TaxSummary";
-import TrendChartNew from "@/components/charts/TrendChart";
+import TrendChart from "@/components/charts/TrendChart";
 import InspirationalQuote from "@/components/InspirationalQuote";
 import AIForecastWidget from "@/components/analytics/AIForecastWidget";
 import AISummaryBuilder from "@/components/analytics/AISummaryBuilder";
@@ -28,10 +28,10 @@ import ProductDeepDiveModal from "@/components/ProductDeepDiveModal";
 import { Breadcrumbs } from "@/components/dashboard/vendor/Breadcrumbs";
 import { ErrorCard } from "@/components/ui/ErrorCard";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { FinancialsPanel } from "@/components/analytics/FinancialsPanel";
+
 import { ComprehensiveFinancialStatements } from "@/components/analytics/ComprehensiveFinancialStatements";
 
-type TabType = 'insights' | 'financials' | 'financial-statements' | 'taxes' | 'pricing' | 'portfolio';
+type TabType = 'insights' | 'financial-statements' | 'taxes' | 'pricing' | 'portfolio';
 
 export default function VendorAnalyticsPage() {
   const [location] = useLocation();
@@ -42,12 +42,11 @@ export default function VendorAnalyticsPage() {
   const vendorId = 'dev-user-id'; // This should come from auth context in production
   
   // Define allowed tabs with feature flag support
-  const TABS: TabType[] = ['insights', 'financials', 'financial-statements', 'taxes', 'pricing', 'portfolio'];
+  const TABS: TabType[] = ['insights', 'financial-statements', 'taxes', 'pricing', 'portfolio'];
   const { tab: activeTab, setTab, allowed: allowedTabs } = useUrlTab(
     TABS,
     'insights',
     { 
-      financials: flags.LIVE_ANALYTICS && flags.FINANCIALS,
       'financial-statements': flags.LIVE_ANALYTICS && flags.FINANCIALS
     }
   );
@@ -66,10 +65,15 @@ export default function VendorAnalyticsPage() {
   const bestSellersQuery = useVendorBestSellers(vendorId, { limit: 10 });
   const mockBestSellersQuery = useMockVendorBestSellers(vendorId, { limit: 10 });
 
-  // Financials data fetching - only enabled when financials tab is active
-  const financialsQuery = useFinancials(
+
+  
+  // Helper to determine if financials should be enabled
+  const financialsEnabled = activeTab === 'financial-statements';
+  
+  // Financials data fetching - enabled for financial-statements tab only
+  const fin = useFinancials(
     { vendorId, range: 'month' }, 
-    activeTab === 'financials'
+    financialsEnabled
   );
   
   // Extract data with safe defaults based on feature flags
@@ -113,12 +117,12 @@ export default function VendorAnalyticsPage() {
     console.log('Best sellers data:', bestSellersData);
     console.log('Loading state:', isLoading);
     console.log('Financials query state:', {
-      isLoading: financialsQuery.isLoading,
-      isError: financialsQuery.isError,
-      data: financialsQuery.data,
-      error: financialsQuery.error
+      isLoading: fin.isLoading,
+      isError: fin.isError,
+      data: fin.data,
+      error: fin.error
     });
-  }, [overviewData, bestSellersData, isLoading, financialsQuery.isLoading, financialsQuery.isError, financialsQuery.data, financialsQuery.error]);
+  }, [overviewData, bestSellersData, isLoading, fin.isLoading, fin.isError, fin.data, fin.error]);
 
   const renderTabContent = () => {
     console.log('=== RENDER TAB CONTENT DEBUG ===');
@@ -142,7 +146,7 @@ export default function VendorAnalyticsPage() {
             
             {/* Real-time Analytics Overview */}
             {!isLoading && flags.LIVE_ANALYTICS && (
-              <div className="bg-[#F7F2EC] rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
+              <div className="bg-[#F7F2EC] rounded-lg shadow-xl border border-gray-200 p-6 mb-8 hover:shadow-2xl transition-shadow duration-300">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Real-time Analytics Overview</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="bg-white rounded-lg p-4 border border-gray-200">
@@ -179,11 +183,12 @@ export default function VendorAnalyticsPage() {
             {/* AI Forecasting Widget */}
             <AIForecastWidget />
             
-            {/* New Trend Chart */}
-            <TrendChartNew />
-            
-            {/* Original Trend Chart */}
-            <TrendChart />
+            {/* Trend Chart with Revenue Data */}
+            {Array.isArray(overviewData?.series) && overviewData.series.length > 0 ? (
+              <TrendChart data={overviewData.series} xKey="date" yKey="revenue" />
+            ) : (
+              <div className="text-sm text-neutral-500">No trends yet</div>
+            )}
             
             {/* Conversion Funnel */}
             <ConversionFunnel />
@@ -204,59 +209,22 @@ export default function VendorAnalyticsPage() {
           </div>
         );
       
-      case 'financials':
-        console.log('Rendering financials tab content');
-        
-        // Error state
-        if (financialsQuery.isError) {
-          return (
-            <ErrorCard
-              title="Failed to Load Financial Data"
-              message="Unable to load financial information. Please check your connection and try again."
-              onRetry={() => financialsQuery.refetch()}
-            />
-          );
-        }
-        
-        // Loading state
-        if (!financialsQuery.data && financialsQuery.isLoading) {
-          return (
-            <div className="flex items-center justify-center p-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5B6E02]"></div>
-              <span className="ml-2 text-gray-600">Loading financial data...</span>
-            </div>
-          );
-        }
-        
-        // Empty state
-        if (!financialsQuery.data || financialsQuery.data.series.length === 0) {
-          return (
-            <EmptyState
-              title="No Financial Data Available"
-              message="No financial transactions found for the selected period. Try adjusting your date range or check back later."
-            />
-          );
-        }
-        
-        // Data loaded successfully
-        return <FinancialsPanel data={financialsQuery.data} />;
+
       
       case 'financial-statements':
         console.log('Rendering financial statements tab content');
         
-        // Error state
-        if (financialsQuery.isError) {
+        if (fin.isError) {
           return (
             <ErrorCard
               title="Failed to Load Financial Data"
               message="Unable to load financial information. Please check your connection and try again."
-              onRetry={() => financialsQuery.refetch()}
+              onRetry={() => fin.refetch()}
             />
           );
         }
         
-        // Loading state
-        if (!financialsQuery.data && financialsQuery.isLoading) {
+        if (fin.isLoading && !fin.data) {
           return (
             <div className="flex items-center justify-center p-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5B6E02]"></div>
@@ -265,8 +233,7 @@ export default function VendorAnalyticsPage() {
           );
         }
         
-        // Empty state
-        if (!financialsQuery.data || financialsQuery.data.series.length === 0) {
+        if (!fin.data || fin.data.series.length === 0) {
           return (
             <EmptyState
               title="No Financial Data Available"
@@ -275,8 +242,7 @@ export default function VendorAnalyticsPage() {
           );
         }
         
-        // Data loaded successfully
-        return <ComprehensiveFinancialStatements data={financialsQuery.data} vendorId={vendorId} />;
+        return <ComprehensiveFinancialStatements data={fin.data} vendorId={vendorId} />;
       
       case 'taxes':
         return (
@@ -310,7 +276,6 @@ export default function VendorAnalyticsPage() {
   const getTabDisplayName = (tab: TabType) => {
     switch (tab) {
       case 'insights': return 'Insights';
-      case 'financials': return 'Financials';
       case 'financial-statements': return 'Financial Statements';
       case 'taxes': return 'Taxes';
       case 'pricing': return 'Pricing Optimizer';
@@ -324,7 +289,7 @@ export default function VendorAnalyticsPage() {
       <div className="space-y-6">
         <div>
           <Breadcrumbs />
-          <div className="bg-[#F7F2EC] rounded-2xl shadow-sm p-6 mb-6 border border-gray-100">
+          <div className="bg-[#F7F2EC] rounded-2xl shadow-xl p-6 mb-6 border border-gray-100 hover:shadow-2xl transition-shadow duration-300">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Analytics Dashboard</h1>
@@ -340,29 +305,15 @@ export default function VendorAnalyticsPage() {
             </div>
             <InspirationalQuote />
             
-            {/* Financial Data Disclaimer */}
-            <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-              <div className="flex items-start space-x-2">
-                <div className="flex-shrink-0 mt-0.5">
-                  <svg className="w-4 h-4 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <div className="text-sm text-amber-800">
-                  <p className="font-medium">Financial Data Disclaimer</p>
-                  <p className="mt-1">All financial data displayed is for informational purposes only. Users are responsible for verifying the accuracy and security of their financial information. This dashboard does not constitute financial advice.</p>
-                </div>
-              </div>
-            </div>
+
           </div>
 
           {/* Tab Navigation */}
-          <div className="bg-[#F7F2EC] rounded-lg shadow-sm border border-gray-200 mb-6">
+          <div className="bg-[#F7F2EC] rounded-lg shadow-xl border border-gray-200 mb-6 hover:shadow-2xl transition-shadow duration-300">
             <div className="border-b border-gray-200">
               <nav className="flex space-x-8 px-6">
                 {[
                   { id: 'insights', label: 'Insights', icon: '📊' },
-                  { id: 'financials', label: 'Financials', icon: '💰' },
                   { id: 'financial-statements', label: 'Financial Statements', icon: '📋' },
                   { id: 'taxes', label: 'Taxes', icon: '📋' },
                   { id: 'pricing', label: 'Pricing Optimizer', icon: '🎯' },
@@ -388,22 +339,7 @@ export default function VendorAnalyticsPage() {
             </div>
           </div>
           
-          {/* KPI Row */}
-          <div className="bg-[#F7F2EC] rounded-lg shadow-sm border border-gray-200 p-6 mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Key Performance Indicators</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {mockKpis.map((kpi, idx) => (
-                <div key={idx} className="bg-white rounded-lg p-4 border border-gray-200">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="text-gray-600">{icons[idx]}</div>
-                    <span className="text-xs text-gray-500">{kpi.delta}</span>
-                  </div>
-                  <div className="text-2xl font-bold text-gray-900">{kpi.value}</div>
-                  <div className="text-sm text-gray-600">{kpi.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
+
           
           {/* Tab Content */}
           {isLoading ? (

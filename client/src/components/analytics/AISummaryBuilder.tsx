@@ -187,7 +187,7 @@ const AISummaryBuilder = () => {
   };
 
   return (
-            <div className="bg-[#F7F2EC] rounded-xl shadow-lg p-6 border border-gray-200">
+            <div className="bg-[#F7F2EC] rounded-xl shadow-xl p-6 border border-gray-200 hover:shadow-2xl transition-shadow duration-300">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center space-x-3">

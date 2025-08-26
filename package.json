@@ -42,10 +42,13 @@
     "@types/morgan": "^1.9.9",
     "@types/supertest": "^6.0.2",
     "concurrently": "^8.2.2",
+    "cross-fetch": "^4.1.0",
     "express-rate-limit": "^7.3.1",
     "openapi-typescript": "^7.0.0",
     "openapi-zod-client": "^1.18.3",
     "supertest": "^7.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3",
     "vitest": "^2.0.0"
   },
   "keywords": [

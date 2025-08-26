@@ -218,7 +218,7 @@ const EnhancedBestSellers = () => {
 
   if (isLoading) {
     return (
-      <div className="bg-[#F7F2EC] rounded-xl shadow-lg p-6 border border-gray-200">
+      <div className="bg-[#F7F2EC] rounded-xl shadow-xl p-6 border border-gray-200 hover:shadow-2xl transition-shadow duration-300">
         <div className="animate-pulse">
           <div className="h-6 bg-gray-200 rounded w-1/3 mb-4"></div>
           <div className="h-64 bg-gray-200 rounded"></div>
@@ -229,7 +229,7 @@ const EnhancedBestSellers = () => {
 
   if (error || !data) {
     return (
-      <div className="bg-[#F7F2EC] rounded-xl shadow-lg p-6 border border-gray-200">
+      <div className="bg-[#F7F2EC] rounded-xl shadow-xl p-6 border border-gray-200 hover:shadow-2xl transition-shadow duration-300">
         <div className="text-center text-gray-500">
           <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-red-400" />
           <p>Failed to load best sellers data</p>
@@ -239,7 +239,7 @@ const EnhancedBestSellers = () => {
   }
 
   return (
-    <div className="bg-[#F7F2EC] rounded-xl shadow-lg p-6 border border-gray-200">
+    <div className="bg-[#F7F2EC] rounded-xl shadow-xl p-6 border border-gray-200 hover:shadow-2xl transition-shadow duration-300">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>

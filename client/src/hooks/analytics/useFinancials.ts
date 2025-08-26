@@ -227,7 +227,10 @@ export function useFinancials({ vendorId, range, asOf }: FinancialsOptions, enab
       return data;
     },
     enabled: enabled && !!vendorId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 60_000, // 1 minute
+    gcTime: 5 * 60_000, // 5 minutes
+    keepPreviousData: true,
+    refetchOnWindowFocus: false,
     retry: 2,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });

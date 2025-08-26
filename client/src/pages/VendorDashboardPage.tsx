@@ -149,7 +149,7 @@ const VendorDashboardPage: React.FC = () => {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-8 mt-12">
         {/* Hero Banner */}
-        <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-100 shadow-sm mb-6">
+        <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-100 shadow-xl mb-6 hover:shadow-2xl transition-shadow duration-300">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-2xl font-bold mb-2 text-gray-900">Dashboard Overview</h2>

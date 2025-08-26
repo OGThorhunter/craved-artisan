@@ -38,7 +38,7 @@ export function ProductCard({ id, title, price, imageUrl, tags, availability, on
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-200">
+    <div className="bg-white rounded-lg shadow-xl overflow-hidden hover:shadow-2xl transition-shadow duration-300">
       <Link href={`/product/${id}`} className="block">
         <div className="aspect-square overflow-hidden">
           <img

@@ -148,7 +148,7 @@ export function BalanceSheet() {
   };
 
   return (
-    <div className="bg-[#F7F2EC] rounded-2xl p-4 shadow-md mt-6 max-w-6xl border border-gray-100">
+    <div className="bg-[#F7F2EC] rounded-2xl p-4 shadow-xl mt-6 max-w-6xl border border-gray-100 hover:shadow-2xl transition-shadow duration-300">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold text-gray-800">Balance Sheet</h2>
         

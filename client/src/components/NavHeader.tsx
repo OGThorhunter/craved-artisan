@@ -48,7 +48,6 @@ export default function NavHeader() {
   ];
 
   const roleLinks: Record<string, React.ReactElement | null> = {
-    vendor: <Link href="/dashboard/vendor">Manage Shop</Link>,
     coordinator: <Link href="/events/manage">My Events</Link>,
     customer: <Link href="/dashboard/customer/orders">My Orders</Link>,
     admin: <Link href="/admin">The Bridge</Link>,

@@ -48,7 +48,7 @@ const DashboardPage: React.FC = () => {
       <div className="container mx-auto px-4 py-8 pt-8">
         
         {/* User Info Card */}
-        <div className="bg-[#F7F2EC] rounded-2xl shadow-lg p-6 mb-8 hover:shadow-xl transition-all duration-300">
+        <div className="bg-[#F7F2EC] rounded-2xl shadow-xl p-6 mb-8 hover:shadow-2xl transition-all duration-300">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center border-2 border-[#5B6E02] shadow-md">
@@ -92,7 +92,7 @@ const DashboardPage: React.FC = () => {
         </div>
 
         {/* Storefront URL */}
-        <div className="bg-[#F7F2EC] rounded-xl shadow-lg p-6 mb-8">
+        <div className="bg-[#F7F2EC] rounded-xl shadow-xl p-6 mb-8 hover:shadow-2xl transition-shadow duration-300">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-semibold text-[#2C2C2C]">Storefront URL</h3>
             <ExternalLink className="w-5 h-5 text-[#5B6E02]" />
@@ -127,7 +127,7 @@ const DashboardPage: React.FC = () => {
         </div>
 
         {/* Revenue Overview */}
-        <div className="bg-[#F7F2EC] rounded-2xl shadow-lg p-6 mb-8 hover:shadow-xl transition-all duration-300">
+        <div className="bg-[#F7F2EC] rounded-2xl shadow-xl p-6 mb-8 hover:shadow-2xl transition-all duration-300">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-bold text-[#2C2C2C] flex items-center">
               <DollarSign className="w-6 h-6 text-[#5B6E02] mr-2" />

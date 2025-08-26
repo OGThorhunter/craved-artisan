@@ -128,7 +128,7 @@ export function BestSellersList() {
   const categories = ['all', ...Array.from(new Set(mockBestSellers.map(p => p.category)))] as CategoryFilter[];
 
   return (
-    <div className="bg-[#F7F2EC] rounded-2xl p-6 shadow-md mt-6 max-w-6xl border border-gray-100">
+    <div className="bg-[#F7F2EC] rounded-2xl p-6 shadow-xl mt-6 max-w-6xl border border-gray-100 hover:shadow-2xl transition-shadow duration-300">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">

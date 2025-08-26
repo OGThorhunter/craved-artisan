@@ -107,7 +107,7 @@ export function ConversionFunnel() {
 
   if (isLoading) {
     return (
-      <div className="bg-[#F7F2EC] rounded-2xl p-4 shadow-md border border-gray-100">
+      <div className="bg-[#F7F2EC] rounded-2xl p-4 shadow-xl border border-gray-100 hover:shadow-2xl transition-shadow duration-300">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
             <Target size={20} className="text-[#5B6E02]" />
@@ -123,7 +123,7 @@ export function ConversionFunnel() {
 
   if (error) {
     return (
-      <div className="bg-[#F7F2EC] rounded-2xl p-4 shadow-md border border-gray-100">
+      <div className="bg-[#F7F2EC] rounded-2xl p-4 shadow-xl border border-gray-100 hover:shadow-2xl transition-shadow duration-300">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
             <Target size={20} className="text-[#5B6E02]" />
@@ -138,7 +138,7 @@ export function ConversionFunnel() {
   }
 
   return (
-    <div className="bg-[#F7F2EC] rounded-2xl p-4 shadow-md border border-gray-100">
+    <div className="bg-[#F7F2EC] rounded-2xl p-4 shadow-xl border border-gray-100 hover:shadow-2xl transition-shadow duration-300">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <Target size={20} className="text-[#5B6E02]" />
@@ -150,7 +150,7 @@ export function ConversionFunnel() {
             className={`flex items-center gap-1 px-3 py-1 text-sm rounded-full border transition ${
               showSuggestions
                 ? "bg-[#5B6E02] text-white border-transparent"
-                : "bg-white border-gray-300 text-gray-700 hover:bg-gray-100"
+                : "bg-white border-gray-300 text-gray-300 hover:bg-gray-100"
             }`}
           >
             <Zap size={12} />

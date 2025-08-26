@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { DollarSign, FileText, Calculator, MapPin, TrendingUp, TrendingDown, AlertTriangle, Calendar, BarChart3, Download, Receipt } from "lucide-react";
+import { DollarSign, FileText, Calculator, MapPin, TrendingUp, TrendingDown, AlertTriangle, Calendar, BarChart3, Download, Receipt, Crown, X } from "lucide-react";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, LineChart, Line, CartesianGrid } from "recharts";
 
 interface SalesTaxData {
@@ -74,6 +74,23 @@ export function TaxSummary() {
   const [selectedQuarter, setSelectedQuarter] = useState<string | null>(null);
   const [showDeductions, setShowDeductions] = useState(true);
   const [viewMode, setViewMode] = useState<"overview" | "detailed">("overview");
+  const [showTaxCalculator, setShowTaxCalculator] = useState(false);
+  
+  // Tax calculator state
+  const [taxCalculatorInputs, setTaxCalculatorInputs] = useState({
+    annualRevenue: '',
+    annualExpenses: '',
+    businessType: 'sole-proprietor',
+    state: 'CA', // Default to California, but should come from vendor profile
+    zipCode: '90210' // Default, but should come from vendor profile
+  });
+  const [taxCalculationResults, setTaxCalculationResults] = useState({
+    netIncome: 0,
+    selfEmploymentTax: 0,
+    incomeTax: 0,
+    totalTax: 0
+  });
+  const [hasCalculated, setHasCalculated] = useState(false);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -131,8 +148,90 @@ export function TaxSummary() {
   const totalStripeFees = stripeFees.reduce((sum, item) => sum + item.totalFees, 0);
   const currentQuarterEstimate = quarterlyEstimates.find(q => q.status === "upcoming");
 
+  // Tax calculation functions
+  const calculateTaxes = () => {
+    const revenue = parseFloat(taxCalculatorInputs.annualRevenue) || 0;
+    const expenses = parseFloat(taxCalculatorInputs.annualExpenses) || 0;
+    
+    if (revenue === 0) {
+      setTaxCalculationResults({
+        netIncome: 0,
+        selfEmploymentTax: 0,
+        incomeTax: 0,
+        totalTax: 0
+      });
+      setHasCalculated(false);
+      return;
+    }
+
+    const netIncome = revenue - expenses;
+    
+    // Self-employment tax (15.3% of net income)
+    const selfEmploymentTax = netIncome * 0.153;
+    
+    // Federal income tax (simplified brackets for 2024)
+    let incomeTax = 0;
+    if (netIncome <= 11600) {
+      incomeTax = netIncome * 0.10;
+    } else if (netIncome <= 47150) {
+      incomeTax = 1160 + (netIncome - 11600) * 0.12;
+    } else if (netIncome <= 100525) {
+      incomeTax = 5428 + (netIncome - 47150) * 0.22;
+    } else if (netIncome <= 191950) {
+      incomeTax = 17190 + (netIncome - 100525) * 0.24;
+    } else if (netIncome <= 243725) {
+      incomeTax = 39462 + (netIncome - 191950) * 0.32;
+    } else if (netIncome <= 609350) {
+      incomeTax = 55979 + (netIncome - 243725) * 0.35;
+    } else {
+      incomeTax = 183997 + (netIncome - 609350) * 0.37;
+    }
+    
+    // State tax (simplified - California has progressive rates)
+    let stateTax = 0;
+    if (taxCalculatorInputs.state === 'CA') {
+      if (netIncome <= 10099) {
+        stateTax = netIncome * 0.01;
+      } else if (netIncome <= 23942) {
+        stateTax = 101 + (netIncome - 10099) * 0.02;
+      } else if (netIncome <= 37788) {
+        stateTax = 377 + (netIncome - 23942) * 0.04;
+      } else if (netIncome <= 52455) {
+        stateTax = 931 + (netIncome - 37788) * 0.06;
+      } else if (netIncome <= 66295) {
+        stateTax = 1813 + (netIncome - 52455) * 0.08;
+      } else if (netIncome <= 338639) {
+        stateTax = 2919 + (netIncome - 66295) * 0.093;
+      } else if (netIncome <= 406364) {
+        stateTax = 25247 + (netIncome - 338639) * 0.103;
+      } else if (netIncome <= 677275) {
+        stateTax = 32248 + (netIncome - 406364) * 0.113;
+      } else {
+        stateTax = 62837 + (netIncome - 677275) * 0.133;
+      }
+    }
+    
+    const totalTax = selfEmploymentTax + incomeTax + stateTax;
+    
+    setTaxCalculationResults({
+      netIncome,
+      selfEmploymentTax,
+      incomeTax: incomeTax + stateTax, // Combine federal and state
+      totalTax
+    });
+    setHasCalculated(true);
+  };
+
+  const handleInputChange = (field: string, value: string) => {
+    setTaxCalculatorInputs(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    setHasCalculated(false);
+  };
+
   return (
-    <div className="bg-[#F7F2EC] rounded-2xl p-4 shadow-md border border-gray-100">
+    <div className="bg-[#F7F2EC] rounded-2xl p-4 shadow-xl border border-gray-100 hover:shadow-2xl transition-shadow duration-300">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <FileText size={20} className="text-[#5B6E02]" />
@@ -190,8 +289,8 @@ export function TaxSummary() {
           {quarterlyEstimates.map((quarter, idx) => (
             <div 
               key={idx} 
-              className={`p-4 border-2 rounded-lg transition-all cursor-pointer ${
-                selectedQuarter === quarter.quarter ? "border-[#5B6E02] bg-[#F7F2EC]" : "border-gray-200 hover:border-gray-300"
+              className={`p-4 border-2 rounded-lg transition-all cursor-pointer bg-white ${
+                selectedQuarter === quarter.quarter ? "border-[#5B6E02]" : "border-gray-200 hover:border-gray-300"
               }`}
               onClick={() => setSelectedQuarter(selectedQuarter === quarter.quarter ? null : quarter.quarter)}
             >
@@ -228,7 +327,7 @@ export function TaxSummary() {
       {/* Sales Tax Collection by Region */}
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">Sales Tax Collection by Region</h3>
-        <div className="overflow-x-auto">
+        <div className="bg-white p-4 rounded-lg border border-gray-200 overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b">
@@ -264,7 +363,7 @@ export function TaxSummary() {
           <h3 className="text-lg font-semibold text-gray-800 mb-4">Business Deductions</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {deductions.map((deduction, idx) => (
-              <div key={idx} className="p-4 border border-gray-200 rounded-lg">
+              <div key={idx} className="p-4 bg-white border border-gray-200 rounded-lg">
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="font-semibold text-gray-800">{deduction.category}</h4>
                   <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs border ${getStatusColor(deduction.status)}`}>
@@ -334,7 +433,7 @@ export function TaxSummary() {
       {/* Stripe Fees Breakdown */}
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">Stripe Fees Breakdown</h3>
-        <div className="overflow-x-auto">
+        <div className="bg-white p-4 rounded-lg border border-gray-200 overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b">
@@ -373,7 +472,7 @@ export function TaxSummary() {
           <h3 className="text-lg font-semibold text-gray-800">Tax Reminders</h3>
         </div>
         <div className="space-y-3">
-          <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
+          <div className="p-3 bg-white border border-orange-200 rounded-lg">
             <div className="flex items-center gap-2 mb-1">
               <Calendar size={16} className="text-orange-600" />
               <span className="font-medium">Q3 Estimated Tax Due</span>
@@ -386,7 +485,7 @@ export function TaxSummary() {
               </button>
             </div>
           </div>
-          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="p-3 bg-white border border-blue-200 rounded-lg">
             <div className="flex items-center gap-2 mb-1">
               <FileText size={16} className="text-blue-600" />
               <span className="font-medium">Annual Tax Return</span>
@@ -402,6 +501,96 @@ export function TaxSummary() {
         </div>
       </div>
 
+      {/* Tax Calculator Modal */}
+      {showTaxCalculator && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                <Crown size={20} className="text-[#5B6E02]" />
+                Tax Calculator
+              </h3>
+              <button
+                onClick={() => setShowTaxCalculator(false)}
+                className="text-gray-400 hover:text-gray-600"
+                aria-label="Close tax calculator"
+                title="Close tax calculator"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Annual Revenue
+                </label>
+                <input
+                  type="number"
+                  placeholder="Enter annual revenue"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#5B6E02]"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Annual Expenses
+                </label>
+                <input
+                  type="number"
+                  placeholder="Enter annual expenses"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-ring-[#5B6E02]"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Business Type
+                </label>
+                <select 
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#5B6E02]"
+                  aria-label="Business type"
+                  title="Business type"
+                >
+                  <option value="sole-proprietor">Sole Proprietor</option>
+                  <option value="llc">LLC</option>
+                  <option value="corporation">Corporation</option>
+                  <option value="partnership">Partnership</option>
+                </select>
+              </div>
+              
+              <button className="w-full bg-[#5B6E02] text-white py-2 px-4 rounded-md hover:bg-[#4A5A01] transition-colors">
+                Calculate Tax
+              </button>
+              
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="font-medium text-gray-800 mb-2">Estimated Tax Breakdown:</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>Net Income:</span>
+                    <span className="font-medium">$0</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Self-Employment Tax (15.3%):</span>
+                    <span className="font-medium">$0</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Income Tax:</span>
+                    <span className="font-medium">$0</span>
+                  </div>
+                  <div className="border-t pt-2">
+                    <div className="flex justify-between font-semibold">
+                      <span>Total Estimated Tax:</span>
+                      <span className="text-[#5B6E02]">$0</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Action Buttons */}
       <div className="flex items-center justify-between">
         <div className="text-sm text-gray-600">
@@ -412,8 +601,11 @@ export function TaxSummary() {
             <Download size={16} />
             Export Tax Report
           </button>
-          <button className="flex items-center gap-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-            <Calculator size={16} />
+          <button 
+            onClick={() => setShowTaxCalculator(!showTaxCalculator)}
+            className="flex items-center gap-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <Crown size={16} />
             Tax Calculator
           </button>
         </div>

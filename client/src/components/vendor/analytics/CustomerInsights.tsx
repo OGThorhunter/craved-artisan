@@ -65,7 +65,7 @@ export function CustomerInsights() {
   };
 
   return (
-    <div className="bg-[#F7F2EC] rounded-2xl p-4 shadow-md border border-gray-100">
+    <div className="bg-[#F7F2EC] rounded-2xl p-4 shadow-xl border border-gray-100 hover:shadow-2xl transition-shadow duration-300">
       <div className="flex items-center gap-2 mb-6">
         <Users size={20} className="text-[#5B6E02]" />
         <h2 className="text-xl font-semibold text-gray-800">Customer Insights</h2>
@@ -93,7 +93,7 @@ export function CustomerInsights() {
 
       {/* Performance Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="p-3 border border-gray-200 rounded-lg">
+        <div className="p-3 border border-gray-200 rounded-lg bg-white">
           <div className="flex items-center gap-2 mb-2">
             <Crown size={16} className="text-yellow-500" />
             <span className="font-medium text-gray-800">Loyalty Impact</span>
@@ -103,7 +103,7 @@ export function CustomerInsights() {
           </p>
           <p className="text-sm text-gray-600">Revenue increase from loyalty program</p>
         </div>
-        <div className="p-3 border border-gray-200 rounded-lg">
+        <div className="p-3 border border-gray-200 rounded-lg bg-white">
           <div className="flex items-center gap-2 mb-2">
             <RefreshCw size={16} className="text-blue-500" />
             <span className="font-medium text-gray-800">Return Rate</span>
@@ -113,7 +113,7 @@ export function CustomerInsights() {
           </p>
           <p className="text-sm text-gray-600">Below industry average (5.2%)</p>
         </div>
-        <div className="p-3 border border-gray-200 rounded-lg">
+        <div className="p-3 border border-gray-200 rounded-lg bg-white">
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp size={16} className="text-green-500" />
             <span className="font-medium text-gray-800">Repeat Purchase</span>
@@ -157,9 +157,9 @@ export function CustomerInsights() {
               {topZipCodes.map((zipData, idx) => (
                 <div
                   key={idx}
-                  className={`p-3 border-2 rounded-lg transition-all cursor-pointer ${
+                  className={`p-3 border-2 rounded-lg transition-all cursor-pointer bg-white ${
                     selectedZipCode === zipData.zipCode
-                      ? "border-[#5B6E02] bg-[#F7F2EC]"
+                      ? "border-[#5B6E02]"
                       : "border-gray-200 hover:border-gray-300"
                   }`}
                   onClick={() => setSelectedZipCode(selectedZipCode === zipData.zipCode ? null : zipData.zipCode)}
