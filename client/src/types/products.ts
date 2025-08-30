@@ -103,62 +103,68 @@ export interface Product {
   aiSuggestionNote?: string;
   createdAt: string;
   updatedAt: string;
+  category?: string;
+  brand?: string;
+  sku?: string;
+  weight?: number;
+  dimensions?: string;
+  rating?: number;
+  reviewCount?: number;
+  salesCount?: number;
+  profitMargin?: number;
+  costPrice?: number;
+  supplier?: string;
+  reorderPoint?: number;
+  leadTime?: number;
+  seasonality?: 'year-round' | 'seasonal' | 'limited';
+  status?: 'active' | 'draft' | 'archived' | 'discontinued';
+  seoTitle?: string;
+  seoDescription?: string;
+  seoKeywords?: string[];
+  variants?: ProductVariant[];
+  relatedProducts?: string[];
+  customFields?: Record<string, any>;
   
-  // Enhanced production fields
-  category: 'bread' | 'pastry' | 'dessert' | 'beverage' | 'other';
-  unit: 'loaf' | 'piece' | 'dozen' | 'kg' | 'lb' | 'unit';
-  minStockLevel: number;
-  maxStockLevel: number;
-  reorderQuantity: number;
-  productionLeadTime: number; // days
-  
-  // Cost tracking
-  currentCost: number;
-  costBreakdown: {
-    rawMaterials: number;
-    labor: number;
-    overhead: number;
-    packaging: number;
-  };
-  
-  // Production settings
-  batchSize: number;
-  productionFrequency: 'daily' | 'weekly' | 'bi-weekly' | 'monthly' | 'on-demand';
-  lastProductionDate?: string;
-  nextProductionDate?: string;
-  
-  // Quality and compliance
-  allergens: string[];
-  dietaryRestrictions: string[];
-  certifications: string[];
-  expirationDays: number;
-  storageRequirements: string;
-  
-  // Sales and performance
-  totalSold: number;
-  averageRating: number;
-  reviewCount: number;
-  isFeatured: boolean;
-  isSeasonal: boolean;
-  seasonalStartDate?: string;
-  seasonalEndDate?: string;
+  // Enhanced Production Fields
+  unit?: string;
+  minStockLevel?: number;
+  maxStockLevel?: number;
+  reorderQuantity?: number;
+  productionLeadTime?: number;
+  batchSize?: number;
+  productionFrequency?: 'daily' | 'weekly' | 'bi-weekly' | 'monthly' | 'on-demand';
+  allergens?: string[];
+  dietaryRestrictions?: string[];
+  certifications?: string[];
+  expirationDays?: number;
+  storageRequirements?: string;
+  isFeatured?: boolean;
+  isSeasonal?: boolean;
+  hasAllergens?: boolean;
+  requiresRefrigeration?: boolean;
+}
+
+export interface ProductVariant {
+  id: string;
+  name: string;
+  price: number;
+  stock: number;
+  attributes: Record<string, string>;
 }
 
 export interface CreateProductForm {
   name: string;
-  description: string;
+  description?: string;
   price: number;
-  imageUrl: string;
+  imageUrl?: string;
   tags: string;
   stock: number;
   isAvailable: boolean;
-  targetMargin: number;
-  recipeId: string;
+  targetMargin?: number;
+  recipeId?: string;
   onWatchlist: boolean;
-  lastAiSuggestion: number;
-  aiSuggestionNote: string;
-  
-  // Enhanced fields
+  lastAiSuggestion?: number;
+  aiSuggestionNote?: string;
   category: string;
   unit: string;
   minStockLevel: number;
@@ -172,6 +178,11 @@ export interface CreateProductForm {
   certifications: string[];
   expirationDays: number;
   storageRequirements: string;
+  isFeatured: boolean;
+  isSeasonal: boolean;
+  hasAllergens: boolean;
+  requiresRefrigeration: boolean;
+  status?: string;
 }
 
 export interface ProductionPlan {
@@ -206,79 +217,51 @@ export interface InventoryTransaction {
 }
 
 export interface CostAnalysis {
-  product: {
-    id: string;
-    name: string;
-    currentPrice: number;
-    targetMargin: number | null;
-  };
-  costAnalysis: {
-    unitCost: number;
-    recipeYield: number;
-    hasRecipe: boolean;
-    rawMaterialCost: number;
-    laborCost: number;
-    overheadCost: number;
-    packagingCost: number;
-  };
-  marginAnalysis: {
-    currentMargin: number;
-    status: 'danger' | 'warning' | 'safe';
-    suggestedPrice: number | null;
-    breakEvenPrice: number;
-  };
-  productionMetrics: {
-    averageBatchSize: number;
-    averageYield: number;
-    productionEfficiency: number;
-    lastProductionDate?: string;
-  };
+  productId: string;
+  totalCost: number;
+  ingredientCosts: {
+    ingredientId: string;
+    ingredientName: string;
+    quantity: number;
+    unit: string;
+    costPerUnit: number;
+    totalCost: number;
+  }[];
+  overheadCosts: {
+    category: string;
+    amount: number;
+    percentage: number;
+  }[];
+  profitMargin: number;
+  suggestedPrice: number;
 }
 
 export interface MarginAnalysis {
-  product: {
-    id: string;
-    name: string;
-    currentPrice: number;
-    targetMargin: number | null;
-  };
-  costAnalysis: {
-    unitCost: number;
-    recipeYield: number;
-    hasRecipe: boolean;
-  };
-  marginAnalysis: {
-    currentMargin: number;
-    status: 'danger' | 'warning' | 'safe';
-    suggestedPrice: number | null;
-  };
+  productId: string;
+  productName: string;
+  currentPrice: number;
+  costPrice: number;
+  currentMargin: number;
+  targetMargin: number;
+  marginDifference: number;
+  recommendations: string[];
+  costBreakdown: {
+    ingredient: string;
+    cost: number;
+    percentage: number;
+  }[];
 }
 
 export interface AiSuggestionResponse {
-  message: string;
-  product: {
-    id: string;
-    name: string;
-    currentPrice: number;
-    targetMargin: number;
-    onWatchlist: boolean;
-  };
-  costAnalysis: {
-    unitCost: number;
-    hasRecipe: boolean;
-  };
-  aiSuggestion: {
-    suggestedPrice: number;
-    note: string;
-    volatilityDetected: boolean;
+  productId: string;
+  suggestions: {
+    type: 'pricing' | 'inventory' | 'production' | 'marketing';
+    title: string;
+    description: string;
+    impact: 'high' | 'medium' | 'low';
     confidence: number;
-    priceDifference: number;
-    percentageChange: number;
-  };
-  watchlistUpdate: {
-    addedToWatchlist: boolean;
-    reason: string;
-  };
+    implementation: string[];
+  }[];
 }
 
 export interface ProductsResponse {
@@ -326,4 +309,82 @@ export interface ProductionFilters {
   };
   productId?: string;
   recipeId?: string;
+}
+
+export interface Recipe {
+  id: string;
+  name: string;
+  description?: string;
+  instructions?: string;
+  yield: number;
+  yieldUnit: string;
+  prepTime?: number;
+  cookTime?: number;
+  difficulty?: string;
+  isActive: boolean;
+  vendorProfileId: string;
+  productId?: string;
+  createdAt: string;
+  updatedAt: string;
+  ingredients: RecipeIngredient[];
+}
+
+export interface RecipeIngredient {
+  id: string;
+  recipeId: string;
+  ingredientId: string;
+  ingredientName: string;
+  quantity: number;
+  unit: string;
+  notes?: string;
+  costPerUnit: number;
+  totalCost: number;
+}
+
+export interface Ingredient {
+  id: string;
+  name: string;
+  description?: string;
+  unit: string;
+  costPerUnit: number;
+  supplier?: string;
+  stockQty: number;
+  lowStockThreshold: number;
+  isAvailable: boolean;
+  vendorProfileId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ProductionBatch {
+  id: string;
+  productId: string;
+  productName: string;
+  batchSize: number;
+  startDate: string;
+  completionDate?: string;
+  status: 'planned' | 'in-progress' | 'completed' | 'cancelled';
+  ingredientsUsed: {
+    ingredientId: string;
+    ingredientName: string;
+    quantity: number;
+    unit: string;
+    cost: number;
+  }[];
+  totalCost: number;
+  notes?: string;
+}
+
+export interface ProductionSchedule {
+  id: string;
+  productId: string;
+  productName: string;
+  plannedDate: string;
+  batchSize: number;
+  priority: 'high' | 'medium' | 'low';
+  status: 'scheduled' | 'in-progress' | 'completed' | 'delayed';
+  dependencies?: string[];
+  estimatedDuration: number;
+  actualDuration?: number;
+  notes?: string;
 }

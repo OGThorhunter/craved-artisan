@@ -32,7 +32,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   // Check role if required
-  if (role && user.role !== role) {
+  if (role && user.role.toLowerCase() !== role.toLowerCase()) {
     return <Redirect to="/" />;
   }
 

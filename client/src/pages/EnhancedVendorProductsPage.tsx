@@ -1,219 +1,245 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
 import { 
   Plus, 
-  Package, 
-  Tag, 
-  DollarSign, 
-  FileText, 
   Edit, 
   Trash2, 
   Eye, 
   X, 
-  Image as ImageIcon, 
-  Brain, 
-  AlertTriangle, 
-  RefreshCw,
-  BarChart3,
-  Factory,
-  TrendingUp,
-  Users,
+  Search,
+  Package,
+  DollarSign,
+  Tag,
   Calendar,
+  Filter,
+  Download,
+  Upload,
+  MoreHorizontal,
+  CheckSquare,
+  Square,
+  Settings,
+  Grid3X3,
+  List,
+  SortAsc,
+  SortDesc,
+  ChevronDown,
+  ChevronUp,
+  AlertTriangle,
+  CheckCircle,
+  Clock,
+  Star,
+  Camera,
+  FileText,
   Calculator,
-  Zap,
-  ChefHat
+  Users,
+  Wrench,
+  UtensilsCrossed,
+  ShoppingBag,
+  Printer,
+  Share2
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import axios from 'axios';
+import api from '../lib/api';
 import VendorDashboardLayout from '../layouts/VendorDashboardLayout';
-import ProductionManager from '../components/vendor/ProductionManager';
-import RecipeManager from '../components/vendor/RecipeManager';
-import type { 
-  Product, 
-  CreateProductForm, 
-  MarginAnalysis, 
-  AiSuggestionResponse, 
-  ProductsResponse,
-  CostAnalysis
-} from '../types/products';
+import { MOCK_INGREDIENTS, MOCK_UNITS, MOCK_TRADE_SUPPLIES, MOCK_TRADE_UNITS, calculateRecipeCost, calculateMarginAnalysis } from '../types/recipes';
 
-// API functions
-const fetchProducts = async (): Promise<ProductsResponse> => {
-  const response = await axios.get('/api/vendor/products', {
-    withCredentials: true
-  });
-  return response.data;
-};
+// Enhanced Product Card interface
+interface ProductCard {
+  id: string;
+  name: string;
+  description?: string;
+  category: 'food' | 'service' | 'non-food';
+  subcategory: string;
+  price: number;
+  imageUrl?: string;
+  tags: string[];
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  
+  // Cost breakdown
+  ingredients: ProductIngredient[];
+  tradeSupplies?: ProductTradeSupply[];
+  laborCost: number;
+  overheadCost: number;
+  totalCost: number;
+  profitMargin: number;
+  
+  // Recipe details (for food items)
+  recipe?: {
+    instructions: string[];
+    prepTime: number;
+    cookTime: number;
+    servings: number;
+    yield: number;
+    yieldUnit: string;
+  };
+  
+  // Service details (for service items)
+  service?: {
+    duration: number;
+    skillLevel: 'beginner' | 'intermediate' | 'expert';
+    requirements: string[];
+  };
+}
 
-const createProduct = async (productData: CreateProductForm): Promise<{ message: string; product: Product }> => {
-  const tags = (productData.tags || '')
-    .split(',')
-    .map(tag => tag.trim())
-    .filter(tag => tag.length > 0);
+interface ProductIngredient {
+  id: string;
+  ingredientId: string;
+  ingredient: any; // From MOCK_INGREDIENTS
+  quantity: number;
+  unit: string;
+  cost: number;
+  notes?: string;
+}
 
-  const response = await axios.post('/api/vendor/products', {
-    ...productData,
-    tags,
-    price: Number(productData.price),
-    stock: Number(productData.stock),
-    targetMargin: productData.targetMargin ? Number(productData.targetMargin) : null,
-    recipeId: productData.recipeId || null
-  }, {
-    withCredentials: true
-  });
-  return response.data;
-};
+interface ProductTradeSupply {
+  id: string;
+  supplyId: string;
+  supply: any; // From MOCK_TRADE_SUPPLIES
+  quantity: number;
+  unit: string;
+  cost: number;
+  notes?: string;
+}
 
-const updateProduct = async (productData: CreateProductForm & { id: string }): Promise<{ message: string; product: Product }> => {
-  const tags = (productData.tags || '')
-    .split(tag => tag.trim())
-    .filter(tag => tag.length > 0);
+interface CreateProductCardForm {
+  name: string;
+  description: string;
+  category: 'food' | 'service' | 'non-food';
+  subcategory: string;
+  price: number;
+  imageUrl: string;
+  tags: string;
+  ingredients: ProductIngredient[];
+  tradeSupplies: ProductTradeSupply[];
+  laborCost: number;
+  overheadCost: number;
+  profitMargin: number;
+}
 
-  const response = await axios.put(`/api/vendor/products/${productData.id}`, {
-    ...productData,
-    tags,
-    price: Number(productData.price),
-    stock: Number(productData.stock),
-    targetMargin: productData.targetMargin ? Number(productData.targetMargin) : null,
-    recipeId: productData.recipeId || null
-  }, {
-    withCredentials: true
-  });
-  return response.data;
-};
+interface Category {
+  id: string;
+  name: string;
+  icon: any;
+  subcategories: string[];
+  description: string;
+}
 
-const fetchMarginAnalysis = async (productId: string): Promise<MarginAnalysis> => {
-  const response = await axios.get(`/api/vendor/products/${productId}/margin`, {
-    withCredentials: true
-  });
-  return response.data;
-};
-
-const fetchAiSuggestion = async (productId: string): Promise<AiSuggestionResponse> => {
-  const response = await axios.post(`/api/vendor/products/${productId}/ai-suggest`, {}, {
-    withCredentials: true
-  });
-  return response.data;
-};
+// Enhanced categories with icons and descriptions
+const PRODUCT_CATEGORIES: Category[] = [
+  {
+         id: 'food',
+     name: 'Food',
+     icon: UtensilsCrossed,
+     subcategories: ['Baked Goods', 'Preserved Foods', 'Fresh Produce', 'Beverages', 'Dairy', 'Meat & Seafood'],
+     description: 'Food-based products with ingredient tracking and recipe management'
+  },
+  {
+    id: 'service',
+    name: 'Services',
+    icon: Wrench,
+    subcategories: ['Yard Work', 'Tattoo Services', 'Consulting', 'Maintenance', 'Creative Services', 'Other'],
+    description: 'Service-based offerings with labor and material cost tracking'
+  },
+  {
+    id: 'non-food',
+    name: 'Non-Food Goods',
+    icon: ShoppingBag,
+    subcategories: ['Crafts', 'Textiles', 'Pottery', 'Jewelry', 'Home Decor', 'Other'],
+    description: 'Handcrafted items with material and labor cost management'
+  }
+];
 
 const EnhancedVendorProductsPage: React.FC = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState<'products' | 'production' | 'recipes' | 'analytics' | 'financials'>('products');
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [editing, setEditing] = useState<Product | null>(null);
-  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; product: Product | null }>({
-    show: false,
-    product: null
-  });
-  const [imagePreview, setImagePreview] = useState<string>('');
-  const [tags, setTags] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState<string>('');
-  const [marginData, setMarginData] = useState<MarginAnalysis | null>(null);
-  const [showMarginAnalysis, setShowMarginAnalysis] = useState(false);
-  const [aiSuggestionData, setAiSuggestionData] = useState<AiSuggestionResponse | null>(null);
-  const [showAiSuggestionModal, setShowAiSuggestionModal] = useState(false);
+  
+  // State management
 
-  // React Query for fetching products
-  const {
-    data: productsData,
-    isLoading,
-    error,
-    refetch
-  } = useQuery({
-    queryKey: ['vendor-products'],
-    queryFn: fetchProducts,
-    retry: 1,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
+  const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
+  const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState<'name' | 'price' | 'totalCost' | 'createdAt'>('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  
+  // Product card management
+  const [showProductCard, setShowProductCard] = useState(false);
+  const [showViewDetails, setShowViewDetails] = useState(false);
+  const [editingCard, setEditingCard] = useState<ProductCard | null>(null);
+  const [viewingCard, setViewingCard] = useState<ProductCard | null>(null);
+  const [selectedCategoryForCard, setSelectedCategoryForCard] = useState<'food' | 'service' | 'non-food'>('food');
+  
+  // AI recipe parsing
+  const [showImageUpload, setShowImageUpload] = useState(false);
+  const [uploadedImage, setUploadedImage] = useState<File | null>(null);
+  const [parsingRecipe, setParsingRecipe] = useState(false);
+  
+  // Ingredient management
+  const [ingredientLines, setIngredientLines] = useState<Array<{
+    id: string;
+    ingredientId: string;
+    quantity: number;
+    unit: string;
+    cost: number;
+  }>>([]);
 
-  // Ensure we have safe data to work with
-  const safeProductsData = productsData || { products: [], count: 0 };
-  const safeProducts = safeProductsData.products || [];
-
-  // React Query for creating products
-  const createProductMutation = useMutation({
-    mutationFn: createProduct,
-    onSuccess: (data) => {
-      toast.success('Product created successfully!');
-      queryClient.invalidateQueries({ queryKey: ['vendor-products'] });
-      setShowAddForm(false);
-      reset();
-      setTags([]);
-      setImagePreview('');
-      setTagInput('');
-    },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || 'Failed to create product';
-      toast.error(message);
+  // Trade supply management
+  const [tradeSupplyLines, setTradeSupplyLines] = useState<Array<{
+    id: string;
+    supplyId: string;
+    quantity: number;
+    unit: string;
+    cost: number;
+  }>>([]);
+  
+  // Unit conversion reference
+  const [showUnitConverter, setShowUnitConverter] = useState(false);
+  
+  // Trade supplies modal
+  const [showTradeSuppliesModal, setShowTradeSuppliesModal] = useState(false);
+  
+  // Mock product cards for development
+  const [productCards, setProductCards] = useState<ProductCard[]>([
+    {
+      id: '1',
+      name: 'Artisan Sourdough Bread',
+      description: 'Traditional sourdough bread with crispy crust',
+      category: 'food',
+      subcategory: 'Baked Goods',
+      price: 12.99,
+      imageUrl: '',
+      tags: ['bread', 'sourdough', 'artisan'],
+      isActive: true,
+      createdAt: '2025-08-30',
+      updatedAt: '2025-08-30',
+      ingredients: [
+        {
+          id: '1',
+          ingredientId: '1',
+          ingredient: MOCK_INGREDIENTS[0],
+          quantity: 3.5,
+          unit: 'kg',
+          cost: 8.75,
+          notes: 'High protein content'
+        }
+      ],
+      laborCost: 15.00,
+      overheadCost: 2.50,
+      totalCost: 26.25,
+      profitMargin: 30,
+      recipe: {
+        instructions: ['Mix ingredients', 'Knead dough', 'Let rise', 'Bake'],
+        prepTime: 30,
+        cookTime: 45,
+        servings: 8,
+        yield: 1,
+        yieldUnit: 'loaf'
+      }
     }
-  });
-
-  // React Query for updating products
-  const updateProductMutation = useMutation({
-    mutationFn: updateProduct,
-    onSuccess: (data) => {
-      toast.success('Product updated successfully!');
-      queryClient.invalidateQueries({ queryKey: ['vendor-products'] });
-      setShowAddForm(false);
-      setEditing(null);
-      reset();
-      setTags([]);
-      setImagePreview('');
-      setTagInput('');
-      setMarginData(null);
-      setShowMarginAnalysis(false);
-    },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || 'Failed to update product';
-      toast.error(message);
-    }
-  });
-
-  // React Query for deleting products
-  const deleteProductMutation = useMutation({
-    mutationFn: (id: string) => axios.delete(`/api/vendor/products/${id}`, {
-      withCredentials: true
-    }),
-    onSuccess: () => {
-      toast.success('Product deleted successfully!');
-      queryClient.invalidateQueries({ queryKey: ['vendor-products'] });
-    },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || 'Failed to delete product';
-      toast.error(message);
-    }
-  });
-
-  // React Query for margin analysis
-  const marginAnalysisMutation = useMutation({
-    mutationFn: fetchMarginAnalysis,
-    onSuccess: (data) => {
-      setMarginData(data);
-      setShowMarginAnalysis(true);
-    },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || 'Failed to fetch margin analysis';
-      toast.error(message);
-    }
-  });
-
-  // React Query for AI suggestion
-  const aiSuggestionMutation = useMutation({
-    mutationFn: fetchAiSuggestion,
-    onSuccess: (data) => {
-      setAiSuggestionData(data);
-      setShowAiSuggestionModal(true);
-      queryClient.invalidateQueries({ queryKey: ['vendor-products'] });
-      toast.success('AI suggestion applied successfully!');
-    },
-    onError: (error: any) => {
-      const message = error.response?.data?.message || 'Failed to fetch AI suggestion';
-      toast.error(message);
-    }
-  });
+  ]);
 
   // React Hook Form
   const {
@@ -221,940 +247,1542 @@ const EnhancedVendorProductsPage: React.FC = () => {
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors, isSubmitting }
-  } = useForm<CreateProductForm>({
+  } = useForm<CreateProductCardForm>({
     defaultValues: {
       name: '',
       description: '',
+      category: 'food',
+      subcategory: '',
       price: 0,
       imageUrl: '',
       tags: '',
-      stock: 0,
-      isAvailable: true,
-      targetMargin: 30,
-      recipeId: '',
-      onWatchlist: false,
-      lastAiSuggestion: 0,
-      aiSuggestionNote: '',
-      // Enhanced fields
-      category: 'bread',
-      unit: 'loaf',
-      minStockLevel: 10,
-      maxStockLevel: 100,
-      reorderQuantity: 50,
-      productionLeadTime: 1,
-      batchSize: 12,
-      productionFrequency: 'daily',
-      allergens: [],
-      dietaryRestrictions: [],
-      certifications: [],
-      expirationDays: 7,
-      storageRequirements: 'Store in a cool, dry place',
-      // Additional fields
-      isFeatured: false,
-      isSeasonal: false,
-      hasAllergens: false,
-      requiresRefrigeration: false
+      ingredients: [],
+      tradeSupplies: [],
+      laborCost: 0,
+      overheadCost: 0,
+      profitMargin: 30
     }
   });
 
-  // Watch price and target margin for real-time calculations
-  const watchedPrice = watch('price');
-  const watchedTargetMargin = watch('targetMargin');
+  const watchedCategory = watch('category');
 
-  const onSubmit = (data: CreateProductForm) => {
-    const payload = {
-      ...data,
-      price: parseFloat(data.price.toString()),
-      stock: parseInt(data.stock.toString()),
-      tags: tags,
+  // Computed values
+  const filteredAndSortedCards = useMemo(() => {
+    let filtered = productCards.filter(card => {
+      const matchesSearch = card.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        card.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        card.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+      
+      const matchesCategory = !selectedCategory || card.category === selectedCategory;
+      
+      return matchesSearch && matchesCategory;
+    });
+
+    // Sort cards
+    filtered.sort((a, b) => {
+      let aValue: any = a[sortBy];
+      let bValue: any = b[sortBy];
+      
+      if (sortBy === 'price' || sortBy === 'totalCost') {
+        aValue = Number(aValue) || 0;
+        bValue = Number(bValue) || 0;
+      }
+      
+      if (sortOrder === 'asc') {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
+
+    return filtered;
+  }, [productCards, searchTerm, selectedCategory, sortBy, sortOrder]);
+
+  // View details handler
+  const handleViewDetails = (card: ProductCard) => {
+    setViewingCard(card);
+    setShowViewDetails(true);
+  };
+
+  // Form handlers
+  const onSubmit = (data: CreateProductCardForm) => {
+    // Check for duplicates
+    if (!editingCard && checkForDuplicate(data.name, data.category)) {
+      toast.error('A product with this name already exists in this category. Please choose a different name.');
+      return;
+    }
+
+    // Validate required fields
+    if (!data.name.trim()) {
+      toast.error('Product name is required.');
+      return;
+    }
+
+    if (!data.subcategory.trim()) {
+      toast.error('Subcategory is required.');
+      return;
+    }
+
+    // Calculate suggested price if not provided
+    const suggestedPrice = calculateSuggestedPrice();
+    const finalPrice = Number(data.price) > 0 ? Number(data.price) : suggestedPrice;
+
+    const newCard: ProductCard = {
+      id: editingCard?.id || Date.now().toString(),
+      name: data.name.trim(),
+      description: data.description.trim(),
+      category: data.category,
+      subcategory: data.subcategory.trim(),
+      price: finalPrice,
+      imageUrl: data.imageUrl,
+      tags: data.tags.split(',').map(tag => tag.trim()).filter(Boolean),
+      isActive: true,
+      createdAt: editingCard?.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      ingredients: ingredientLines.map(line => ({
+        id: line.id,
+        ingredientId: line.ingredientId,
+        ingredient: MOCK_INGREDIENTS.find(ing => ing.id === line.ingredientId),
+        quantity: line.quantity,
+        unit: line.unit,
+        cost: line.cost,
+        notes: ''
+      })),
+      laborCost: Number(data.laborCost) || 0,
+      overheadCost: Number(data.overheadCost) || 0,
+      totalCost: getTotalIngredientCost() + (Number(data.laborCost) || 0) + (Number(data.overheadCost) || 0),
+      profitMargin: Number(data.profitMargin) || 30
     };
 
-    if (editing) {
-      updateProductMutation.mutate({ ...payload, id: editing.id });
+    if (editingCard) {
+      setProductCards(cards => cards.map(card => card.id === editingCard.id ? newCard : card));
+      toast.success('Product card updated successfully!');
     } else {
-      createProductMutation.mutate(payload);
+      setProductCards(cards => [...cards, newCard]);
+      toast.success('Product card created successfully!');
     }
+
+    setShowProductCard(false);
+    setEditingCard(null);
+    reset();
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(price);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
-  const startEdit = (product: Product) => {
-    setEditing(product);
-    setShowAddForm(true);
-    setTags(product.tags || []);
-    setImagePreview(product.imageUrl || '');
-    setMarginData(null);
-    setShowMarginAnalysis(false);
+  const handleEdit = (card: ProductCard) => {
+    setEditingCard(card);
+    setSelectedCategoryForCard(card.category);
+    setIngredientLines(card.ingredients.map(ing => ({
+      id: ing.id,
+      ingredientId: ing.ingredientId,
+      quantity: ing.quantity,
+      unit: ing.unit,
+      cost: ing.cost
+    })));
     reset({
-      ...product,
-      tags: '',
-      targetMargin: product.targetMargin || 0,
-      recipeId: product.recipeId || '',
-      onWatchlist: product.onWatchlist,
-      lastAiSuggestion: product.lastAiSuggestion || 0,
-      aiSuggestionNote: product.aiSuggestionNote || ''
+      name: card.name,
+      description: card.description || '',
+      category: card.category,
+      subcategory: card.subcategory,
+      price: card.price,
+      imageUrl: card.imageUrl || '',
+      tags: card.tags.join(', '),
+      ingredients: card.ingredients,
+      laborCost: card.laborCost,
+      overheadCost: card.overheadCost,
+      profitMargin: card.profitMargin
     });
+    setShowProductCard(true);
   };
 
-  const handleDelete = (product: Product) => {
-    setDeleteConfirm({ show: true, product });
+  const handleCancel = () => {
+    setShowProductCard(false);
+    setEditingCard(null);
+    setIngredientLines([]);
+    setTradeSupplyLines([]);
+    reset();
   };
 
-  const confirmDelete = () => {
-    if (deleteConfirm.product) {
-      deleteProductMutation.mutate(deleteConfirm.product.id);
-      setDeleteConfirm({ show: false, product: null });
-    }
+  // Ingredient management functions
+  const addIngredientLine = () => {
+    const newLine = {
+      id: Date.now().toString(),
+      ingredientId: '',
+      quantity: 0,
+      unit: 'grams',
+      cost: 0
+    };
+    setIngredientLines([...ingredientLines, newLine]);
   };
 
-  const cancelDelete = () => {
-    setDeleteConfirm({ show: false, product: null });
+  const removeIngredientLine = (id: string) => {
+    setIngredientLines(ingredientLines.filter(line => line.id !== id));
   };
 
-  const addTag = () => {
-    if (tagInput.trim() && !tags.includes(tagInput.trim())) {
-      setTags([...tags, tagInput.trim()]);
-      setTagInput('');
-    }
+  const updateIngredientLine = (id: string, field: string, value: any) => {
+    setIngredientLines(ingredientLines.map(line => {
+      if (line.id === id) {
+        const updated = { ...line, [field]: value };
+        // Recalculate cost based on ingredient selection
+        if (field === 'ingredientId' || field === 'quantity') {
+          const ingredient = MOCK_INGREDIENTS.find(ing => ing.id === updated.ingredientId);
+          if (ingredient) {
+            updated.cost = ingredient.costPerUnit * updated.quantity;
+          }
+        }
+        return updated;
+      }
+      return line;
+    }));
   };
 
-  const removeTag = (tagToRemove: string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove));
+  // Trade supply management functions
+  const addTradeSupplyLine = () => {
+    const newLine = {
+      id: Date.now().toString(),
+      supplyId: '',
+      quantity: 0,
+      unit: 'piece',
+      cost: 0
+    };
+    setTradeSupplyLines([...tradeSupplyLines, newLine]);
   };
 
-  const handleImageUrlChange = (url: string) => {
-    setImagePreview(url);
+  const removeTradeSupplyLine = (id: string) => {
+    setTradeSupplyLines(tradeSupplyLines.filter(line => line.id !== id));
   };
 
-  const handleProductionUpdate = () => {
-    // Refresh products data when production is updated
-    refetch();
+  const updateTradeSupplyLine = (id: string, field: string, value: any) => {
+    setTradeSupplyLines(tradeSupplyLines.map(line => {
+      if (line.id === id) {
+        const updated = { ...line, [field]: value };
+        // Recalculate cost based on supply selection
+        if (field === 'supplyId' || field === 'quantity') {
+          const supply = MOCK_TRADE_SUPPLIES.find(sup => sup.id === updated.supplyId);
+          if (supply) {
+            updated.cost = supply.costPerUnit * updated.quantity;
+          }
+        }
+        return updated;
+      }
+      return line;
+    }));
   };
 
-  if (isLoading) {
-    return (
-      <VendorDashboardLayout>
-        <div className="p-6">
-          <div className="max-w-7xl mx-auto">
-            <div className="animate-pulse">
-              <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[...Array(6)].map((_, i) => (
-                  <div key={i} className="bg-white rounded-lg shadow p-6">
-                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
-                    <div className="h-3 bg-gray-200 rounded w-1/2 mb-2"></div>
-                    <div className="h-3 bg-gray-200 rounded w-2/3"></div>
-                  </div>
-                ))}
+  const getTotalIngredientCost = () => {
+    return ingredientLines.reduce((total, line) => total + line.cost, 0);
+  };
+
+  const getTotalTradeSuppliesCost = () => {
+    return tradeSupplyLines.reduce((total, line) => total + line.cost, 0);
+  };
+
+  const getTotalCost = () => {
+    const ingredientCost = getTotalIngredientCost();
+    const tradeSuppliesCost = getTotalTradeSuppliesCost();
+    const laborCost = Number(watch('laborCost')) || 0;
+    const overheadCost = Number(watch('overheadCost')) || 0;
+    return ingredientCost + tradeSuppliesCost + laborCost + overheadCost;
+  };
+
+  const calculateSuggestedPrice = () => {
+    const totalCost = getTotalCost();
+    const profitMargin = Number(watch('profitMargin')) || 30;
+    const suggestedPrice = totalCost * (1 + profitMargin / 100);
+    // Round to nearest penny (2 decimal places)
+    return Math.round(suggestedPrice * 100) / 100;
+  };
+
+  // Safe price formatting helper
+  const formatPrice = (price: any) => {
+    const numPrice = Number(price);
+    return isNaN(numPrice) ? 0 : numPrice.toFixed(2);
+  };
+
+  // Duplicate prevention
+  const checkForDuplicate = (name: string, category: string) => {
+    return productCards.some(card => 
+      card.name.toLowerCase() === name.toLowerCase() && 
+      card.category === category
+    );
+  };
+
+  // AI Recipe Parsing
+  const handleImageUpload = async (file: File) => {
+    setUploadedImage(file);
+    setParsingRecipe(true);
+    
+    // Simulate AI parsing
+    setTimeout(() => {
+      // Mock parsed recipe data
+      const parsedRecipe = {
+        name: 'Parsed Recipe from Image',
+        ingredients: [
+          { name: 'Flour', quantity: 2, unit: 'cups' },
+          { name: 'Sugar', quantity: 1, unit: 'cup' }
+        ],
+        instructions: ['Mix ingredients', 'Bake at 350°F']
+      };
+      
+      // Auto-fill form with parsed data
+      setValue('name', parsedRecipe.name);
+      setValue('description', 'Recipe parsed from uploaded image');
+      setValue('ingredients', parsedRecipe.ingredients.map((ing, index) => ({
+        id: index.toString(),
+        ingredientId: '',
+        ingredient: null,
+        quantity: ing.quantity,
+        unit: ing.unit,
+        cost: 0,
+        notes: `Parsed from image`
+      })));
+      
+      setParsingRecipe(false);
+      setShowImageUpload(false);
+      toast.success('Recipe parsed successfully!');
+    }, 2000);
+  };
+
+  // Export functionality
+  const handleExport = () => {
+    const csvContent = [
+      ['Name', 'Category', 'Subcategory', 'Price', 'Total Cost', 'Profit Margin', 'Tags'],
+      ...filteredAndSortedCards.map(card => [
+        card.name,
+        card.category,
+        card.subcategory,
+        card.price.toString(),
+        card.price.toString(),
+        card.profitMargin.toString(),
+        card.tags.join(', ')
+      ])
+    ].map(row => row.map(field => `"${field}"`).join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'product-cards-export.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+    
+    toast.success('Product cards exported successfully!');
+  };
+
+  // Print functionality
+  const handlePrint = () => {
+    if (!viewingCard) return;
+    
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      const printContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>${viewingCard.name} - Recipe Card</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 20px; }
+            .recipe-card { max-width: 600px; margin: 0 auto; }
+            .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
+            .recipe-title { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+            .recipe-subtitle { color: #666; margin-bottom: 20px; }
+            .section { margin-bottom: 20px; }
+            .section-title { font-size: 18px; font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 10px; }
+            .ingredient-list { list-style: none; padding: 0; }
+            .ingredient-item { padding: 5px 0; border-bottom: 1px solid #eee; }
+            .instructions { list-style: decimal; padding-left: 20px; }
+            .footer { margin-top: 30px; text-align: center; color: #666; font-size: 12px; }
+            @media print { body { margin: 0; } .no-print { display: none; } }
+          </style>
+        </head>
+        <body>
+          <div class="recipe-card">
+            <div class="header">
+              <div class="recipe-title">${viewingCard.name}</div>
+              <div class="recipe-subtitle">${viewingCard.description}</div>
+              <div>${PRODUCT_CATEGORIES.find(c => c.id === viewingCard.category)?.name} • ${viewingCard.subcategory}</div>
+            </div>
+            
+            ${viewingCard.category === 'food' && viewingCard.recipe ? `
+              <div class="section">
+                <div class="section-title">Recipe Details</div>
+                <div>Prep Time: ${viewingCard.recipe.prepTime} minutes</div>
+                <div>Cook Time: ${viewingCard.recipe.cookTime} minutes</div>
+                <div>Servings: ${viewingCard.servings}</div>
+                <div>Yield: ${viewingCard.recipe.yield} ${viewingCard.recipe.yieldUnit}</div>
               </div>
+            ` : ''}
+            
+            <div class="section">
+              <div class="section-title">Ingredients</div>
+              <ul class="ingredient-list">
+                ${viewingCard.ingredients.map(ing => `
+                  <li class="ingredient-item">
+                    <strong>${ing.quantity} ${ing.unit}</strong> ${ing.ingredient.name}
+                    ${ing.notes ? ` - ${ing.notes}` : ''}
+                  </li>
+                `).join('')}
+              </ul>
+            </div>
+            
+            ${viewingCard.category === 'food' && viewingCard.recipe ? `
+              <div class="section">
+                <div class="section-title">Instructions</div>
+                <ol class="instructions">
+                  ${viewingCard.recipe.instructions.map(instruction => `
+                    <li>${instruction}</li>
+                  `).join('')}
+                </ol>
+              </div>
+            ` : ''}
+            
+            <div class="section">
+              <div class="section-title">Cost Breakdown</div>
+              <div>Total Cost: $${viewingCard.totalCost.toFixed(2)}</div>
+              <div>Price: $${viewingCard.price.toFixed(2)}</div>
+              <div>Profit Margin: ${viewingCard.profitMargin}%</div>
+            </div>
+            
+            <div class="footer">
+              <div>Generated on ${new Date().toLocaleDateString()}</div>
+              <div>Craved Artisan - Product Management System</div>
             </div>
           </div>
-        </div>
-      </VendorDashboardLayout>
-    );
-  }
+        </body>
+        </html>
+      `;
+      
+      printWindow.document.write(printContent);
+      printWindow.document.close();
+      printWindow.focus();
+      printWindow.print();
+    }
+  };
 
-  if (error) {
-    return (
-      <VendorDashboardLayout>
-        <div className="p-6">
-          <div className="max-w-7xl mx-auto">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-              <Package className="h-12 w-12 text-red-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-red-800 mb-2">Error Loading Products</h3>
-              <p className="text-red-600 mb-4">
-                {error instanceof Error ? error.message : 'Failed to load products'}
-              </p>
-              <button
-                onClick={() => refetch()}
-                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
-              >
-                Try Again
-              </button>
-            </div>
-          </div>
-        </div>
-      </VendorDashboardLayout>
-    );
-  }
+  // Share functionality
+  const handleShare = async () => {
+    if (!viewingCard) return;
+    
+    const shareData = {
+      title: viewingCard.name,
+      text: viewingCard.description,
+      url: window.location.href
+    };
+    
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+        toast.success('Product card shared successfully!');
+      } catch (error) {
+        console.log('Error sharing:', error);
+      }
+    } else {
+      // Fallback: copy to clipboard
+      const shareText = `${viewingCard.name}\n${viewingCard.description}\n\nView at: ${window.location.href}`;
+      try {
+        await navigator.clipboard.writeText(shareText);
+        toast.success('Product details copied to clipboard!');
+      } catch (error) {
+        console.log('Error copying to clipboard:', error);
+      }
+    }
+  };
 
   return (
     <VendorDashboardLayout>
-      <div className="p-6">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Enhanced Products & Production</h1>
-                <p className="text-gray-600 mt-2">
-                  Manage your artisan products, track production, and optimize costs
-                </p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Product Management</h1>
+          <p className="mt-2 text-gray-600">Create and manage product cards with ingredient tracking and cost management</p>
+        </div>
+
+        {/* Page Header */}
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold text-gray-900">Product Cards</h2>
+          <p className="text-gray-600">Manage your product inventory and recipes</p>
+        </div>
+
+        {/* Action Bar */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => {
+                      setSelectedCategoryForCard('');
+                      setShowProductCard(true);
+                    }}
+                    className="bg-brand-green text-white px-6 py-3 rounded-lg hover:bg-brand-green/90 transition-colors flex items-center gap-2 text-lg font-medium"
+                  >
+                    <Plus className="w-5 h-5" />
+                    Add Product
+                  </button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setShowImageUpload(true)}
+                    className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2"
+                  >
+                    <Camera className="w-4 h-4" />
+                    AI Recipe Parser
+                  </button>
+                  <button
+                    onClick={handleExport}
+                    className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    Export
+                  </button>
+                </div>
               </div>
-              <button
-                onClick={() => {
-                  setShowAddForm(!showAddForm);
-                  if (!showAddForm) {
-                    setEditing(null);
-                    reset();
-                    setTags([]);
-                    setImagePreview('');
-                    setTagInput('');
-                    setMarginData(null);
-                    setShowMarginAnalysis(false);
-                    setAiSuggestionData(null);
-                    setShowAiSuggestionModal(false);
-                  }
-                }}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Add Product
-              </button>
             </div>
-          </div>
 
-          {/* Tab Navigation */}
-          <div className="flex border-b border-gray-200 mb-6">
-            {[
-              { id: 'products', label: 'Products', icon: Package },
-              { id: 'production', label: 'Production', icon: Factory },
-              { id: 'recipes', label: 'Recipes', icon: ChefHat },
-              { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-              { id: 'financials', label: 'Financials', icon: DollarSign }
-            ].map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors ${
-                    activeTab === tab.id
-                      ? 'border-b-2 border-blue-500 text-blue-600'
-                      : 'text-gray-500 hover:text-gray-700'
-                  }`}
-                >
-                  <Icon className="h-4 w-4" />
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
+            {/* Search and Filters */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <input
+                    type="text"
+                    placeholder="Search products..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
+                  />
+                </div>
+                                 <div>
+                   <label htmlFor="category-filter" className="sr-only">Filter by category</label>
+                   <select
+                     id="category-filter"
+                     value={selectedCategory}
+                     onChange={(e) => setSelectedCategory(e.target.value)}
+                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
+                     aria-label="Filter by category"
+                   >
+                     <option value="">All Categories</option>
+                     {PRODUCT_CATEGORIES.map(category => (
+                       <option key={category.id} value={category.id}>
+                         {category.name}
+                       </option>
+                     ))}
+                   </select>
+                 </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setViewMode('cards')}
+                    className={`p-2 rounded-md ${viewMode === 'cards' ? 'bg-brand-green text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                    aria-label="View as cards"
+                  >
+                    <Grid3X3 className="w-5 h-5" />
+                  </button>
+                  <button
+                    onClick={() => setViewMode('list')}
+                    className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-brand-green text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                    aria-label="View as list"
+                  >
+                    <List className="w-5 h-5" />
+                  </button>
+                </div>
+                                 <div className="flex gap-2">
+                   <label htmlFor="sort-select" className="sr-only">Sort by</label>
+                   <select
+                     id="sort-select"
+                     value={sortBy}
+                     onChange={(e) => setSortBy(e.target.value as any)}
+                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
+                     aria-label="Sort by"
+                   >
+                     <option value="name">Name</option>
+                     <option value="price">Price</option>
+                     <option value="totalCost">Cost</option>
+                     <option value="createdAt">Date</option>
+                   </select>
+                                     <button
+                     onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                     className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                     aria-label={`Sort ${sortOrder === 'asc' ? 'descending' : 'ascending'}`}
+                   >
+                     {sortOrder === 'asc' ? <SortAsc className="w-4 h-4" /> : <SortDesc className="w-4 h-4" />}
+                   </button>
+                </div>
+              </div>
+            </div>
 
-          {/* Tab Content */}
-          {activeTab === 'products' && (
-            <>
-              {/* Add/Edit Product Form */}
-              {showAddForm && (
-                <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                    {editing ? 'Edit Product' : 'Add New Product'}
+            {/* Product Cards Display */}
+            {viewMode === 'cards' ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredAndSortedCards.map((card) => (
+                  <div key={card.id} className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow flex flex-col">
+                    <div className="aspect-video bg-gray-100 flex items-center justify-center">
+                      {card.imageUrl ? (
+                        <img src={card.imageUrl} alt={card.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <Package className="w-16 h-16 text-gray-400" />
+                      )}
+                    </div>
+                    <div className="p-4 flex flex-col flex-1">
+                      <div className="flex items-start justify-between mb-3">
+                        <h3 className="font-semibold text-gray-900 text-lg">{card.name}</h3>
+                                                 <div className="flex gap-1">
+                           <button
+                             onClick={() => handleEdit(card)}
+                             className="p-1 text-blue-600 hover:text-blue-800"
+                             aria-label="Edit product card"
+                           >
+                             <Edit className="w-4 h-4" />
+                           </button>
+                           <button
+                             onClick={() => {
+                               setProductCards(cards => cards.filter(c => c.id !== card.id));
+                             }}
+                             className="p-1 text-red-600 hover:text-red-800"
+                             aria-label="Delete product card"
+                           >
+                             <Trash2 className="w-4 h-4" />
+                           </button>
+                         </div>
+                      </div>
+                      
+                      <p className="text-gray-600 text-sm mb-3 min-h-[3rem] line-clamp-2">{card.description}</p>
+                      
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className={`inline-block text-xs px-2 py-1 rounded-full ${
+                          card.category === 'food' ? 'bg-green-100 text-green-800' :
+                          card.category === 'service' ? 'bg-blue-100 text-blue-800' :
+                          'bg-purple-100 text-purple-800'
+                        }`}>
+                          {PRODUCT_CATEGORIES.find(c => c.id === card.category)?.name}
+                        </span>
+                        <span className="inline-block bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">
+                          {card.subcategory}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 mb-4">
+                        <div>💰 Price: ${formatPrice(card.price)}</div>
+                        <div>📦 Cost: ${formatPrice(card.totalCost)}</div>
+                        <div>👷 Labor: ${formatPrice(card.laborCost)}</div>
+                        <div>📊 Margin: {card.profitMargin}%</div>
+                      </div>
+
+                      <div className="flex gap-2 mt-auto">
+                        <button 
+                          onClick={() => handleViewDetails(card)}
+                          className="flex-1 bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 transition-colors text-sm"
+                        >
+                          View Details
+                        </button>
+                        <button 
+                          onClick={() => handleEdit(card)}
+                          className="flex-1 bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 transition-colors text-sm"
+                        >
+                          Edit Recipe
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cost</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Margin</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredAndSortedCards.map((card) => (
+                      <tr key={card.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0 h-10 w-10">
+                              <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                                <Package className="w-5 h-5 text-gray-400" />
+                              </div>
+                            </div>
+                            <div className="ml-4">
+                              <div className="text-sm font-medium text-gray-900">{card.name}</div>
+                              <div className="text-sm text-gray-500">{card.description}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-block text-xs px-2 py-1 rounded-full ${
+                            card.category === 'food' ? 'bg-green-100 text-green-800' :
+                            card.category === 'service' ? 'bg-blue-100 text-blue-800' :
+                            'bg-purple-100 text-purple-800'
+                          }`}>
+                            {PRODUCT_CATEGORIES.find(c => c.id === card.category)?.name}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          ${formatPrice(card.price)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          ${formatPrice(card.totalCost)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {card.profitMargin}%
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex gap-2">
+                            <button 
+                              onClick={() => handleEdit(card)}
+                              className="text-blue-600 hover:text-blue-900"
+                            >
+                              Edit
+                            </button>
+                            <button 
+                              onClick={() => {
+                                setProductCards(cards => cards.filter(c => c.id !== card.id));
+                              }}
+                              className="text-red-600 hover:text-red-900"
+                            >
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Empty State */}
+            {filteredAndSortedCards.length === 0 && (
+              <div className="text-center py-12">
+                <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No product cards found</h3>
+                <p className="text-gray-600 mb-4">
+                  {searchTerm || selectedCategory ? 'Try adjusting your search terms or filters' : 'Get started by creating your first product card'}
+                </p>
+                {!searchTerm && !selectedCategory && (
+                  <div className="flex justify-center">
+                    <button
+                      onClick={() => {
+                        setSelectedCategoryForCard('');
+                        setShowProductCard(true);
+                      }}
+                      className="bg-brand-green text-white px-6 py-3 rounded-lg hover:bg-brand-green/90 transition-colors flex items-center gap-2 text-lg font-medium"
+                    >
+                      <Plus className="w-5 h-5" />
+                      Add Product
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+        {/* Product Card Modal */}
+        {showProductCard && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    {editingCard ? 'Edit Product Card' : 'Add New Product'}
                   </h2>
-                  <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Product Name *
-                        </label>
-                        <input
-                          type="text"
-                          {...register('name', { 
-                            required: 'Product name is required',
-                            minLength: { value: 1, message: 'Name must be at least 1 character' },
-                            maxLength: { value: 100, message: 'Name must be less than 100 characters' }
-                          })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="Enter product name"
-                        />
-                        {errors.name && (
-                          <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
+                  <button
+                    onClick={handleCancel}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                  {/* Category Selection Indicator */}
+                  {watch('category') && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                        <span className="text-blue-800 font-medium">
+                          Creating: {PRODUCT_CATEGORIES.find(c => c.id === watch('category'))?.name}
+                        </span>
+                        {watch('category') === 'food' && (
+                          <span className="text-blue-600 text-sm">• Ingredient management will be available</span>
                         )}
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Price *
-                        </label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          {...register('price', { 
-                            required: 'Price is required',
-                            min: { value: 0, message: 'Price must be positive' }
-                          })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="0.00"
-                        />
-                        {errors.price && (
-                          <p className="text-red-500 text-sm mt-1">{errors.price.message}</p>
+                        {watch('category') === 'service' && (
+                          <span className="text-blue-600 text-sm">• Labor and overhead costs required</span>
                         )}
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Category
-                        </label>
-                        <select
-                          {...register('category')}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="bread">Bread</option>
-                          <option value="pastry">Pastry</option>
-                          <option value="dessert">Dessert</option>
-                          <option value="beverage">Beverage</option>
-                          <option value="other">Other</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Unit
-                        </label>
-                        <select
-                          {...register('unit')}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="loaf">Loaf</option>
-                          <option value="piece">Piece</option>
-                          <option value="dozen">Dozen</option>
-                          <option value="kg">Kilogram</option>
-                          <option value="lb">Pound</option>
-                          <option value="unit">Unit</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    {/* Enhanced Production Fields */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Min Stock Level
-                        </label>
-                        <input
-                          type="number"
-                          min="0"
-                          {...register('minStockLevel', { 
-                            min: { value: 0, message: 'Min stock must be non-negative' }
-                          })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="10"
-                        />
-                        {errors.minStockLevel && (
-                          <p className="text-red-500 text-sm mt-1">{errors.minStockLevel.message}</p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Max Stock Level
-                        </label>
-                        <input
-                          type="number"
-                          min="0"
-                          {...register('maxStockLevel', { 
-                            min: { value: 0, message: 'Max stock must be non-negative' }
-                          })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="100"
-                        />
-                        {errors.maxStockLevel && (
-                          <p className="text-red-500 text-sm mt-1">{errors.maxStockLevel.message}</p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Reorder Quantity
-                        </label>
-                        <input
-                          type="number"
-                          min="0"
-                          {...register('reorderQuantity', { 
-                            min: { value: 0, message: 'Reorder quantity must be non-negative' }
-                          })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="50"
-                        />
-                        {errors.reorderQuantity && (
-                          <p className="text-red-500 text-sm mt-1">{errors.reorderQuantity.message}</p>
+                        {watch('category') === 'non-food' && (
+                          <span className="text-blue-600 text-sm">• Raw materials and labor costs</span>
                         )}
                       </div>
                     </div>
+                  )}
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Production Lead Time (days)
-                        </label>
-                        <input
-                          type="number"
-                          min="0"
-                          {...register('productionLeadTime', { 
-                            min: { value: 0, message: 'Lead time must be non-negative' }
-                          })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="1"
-                        />
-                        {errors.productionLeadTime && (
-                          <p className="text-red-500 text-sm mt-1">{errors.productionLeadTime.message}</p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Batch Size
-                        </label>
-                        <input
-                          type="number"
-                          min="1"
-                          {...register('batchSize', { 
-                            min: { value: 1, message: 'Batch size must be at least 1' }
-                          })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="12"
-                        />
-                        {errors.batchSize && (
-                          <p className="text-red-500 text-sm mt-1">{errors.batchSize.message}</p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Production Frequency
-                        </label>
-                        <select
-                          {...register('productionFrequency')}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="daily">Daily</option>
-                          <option value="weekly">Weekly</option>
-                          <option value="bi-weekly">Bi-weekly</option>
-                          <option value="monthly">Monthly</option>
-                          <option value="on-demand">On-demand</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    {/* Quality & Compliance Fields */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Expiration Days
-                        </label>
-                        <input
-                          type="number"
-                          min="1"
-                          {...register('expirationDays', { 
-                            min: { value: 1, message: 'Expiration must be at least 1 day' }
-                          })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="7"
-                        />
-                        {errors.expirationDays && (
-                          <p className="text-red-500 text-sm mt-1">{errors.expirationDays.message}</p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Storage Requirements
-                        </label>
-                        <input
-                          type="text"
-                          {...register('storageRequirements')}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="Store in a cool, dry place"
-                        />
-                      </div>
+                  {/* Basic Information */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Product Name *
+                      </label>
+                      <input
+                        type="text"
+                        {...register('name', { required: 'Product name is required' })}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-green focus:border-transparent"
+                        placeholder="Enter product name"
+                      />
+                      {errors.name && (
+                        <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
+                      )}
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Description
+                        Category
                       </label>
-                      <textarea
-                        {...register('description')}
-                        rows={3}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Describe your product..."
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Stock Quantity
-                        </label>
-                        <input
-                          type="number"
-                          min="0"
-                          {...register('stock', { 
-                            min: { value: 0, message: 'Stock must be non-negative' }
-                          })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="0"
-                        />
-                        {errors.stock && (
-                          <p className="text-red-500 text-sm mt-1">{errors.stock.message}</p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Target Margin (%)
-                        </label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          min="0"
-                          max="100"
-                          {...register('targetMargin', { 
-                            min: { value: 0, message: 'Target margin must be non-negative' },
-                            max: { value: 100, message: 'Target margin cannot exceed 100%' }
-                          })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="0.0"
-                        />
-                        {errors.targetMargin && (
-                          <p className="text-red-500 text-sm mt-1">{errors.targetMargin.message}</p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Recipe and Advanced Settings */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Recipe (Optional)
-                        </label>
-                        <select
-                          {...register('recipeId')}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="">No recipe linked</option>
-                          {/* Recipe options would be populated from API */}
-                        </select>
-                        <p className="text-xs text-gray-500 mt-1">
-                          Link to a recipe for automatic cost calculation
-                        </p>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Target Margin (%)
-                        </label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          min="0"
-                          max="100"
-                          {...register('targetMargin', { 
-                            min: { value: 0, message: 'Target margin must be non-negative' },
-                            max: { value: 100, message: 'Target margin cannot exceed 100%' }
-                          })}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="30.0"
-                        />
-                        {errors.targetMargin && (
-                          <p className="text-red-500 text-sm mt-1">{errors.targetMargin.message}</p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Product Status and Features */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-3">
-                        <div className="flex items-center">
-                          <input
-                            type="checkbox"
-                            {...register('isAvailable')}
-                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                          />
-                          <label className="ml-2 text-sm text-gray-700">
-                            Product is available for purchase
-                          </label>
-                        </div>
-                        
-                        <div className="flex items-center">
-                          <input
-                            type="checkbox"
-                            {...register('isFeatured')}
-                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                          />
-                          <label className="ml-2 text-sm text-gray-700">
-                            Feature this product prominently
-                          </label>
-                        </div>
-
-                        <div className="flex items-center">
-                          <input
-                            type="checkbox"
-                            {...register('isSeasonal')}
-                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                          />
-                          <label className="ml-2 text-sm text-gray-700">
-                            Seasonal product
-                          </label>
-                        </div>
-                      </div>
-
-                      <div className="space-y-3">
-                        <div className="flex items-center">
-                          <input
-                            type="checkbox"
-                            {...register('onWatchlist')}
-                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                          />
-                          <label className="ml-2 text-sm text-gray-700">
-                            Add to cost watchlist
-                          </label>
-                        </div>
-
-                        <div className="flex items-center">
-                          <input
-                            type="checkbox"
-                            {...register('hasAllergens')}
-                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                          />
-                          <label className="ml-2 text-sm text-gray-700">
-                            Contains allergens
-                          </label>
-                        </div>
-
-                        <div className="flex items-center">
-                          <input
-                            type="checkbox"
-                            {...register('requiresRefrigeration')}
-                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                          />
-                          <label className="ml-2 text-sm text-gray-700">
-                            Requires refrigeration
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex gap-3 pt-4">
-                      <button
-                        type="submit"
-                        disabled={isSubmitting}
-                        className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                      >
-                        {isSubmitting ? (
-                          <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                            {editing ? 'Updating...' : 'Creating...'}
-                          </>
-                        ) : (
-                          <>
-                            <Plus className="h-4 w-4" />
-                            {editing ? 'Update Product' : 'Create Product'}
-                          </>
-                        )}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowAddForm(false);
-                          setEditing(null);
-                          reset();
-                          setTags([]);
-                          setImagePreview('');
-                          setTagInput('');
+                      <select
+                        {...register('category')}
+                        onChange={(e) => {
+                          setValue('category', e.target.value);
+                          setValue('subcategory', ''); // Reset subcategory when category changes
                         }}
-                        className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition-colors"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-green focus:border-transparent"
                       >
-                        Cancel
-                      </button>
+                        <option value="">Select Category</option>
+                        {PRODUCT_CATEGORIES.map(category => (
+                          <option key={category.id} value={category.id}>
+                            {category.name}
+                          </option>
+                        ))}
+                      </select>
                     </div>
-                  </form>
-                </div>
-              )}
 
-              {/* Products List */}
-              <div className="bg-white rounded-lg shadow-md">
-                <div className="px-6 py-4 border-b border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-xl font-semibold text-gray-900">
-                      Your Products ({safeProductsData.count || 0})
-                    </h2>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Subcategory
+                      </label>
+                      <select
+                        {...register('subcategory')}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-green focus:border-transparent"
+                        disabled={!watch('category')}
+                      >
+                        <option value="">Select Subcategory</option>
+                        {watch('category') && PRODUCT_CATEGORIES.find(cat => cat.id === watch('category'))?.subcategories.map(subcat => (
+                          <option key={subcat} value={subcat}>
+                            {subcat}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                                     <div>
+                     <label className="block text-sm font-medium text-gray-700 mb-1">
+                       Description
+                     </label>
+                     <textarea
+                       {...register('description')}
+                       rows={3}
+                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-green focus:border-transparent"
+                       placeholder="Enter product description"
+                     />
+                   </div>
+
+                   <div>
+                     <label className="block text-sm font-medium text-gray-700 mb-1">
+                       Tags (Optional)
+                     </label>
+                     <input
+                       type="text"
+                       {...register('tags')}
+                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-green focus:border-transparent"
+                       placeholder="Enter tags separated by commas (e.g., organic, gluten-free, seasonal)"
+                     />
+                     <p className="text-xs text-gray-500 mt-1">Add tags to help categorize and search for your products</p>
+                   </div>
+
+                   {/* Image Upload */}
+                   <div>
+                     <label className="block text-sm font-medium text-gray-700 mb-1">
+                       Product Image (Optional)
+                     </label>
+                     <div className="flex items-center gap-3">
+                       <input
+                         type="file"
+                         accept="image/*"
+                         onChange={(e) => {
+                           const file = e.target.files?.[0];
+                           if (file) {
+                             const imageUrl = URL.createObjectURL(file);
+                             setValue('imageUrl', imageUrl);
+                           }
+                         }}
+                         className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-green focus:border-transparent"
+                       />
+                       {watch('imageUrl') && (
+                         <div className="w-16 h-16 bg-gray-100 rounded-md overflow-hidden">
+                           <img 
+                             src={watch('imageUrl')} 
+                             alt="Product preview" 
+                             className="w-full h-full object-cover"
+                           />
+                         </div>
+                       )}
+                     </div>
+                     <p className="text-xs text-gray-500 mt-1">Upload a product image to help customers visualize your product</p>
+                   </div>
+
+                                     {/* Ingredient Management - Only for Food Products */}
+                   {watch('category') === 'food' && (
+                     <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                       <div className="flex items-center justify-between mb-4">
+                         <h3 className="text-lg font-medium text-green-900">Ingredient Management</h3>
+                         <div className="flex items-center gap-2">
+                           <button
+                             type="button"
+                             onClick={() => setShowUnitConverter(true)}
+                             className="text-sm text-green-700 hover:text-green-900 underline"
+                           >
+                             Unit Converter
+                           </button>
+                           <button
+                             type="button"
+                             onClick={addIngredientLine}
+                             className="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 transition-colors text-sm flex items-center gap-1"
+                           >
+                             <Plus className="w-4 h-4" />
+                             Add Ingredient
+                           </button>
+                         </div>
+                       </div>
+                       
+                       {ingredientLines.length === 0 ? (
+                         <p className="text-green-700 text-sm">No ingredients added yet. Click "Add Ingredient" to get started.</p>
+                       ) : (
+                         <div className="space-y-3">
+                           {ingredientLines.map((line, index) => (
+                             <div key={line.id} className="grid grid-cols-12 gap-2 items-center p-3 bg-white rounded-md border border-green-200">
+                               <div className="col-span-5">
+                                 <select
+                                   value={line.ingredientId}
+                                   onChange={(e) => updateIngredientLine(line.id, 'ingredientId', e.target.value)}
+                                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                                 >
+                                   <option value="">Select Ingredient</option>
+                                   {MOCK_INGREDIENTS.map(ingredient => (
+                                     <option key={ingredient.id} value={ingredient.id}>
+                                       {ingredient.name} (${ingredient.costPerUnit}/{ingredient.unit})
+                                     </option>
+                                   ))}
+                                 </select>
+                               </div>
+                               <div className="col-span-2">
+                                 <input
+                                   type="number"
+                                   value={line.quantity}
+                                   onChange={(e) => updateIngredientLine(line.id, 'quantity', parseFloat(e.target.value) || 0)}
+                                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                                   placeholder="0"
+                                   min="0"
+                                   step="0.01"
+                                 />
+                               </div>
+                               <div className="col-span-2">
+                                 <select
+                                   value={line.unit}
+                                   onChange={(e) => updateIngredientLine(line.id, 'unit', e.target.value)}
+                                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                                 >
+                                   {MOCK_UNITS.map(unit => (
+                                     <option key={unit} value={unit}>{unit}</option>
+                                   ))}
+                                 </select>
+                               </div>
+                               <div className="col-span-2 text-sm text-gray-600">
+                                 ${line.cost.toFixed(2)}
+                               </div>
+                               <div className="col-span-1">
+                                 <button
+                                   type="button"
+                                   onClick={() => removeIngredientLine(line.id)}
+                                   className="text-red-600 hover:text-red-800 p-1"
+                                   aria-label="Remove ingredient line"
+                                 >
+                                   <X className="w-4 h-4" />
+                                 </button>
+                               </div>
+                             </div>
+                           ))}
+                           
+                           <div className="flex justify-between items-center pt-2 border-t border-green-200">
+                             <span className="text-sm font-medium text-green-900">Total Ingredient Cost:</span>
+                             <span className="text-lg font-semibold text-green-900">${getTotalIngredientCost().toFixed(2)}</span>
+                           </div>
+                         </div>
+                       )}
+                     </div>
+                   )}
+
+                   {/* Trade Supplies Management - Only for Service Products */}
+                   {watch('category') === 'service' && (
+                     <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                       <div className="flex items-center justify-between mb-4">
+                         <h3 className="text-lg font-medium text-orange-900">Trade Supplies Management</h3>
+                         <div className="flex items-center gap-2">
+                           <button
+                             type="button"
+                             onClick={() => setShowTradeSuppliesModal(true)}
+                             className="text-sm text-orange-700 hover:text-orange-900 underline"
+                           >
+                             View Available Supplies
+                           </button>
+                           <button
+                             type="button"
+                             onClick={addTradeSupplyLine}
+                             className="bg-orange-600 text-white px-3 py-1 rounded-md hover:bg-orange-700 transition-colors text-sm flex items-center gap-1"
+                           >
+                             <Plus className="w-4 h-4" />
+                             Add Trade Supply
+                           </button>
+                         </div>
+                       </div>
+                       
+                       {tradeSupplyLines.length === 0 ? (
+                         <p className="text-orange-700 text-sm">No trade supplies added yet. Click "Add Trade Supply" to get started.</p>
+                       ) : (
+                         <div className="space-y-3">
+                           {tradeSupplyLines.map((line, index) => (
+                             <div key={line.id} className="grid grid-cols-12 gap-2 items-center p-3 bg-white rounded-md border border-orange-200">
+                               <div className="col-span-5">
+                                 <select
+                                   value={line.supplyId}
+                                   onChange={(e) => updateTradeSupplyLine(line.id, 'supplyId', e.target.value)}
+                                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+                                 >
+                                   <option value="">Select Trade Supply</option>
+                                   {MOCK_TRADE_SUPPLIES.map(supply => (
+                                     <option key={supply.id} value={supply.id}>
+                                       {supply.name} (${supply.costPerUnit}/{supply.unit})
+                                     </option>
+                                   ))}
+                                 </select>
+                               </div>
+                               <div className="col-span-2">
+                                 <input
+                                   type="number"
+                                   value={line.quantity}
+                                   onChange={(e) => updateTradeSupplyLine(line.id, 'quantity', parseFloat(e.target.value) || 0)}
+                                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+                                   placeholder="0"
+                                   min="0"
+                                   step="0.01"
+                                 />
+                               </div>
+                               <div className="col-span-2">
+                                 <select
+                                   value={line.unit}
+                                   onChange={(e) => updateTradeSupplyLine(line.id, 'unit', e.target.value)}
+                                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+                                 >
+                                   {MOCK_TRADE_UNITS.map(unit => (
+                                     <option key={unit} value={unit}>{unit}</option>
+                                   ))}
+                                 </select>
+                               </div>
+                               <div className="col-span-2 text-sm text-gray-600">
+                                 ${line.cost.toFixed(2)}
+                               </div>
+                               <div className="col-span-1">
+                                 <button
+                                   type="button"
+                                   onClick={() => removeTradeSupplyLine(line.id)}
+                                   className="text-red-600 hover:text-red-800 p-1"
+                                   aria-label="Remove trade supply line"
+                                 >
+                                   <X className="w-4 h-4" />
+                                 </button>
+                               </div>
+                             </div>
+                           ))}
+                           
+                           <div className="flex justify-between items-center pt-2 border-t border-orange-200">
+                             <span className="text-sm font-medium text-orange-900">Total Trade Supplies Cost:</span>
+                             <span className="text-lg font-semibold text-orange-900">${getTotalTradeSuppliesCost().toFixed(2)}</span>
+                           </div>
+                         </div>
+                       )}
+                     </div>
+                   )}
+
+                   {/* Cost Management */}
+                   <div className="bg-gray-50 p-4 rounded-lg">
+                     <h3 className="text-lg font-medium text-gray-900 mb-4">Cost Management</h3>
+                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                       <div>
+                         <label className="block text-sm font-medium text-gray-700 mb-1">
+                           Labor Cost
+                         </label>
+                         <div className="relative">
+                           <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                           <input
+                             type="number"
+                             step="0.01"
+                             min="0"
+                             {...register('laborCost', { min: { value: 0, message: 'Labor cost must be positive' } })}
+                             className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-green focus:border-transparent"
+                             placeholder="0.00"
+                           />
+                         </div>
+                       </div>
+
+                       <div>
+                         <label className="block text-sm font-medium text-gray-700 mb-1">
+                           Overhead Cost
+                         </label>
+                         <div className="relative">
+                           <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                           <input
+                             type="number"
+                             step="0.01"
+                             min="0"
+                             {...register('overheadCost', { min: { value: 0, message: 'Overhead cost must be positive' } })}
+                             className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-green focus:border-transparent"
+                             placeholder="0.00"
+                           />
+                         </div>
+                       </div>
+
+                       <div>
+                         <label className="block text-sm font-medium text-gray-700 mb-1">
+                           Target Profit Margin (%)
+                         </label>
+                         <input
+                           type="number"
+                           min="0"
+                           max="100"
+                           {...register('profitMargin', { min: { value: 0, message: 'Margin must be positive' } })}
+                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-green focus:border-transparent"
+                           placeholder="30"
+                         />
+                       </div>
+                     </div>
+                     
+                     {/* Total Cost Display */}
+                     <div className="mt-4 pt-4 border-t border-gray-200">
+                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 text-sm">
+                         <div>
+                           <span className="text-gray-600">Ingredient Cost:</span>
+                           <span className="ml-2 font-medium">${getTotalIngredientCost().toFixed(2)}</span>
+                         </div>
+                         {watch('category') === 'service' && (
+                           <div>
+                             <span className="text-gray-600">Trade Supplies:</span>
+                             <span className="ml-2 font-medium">${getTotalTradeSuppliesCost().toFixed(2)}</span>
+                           </div>
+                         )}
+                         <div>
+                           <span className="text-gray-600">Labor Cost:</span>
+                           <span className="ml-2 font-medium">${(Number(watch('laborCost')) || 0).toFixed(2)}</span>
+                         </div>
+                         <div>
+                           <span className="text-gray-600">Overhead Cost:</span>
+                           <span className="ml-2 font-medium">${(Number(watch('overheadCost')) || 0).toFixed(2)}</span>
+                         </div>
+                         <div className="lg:col-span-2">
+                           <span className="text-gray-600 font-medium">Total Cost:</span>
+                           <span className="ml-2 font-semibold text-lg">${getTotalCost().toFixed(2)}</span>
+                         </div>
+                       </div>
+                     </div>
+                   </div>
+
+                   {/* Price Calculation */}
+                   <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                     <h3 className="text-lg font-medium text-blue-900 mb-3">Price Calculation</h3>
+                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                       <div>
+                         <span className="text-blue-700 font-medium">Total Cost:</span>
+                         <span className="ml-2 font-semibold">${getTotalCost().toFixed(2)}</span>
+                       </div>
+                       <div>
+                         <span className="text-blue-700 font-medium">Profit Margin:</span>
+                         <span className="ml-2 font-semibold">{watch('profitMargin') || 30}%</span>
+                       </div>
+                       <div>
+                         <span className="text-blue-700 font-medium">Suggested Price:</span>
+                         <span className="ml-2 font-semibold text-green-600">${calculateSuggestedPrice().toFixed(2)}</span>
+                       </div>
+                     </div>
+                     <p className="text-xs text-blue-600 mt-2">Price is calculated as: Total Cost × (1 + Profit Margin %)</p>
+                     
+                     {/* Price Input Field */}
+                     <div className="mt-4">
+                       <label className="block text-sm font-medium text-blue-700 mb-2">
+                         Product Price (USD)
+                       </label>
+                       <div className="flex items-center gap-3">
+                         <div className="relative flex-1">
+                           <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-500">$</span>
+                           <input
+                             type="number"
+                             step="0.01"
+                             min="0"
+                             {...register('price', { 
+                               min: { value: 0, message: 'Price must be positive' },
+                               required: 'Price is required'
+                             })}
+                             value={watch('price') || calculateSuggestedPrice()}
+                             onChange={(e) => {
+                               const value = parseFloat(e.target.value) || 0;
+                               setValue('price', value);
+                             }}
+                             className="w-full pl-8 pr-3 py-2 border border-blue-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                             placeholder="0.00"
+                           />
+                         </div>
+                         <button
+                           type="button"
+                           onClick={() => {
+                             const suggestedPrice = calculateSuggestedPrice();
+                             setValue('price', suggestedPrice);
+                           }}
+                           className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+                         >
+                           Use Suggested
+                         </button>
+                       </div>
+                       {errors.price && (
+                         <p className="text-red-500 text-sm mt-1">{errors.price.message}</p>
+                       )}
+                     </div>
+                   </div>
+
+                  {/* Submit Button */}
+                  <div className="flex gap-3 pt-4">
                     <button
-                      onClick={() => refetch()}
-                      className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                      type="button"
+                      onClick={handleCancel}
+                      className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
                     >
-                      Refresh
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="flex-1 bg-brand-green text-white px-4 py-2 rounded-md hover:bg-brand-green/90 transition-colors disabled:opacity-50"
+                    >
+                      {isSubmitting ? 'Saving...' : (editingCard ? 'Update Product Card' : 'Create Product Card')}
                     </button>
                   </div>
-                </div>
-
-                {(!safeProducts || safeProducts.length === 0) ? (
-                  <div className="p-12 text-center">
-                    <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">No products yet</h3>
-                    <p className="text-gray-600 mb-4">
-                      Start by adding your first artisan product to showcase your work.
-                    </p>
-                    <button
-                      onClick={() => {
-                        setShowAddForm(true);
-                        setEditing(null);
-                        reset();
-                        setTags([]);
-                        setImagePreview('');
-                        setTagInput('');
-                      }}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                      Add Your First Product
-                    </button>
-                  </div>
-                ) : (
-                  <div className="divide-y divide-gray-200">
-                    {safeProducts.map((product) => (
-                      <div key={product.id} className="p-6 hover:bg-gray-50 transition-colors">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-4">
-                              {product.imageUrl && (
-                                <img
-                                  src={product.imageUrl}
-                                  alt={product.name}
-                                  className="w-16 h-16 object-cover rounded-lg"
-                                  onError={(e) => {
-                                    e.currentTarget.style.display = 'none';
-                                  }}
-                                />
-                              )}
-                              <div className="flex-1">
-                                <div className="flex items-center gap-3 mb-2">
-                                  <h3 className="text-lg font-semibold text-gray-900">
-                                    {product.name}
-                                  </h3>
-                                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                                    product.isAvailable 
-                                      ? 'bg-green-100 text-green-800' 
-                                      : 'bg-red-100 text-red-800'
-                                  }`}>
-                                    {product.isAvailable ? 'Available' : 'Unavailable'}
-                                  </span>
-                                </div>
-                                
-                                <div className="flex items-center gap-6 text-sm text-gray-600 mb-2">
-                                  <div className="flex items-center gap-1">
-                                    <DollarSign className="h-4 w-4" />
-                                    <span className="font-medium">{formatPrice(product.price)}</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <Package className="h-4 w-4" />
-                                    <span>{product.stock} in stock</span>
-                                  </div>
-                                  {product.targetMargin && (
-                                    <div className="flex items-center gap-1">
-                                      <span className="text-gray-500">Target:</span>
-                                      <span className="font-medium">{product.targetMargin}%</span>
-                                    </div>
-                                  )}
-                                  <div className="flex items-center gap-1">
-                                    <Factory className="h-4 w-4" />
-                                    <span>{product.batchSize || 'N/A'} per batch</span>
-                                  </div>
-                                </div>
-
-                                {/* Production Status */}
-                                <div className="flex items-center gap-4 text-xs text-gray-500 mb-2">
-                                  <div className="flex items-center gap-1">
-                                    <span className={`w-2 h-2 rounded-full ${
-                                      product.stock <= (product.minStockLevel || 0) ? 'bg-red-500' :
-                                      product.stock <= (product.minStockLevel || 0) * 1.5 ? 'bg-yellow-500' :
-                                      'bg-green-500'
-                                    }`}></span>
-                                    <span>Stock: {product.stock <= (product.minStockLevel || 0) ? 'Low' : 'Good'}</span>
-                                  </div>
-                                  {product.recipeId && (
-                                    <div className="flex items-center gap-1">
-                                      <ChefHat className="h-3 w-3" />
-                                      <span>Recipe linked</span>
-                                    </div>
-                                  )}
-                                  {product.isFeatured && (
-                                    <div className="flex items-center gap-1">
-                                      <span className="text-blue-500">⭐ Featured</span>
-                                    </div>
-                                  )}
-                                  {product.isSeasonal && (
-                                    <div className="flex items-center gap-1">
-                                      <span className="text-orange-500">🌱 Seasonal</span>
-                                    </div>
-                                  )}
-                                </div>
-
-                                {product.description && (
-                                  <div className="flex items-start gap-1 mb-2">
-                                    <FileText className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                                    <p className="text-gray-600 text-sm line-clamp-2">
-                                      {product.description}
-                                    </p>
-                                  </div>
-                                )}
-
-                                <div className="text-xs text-gray-500">
-                                  Created: {formatDate(product.createdAt)} • 
-                                  Updated: {formatDate(product.updatedAt)}
-                                </div>
-                                
-                                {/* Action Buttons */}
-                                <div className="flex gap-2 mt-3">
-                                  <button
-                                    onClick={() => startEdit(product)}
-                                    disabled={updateProductMutation.isPending}
-                                    className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                                  >
-                                    <Edit className="h-3 w-3" />
-                                    Edit
-                                  </button>
-                                  <button
-                                    onClick={() => marginAnalysisMutation.mutate(product.id)}
-                                    disabled={marginAnalysisMutation.isPending}
-                                    className="px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                                  >
-                                    <DollarSign className="h-3 w-3" />
-                                    Margin
-                                  </button>
-                                  <button
-                                    onClick={() => aiSuggestionMutation.mutate(product.id)}
-                                    disabled={aiSuggestionMutation.isPending}
-                                    className="px-3 py-1.5 text-sm bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                                  >
-                                    <Brain className="h-3 w-3" />
-                                    AI Suggestion
-                                  </button>
-                                  <button
-                                    onClick={() => handleDelete(product)}
-                                    disabled={deleteProductMutation.isPending}
-                                    className="px-3 py-1.5 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                                  >
-                                    <Trash2 className="h-3 w-3" />
-                                    Delete
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                </form>
               </div>
-            </>
-          )}
-
-          {activeTab === 'production' && (
-            <ProductionManager 
-              products={safeProducts}
-              onProductionUpdate={handleProductionUpdate}
-            />
-          )}
-
-          {activeTab === 'recipes' && (
-            <RecipeManager 
-              products={safeProducts}
-              onRecipeUpdate={handleProductionUpdate}
-            />
-          )}
-
-          {activeTab === 'analytics' && (
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Production Analytics</h2>
-              <p className="text-gray-600">Comprehensive analytics and insights for your production operations.</p>
-              
-              {/* Analytics content would go here */}
-              <div className="text-center py-8 text-gray-500">
-                Production analytics features coming soon...
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'financials' && (
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Financial Management</h2>
-              <p className="text-gray-600">Track your business finances, margins, and profitability.</p>
-              
-              {/* Financial content would go here */}
-              <div className="text-center py-8 text-gray-500">
-                Financial management features coming soon...
-                <br />
-                <a 
-                  href="/dashboard/vendor/financials" 
-                  className="text-blue-600 hover:text-blue-800 underline mt-2 inline-block"
-                >
-                  Go to Full Financial Dashboard →
-                </a>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Delete Confirmation Modal */}
-      {deleteConfirm.show && deleteConfirm.product && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                <Trash2 className="w-5 h-5 text-red-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900">Delete Product</h3>
-            </div>
-            
-            <p className="text-gray-600 mb-6">
-              Are you sure you want to delete <span className="font-semibold">"{deleteConfirm.product.name}"</span>? 
-              This action cannot be undone.
-            </p>
-            
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={cancelDelete}
-                className="text-gray-700 bg-gray-200 px-4 py-2 rounded-md hover:bg-gray-300 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDelete}
-                disabled={deleteProductMutation.isPending}
-                className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {deleteProductMutation.isPending ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Deleting...
-                  </>
-                ) : (
-                  <>
-                    <Trash2 className="w-4 h-4" />
-                    Delete
-                  </>
-                )}
-              </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* View Details Modal */}
+        {showViewDetails && viewingCard && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-gray-900">{viewingCard.name}</h2>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handlePrint}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2"
+                    >
+                      <Printer className="w-4 h-4" />
+                      Print
+                    </button>
+                    <button
+                      onClick={handleShare}
+                      className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center gap-2"
+                    >
+                      <Share2 className="w-4 h-4" />
+                      Share
+                    </button>
+                    <button
+                      onClick={() => setShowViewDetails(false)}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Recipe Card Layout */}
+                <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg p-6 mb-6 border border-amber-200">
+                  <div className="text-center mb-6">
+                    <h3 className="text-xl font-semibold text-gray-800 mb-2">{viewingCard.name}</h3>
+                    <p className="text-gray-600 mb-3">{viewingCard.description}</p>
+                    <div className="flex items-center justify-center gap-4 text-sm text-gray-500">
+                      <span className="flex items-center gap-1">
+                        <Package className="w-4 h-4" />
+                        {PRODUCT_CATEGORIES.find(c => c.id === viewingCard.category)?.name}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Tag className="w-4 h-4" />
+                        {viewingCard.subcategory}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <DollarSign className="w-4 h-4" />
+                        ${viewingCard.price.toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Recipe Details for Food Items */}
+                  {viewingCard.category === 'food' && viewingCard.recipe && (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 text-center">
+                      <div className="bg-white rounded-lg p-3 border border-amber-200">
+                        <div className="text-2xl font-bold text-amber-600">{viewingCard.recipe.prepTime}</div>
+                        <div className="text-sm text-gray-600">Prep (min)</div>
+                      </div>
+                      <div className="bg-white rounded-lg p-3 border border-amber-200">
+                        <div className="text-2xl font-bold text-amber-600">{viewingCard.recipe.cookTime}</div>
+                        <div className="text-sm text-gray-600">Cook (min)</div>
+                      </div>
+                      <div className="bg-white rounded-lg p-3 border border-amber-200">
+                        <div className="text-2xl font-bold text-amber-600">{viewingCard.recipe.servings}</div>
+                        <div className="text-sm text-gray-600">Servings</div>
+                      </div>
+                      <div className="bg-white rounded-lg p-3 border border-amber-200">
+                        <div className="text-2xl font-bold text-amber-600">{viewingCard.recipe.yield}</div>
+                        <div className="text-sm text-gray-600">{viewingCard.recipe.yieldUnit}</div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Ingredients Section */}
+                  <div className="mb-6">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-3 border-b border-amber-200 pb-2">Ingredients</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {viewingCard.ingredients.map((ingredient, index) => (
+                        <div key={index} className="bg-white rounded-lg p-3 border border-amber-200 flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center">
+                              <span className="text-amber-600 font-semibold text-sm">{index + 1}</span>
+                            </div>
+                            <div>
+                              <div className="font-medium text-gray-800">{ingredient.ingredient.name}</div>
+                              {ingredient.notes && (
+                                <div className="text-sm text-gray-500">{ingredient.notes}</div>
+                              )}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-semibold text-amber-600">{ingredient.quantity} {ingredient.unit}</div>
+                            <div className="text-sm text-gray-500">${ingredient.cost.toFixed(2)}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Instructions for Food Items */}
+                  {viewingCard.category === 'food' && viewingCard.recipe && (
+                    <div className="mb-6">
+                      <h4 className="text-lg font-semibold text-gray-800 mb-3 border-b border-amber-200 pb-2">Instructions</h4>
+                      <div className="space-y-3">
+                        {viewingCard.recipe.instructions.map((instruction, index) => (
+                          <div key={index} className="bg-white rounded-lg p-4 border border-amber-200">
+                            <div className="flex items-start gap-3">
+                              <div className="w-6 h-6 bg-amber-500 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">
+                                {index + 1}
+                              </div>
+                              <p className="text-gray-700">{instruction}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Cost Breakdown */}
+                  <div className="bg-white rounded-lg p-4 border border-amber-200">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-3 border-b border-amber-200 pb-2">Cost Breakdown</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                      <div>
+                        <div className="text-sm text-gray-600">Total Cost</div>
+                        <div className="text-lg font-bold text-red-600">${viewingCard.totalCost.toFixed(2)}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-600">Labor Cost</div>
+                        <div className="text-lg font-bold text-blue-600">${viewingCard.laborCost.toFixed(2)}</div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-600">Profit Margin</div>
+                        <div className="text-lg font-bold text-green-600">{viewingCard.profitMargin}%</div>
+                      </div>
+                      <div>
+                        <div className="text-sm text-gray-600">Final Price</div>
+                        <div className="text-lg font-bold text-purple-600">${viewingCard.price.toFixed(2)}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* AI Recipe Parser Modal */}
+         {showImageUpload && (
+           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+             <div className="bg-white rounded-lg max-w-md w-full p-6">
+               <div className="text-center">
+                 <Camera className="w-16 h-16 text-blue-600 mx-auto mb-4" />
+                 <h3 className="text-lg font-medium text-gray-900 mb-2">AI Recipe Parser</h3>
+                 <p className="text-gray-600 mb-4">Upload an image of a handwritten or printed recipe to automatically parse ingredients and instructions</p>
+                 
+                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 mb-4">
+                   <input
+                     type="file"
+                     accept="image/*"
+                     onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
+                     className="hidden"
+                     id="recipe-image-upload"
+                   />
+                   <label
+                     htmlFor="recipe-image-upload"
+                     className="cursor-pointer block"
+                   >
+                     <div className="text-center">
+                       <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                       <p className="text-sm text-gray-600">
+                         {parsingRecipe ? 'Parsing recipe...' : 'Click to upload recipe image'}
+                       </p>
+                     </div>
+                   </label>
+                 </div>
+
+                 <div className="flex gap-3">
+                   <button
+                     onClick={() => setShowImageUpload(false)}
+                     className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+                   >
+                     Cancel
+                   </button>
+                 </div>
+               </div>
+             </div>
+           </div>
+         )}
+
+         {/* Trade Supplies Modal */}
+         {showTradeSuppliesModal && (
+           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+             <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6">
+               <div className="flex items-center justify-between mb-6">
+                 <h3 className="text-xl font-semibold text-gray-900">Available Trade Supplies</h3>
+                 <button
+                   onClick={() => setShowTradeSuppliesModal(false)}
+                   className="text-gray-400 hover:text-gray-600"
+                 >
+                   <X className="w-6 h-6" />
+                 </button>
+               </div>
+               
+               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                 {MOCK_TRADE_SUPPLIES.map(supply => (
+                   <div key={supply.id} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                     <div className="flex items-center justify-between mb-2">
+                       <h4 className="font-medium text-gray-900">{supply.name}</h4>
+                       <span className="text-sm text-gray-500">{supply.unit}</span>
+                     </div>
+                     <div className="text-lg font-semibold text-orange-600">
+                       ${supply.costPerUnit.toFixed(2)}/{supply.unit}
+                     </div>
+                     <div className="text-sm text-gray-600 mt-2">
+                       <span className="font-medium">Category:</span> Trade Supplies
+                     </div>
+                   </div>
+                 ))}
+               </div>
+               
+               <div className="mt-6 pt-4 border-t border-gray-200">
+                 <p className="text-sm text-gray-600 text-center">
+                   💡 Tip: Add these trade supplies to your service products to accurately calculate costs
+                 </p>
+               </div>
+             </div>
+           </div>
+         )}
+
+         {/* Unit Converter Modal */}
+         {showUnitConverter && (
+           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+             <div className="bg-white rounded-lg max-w-2xl w-full p-6">
+               <div className="flex items-center justify-between mb-6">
+                 <h3 className="text-xl font-semibold text-gray-900">Unit Converter</h3>
+                 <button
+                   onClick={() => setShowUnitConverter(false)}
+                   className="text-gray-400 hover:text-gray-600"
+                 >
+                   <X className="w-6 h-6" />
+                 </button>
+               </div>
+               
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 <div>
+                   <h4 className="font-medium text-gray-900 mb-3">Common Conversions</h4>
+                   <div className="space-y-2 text-sm">
+                     <div className="flex justify-between">
+                       <span>1 cup = 8 fluid ounces</span>
+                       <span>1 cup = 240 ml</span>
+                     </div>
+                     <div className="flex justify-between">
+                       <span>1 tablespoon = 3 teaspoons</span>
+                       <span>1 tbsp = 15 ml</span>
+                     </div>
+                     <div className="flex justify-between">
+                       <span>1 pound = 16 ounces</span>
+                       <span>1 lb = 453.6 grams</span>
+                     </div>
+                     <div className="flex justify-between">
+                       <span>1 kilogram = 2.2 pounds</span>
+                       <span>1 kg = 1000 grams</span>
+                     </div>
+                     <div className="flex justify-between">
+                       <span>1 gallon = 4 quarts</span>
+                       <span>1 gal = 3.785 liters</span>
+                     </div>
+                   </div>
+                 </div>
+                 
+                 <div>
+                   <h4 className="font-medium text-gray-900 mb-3">Baking Conversions</h4>
+                   <div className="space-y-2 text-sm">
+                     <div className="flex justify-between">
+                       <span>1 cup flour = 120 grams</span>
+                       <span>1 cup sugar = 200 grams</span>
+                     </div>
+                     <div className="flex justify-between">
+                       <span>1 cup butter = 227 grams</span>
+                       <span>1 cup milk = 240 ml</span>
+                     </div>
+                     <div className="flex justify-between">
+                       <span>1 large egg = 50 grams</span>
+                       <span>1 cup honey = 340 grams</span>
+                     </div>
+                     <div className="flex justify-between">
+                       <span>1 cup oats = 80 grams</span>
+                       <span>1 cup nuts = 120 grams</span>
+                     </div>
+                   </div>
+                 </div>
+               </div>
+               
+               <div className="mt-6 pt-4 border-t border-gray-200">
+                 <p className="text-sm text-gray-600 text-center">
+                   💡 Tip: Use these conversions to easily switch between units when creating recipes
+                 </p>
+               </div>
+             </div>
+           </div>
+         )}
+      </div>
     </VendorDashboardLayout>
   );
 };

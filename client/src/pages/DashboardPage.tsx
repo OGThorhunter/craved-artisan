@@ -250,18 +250,18 @@ const DashboardPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Pending Orders */}
+        {/* Sales Events */}
         <div className="bg-[#F7F2EC] rounded-2xl shadow-lg p-6 mb-8 hover:shadow-xl transition-all duration-300">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xl font-bold text-[#2C2C2C] flex items-center">
               <Package className="w-6 h-6 text-[#5B6E02] mr-2" />
-              Pending Orders
+              Sales Events
             </h3>
             <button
               onClick={() => setLocation('/dashboard/vendor/orders')}
               className="bg-[#8B4513] hover:bg-[#A0522D] text-white px-4 py-2 rounded-lg transition-colors shadow-md hover:shadow-lg text-sm"
             >
-              View Orders →
+              View Sales Events →
             </button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

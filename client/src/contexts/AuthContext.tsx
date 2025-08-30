@@ -2,7 +2,8 @@ import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { useLocation } from 'wouter';
 import axios from 'axios';
-import type { AxiosInstance, AxiosResponse } from 'axios';
+import type { AxiosResponse } from 'axios';
+import api from '../lib/api';
 
 // Types
 export interface User {
@@ -138,32 +139,7 @@ const authReducer = (state: AuthState, action: AuthAction): AuthState => {
 // Create context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// API base URL
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-
-// Set global Axios defaults
-axios.defaults.withCredentials = true;
-
-// Create Axios instance with default configuration
-const api: AxiosInstance = axios.create({
-  baseURL: API_BASE_URL,
-  withCredentials: true, // Important for sending cookies with requests
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// Axios response interceptor for error handling
-api.interceptors.response.use(
-  (response: AxiosResponse) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Handle unauthorized responses
-      console.log('Unauthorized request, user may need to login');
-    }
-    return Promise.reject(error);
-  }
-);
+// Use centralized API instance from lib/api.ts
 
 // Auth provider component
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {

@@ -1,5 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLocation } from 'wouter';
 import InspirationalQuote from '@/components/InspirationalQuote';
 import { 
   TrendingUp, 
@@ -57,6 +58,7 @@ const achievements = [
 const VendorDashboardPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [timeRange, setTimeRange] = useState('daily');
+  const [location, setLocation] = useLocation();
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: BarChart3 },
@@ -116,17 +118,17 @@ const VendorDashboardPage: React.FC = () => {
                   key={tab.id}
                   onClick={() => {
                     if (tab.id === 'analytics') {
-                      window.location.href = '/dashboard/vendor/analytics';
+                      setLocation('/dashboard/vendor/analytics');
                     } else if (tab.id === 'products') {
-                      window.location.href = '/dashboard/vendor/products';
+                      setLocation('/dashboard/vendor/products');
                     } else if (tab.id === 'orders') {
-                      window.location.href = '/dashboard/orders';
+                      setLocation('/dashboard/orders');
                     } else if (tab.id === 'inventory') {
-                      window.location.href = '/dashboard/vendor/inventory';
+                      setLocation('/dashboard/vendor/inventory');
                     } else if (tab.id === 'crm') {
-                      window.location.href = '/dashboard/vendor/crm';
+                      setLocation('/dashboard/vendor/crm');
                     } else if (tab.id === 'settings') {
-                      window.location.href = '/dashboard/vendor/site-settings';
+                      setLocation('/dashboard/vendor/site-settings');
                     } else {
                       setActiveTab(tab.id as any);
                     }

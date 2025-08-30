@@ -331,7 +331,7 @@ const BatchPricingPage: React.FC = () => {
             <h2 className="responsive-subheading text-gray-900 mb-4">Ingredient Price Alerts</h2>
             <div className="space-y-4">
               {priceAlertsData.alerts.map((alert: any, index: number) => (
-                <div key={index} className="flex items-center justify-between p-4 bg-orange-50 rounded-lg border border-orange-200">
+                <div key={index} className="flex items-center justify-between p-4 bg-white rounded-lg border border-orange-200">
                   <div>
                     <h3 className="font-medium text-gray-900">{alert.ingredientName}</h3>
                     <p className="responsive-text text-gray-600">

@@ -1,33 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Plus, 
-  ChefHat, 
-  Package, 
-  DollarSign, 
-  Clock, 
-  TrendingUp, 
-  AlertTriangle, 
-  CheckCircle, 
-  X,
-  Edit,
-  Trash2,
-  Eye,
-  Calculator,
-  BarChart3,
-  Users,
-  Zap,
-  Scale,
-  Thermometer,
-  Shield
-} from 'lucide-react';
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
-import type { 
-  Recipe, 
-  Product, 
-  RawMaterial, 
-  LaborCost,
-  CostAnalysis
-} from '../../types/products';
+import { 
+  ChefHat, 
+  Plus, 
+  Edit, 
+  Trash2, 
+  Eye, 
+  Copy, 
+  Archive, 
+  TrendingUp,
+  Calculator,
+  Package,
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
+  Clock,
+  Scale,
+  DollarSign
+} from 'lucide-react';
+import type { Product, Recipe, RecipeIngredient, Ingredient } from '../../types/products';
 
 interface RecipeManagerProps {
   products: Product[];
@@ -37,285 +29,240 @@ interface RecipeManagerProps {
 const RecipeManager: React.FC<RecipeManagerProps> = ({ products, onRecipeUpdate }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'recipes' | 'ingredients' | 'costs'>('overview');
   const [showRecipeForm, setShowRecipeForm] = useState(false);
-  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
+  const [showIngredientForm, setShowIngredientForm] = useState(false);
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
-  
-  // Mock data - in real app, this would come from API
-  const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [rawMaterials, setRawMaterials] = useState<RawMaterial[]>([]);
-  const [laborCosts, setLaborCosts] = useState<LaborCost[]>([]);
+  const [editingIngredient, setEditingIngredient] = useState<Ingredient | null>(null);
 
-  // Form states
-  const [recipeForm, setRecipeForm] = useState({
-    name: '',
-    description: '',
-    version: '1.0',
-    yield: 1,
-    yieldUnit: 'loaves',
-    productId: '',
-    ingredients: [] as Array<{
-      rawMaterialId: string;
-      quantity: number;
-      unit: string;
-      notes?: string;
-    }>,
-    laborSteps: [] as Array<{
-      laborCostId: string;
-      hours: number;
-      notes?: string;
-    }>,
-    notes: ''
-  });
-
-  useEffect(() => {
-    // Load mock data
-    loadMockData();
-  }, []);
-
-  const loadMockData = () => {
-    // Mock recipes
-    setRecipes([
-      {
-        id: 'recipe-1',
-        name: 'Classic Sourdough Recipe',
-        description: 'Traditional sourdough bread recipe with long fermentation',
-        version: '1.0',
-        yield: 12,
-        yieldUnit: 'loaves',
-        ingredients: [
-          { rawMaterialId: 'flour-1', rawMaterialName: 'Organic Flour', quantity: 5, unit: 'kg', cost: 15.00 },
-          { rawMaterialId: 'water-1', rawMaterialName: 'Filtered Water', quantity: 3.5, unit: 'l', cost: 0.50 },
-          { rawMaterialId: 'salt-1', rawMaterialName: 'Sea Salt', quantity: 0.1, unit: 'kg', cost: 2.00 },
-          { rawMaterialId: 'starter-1', rawMaterialName: 'Sourdough Starter', quantity: 0.5, unit: 'kg', cost: 5.00 }
-        ],
-        laborSteps: [
-          { laborCostId: 'baker-1', role: 'baker', hours: 8, cost: 120.00 },
-          { laborCostId: 'assistant-1', role: 'assistant', hours: 4, cost: 60.00 }
-        ],
-        totalCost: 202.50,
-        costPerUnit: 16.88,
-        lastUpdated: new Date().toISOString(),
-        isActive: true
-      },
-      {
-        id: 'recipe-2',
-        name: 'Artisan Croissant Recipe',
-        description: 'Buttery, flaky croissants with laminated dough',
-        version: '1.0',
-        yield: 24,
-        yieldUnit: 'pieces',
-        ingredients: [
-          { rawMaterialId: 'flour-1', rawMaterialName: 'Organic Flour', quantity: 3, unit: 'kg', cost: 9.00 },
-          { rawMaterialId: 'butter-1', rawMaterialName: 'European Butter', quantity: 1.5, unit: 'kg', cost: 18.00 },
-          { rawMaterialId: 'milk-1', rawMaterialName: 'Whole Milk', quantity: 1, unit: 'l', cost: 2.50 },
-          { rawMaterialId: 'yeast-1', rawMaterialName: 'Active Dry Yeast', quantity: 0.05, unit: 'kg', cost: 1.50 }
-        ],
-        laborSteps: [
-          { laborCostId: 'baker-1', role: 'baker', hours: 6, cost: 90.00 },
-          { laborCostId: 'assistant-1', role: 'assistant', hours: 3, cost: 45.00 }
-        ],
-        totalCost: 166.00,
-        costPerUnit: 6.92,
-        lastUpdated: new Date().toISOString(),
-        isActive: true
-      }
-    ]);
-
-    // Mock raw materials
-    setRawMaterials([
-      {
-        id: 'flour-1',
-        name: 'Organic Flour',
-        category: 'grain',
-        unit: 'kg',
-        costPerUnit: 3.00,
-        supplier: 'Local Mill Co.',
-        currentStock: 50,
-        reorderPoint: 10,
-        leadTime: 3,
-        isActive: true
-      },
-      {
-        id: 'water-1',
-        name: 'Filtered Water',
-        category: 'other',
-        unit: 'l',
-        costPerUnit: 0.15,
-        supplier: 'City Water',
-        currentStock: 1000,
-        reorderPoint: 100,
-        leadTime: 0,
-        isActive: true
-      },
-      {
-        id: 'butter-1',
-        name: 'European Butter',
-        category: 'dairy',
-        unit: 'kg',
-        costPerUnit: 12.00,
-        supplier: 'Premium Dairy Co.',
-        currentStock: 25,
-        reorderPoint: 5,
-        leadTime: 2,
-        isActive: true
-      }
-    ]);
-
-    // Mock labor costs
-    setLaborCosts([
-      {
-        id: 'baker-1',
-        role: 'baker',
-        hourlyRate: 25.00,
-        hoursPerBatch: 8,
-        isActive: true
-      },
-      {
-        id: 'assistant-1',
-        role: 'assistant',
-        hourlyRate: 18.00,
-        hoursPerBatch: 4,
-        isActive: true
-      }
-    ]);
-  };
-
-  const handleCreateRecipe = () => {
-    if (!recipeForm.name || recipeForm.ingredients.length === 0) {
-      toast.error('Please fill in recipe name and add at least one ingredient');
-      return;
-    }
-
-    const newRecipe: Recipe = {
-      id: `recipe-${Date.now()}`,
-      name: recipeForm.name,
-      description: recipeForm.description,
-      version: recipeForm.version,
-      yield: recipeForm.yield,
-      yieldUnit: recipeForm.yieldUnit,
-      ingredients: recipeForm.ingredients.map(ing => ({
-        ...ing,
-        rawMaterialName: rawMaterials.find(rm => rm.id === ing.rawMaterialId)?.name || 'Unknown',
-        cost: (rawMaterials.find(rm => rm.id === ing.rawMaterialId)?.costPerUnit || 0) * ing.quantity
-      })),
-      laborSteps: recipeForm.laborSteps.map(step => ({
-        ...step,
-        role: laborCosts.find(lc => lc.id === step.laborCostId)?.role || 'Unknown',
-        cost: (laborCosts.find(lc => lc.id === step.laborCostId)?.hourlyRate || 0) * step.hours
-      })),
-      totalCost: 0, // Will be calculated
-      costPerUnit: 0, // Will be calculated
-      lastUpdated: new Date().toISOString(),
-      isActive: true
-    };
-
-    // Calculate costs
-    newRecipe.totalCost = newRecipe.ingredients.reduce((sum, ing) => sum + ing.cost, 0) +
-                          newRecipe.laborSteps.reduce((sum, step) => sum + step.cost, 0);
-    newRecipe.costPerUnit = newRecipe.totalCost / newRecipe.yield;
-
-    setRecipes([...recipes, newRecipe]);
-    setShowRecipeForm(false);
-    resetRecipeForm();
-    
-    toast.success('Recipe created successfully!');
-    onRecipeUpdate();
-  };
-
-  const resetRecipeForm = () => {
-    setRecipeForm({
-      name: '',
-      description: '',
-      version: '1.0',
-      yield: 1,
+  // Mock data for demonstration
+  const mockRecipes: Recipe[] = [
+    {
+      id: '1',
+      name: 'Classic Sourdough Bread',
+      description: 'Traditional sourdough bread with long fermentation',
+      instructions: 'Mix ingredients, let rise for 18 hours, shape, proof, bake at 450°F for 45 minutes',
+      yield: 2,
       yieldUnit: 'loaves',
-      productId: '',
-      ingredients: [],
-      laborSteps: [],
-      notes: ''
-    });
+      prepTime: 30,
+      cookTime: 45,
+      difficulty: 'Intermediate',
+      isActive: true,
+      vendorProfileId: 'mock-vendor-id',
+      productId: '1',
+      createdAt: '2025-08-01T00:00:00Z',
+      updatedAt: '2025-08-01T00:00:00Z',
+      ingredients: [
+        {
+          id: '1',
+          recipeId: '1',
+          ingredientId: '1',
+          ingredientName: 'Organic Flour',
+          quantity: 1000,
+          unit: 'grams',
+          notes: 'High protein bread flour',
+          costPerUnit: 0.0035,
+          totalCost: 3.50
+        },
+        {
+          id: '2',
+          recipeId: '1',
+          ingredientId: '2',
+          ingredientName: 'Water',
+          quantity: 750,
+          unit: 'grams',
+          notes: 'Filtered water at room temperature',
+          costPerUnit: 0.0001,
+          totalCost: 0.08
+        },
+        {
+          id: '3',
+          recipeId: '1',
+          ingredientId: '3',
+          ingredientName: 'Sourdough Starter',
+          quantity: 200,
+          unit: 'grams',
+          notes: 'Active 100% hydration starter',
+          costPerUnit: 0.0025,
+          totalCost: 0.50
+        },
+        {
+          id: '4',
+          recipeId: '1',
+          ingredientId: '4',
+          ingredientName: 'Sea Salt',
+          quantity: 20,
+          unit: 'grams',
+          notes: 'Fine sea salt',
+          costPerUnit: 0.008,
+          totalCost: 0.16
+        }
+      ]
+    },
+    {
+      id: '2',
+      name: 'Artisan Coffee Mug',
+      description: 'Hand-thrown ceramic coffee mug with custom glaze',
+      instructions: 'Center clay, throw cylinder, shape, trim, glaze, fire to cone 6',
+      yield: 1,
+      yieldUnit: 'mug',
+      prepTime: 45,
+      cookTime: 0,
+      difficulty: 'Advanced',
+      isActive: true,
+      vendorProfileId: 'mock-vendor-id',
+      productId: '2',
+      createdAt: '2025-08-01T00:00:00Z',
+      updatedAt: '2025-08-01T00:00:00Z',
+      ingredients: [
+        {
+          id: '5',
+          recipeId: '2',
+          ingredientId: '5',
+          ingredientName: 'Stoneware Clay',
+          quantity: 500,
+          unit: 'grams',
+          notes: 'Cone 6 stoneware clay body',
+          costPerUnit: 0.002,
+          totalCost: 1.00
+        },
+        {
+          id: '6',
+          recipeId: '2',
+          ingredientId: '6',
+          ingredientName: 'Glaze',
+          quantity: 100,
+          unit: 'grams',
+          notes: 'Food-safe cone 6 glaze',
+          costPerUnit: 0.015,
+          totalCost: 1.50
+        }
+      ]
+    }
+  ];
+
+  const mockIngredients: Ingredient[] = [
+    {
+      id: '1',
+      name: 'Organic Flour',
+      description: 'High protein bread flour for artisan breads',
+      unit: 'grams',
+      costPerUnit: 0.0035,
+      supplier: 'Local Mill Co.',
+      stockQty: 50000,
+      lowStockThreshold: 5000,
+      isAvailable: true,
+      vendorProfileId: 'mock-vendor-id',
+      createdAt: '2025-08-01T00:00:00Z',
+      updatedAt: '2025-08-01T00:00:00Z'
+    },
+    {
+      id: '2',
+      name: 'Water',
+      description: 'Filtered water for consistent results',
+      unit: 'grams',
+      costPerUnit: 0.0001,
+      supplier: 'City Water',
+      stockQty: 1000000,
+      lowStockThreshold: 100000,
+      isAvailable: true,
+      vendorProfileId: 'mock-vendor-id',
+      createdAt: '2025-08-01T00:00:00Z',
+      updatedAt: '2025-08-01T00:00:00Z'
+    },
+    {
+      id: '3',
+      name: 'Sourdough Starter',
+      description: 'Active 100% hydration sourdough starter',
+      unit: 'grams',
+      costPerUnit: 0.0025,
+      supplier: 'In-house',
+      stockQty: 2000,
+      lowStockThreshold: 500,
+      isAvailable: true,
+      vendorProfileId: 'mock-vendor-id',
+      createdAt: '2025-08-01T00:00:00Z',
+      updatedAt: '2025-08-01T00:00:00Z'
+    },
+    {
+      id: '4',
+      name: 'Sea Salt',
+      description: 'Fine sea salt for bread making',
+      unit: 'grams',
+      costPerUnit: 0.008,
+      supplier: 'Salt Co.',
+      stockQty: 5000,
+      lowStockThreshold: 1000,
+      isAvailable: true,
+      vendorProfileId: 'mock-vendor-id',
+      createdAt: '2025-08-01T00:00:00Z',
+      updatedAt: '2025-08-01T00:00:00Z'
+    }
+  ];
+
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty?.toLowerCase()) {
+      case 'easy': return 'bg-green-100 text-green-800';
+      case 'intermediate': return 'bg-yellow-100 text-yellow-800';
+      case 'advanced': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
   };
 
-  const addIngredient = () => {
-    setRecipeForm(prev => ({
-      ...prev,
-      ingredients: [...prev.ingredients, { rawMaterialId: '', quantity: 0, unit: 'kg' }]
-    }));
+  const getStockStatus = (stock: number, threshold: number) => {
+    if (stock === 0) return { status: 'Out of Stock', color: 'text-red-600', bg: 'bg-red-100' };
+    if (stock <= threshold) return { status: 'Low Stock', color: 'text-orange-600', bg: 'bg-orange-100' };
+    return { status: 'In Stock', color: 'text-green-600', bg: 'bg-green-100' };
   };
 
-  const removeIngredient = (index: number) => {
-    setRecipeForm(prev => ({
-      ...prev,
-      ingredients: prev.ingredients.filter((_, i) => i !== index)
-    }));
+  const calculateRecipeCost = (recipe: Recipe): number => {
+    return recipe.ingredients.reduce((total, ingredient) => total + ingredient.totalCost, 0);
   };
 
-  const updateIngredient = (index: number, field: string, value: any) => {
-    setRecipeForm(prev => ({
-      ...prev,
-      ingredients: prev.ingredients.map((ing, i) => 
-        i === index ? { ...ing, [field]: value } : ing
-      )
-    }));
+  const calculateCostPerUnit = (recipe: Recipe): number => {
+    const totalCost = calculateRecipeCost(recipe);
+    return recipe.yield > 0 ? totalCost / recipe.yield : 0;
   };
 
-  const addLaborStep = () => {
-    setRecipeForm(prev => ({
-      ...prev,
-      laborSteps: [...prev.laborSteps, { laborCostId: '', hours: 0 }]
-    }));
+  const formatDuration = (minutes: number): string => {
+    if (minutes < 60) return `${minutes}m`;
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
   };
 
-  const removeLaborStep = (index: number) => {
-    setRecipeForm(prev => ({
-      ...prev,
-      laborSteps: prev.laborSteps.filter((_, i) => i !== index)
-    }));
+  const formatCost = (cost: number): string => {
+    return `$${cost.toFixed(4)}`;
   };
-
-  const updateLaborStep = (index: number, field: string, value: any) => {
-    setRecipeForm(prev => ({
-      ...prev,
-      laborSteps: prev.laborSteps.map((step, i) => 
-        i === index ? { ...step, [field]: value } : step
-      )
-    }));
-  };
-
-  const getRecipeMetrics = () => {
-    const totalRecipes = recipes.length;
-    const activeRecipes = recipes.filter(r => r.isActive).length;
-    const totalCost = recipes.reduce((sum, r) => sum + r.totalCost, 0);
-    const averageCostPerUnit = recipes.length > 0 ? 
-      recipes.reduce((sum, r) => sum + r.costPerUnit, 0) / recipes.length : 0;
-    
-    return { totalRecipes, activeRecipes, totalCost, averageCostPerUnit };
-  };
-
-  const metrics = getRecipeMetrics();
 
   return (
-    <div className="bg-white rounded-lg shadow-md">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-gray-900">Recipe Management</h2>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setShowRecipeForm(true)}
-              className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              New Recipe
-            </button>
-          </div>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900">Recipe Management</h2>
+          <p className="text-gray-600">Create and manage recipes, track ingredients, and analyze costs</p>
+        </div>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setShowRecipeForm(true)}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            New Recipe
+          </button>
+          <button
+            onClick={() => setShowIngredientForm(true)}
+            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+          >
+            <Package className="h-4 w-4" />
+            New Ingredient
+          </button>
         </div>
       </div>
 
       {/* Tab Navigation */}
       <div className="flex border-b border-gray-200">
         {[
-          { id: 'overview', label: 'Overview', icon: BarChart3 },
+          { id: 'overview', label: 'Overview', icon: TrendingUp },
           { id: 'recipes', label: 'Recipes', icon: ChefHat },
           { id: 'ingredients', label: 'Ingredients', icon: Package },
           { id: 'costs', label: 'Cost Analysis', icon: Calculator }
@@ -327,7 +274,7 @@ const RecipeManager: React.FC<RecipeManagerProps> = ({ products, onRecipeUpdate 
               onClick={() => setActiveTab(tab.id as any)}
               className={`flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors ${
                 activeTab === tab.id
-                  ? 'border-b-2 border-green-500 text-green-600'
+                  ? 'border-b-2 border-blue-500 text-blue-600'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -339,450 +286,528 @@ const RecipeManager: React.FC<RecipeManagerProps> = ({ products, onRecipeUpdate 
       </div>
 
       {/* Tab Content */}
-      <div className="p-6">
-        {activeTab === 'overview' && (
-          <div className="space-y-6">
-            {/* Recipe Metrics */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-green-50 rounded-lg p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-green-600">Total Recipes</p>
-                    <p className="text-2xl font-bold text-green-900">{metrics.totalRecipes}</p>
-                  </div>
-                  <ChefHat className="h-8 w-8 text-green-400" />
-                </div>
+      {activeTab === 'overview' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Recipe Stats */}
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Recipes</p>
+                <p className="text-2xl font-bold text-blue-600">{mockRecipes.length}</p>
               </div>
-              
-              <div className="bg-blue-50 rounded-lg p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-blue-600">Active Recipes</p>
-                    <p className="text-2xl font-bold text-blue-900">{metrics.activeRecipes}</p>
-                  </div>
-                  <CheckCircle className="h-8 w-8 text-blue-400" />
-                </div>
-              </div>
-              
-              <div className="bg-purple-50 rounded-lg p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-purple-600">Total Cost</p>
-                    <p className="text-2xl font-bold text-purple-900">${metrics.totalCost.toFixed(2)}</p>
-                  </div>
-                  <DollarSign className="h-8 w-8 text-purple-400" />
-                </div>
-              </div>
-              
-              <div className="bg-orange-50 rounded-lg p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-orange-600">Avg Cost/Unit</p>
-                    <p className="text-2xl font-bold text-orange-900">${metrics.averageCostPerUnit.toFixed(2)}</p>
-                  </div>
-                  <Calculator className="h-8 w-8 text-orange-400" />
-                </div>
-              </div>
-            </div>
-
-            {/* Recent Recipes */}
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 mb-3">Recent Recipes</h3>
-              <div className="space-y-2">
-                {recipes.slice(0, 5).map((recipe) => (
-                  <div key={recipe.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div>
-                      <p className="font-medium text-gray-900">{recipe.name}</p>
-                      <p className="text-sm text-gray-600">v{recipe.version} • {recipe.yield} {recipe.yieldUnit}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-600">
-                        ${recipe.costPerUnit.toFixed(2)}/unit
-                      </span>
-                      <button
-                        onClick={() => setSelectedRecipe(recipe)}
-                        className="px-3 py-1 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-                      >
-                        View
-                      </button>
-                    </div>
-                  </div>
-                ))}
+              <div className="p-3 bg-blue-100 rounded-full">
+                <ChefHat className="h-6 w-6 text-blue-600" />
               </div>
             </div>
           </div>
-        )}
 
-        {activeTab === 'recipes' && (
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-medium text-gray-900">All Recipes</h3>
-              <span className="text-sm text-gray-600">{recipes.length} total recipes</span>
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Active Recipes</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {mockRecipes.filter(r => r.isActive).length}
+                </p>
+              </div>
+              <div className="p-3 bg-green-100 rounded-full">
+                <CheckCircle className="h-6 w-6 text-green-600" />
+              </div>
             </div>
-            
-            <div className="space-y-3">
-              {recipes.map((recipe) => (
-                <div key={recipe.id} className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <h4 className="font-medium text-gray-900">{recipe.name}</h4>
-                      <p className="text-sm text-gray-600">{recipe.description}</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                        recipe.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Ingredients</p>
+                <p className="text-2xl font-bold text-purple-600">{mockIngredients.length}</p>
+              </div>
+              <div className="p-3 bg-purple-100 rounded-full">
+                <Package className="h-6 w-6 text-purple-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Low Stock Alerts</p>
+                <p className="text-2xl font-bold text-orange-600">
+                  {mockIngredients.filter(i => i.stockQty <= i.lowStockThreshold).length}
+                </p>
+              </div>
+              <div className="p-3 bg-orange-100 rounded-full">
+                <AlertTriangle className="h-6 w-6 text-orange-600" />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'recipes' && (
+        <div className="bg-white rounded-lg shadow-md">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900">Recipes</h3>
+          </div>
+          
+          <div className="divide-y divide-gray-200">
+            {mockRecipes.map((recipe) => (
+              <div key={recipe.id} className="p-6 hover:bg-gray-50 transition-colors">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-4 mb-3">
+                      <h4 className="text-lg font-semibold text-gray-900">{recipe.name}</h4>
+                      <span className={`px-3 py-1 text-sm font-medium rounded-full ${getDifficultyColor(recipe.difficulty)}`}>
+                        {recipe.difficulty}
+                      </span>
+                      <span className={`px-3 py-1 text-sm font-medium rounded-full ${
+                        recipe.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                       }`}>
                         {recipe.isActive ? 'Active' : 'Inactive'}
                       </span>
                     </div>
+                    
+                    {recipe.description && (
+                      <p className="text-gray-600 mb-3">{recipe.description}</p>
+                    )}
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-3">
+                      <div>
+                        <span className="text-sm text-gray-600">Yield:</span>
+                        <span className="ml-2 font-medium">{recipe.yield} {recipe.yieldUnit}</span>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-600">Prep Time:</span>
+                        <span className="ml-2 font-medium">{formatDuration(recipe.prepTime || 0)}</span>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-600">Cook Time:</span>
+                        <span className="ml-2 font-medium">{formatDuration(recipe.cookTime || 0)}</span>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-600">Total Cost:</span>
+                        <span className="ml-2 font-medium text-green-600">
+                          {formatCost(calculateRecipeCost(recipe))}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Ingredients */}
+                    <div className="mb-3">
+                      <h5 className="text-sm font-medium text-gray-700 mb-2">Ingredients:</h5>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {recipe.ingredients.map((ingredient, index) => (
+                          <div key={index} className="flex items-center justify-between text-sm bg-gray-50 p-2 rounded">
+                            <span className="text-gray-600">
+                              {ingredient.ingredientName} ({ingredient.quantity} {ingredient.unit})
+                            </span>
+                            <span className="font-medium">{formatCost(ingredient.totalCost)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {recipe.instructions && (
+                      <div className="text-sm text-gray-600 italic">"{recipe.instructions}"</div>
+                    )}
                   </div>
                   
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-3">
-                    <div>
-                      <span className="text-gray-600">Version:</span>
-                      <span className="ml-2 font-medium">v{recipe.version}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Yield:</span>
-                      <span className="ml-2 font-medium">{recipe.yield} {recipe.yieldUnit}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Cost/Unit:</span>
-                      <span className="ml-2 font-medium">${recipe.costPerUnit.toFixed(2)}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Total Cost:</span>
-                      <span className="ml-2 font-medium">${recipe.totalCost.toFixed(2)}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setSelectedRecipe(recipe)}
-                      className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                    >
-                      View Details
+                  {/* Action Buttons */}
+                  <div className="flex flex-col gap-2 ml-4">
+                    <button className="p-2 text-blue-600 hover:bg-blue-50 rounded" title="View recipe details">
+                      <Eye className="h-4 w-4" />
                     </button>
-                    <button
-                      onClick={() => setEditingRecipe(recipe)}
-                      className="px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-                    >
-                      Edit
+                    <button className="p-2 text-gray-600 hover:bg-gray-50 rounded" title="Edit recipe">
+                      <Edit className="h-4 w-4" />
+                    </button>
+                    <button className="p-2 text-purple-600 hover:bg-purple-50 rounded" title="Duplicate recipe">
+                      <Copy className="h-4 w-4" />
+                    </button>
+                    <button className="p-2 text-orange-600 hover:bg-orange-50 rounded" title="Archive recipe">
+                      <Archive className="h-4 w-4" />
                     </button>
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
-        )}
+        </div>
+      )}
 
-        {activeTab === 'ingredients' && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium text-gray-900">Raw Materials & Ingredients</h3>
-            <p className="text-gray-600">Manage your raw materials and track costs for recipe calculations.</p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {rawMaterials.map((material) => (
-                <div key={material.id} className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-medium text-gray-900">{material.name}</h4>
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      material.currentStock <= material.reorderPoint ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
-                    }`}>
-                      {material.currentStock <= material.reorderPoint ? 'Low Stock' : 'In Stock'}
-                    </span>
-                  </div>
-                  
-                  <div className="space-y-1 text-sm text-gray-600">
-                    <div>Category: {material.category}</div>
-                    <div>Unit: {material.unit}</div>
-                    <div>Cost: ${material.costPerUnit.toFixed(2)}/{material.unit}</div>
-                    <div>Stock: {material.currentStock} {material.unit}</div>
-                    <div>Reorder Point: {material.reorderPoint} {material.unit}</div>
+      {activeTab === 'ingredients' && (
+        <div className="bg-white rounded-lg shadow-md">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900">Ingredients</h3>
+          </div>
+          
+          <div className="divide-y divide-gray-200">
+            {mockIngredients.map((ingredient) => {
+              const stockStatus = getStockStatus(ingredient.stockQty, ingredient.lowStockThreshold);
+              return (
+                <div key={ingredient.id} className="p-6 hover:bg-gray-50 transition-colors">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-4 mb-3">
+                        <h4 className="text-lg font-semibold text-gray-900">{ingredient.name}</h4>
+                        <span className={`px-3 py-1 text-sm font-medium rounded-full ${stockStatus.bg}`}>
+                          {stockStatus.status}
+                        </span>
+                        <span className={`px-3 py-1 text-sm font-medium rounded-full ${
+                          ingredient.isAvailable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}>
+                          {ingredient.isAvailable ? 'Available' : 'Unavailable'}
+                        </span>
+                      </div>
+                      
+                      {ingredient.description && (
+                        <p className="text-gray-600 mb-3">{ingredient.description}</p>
+                      )}
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-3">
+                        <div>
+                          <span className="text-sm text-gray-600">Unit:</span>
+                          <span className="ml-2 font-medium">{ingredient.unit}</span>
+                        </div>
+                        <div>
+                          <span className="text-sm text-gray-600">Cost per Unit:</span>
+                          <span className="ml-2 font-medium text-green-600">
+                            {formatCost(ingredient.costPerUnit)}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-sm text-gray-600">Current Stock:</span>
+                          <span className="ml-2 font-medium">{ingredient.stockQty.toLocaleString()}</span>
+                        </div>
+                        <div>
+                          <span className="text-sm text-gray-600">Low Stock Threshold:</span>
+                          <span className="ml-2 font-medium">{ingredient.lowStockThreshold.toLocaleString()}</span>
+                        </div>
+                      </div>
+
+                      {ingredient.supplier && (
+                        <div className="text-sm text-gray-600">
+                          <span className="text-gray-500">Supplier:</span>
+                          <span className="ml-2">{ingredient.supplier}</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Action Buttons */}
+                    <div className="flex flex-col gap-2 ml-4">
+                      <button className="p-2 text-blue-600 hover:bg-blue-50 rounded" title="View ingredient details">
+                        <Eye className="h-4 w-4" />
+                      </button>
+                      <button className="p-2 text-gray-600 hover:bg-gray-50 rounded" title="Edit ingredient">
+                        <Edit className="h-4 w-4" />
+                      </button>
+                      <button className="p-2 text-green-600 hover:bg-green-50 rounded" title="Add to stock">
+                        <Plus className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </div>
-        )}
+        </div>
+      )}
 
-        {activeTab === 'costs' && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium text-gray-900">Cost Analysis</h3>
-            <p className="text-gray-600">Analyze recipe costs and identify optimization opportunities.</p>
-            
+      {activeTab === 'costs' && (
+        <div className="space-y-6">
+          {/* Recipe Cost Analysis */}
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Recipe Cost Analysis</h3>
             <div className="space-y-4">
-              {recipes.map((recipe) => (
-                <div key={recipe.id} className="border border-gray-200 rounded-lg p-4">
-                  <h4 className="font-medium text-gray-900 mb-3">{recipe.name}</h4>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-blue-50 rounded-lg p-3">
-                      <div className="text-sm font-medium text-blue-600">Material Costs</div>
-                      <div className="text-lg font-bold text-blue-900">
-                        ${recipe.ingredients.reduce((sum, ing) => sum + ing.cost, 0).toFixed(2)}
+              {mockRecipes.map((recipe) => {
+                const totalCost = calculateRecipeCost(recipe);
+                const costPerUnit = calculateCostPerUnit(recipe);
+                return (
+                  <div key={recipe.id} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-medium text-gray-900">{recipe.name}</h4>
+                      <span className="text-sm text-gray-500">Yield: {recipe.yield} {recipe.yieldUnit}</span>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <span className="text-sm text-gray-600">Total Cost:</span>
+                        <span className="ml-2 font-medium text-green-600">{formatCost(totalCost)}</span>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-600">Cost per Unit:</span>
+                        <span className="ml-2 font-medium text-blue-600">{formatCost(costPerUnit)}</span>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-600">Ingredients:</span>
+                        <span className="ml-2 font-medium">{recipe.ingredients.length}</span>
                       </div>
                     </div>
                     
-                    <div className="bg-green-50 rounded-lg p-3">
-                      <div className="text-sm font-medium text-green-600">Labor Costs</div>
-                      <div className="text-lg font-bold text-green-900">
-                        ${recipe.laborSteps.reduce((sum, step) => sum + step.cost, 0).toFixed(2)}
-                      </div>
-                    </div>
-                    
-                    <div className="bg-purple-50 rounded-lg p-3">
-                      <div className="text-sm font-medium text-purple-600">Cost per Unit</div>
-                      <div className="text-lg font-bold text-purple-900">
-                        ${recipe.costPerUnit.toFixed(2)}
+                    {/* Cost Breakdown */}
+                    <div className="mt-3">
+                      <h5 className="text-sm font-medium text-gray-700 mb-2">Cost Breakdown:</h5>
+                      <div className="space-y-1">
+                        {recipe.ingredients.map((ingredient, index) => (
+                          <div key={index} className="flex items-center justify-between text-sm">
+                            <span className="text-gray-600">
+                              {ingredient.ingredientName} ({ingredient.quantity} {ingredient.unit})
+                            </span>
+                            <span className="font-medium">{formatCost(ingredient.totalCost)}</span>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
-        )}
-      </div>
 
-      {/* Create Recipe Modal */}
+          {/* Ingredient Cost Summary */}
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Ingredient Cost Summary</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600 mb-2">
+                  {formatCost(mockIngredients.reduce((total, i) => total + (i.costPerUnit * i.stockQty), 0))}
+                </div>
+                <div className="text-sm text-gray-600">Total Inventory Value</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600 mb-2">
+                  {formatCost(mockIngredients.reduce((total, i) => total + i.costPerUnit, 0))}
+                </div>
+                <div className="text-sm text-gray-600">Average Cost per Unit</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-purple-600 mb-2">
+                  {mockIngredients.length}
+                </div>
+                <div className="text-sm text-gray-600">Total Ingredients</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Recipe Form Modal */}
       {showRecipeForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Create New Recipe</h3>
+          <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">
+                {editingRecipe ? 'Edit Recipe' : 'New Recipe'}
+              </h2>
               <button
-                onClick={() => setShowRecipeForm(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                onClick={() => {
+                  setShowRecipeForm(false);
+                  setEditingRecipe(null);
+                }}
+                className="text-gray-400 hover:text-gray-600"
               >
-                <X className="h-5 w-5" />
+                <XCircle className="h-6 w-6" />
               </button>
             </div>
             
-            <form onSubmit={(e) => { e.preventDefault(); handleCreateRecipe(); }} className="space-y-4">
-              {/* Basic Recipe Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Recipe Name *
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Recipe Name</label>
                   <input
                     type="text"
-                    value={recipeForm.name}
-                    onChange={(e) => setRecipeForm({ ...recipeForm, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter recipe name"
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Version
-                  </label>
-                  <input
-                    type="text"
-                    value={recipeForm.version}
-                    onChange={(e) => setRecipeForm({ ...recipeForm, version: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Yield Quantity *
-                  </label>
-                  <input
-                    type="number"
-                    value={recipeForm.yield}
-                    onChange={(e) => setRecipeForm({ ...recipeForm, yield: parseInt(e.target.value) })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                    min="1"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Yield Unit
-                  </label>
-                  <select
-                    value={recipeForm.yieldUnit}
-                    onChange={(e) => setRecipeForm({ ...recipeForm, yieldUnit: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                  >
-                    <option value="loaves">Loaves</option>
-                    <option value="pieces">Pieces</option>
-                    <option value="dozen">Dozen</option>
-                    <option value="kg">Kilogram</option>
-                    <option value="lb">Pound</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Linked Product
-                  </label>
-                  <select
-                    value={recipeForm.productId}
-                    onChange={(e) => setRecipeForm({ ...recipeForm, productId: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                  >
-                    <option value="">No product linked</option>
-                    {products.map((product) => (
-                      <option key={product.id} value={product.id}>
-                        {product.name}
-                      </option>
-                    ))}
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Difficulty</label>
+                  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="easy">Easy</option>
+                    <option value="intermediate">Intermediate</option>
+                    <option value="advanced">Advanced</option>
                   </select>
                 </div>
               </div>
               
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
                 <textarea
-                  value={recipeForm.description}
-                  onChange={(e) => setRecipeForm({ ...recipeForm, description: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
                   rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Describe your recipe..."
                 />
               </div>
-
-              {/* Ingredients Section */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-md font-medium text-gray-900">Ingredients</h4>
-                  <button
-                    type="button"
-                    onClick={addIngredient}
-                    className="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 transition-colors text-sm"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Yield</label>
+                  <input
+                    type="number"
+                    min="1"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="2"
+                  />
                 </div>
                 
-                <div className="space-y-3">
-                  {recipeForm.ingredients.map((ingredient, index) => (
-                    <div key={index} className="grid grid-cols-1 md:grid-cols-4 gap-3 p-3 bg-gray-50 rounded-lg">
-                      <select
-                        value={ingredient.rawMaterialId}
-                        onChange={(e) => updateIngredient(index, 'rawMaterialId', e.target.value)}
-                        className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                        required
-                      >
-                        <option value="">Select material</option>
-                        {rawMaterials.map((material) => (
-                          <option key={material.id} value={material.id}>
-                            {material.name} (${material.costPerUnit}/{material.unit})
-                          </option>
-                        ))}
-                      </select>
-                      
-                      <input
-                        type="number"
-                        value={ingredient.quantity}
-                        onChange={(e) => updateIngredient(index, 'quantity', parseFloat(e.target.value))}
-                        className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                        placeholder="Quantity"
-                        min="0"
-                        step="0.01"
-                        required
-                      />
-                      
-                      <select
-                        value={ingredient.unit}
-                        onChange={(e) => updateIngredient(index, 'unit', e.target.value)}
-                        className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-                        required
-                      >
-                        <option value="kg">kg</option>
-                        <option value="g">g</option>
-                        <option value="l">l</option>
-                        <option value="ml">ml</option>
-                        <option value="pcs">pcs</option>
-                      </select>
-                      
-                      <button
-                        type="button"
-                        onClick={() => removeIngredient(index)}
-                        className="bg-red-600 text-white px-3 py-2 rounded-md hover:bg-red-700 transition-colors"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Labor Steps Section */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-md font-medium text-gray-900">Labor Steps</h4>
-                  <button
-                    type="button"
-                    onClick={addLaborStep}
-                    className="bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition-colors text-sm"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Yield Unit</label>
+                  <input
+                    type="text"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="loaves, pieces, etc."
+                  />
                 </div>
                 
-                <div className="space-y-3">
-                  {recipeForm.laborSteps.map((step, index) => (
-                    <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-3 p-3 bg-blue-50 rounded-lg">
-                      <select
-                        value={step.laborCostId}
-                        onChange={(e) => updateLaborStep(index, 'laborCostId', e.target.value)}
-                        className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        required
-                      >
-                        <option value="">Select role</option>
-                        {laborCosts.map((labor) => (
-                          <option key={labor.id} value={labor.id}>
-                            {labor.role} (${labor.hourlyRate}/hr)
-                          </option>
-                        ))}
-                      </select>
-                      
-                      <input
-                        type="number"
-                        value={step.hours}
-                        onChange={(e) => updateLaborStep(index, 'hours', parseFloat(e.target.value))}
-                        className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Hours"
-                        min="0"
-                        step="0.5"
-                        required
-                      />
-                      
-                      <button
-                        type="button"
-                        onClick={() => removeLaborStep(index)}
-                        className="bg-red-600 text-white px-3 py-2 rounded-md hover:bg-red-700 transition-colors"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Prep Time (minutes)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="30"
+                  />
                 </div>
               </div>
               
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="submit"
-                  className="flex-1 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
-                >
-                  Create Recipe
-                </button>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Instructions</label>
+                <textarea
+                  rows={5}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Step-by-step instructions..."
+                />
+              </div>
+              
+              <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
                 <button
                   type="button"
-                  onClick={() => setShowRecipeForm(false)}
-                  className="flex-1 bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 transition-colors"
+                  onClick={() => {
+                    setShowRecipeForm(false);
+                    setEditingRecipe(null);
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
                 >
                   Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  {editingRecipe ? 'Update Recipe' : 'Create Recipe'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Ingredient Form Modal */}
+      {showIngredientForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">
+                {editingIngredient ? 'Edit Ingredient' : 'New Ingredient'}
+              </h2>
+              <button
+                onClick={() => {
+                  setShowIngredientForm(false);
+                  setEditingIngredient(null);
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <XCircle className="h-6 w-6" />
+              </button>
+            </div>
+            
+            <form className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Ingredient Name</label>
+                  <input
+                    type="text"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter ingredient name"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Unit</label>
+                  <input
+                    type="text"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="grams, pieces, etc."
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                <textarea
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Describe the ingredient..."
+                />
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Cost per Unit</label>
+                  <input
+                    type="number"
+                    step="0.0001"
+                    min="0"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="0.00"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Current Stock</label>
+                  <input
+                    type="number"
+                    min="0"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="0"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Low Stock Threshold</label>
+                  <input
+                    type="number"
+                    min="0"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Supplier</label>
+                <input
+                  type="text"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter supplier name"
+                />
+              </div>
+              
+              <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowIngredientForm(false);
+                    setEditingIngredient(null);
+                  }}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  {editingIngredient ? 'Update Ingredient' : 'Create Ingredient'}
                 </button>
               </div>
             </form>

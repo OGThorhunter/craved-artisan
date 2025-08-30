@@ -14,7 +14,7 @@ const navItems = [
   { label: 'Snapshot', href: '/dashboard', icon: Home },
   { label: 'Analytics', href: '/dashboard/vendor/analytics', icon: BarChart3 },
   { label: 'Products', href: '/dashboard/vendor/products', icon: Package },
-  { label: 'Orders', href: '/dashboard/vendor/orders', icon: ShoppingCart },
+          { label: 'Sales Events', href: '/dashboard/vendor/orders', icon: ShoppingCart },
   { label: 'Inventory', href: '/dashboard/vendor/inventory', icon: Database },
   { label: 'CRM', href: '/dashboard/vendor/crm', icon: Users },
   { label: 'Relationships', href: '/dashboard/vendor/relationships', icon: Handshake },

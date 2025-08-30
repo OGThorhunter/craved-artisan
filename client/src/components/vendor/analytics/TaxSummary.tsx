@@ -1,6 +1,25 @@
 "use client";
 
-import { useState } from "react";
+/**
+ * TODO: STRIPE TAX API INTEGRATION - AFTER DEPLOYMENT
+ * 
+ * This component currently uses placeholder tax data. After deployment:
+ * 
+ * 1. Enable Stripe Tax in your Stripe dashboard
+ * 2. Set up proper MoR (Merchant of Record) configuration for each vendor
+ * 3. Replace fetchTaxRatesFromStripe() with real Stripe Tax API calls
+ * 4. Update salesTaxData to pull from Stripe Tax API
+ * 5. Remove placeholder notices and console.log statements
+ * 
+ * Stripe Tax API endpoints needed:
+ * - /v1/tax_rates (for tax rate lookup)
+ * - /v1/tax_calculations (for tax calculations)
+ * - /v1/tax_transactions (for tax reporting)
+ * 
+ * Reference: https://stripe.com/docs/tax
+ */
+
+import React, { useState, useEffect } from "react";
 import { DollarSign, FileText, Calculator, MapPin, TrendingUp, TrendingDown, AlertTriangle, Calendar, BarChart3, Download, Receipt, Crown, X } from "lucide-react";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, LineChart, Line, CartesianGrid } from "recharts";
 
@@ -33,6 +52,8 @@ interface StripeFee {
   netRevenue: number;
 }
 
+// TODO: Replace with Stripe Tax API after deployment
+// This is placeholder data until Stripe Tax is fully configured
 const salesTaxData: SalesTaxData[] = [
   { zipCode: "90210", region: "Beverly Hills", state: "CA", taxRate: 9.5, salesAmount: 12500, taxCollected: 1187.50, transactions: 156 },
   { zipCode: "90211", region: "West Hollywood", state: "CA", taxRate: 9.5, salesAmount: 8900, taxCollected: 845.50, transactions: 112 },
@@ -81,16 +102,49 @@ export function TaxSummary() {
     annualRevenue: '',
     annualExpenses: '',
     businessType: 'sole-proprietor',
-    state: 'CA', // Default to California, but should come from vendor profile
-    zipCode: '90210' // Default, but should come from vendor profile
+    state: 'CA',
+    zipCode: '90210'
   });
+  
   const [taxCalculationResults, setTaxCalculationResults] = useState({
     netIncome: 0,
     selfEmploymentTax: 0,
     incomeTax: 0,
     totalTax: 0
   });
+  
   const [hasCalculated, setHasCalculated] = useState(false);
+
+  // TODO: Replace with real Stripe Tax API after deployment
+  // This function will call Stripe Tax API to get real-time tax rates
+  const fetchTaxRatesFromStripe = async (zipCode: string, state: string) => {
+    try {
+      // TODO: After deployment, replace this with:
+      // const response = await fetch('/api/stripe/tax-rates', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ zipCode, state, vendorId: 'current-vendor-id' })
+      // });
+      // const taxData = await response.json();
+      // return taxData;
+      
+      // For now, return placeholder data
+      console.log(`[PLACEHOLDER] Would fetch tax rates for ZIP: ${zipCode}, State: ${state}`);
+      
+      // Mock response structure matching Stripe Tax API
+      return {
+        stateTaxRate: 0.093, // 9.3% for CA
+        countyTaxRate: 0.01, // 1% for LA County
+        cityTaxRate: 0.005,  // 0.5% for Beverly Hills
+        salesTaxRate: 0.095, // 9.5% total
+        effectiveDate: new Date().toISOString(),
+        source: 'placeholder'
+      };
+    } catch (error) {
+      console.error('Error fetching tax rates:', error);
+      return null;
+    }
+  };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -148,7 +202,7 @@ export function TaxSummary() {
   const totalStripeFees = stripeFees.reduce((sum, item) => sum + item.totalFees, 0);
   const currentQuarterEstimate = quarterlyEstimates.find(q => q.status === "upcoming");
 
-  // Tax calculation functions
+  // Simple tax calculation
   const calculateTaxes = () => {
     const revenue = parseFloat(taxCalculatorInputs.annualRevenue) || 0;
     const expenses = parseFloat(taxCalculatorInputs.annualExpenses) || 0;
@@ -165,58 +219,14 @@ export function TaxSummary() {
     }
 
     const netIncome = revenue - expenses;
-    
-    // Self-employment tax (15.3% of net income)
     const selfEmploymentTax = netIncome * 0.153;
-    
-    // Federal income tax (simplified brackets for 2024)
-    let incomeTax = 0;
-    if (netIncome <= 11600) {
-      incomeTax = netIncome * 0.10;
-    } else if (netIncome <= 47150) {
-      incomeTax = 1160 + (netIncome - 11600) * 0.12;
-    } else if (netIncome <= 100525) {
-      incomeTax = 5428 + (netIncome - 47150) * 0.22;
-    } else if (netIncome <= 191950) {
-      incomeTax = 17190 + (netIncome - 100525) * 0.24;
-    } else if (netIncome <= 243725) {
-      incomeTax = 39462 + (netIncome - 191950) * 0.32;
-    } else if (netIncome <= 609350) {
-      incomeTax = 55979 + (netIncome - 243725) * 0.35;
-    } else {
-      incomeTax = 183997 + (netIncome - 609350) * 0.37;
-    }
-    
-    // State tax (simplified - California has progressive rates)
-    let stateTax = 0;
-    if (taxCalculatorInputs.state === 'CA') {
-      if (netIncome <= 10099) {
-        stateTax = netIncome * 0.01;
-      } else if (netIncome <= 23942) {
-        stateTax = 101 + (netIncome - 10099) * 0.02;
-      } else if (netIncome <= 37788) {
-        stateTax = 377 + (netIncome - 23942) * 0.04;
-      } else if (netIncome <= 52455) {
-        stateTax = 931 + (netIncome - 37788) * 0.06;
-      } else if (netIncome <= 66295) {
-        stateTax = 1813 + (netIncome - 52455) * 0.08;
-      } else if (netIncome <= 338639) {
-        stateTax = 2919 + (netIncome - 66295) * 0.093;
-      } else if (netIncome <= 406364) {
-        stateTax = 25247 + (netIncome - 338639) * 0.103;
-      } else if (netIncome <= 677275) {
-        stateTax = 32248 + (netIncome - 406364) * 0.113;
-      } else {
-        stateTax = 62837 + (netIncome - 677275) * 0.133;
-      }
-    }
-    
-    const totalTax = selfEmploymentTax + incomeTax + stateTax;
+    const incomeTax = netIncome * 0.22; // Simplified federal rate
+    const totalTax = selfEmploymentTax + incomeTax;
     
     setTaxCalculationResults({
       netIncome,
       selfEmploymentTax,
-      incomeTax: incomeTax + stateTax, // Combine federal and state
+      incomeTax,
       totalTax
     });
     setHasCalculated(true);
@@ -326,7 +336,12 @@ export function TaxSummary() {
 
       {/* Sales Tax Collection by Region */}
       <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">Sales Tax Collection by Region</h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-800">Sales Tax Collection by Region</h3>
+          <div className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full">
+            ⚠️ Placeholder Data - Stripe Tax API pending deployment
+          </div>
+        </div>
         <div className="bg-white p-4 rounded-lg border border-gray-200 overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -382,132 +397,18 @@ export function TaxSummary() {
         </div>
       )}
 
-      {/* Detailed View */}
-      {viewMode === "detailed" && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          {/* Stripe Fees Over Time */}
-          <div>
-            <h3 className="font-semibold text-gray-800 mb-3">Stripe Fees Over Time</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={stripeFees}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <Tooltip formatter={(value) => [formatCurrency(Number(value)), 'Amount']} />
-                <Line type="monotone" dataKey="totalFees" stroke="#7F232E" strokeWidth={2} name="Total Fees" />
-                <Line type="monotone" dataKey="processingFees" stroke="#5B6E02" strokeWidth={2} name="Processing Fees" />
-                <Line type="monotone" dataKey="platformFees" stroke="#E8CBAE" strokeWidth={2} name="Platform Fees" />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Deductions by Category */}
-          <div>
-            <h3 className="font-semibold text-gray-800 mb-3">Deductions by Category</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={[
-                    { name: "COGS", value: deductions.filter(d => d.type === "cogs").reduce((sum, d) => sum + d.amount, 0) },
-                    { name: "Tools", value: deductions.filter(d => d.type === "tools").reduce((sum, d) => sum + d.amount, 0) },
-                    { name: "Marketing", value: deductions.filter(d => d.type === "marketing").reduce((sum, d) => sum + d.amount, 0) },
-                    { name: "Other", value: deductions.filter(d => d.type === "other").reduce((sum, d) => sum + d.amount, 0) },
-                  ]}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={80}
-                  dataKey="value"
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                >
-                  {COLORS.map((color, index) => (
-                    <Cell key={`cell-${index}`} fill={color} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value) => [formatCurrency(Number(value)), 'Amount']} />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      )}
-
-      {/* Stripe Fees Breakdown */}
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">Stripe Fees Breakdown</h3>
-        <div className="bg-white p-4 rounded-lg border border-gray-200 overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left p-2">Month</th>
-                <th className="text-right p-2">Gross Revenue</th>
-                <th className="text-right p-2">Processing Fees</th>
-                <th className="text-right p-2">Platform Fees</th>
-                <th className="text-right p-2">Refund Fees</th>
-                <th className="text-right p-2">Total Fees</th>
-                <th className="text-right p-2">Net Revenue</th>
-                <th className="text-right p-2">Fee %</th>
-              </tr>
-            </thead>
-            <tbody>
-              {stripeFees.map((fee, idx) => (
-                <tr key={idx} className="border-b hover:bg-gray-50">
-                  <td className="p-2 font-medium">{fee.month}</td>
-                  <td className="p-2 text-right">{formatCurrency(fee.grossRevenue)}</td>
-                  <td className="p-2 text-right">{formatCurrency(fee.processingFees)}</td>
-                  <td className="p-2 text-right">{formatCurrency(fee.platformFees)}</td>
-                  <td className="p-2 text-right">{formatCurrency(fee.refundFees)}</td>
-                  <td className="p-2 text-right font-semibold">{formatCurrency(fee.totalFees)}</td>
-                  <td className="p-2 text-right">{formatCurrency(fee.netRevenue)}</td>
-                  <td className="p-2 text-right">{formatPercentage((fee.totalFees / fee.grossRevenue) * 100)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Tax Reminders */}
-      <div className="mb-6">
-        <div className="flex items-center gap-2 mb-4">
-          <AlertTriangle size={18} className="text-orange-600" />
-          <h3 className="text-lg font-semibold text-gray-800">Tax Reminders</h3>
-        </div>
-        <div className="space-y-3">
-          <div className="p-3 bg-white border border-orange-200 rounded-lg">
-            <div className="flex items-center gap-2 mb-1">
-              <Calendar size={16} className="text-orange-600" />
-              <span className="font-medium">Q3 Estimated Tax Due</span>
-            </div>
-            <p className="text-sm text-gray-700 mb-2">Due Date: October 15, 2024</p>
-            <div className="flex items-center justify-between">
-              <span className="font-semibold text-orange-600">{formatCurrency(currentQuarterEstimate?.estimatedTax || 0)}</span>
-              <button className="text-sm underline hover:no-underline text-orange-600">
-                Set Reminder
-              </button>
-            </div>
-          </div>
-          <div className="p-3 bg-white border border-blue-200 rounded-lg">
-            <div className="flex items-center gap-2 mb-1">
-              <FileText size={16} className="text-blue-600" />
-              <span className="font-medium">Annual Tax Return</span>
-            </div>
-            <p className="text-sm text-gray-700 mb-2">Due Date: April 15, 2025</p>
-            <div className="flex items-center justify-between">
-              <span className="font-semibold text-blue-600">Prepare Documents</span>
-              <button className="text-sm underline hover:no-underline text-blue-600">
-                Start Preparation
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Tax Calculator Modal */}
       {showTaxCalculator && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                <Crown size={20} className="text-[#5B6E02]" />
+                <div className="relative">
+                  <Crown size={20} className="text-[#5B6E02]" />
+                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-600 rounded-full border border-white"></div>
+                  <div className="absolute -top-1 -left-1 w-2 h-2 bg-red-600 rounded-full border border-white"></div>
+                  <div className="absolute -bottom-1 w-2 h-2 bg-red-600 rounded-full border border-white"></div>
+                </div>
                 Tax Calculator
               </h3>
               <button
@@ -527,6 +428,8 @@ export function TaxSummary() {
                 </label>
                 <input
                   type="number"
+                  value={taxCalculatorInputs.annualRevenue}
+                  onChange={(e) => handleInputChange('annualRevenue', e.target.value)}
                   placeholder="Enter annual revenue"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#5B6E02]"
                 />
@@ -538,54 +441,45 @@ export function TaxSummary() {
                 </label>
                 <input
                   type="number"
+                  value={taxCalculatorInputs.annualExpenses}
+                  onChange={(e) => handleInputChange('annualExpenses', e.target.value)}
                   placeholder="Enter annual expenses"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-ring-[#5B6E02]"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#5B6E02]"
                 />
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Business Type
-                </label>
-                <select 
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#5B6E02]"
-                  aria-label="Business type"
-                  title="Business type"
-                >
-                  <option value="sole-proprietor">Sole Proprietor</option>
-                  <option value="llc">LLC</option>
-                  <option value="corporation">Corporation</option>
-                  <option value="partnership">Partnership</option>
-                </select>
-              </div>
-              
-              <button className="w-full bg-[#5B6E02] text-white py-2 px-4 rounded-md hover:bg-[#4A5A01] transition-colors">
+              <button 
+                onClick={calculateTaxes}
+                className="w-full bg-[#5B6E02] text-white py-2 px-4 rounded-md hover:bg-[#4A5A01] transition-colors"
+              >
                 Calculate Tax
               </button>
               
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="font-medium text-gray-800 mb-2">Estimated Tax Breakdown:</h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span>Net Income:</span>
-                    <span className="font-medium">$0</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Self-Employment Tax (15.3%):</span>
-                    <span className="font-medium">$0</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Income Tax:</span>
-                    <span className="font-medium">$0</span>
-                  </div>
-                  <div className="border-t pt-2">
-                    <div className="flex justify-between font-semibold">
-                      <span>Total Estimated Tax:</span>
-                      <span className="text-[#5B6E02]">$0</span>
+              {hasCalculated && (
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="font-medium text-gray-800 mb-2">Estimated Tax Breakdown:</h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Net Income:</span>
+                      <span className="font-medium">{formatCurrency(taxCalculationResults.netIncome)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Self-Employment Tax (15.3%):</span>
+                      <span className="font-medium">{formatCurrency(taxCalculationResults.selfEmploymentTax)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Income Tax:</span>
+                      <span className="font-medium">{formatCurrency(taxCalculationResults.incomeTax)}</span>
+                    </div>
+                    <div className="border-t pt-2">
+                      <div className="flex justify-between font-semibold">
+                        <span>Total Estimated Tax:</span>
+                        <span className="text-[#5B6E02]">{formatCurrency(taxCalculationResults.totalTax)}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
@@ -596,20 +490,13 @@ export function TaxSummary() {
         <div className="text-sm text-gray-600">
           Comprehensive tax reporting with sales tax collection, deductions, and quarterly estimated tax guidance
         </div>
-        <div className="flex gap-2">
-          <button className="flex items-center gap-1 px-4 py-2 bg-[#5B6E02] text-white rounded-lg hover:bg-[#4A5A01] transition-colors">
-            <Download size={16} />
-            Export Tax Report
-          </button>
-          <button 
-            onClick={() => setShowTaxCalculator(!showTaxCalculator)}
-            className="flex items-center gap-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            <Crown size={16} />
-            Tax Calculator
-          </button>
-        </div>
+                 <div className="flex gap-2">
+           <button className="flex items-center gap-1 px-4 py-2 bg-[#5B6E02] text-white rounded-lg hover:bg-[#4A5A01] transition-colors">
+             <Download size={16} />
+             Export Tax Report
+           </button>
+         </div>
       </div>
     </div>
   );
-} 
+}

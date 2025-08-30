@@ -23,6 +23,8 @@ import CustomerDashboardPage from './pages/CustomerDashboardPage';
 import { VendorSettingsPage } from './pages/VendorSettingsPage';
 import VendorProductsPage from './pages/VendorProductsPage';
 import EnhancedVendorProductsPage from './pages/EnhancedVendorProductsPage';
+import SimpleVendorProductsPage from './pages/SimpleVendorProductsPage';
+import RecipeManagementPage from './pages/RecipeManagementPage';
 import VendorInventoryPage from './pages/VendorInventoryPage';
 import VendorCRMPage from './pages/VendorCRMPage';
 import VendorRecipeCreatePage from './pages/VendorRecipeCreatePage';
@@ -163,7 +165,12 @@ function App() {
             </Route>
             <Route path="/dashboard/vendor/products">
               <ProtectedRoute role="VENDOR">
-                <VendorProductsPage />
+                <EnhancedVendorProductsPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/dashboard/vendor/recipes">
+              <ProtectedRoute role="VENDOR">
+                <RecipeManagementPage />
               </ProtectedRoute>
             </Route>
             <Route path="/dashboard/vendor/enhanced-products">
@@ -256,6 +263,24 @@ function App() {
               </ProtectedRoute>
             </Route>
 
+            {/* Add missing vendor dashboard routes */}
+            <Route path="/dashboard/vendor/orders">
+              <ProtectedRoute role="VENDOR">
+                <VendorOrdersPage />
+              </ProtectedRoute>
+            </Route>
+            
+            <Route path="/dashboard/vendor/crm">
+              <ProtectedRoute role="VENDOR">
+                <VendorCRMPage />
+              </ProtectedRoute>
+            </Route>
+            
+            <Route path="/dashboard/vendor/relationships">
+              <ProtectedRoute role="VENDOR">
+                <VendorRelationshipsPage />
+              </ProtectedRoute>
+            </Route>
 
             <Route path="/vendor/financial">
               <ProtectedRoute role="VENDOR">

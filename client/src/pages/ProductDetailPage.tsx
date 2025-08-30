@@ -40,7 +40,16 @@ import {
   Info,
   Clock as ClockIcon,
   Truck as TruckIcon,
-  Package as PackageIcon
+  Package as PackageIcon,
+  AlertTriangle,
+  BarChart3,
+  Wrench,
+  Bell,
+  Zap,
+  Settings,
+  Store,
+  HelpCircle,
+  MessageSquare
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -59,6 +68,8 @@ interface Product {
     location: string;
     verified: boolean;
     avatar: string;
+    followers: number;
+    responseTime: string;
   };
   category: string;
   subcategory: string;
@@ -78,6 +89,8 @@ interface Product {
     carbs?: number;
     fat?: number;
     fiber?: number;
+    sugar?: number;
+    sodium?: number;
   };
   weight: string;
   ingredients: string[];
@@ -95,16 +108,271 @@ interface Product {
       name: string;
       address: string;
       coordinates: { lat: number; lng: number };
+      hours: string;
+      nextSlot: string;
     }>;
+    deliveryRadius: number;
+    deliveryFee: number;
+    deliveryETA: string;
+    cutOffTime: string;
+    leadTime: string;
   };
-  metadata: {
-    sku: string;
-    batchNumber?: string;
-    ingredientCost?: number;
-    recipeId?: string;
+        metadata: {
+        sku: 'SOUR-001',
+        batchNumber: 'B2024-01-15',
+        ingredientCost: 3.50,
+        recipeId: 'RCP-001'
+      },
+      createdAt: '2024-01-15',
+      updatedAt: '2024-01-20',
+      // Enhanced properties
+      variants: [
+        {
+          id: 'v1',
+          name: 'Small Loaf (1 lb)',
+          price: 9.00,
+          image: '/images/products/sourdough-small.jpg',
+          inStock: true,
+          weight: '1 lb'
+        },
+        {
+          id: 'v2',
+          name: 'Large Loaf (2 lb)',
+          price: 16.00,
+          image: '/images/products/sourdough-large.jpg',
+          inStock: true,
+          weight: '2 lb'
+        }
+      ],
+      selectedVariant: 'v1',
+      unit: 'loaf',
+      estimatedTax: 0.72,
+      fees: [
+        {
+          name: 'Delivery Fee',
+          amount: 5.00,
+          description: 'Standard delivery within 25 miles'
+        }
+      ],
+      scheduleSlots: [
+        {
+          id: 'slot1',
+          date: 'Friday, January 26',
+          time: '3:00 PM - 5:00 PM',
+          available: true,
+          maxOrders: 50,
+          currentOrders: 23
+        },
+        {
+          id: 'slot2',
+          date: 'Saturday, January 27',
+          time: '9:00 AM - 11:00 AM',
+          available: true,
+          maxOrders: 50,
+          currentOrders: 15
+        }
+      ],
+      selectedSchedule: 'slot1',
+      preorder: false,
+      preorderWindow: {
+        start: '2024-01-20',
+        end: '2024-01-25',
+        maxOrders: 100
+      },
+      madeToOrder: true,
+      prepTime: '24 hours',
+      shelfLife: '5-7 days',
+      reheatInstructions: 'Warm in oven at 350°F for 5-10 minutes',
+      serveInstructions: 'Best served at room temperature. Slice and enjoy!',
+      cancellationPolicy: {
+        window: '24 hours before pickup',
+        rules: [
+          'Full refund if cancelled 24+ hours before pickup',
+          '50% refund if cancelled 12-24 hours before pickup',
+          'No refund if cancelled less than 12 hours before pickup'
+        ]
+      },
+      customOrderRules: [
+        'Minimum 24 hours notice for custom orders',
+        'Special dietary requests require 48 hours notice',
+        'Bulk orders (10+ loaves) require 1 week notice'
+      ],
+      bundles: [
+        {
+          id: 'b1',
+          name: 'Bread & Butter Bundle',
+          products: ['sourdough', 'artisanal-butter'],
+          price: 14.00,
+          savings: 2.00,
+          image: '/images/bundles/bread-butter.jpg'
+        }
+      ],
+      subscriptions: [
+        {
+          id: 'sub1',
+          name: 'Weekly Bread Share',
+          frequency: 'Weekly',
+          price: 32.00,
+          savings: 4.00,
+          description: 'Get fresh sourdough delivered weekly'
+        }
+      ],
+      giftOptions: {
+        giftWrap: true,
+        giftNote: true,
+        giftWrapPrice: 2.00
+      },
+      waitlist: false,
+      notifyWhenAvailable: true,
+      digitalGoods: [
+        {
+          id: 'dg1',
+          name: 'Sourdough Masterclass',
+          type: 'class',
+          price: 25.00,
+          description: 'Learn the art of sourdough baking'
+        }
+      ],
+      serviceBookings: [
+        {
+          id: 'sb1',
+          name: 'Baking Consultation',
+          duration: '1 hour',
+          price: 50.00,
+          availableSlots: ['Monday 2PM', 'Wednesday 4PM', 'Friday 10AM']
+        }
+      ],
+      sourcing: {
+        organic: true,
+        local: true,
+        nonGMO: true,
+        fairTrade: false,
+        sustainable: true,
+        farmToTable: true
+      },
+      frequentlyBoughtTogether: ['artisanal-butter', 'local-honey', 'olive-oil'],
+      pairsWith: ['soup', 'cheese', 'wine'],
+      fromThisVendor: ['cinnamon-rolls', 'croissants', 'baguettes'],
+      questions: [
+        {
+          id: 'q1',
+          question: 'How long does the sourdough stay fresh?',
+          answer: 'Our sourdough stays fresh for 5-7 days when stored properly in a cool, dry place.',
+          answeredBy: 'Rose Creek Bakery',
+          date: '2024-01-18',
+          helpful: 8
+        },
+        {
+          id: 'q2',
+          question: 'Can I freeze the bread?',
+          answer: 'Yes! You can freeze our sourdough for up to 3 months. Thaw at room temperature.',
+          answeredBy: 'Rose Creek Bakery',
+          date: '2024-01-19',
+          helpful: 12
+        }
+      ]
+  // Enhanced properties for advanced PDP features
+  variants?: Array<{
+    id: string;
+    name: string;
+    price: number;
+    image?: string;
+    inStock: boolean;
+    weight?: string;
+    description?: string;
+  }>;
+  selectedVariant?: string;
+  unit?: string; // per loaf, per dozen, per lb
+  estimatedTax?: number;
+  fees?: Array<{
+    name: string;
+    amount: number;
+    description: string;
+  }>;
+  scheduleSlots?: Array<{
+    id: string;
+    date: string;
+    time: string;
+    available: boolean;
+    maxOrders: number;
+    currentOrders: number;
+  }>;
+  selectedSchedule?: string;
+  preorder?: boolean;
+  preorderWindow?: {
+    start: string;
+    end: string;
+    maxOrders: number;
   };
-  createdAt: string;
-  updatedAt: string;
+  madeToOrder?: boolean;
+  prepTime?: string;
+  shelfLife?: string;
+  reheatInstructions?: string;
+  serveInstructions?: string;
+  cancellationPolicy?: {
+    window: string;
+    rules: string[];
+  };
+  customOrderRules?: string[];
+  bundles?: Array<{
+    id: string;
+    name: string;
+    products: string[];
+    price: number;
+    savings: number;
+    image: string;
+  }>;
+  subscriptions?: Array<{
+    id: string;
+    name: string;
+    frequency: string;
+    price: number;
+    savings: number;
+    description: string;
+  }>;
+  giftOptions?: {
+    giftWrap: boolean;
+    giftNote: boolean;
+    giftWrapPrice: number;
+  };
+  waitlist?: boolean;
+  notifyWhenAvailable?: boolean;
+  digitalGoods?: Array<{
+    id: string;
+    name: string;
+    type: 'class' | 'download' | 'recipe';
+    price: number;
+    description: string;
+  }>;
+  serviceBookings?: Array<{
+    id: string;
+    name: string;
+    duration: string;
+    price: number;
+    availableSlots: string[];
+  }>;
+  // Sourcing & Values
+  sourcing?: {
+    organic: boolean;
+    local: boolean;
+    nonGMO: boolean;
+    fairTrade: boolean;
+    sustainable: boolean;
+    farmToTable: boolean;
+  };
+  // Cross-sells
+  frequentlyBoughtTogether?: string[];
+  pairsWith?: string[];
+  fromThisVendor?: string[];
+  // Q&A
+  questions?: Array<{
+    id: string;
+    question: string;
+    answer?: string;
+    answeredBy?: string;
+    date: string;
+    helpful: number;
+  }>;
 }
 
 interface Review {
@@ -148,11 +416,46 @@ export default function ProductDetailPage() {
   const [selectedFulfillment, setSelectedFulfillment] = useState<'pickup' | 'delivery' | 'shipping'>('pickup');
   const [showChatModal, setShowChatModal] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
-  const [activeTab, setActiveTab] = useState<'description' | 'fulfillment' | 'reviews'>('description');
+  const [activeTab, setActiveTab] = useState<'description' | 'fulfillment' | 'reviews' | 'nutrition' | 'policies' | 'qa'>('description');
   const [wishlist, setWishlist] = useState(false);
   const [showBackInStockModal, setShowBackInStockModal] = useState(false);
+  const [selectedVariant, setSelectedVariant] = useState<string>('');
+  const [selectedSchedule, setSelectedSchedule] = useState<string>('');
+  const [showVariantModal, setShowVariantModal] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [showBundleModal, setShowBundleModal] = useState(false);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const [showGiftOptions, setShowGiftOptions] = useState(false);
+  const [giftNote, setGiftNote] = useState('');
+  const [giftWrap, setGiftWrap] = useState(false);
+  const [countdown, setCountdown] = useState<{ hours: number; minutes: number; seconds: number }>({ hours: 0, minutes: 0, seconds: 0 });
 
   if (!productId) return <div>Missing product id.</div>;
+
+  // Countdown timer effect
+  useEffect(() => {
+    if (product.availability?.cutOffTime) {
+      const timer = setInterval(() => {
+        // Calculate time until cut-off (simplified - in real app, parse actual cut-off time)
+        const now = new Date();
+        const cutOff = new Date();
+        cutOff.setHours(18, 0, 0, 0); // 6 PM today
+        
+        if (now > cutOff) {
+          cutOff.setDate(cutOff.getDate() + 1); // Next day
+        }
+        
+        const diff = cutOff.getTime() - now.getTime();
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        
+        setCountdown({ hours, minutes, seconds });
+      }, 1000);
+      
+      return () => clearInterval(timer);
+    }
+  }, [product.availability?.cutOffTime]);
 
   // Mock data - replace with actual API calls
   useEffect(() => {
@@ -174,7 +477,9 @@ Perfect for sandwiches, toast, or simply enjoyed with butter and honey.`,
         reviewCount: 127,
         location: 'Locust Grove, GA',
         verified: true,
-        avatar: '/images/vendors/rosecreek-avatar.jpg'
+        avatar: '/images/vendors/rosecreek-avatar.jpg',
+        followers: 342,
+        responseTime: 'Usually responds within 2 hours'
       },
       category: 'Bread',
       subcategory: 'Sourdough',
@@ -216,9 +521,16 @@ Perfect for sandwiches, toast, or simply enjoyed with butter and honey.`,
           {
             name: 'Locust Grove Farmers Market',
             address: '123 Main St, Locust Grove, GA 30248',
-            coordinates: { lat: 33.3467, lng: -84.1091 }
+            coordinates: { lat: 33.3467, lng: -84.1091 },
+            hours: 'Wednesday-Saturday: 6AM-2PM',
+            nextSlot: 'Friday 3-5PM'
           }
-        ]
+        ],
+        deliveryRadius: 25,
+        deliveryFee: 5.00,
+        deliveryETA: 'Same day or next day',
+        cutOffTime: 'Thursday 6PM',
+        leadTime: 'Next day'
       },
       metadata: {
         sku: 'SOUR-001',
@@ -442,17 +754,244 @@ Perfect for sandwiches, toast, or simply enjoyed with butter and honey.`,
               <span className="text-gray-600">({product.reviewCount} reviews)</span>
             </div>
 
-            {/* Price */}
-            <div className="flex items-center gap-3">
-              <span className="text-4xl font-bold text-brand-maroon">${product.price.toFixed(2)}</span>
-              {product.originalPrice && (
-                <span className="text-xl text-gray-500 line-through">${product.originalPrice.toFixed(2)}</span>
-              )}
-              {product.originalPrice && (
-                <span className="px-2 py-1 bg-red-100 text-red-800 text-sm font-medium rounded">
-                  {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}% OFF
+            {/* Enhanced Price Block */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-3">
+                <span className="text-4xl font-bold text-brand-maroon">
+                  ${product.variants && product.variants.length > 0 
+                    ? product.variants.find(v => v.id === selectedVariant)?.price || product.price
+                    : product.price
+                  }
                 </span>
-              )}
+                {product.originalPrice && (
+                  <span className="text-xl text-gray-500 line-through">${product.originalPrice.toFixed(2)}</span>
+                )}
+                {product.originalPrice && (
+                  <span className="px-2 py-1 bg-red-100 text-red-800 text-sm font-medium rounded">
+                    {Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}% OFF
+                  </span>
+                )}
+                {product.unit && (
+                  <span className="text-lg text-gray-600">per {product.unit}</span>
+                )}
+              </div>
+
+              {/* Price Breakdown */}
+              <div className="bg-gray-50 p-4 rounded-lg space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Subtotal:</span>
+                  <span>${product.price.toFixed(2)}</span>
+                </div>
+                {product.estimatedTax && (
+                  <div className="flex justify-between text-sm">
+                    <span>Estimated Tax:</span>
+                    <span>${product.estimatedTax.toFixed(2)}</span>
+                  </div>
+                )}
+                {product.fees && product.fees.map((fee, index) => (
+                  <div key={index} className="flex justify-between text-sm">
+                    <span>{fee.name}:</span>
+                    <span>${fee.amount.toFixed(2)}</span>
+                  </div>
+                ))}
+                <div className="border-t pt-2 flex justify-between font-semibold">
+                  <span>Total (price + tax):</span>
+                  <span>
+                    ${(product.price + (product.estimatedTax || 0) + (product.fees?.reduce((sum, fee) => sum + fee.amount, 0) || 0)).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Variant Selector */}
+            {product.variants && product.variants.length > 0 && (
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-700">Select Size/Flavor:</label>
+                <div className="grid grid-cols-2 gap-3">
+                  {product.variants.map((variant) => (
+                    <button
+                      key={variant.id}
+                      onClick={() => setSelectedVariant(variant.id)}
+                      className={`p-3 border rounded-lg text-left transition-colors ${
+                        selectedVariant === variant.id
+                          ? 'border-brand-green bg-brand-green/10 text-brand-green'
+                          : 'border-gray-300 hover:border-gray-400'
+                      }`}
+                      title={`Select ${variant.name} - $${variant.price.toFixed(2)}`}
+                      aria-label={`Select ${variant.name} variant for $${variant.price.toFixed(2)}`}
+                    >
+                      <div className="font-medium">{variant.name}</div>
+                      <div className="text-sm text-gray-600">${variant.price.toFixed(2)}</div>
+                      {variant.weight && (
+                        <div className="text-xs text-gray-500">{variant.weight}</div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Schedule Selector */}
+            {product.scheduleSlots && product.scheduleSlots.length > 0 && (
+              <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-700">Select Pickup Time:</label>
+                <div className="space-y-2">
+                  {product.scheduleSlots.map((slot) => (
+                    <button
+                      key={slot.id}
+                      onClick={() => setSelectedSchedule(slot.id)}
+                      disabled={!slot.available}
+                      className={`w-full p-3 border rounded-lg text-left transition-colors ${
+                        selectedSchedule === slot.id
+                          ? 'border-brand-green bg-brand-green/10 text-brand-green'
+                          : slot.available
+                          ? 'border-gray-300 hover:border-gray-400'
+                          : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
+                      }`}
+                      title={slot.available ? `Select ${slot.date} at ${slot.time}` : 'Slot unavailable'}
+                      aria-label={slot.available ? `Select pickup slot for ${slot.date} at ${slot.time}` : `Unavailable slot for ${slot.date} at ${slot.time}`}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="font-medium">{slot.date}</div>
+                          <div className="text-sm text-gray-600">{slot.time}</div>
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {slot.currentOrders}/{slot.maxOrders} orders
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Availability & Lead Time */}
+            <div className="space-y-3">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Calendar className="w-5 h-5 text-blue-600" />
+                  <h3 className="font-medium text-blue-900">Availability & Lead Time</h3>
+                </div>
+                
+                <div className="space-y-2 text-sm">
+                  {product.availability?.nextAvailable && (
+                    <div className="flex justify-between">
+                      <span className="text-blue-800">Next Available:</span>
+                      <span className="font-medium">{product.availability.nextAvailable}</span>
+                    </div>
+                  )}
+                  
+                  {product.availability?.cutOffTime && (
+                    <div className="flex justify-between">
+                      <span className="text-blue-800">Order Cut-off:</span>
+                      <span className="font-medium">{product.availability.cutOffTime}</span>
+                    </div>
+                  )}
+
+                  {product.availability?.leadTime && (
+                    <div className="flex justify-between">
+                      <span className="text-blue-800">Lead Time:</span>
+                      <span className="font-medium">{product.availability.leadTime}</span>
+                    </div>
+                  )}
+
+                  {/* Countdown Timer */}
+                  {product.availability?.cutOffTime && (
+                    <div className="mt-3 p-3 bg-white rounded border border-blue-200">
+                      <div className="text-center text-blue-900 font-medium mb-2">
+                        Order within {countdown.hours.toString().padStart(2, '0')}:{countdown.minutes.toString().padStart(2, '0')}
+                      </div>
+                      <div className="flex justify-center gap-2 text-xs text-blue-700">
+                        <span>{countdown.hours}h</span>
+                        <span>{countdown.minutes}m</span>
+                        <span>{countdown.seconds}s</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Primary CTA Buttons */}
+            <div className="space-y-3">
+              {/* Main CTA */}
+              <button
+                className={`w-full py-4 px-6 rounded-lg font-semibold text-lg transition-colors ${
+                  product.inStock
+                    ? 'bg-brand-green text-white hover:bg-brand-green/80'
+                    : product.preorder
+                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    : 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                }`}
+                disabled={!product.inStock && !product.preorder}
+                title={
+                  product.inStock
+                    ? 'Add this product to your cart'
+                    : product.preorder
+                    ? 'Preorder this product'
+                    : 'Product currently unavailable'
+                }
+                aria-label={
+                  product.inStock
+                    ? 'Add this product to your cart'
+                    : product.preorder
+                    ? 'Preorder this product'
+                    : 'Product currently unavailable'
+                }
+              >
+                {product.inStock ? (
+                  <>
+                    <ShoppingCart className="w-5 h-5 inline mr-2" />
+                    Add to Cart
+                  </>
+                ) : product.preorder ? (
+                  <>
+                    <Calendar className="w-5 h-5 inline mr-2" />
+                    Preorder Now
+                  </>
+                ) : (
+                  'Out of Stock'
+                )}
+              </button>
+
+              {/* Secondary Actions */}
+              <div className="grid grid-cols-2 gap-3">
+                {product.madeToOrder && (
+                  <button
+                    className="w-full py-3 px-4 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors"
+                    title="Request a custom order for this product"
+                    aria-label="Request a custom order for this product"
+                  >
+                    <Wrench className="w-4 h-4 inline mr-2" />
+                    Request Custom
+                  </button>
+                )}
+                
+                {product.waitlist && (
+                  <button
+                    onClick={() => setShowBackInStockModal(true)}
+                    className="w-full py-3 px-4 bg-orange-600 text-white rounded-lg font-medium hover:bg-orange-700 transition-colors"
+                    title="Join waitlist to be notified when this product is available"
+                    aria-label="Join waitlist to be notified when this product is available"
+                  >
+                    <Bell className="w-4 h-4 inline mr-2" />
+                    Join Waitlist
+                  </button>
+                )}
+
+                {product.notifyWhenAvailable && !product.inStock && !product.preorder && (
+                  <button
+                    onClick={() => setShowBackInStockModal(true)}
+                    className="w-full py-3 px-4 bg-gray-600 text-white rounded-lg font-medium hover:bg-gray-700 transition-colors"
+                    title="Get notified when this product becomes available"
+                    aria-label="Get notified when this product becomes available"
+                  >
+                    <Bell className="w-4 h-4 inline mr-2" />
+                    Notify Me
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Badges */}
@@ -467,20 +1006,99 @@ Perfect for sandwiches, toast, or simply enjoyed with butter and honey.`,
             {/* Short Description */}
             <p className="text-gray-700 leading-relaxed">{product.description}</p>
 
-            {/* Macros & Allergens */}
-            <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-2">Nutrition (per serving)</h4>
-                {product.macros.calories && <p className="text-sm text-gray-600">Calories: {product.macros.calories}</p>}
-                {product.macros.protein && <p className="text-sm text-gray-600">Protein: {product.macros.protein}g</p>}
-                {product.macros.carbs && <p className="text-sm text-gray-600">Carbs: {product.macros.carbs}g</p>}
-                {product.macros.fat && <p className="text-sm text-gray-600">Fat: {product.macros.fat}g</p>}
+            {/* Enhanced Allergens & Nutrition */}
+            <div className="space-y-4">
+              {/* Allergens */}
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <AlertTriangle className="w-5 h-5 text-red-600" />
+                  <h4 className="font-semibold text-red-900">Allergens & Dietary Info</h4>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h5 className="font-medium text-red-800 mb-2">Contains:</h5>
+                    <div className="space-y-1">
+                      {product.allergens.map((allergen, index) => (
+                        <div key={index} className="flex items-center gap-2 text-sm text-red-700">
+                          <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                          {allergen}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h5 className="font-medium text-green-800 mb-2">Dietary:</h5>
+                    <div className="space-y-1">
+                      {product.dietary.map((diet, index) => (
+                        <div key={index} className="flex items-center gap-2 text-sm text-green-700">
+                          <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                          {diet}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-2">Allergens</h4>
-                {product.allergens.map((allergen, index) => (
-                  <p key={index} className="text-sm text-gray-600">{allergen}</p>
-                ))}
+
+              {/* Nutrition */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <BarChart3 className="w-5 h-5 text-blue-600" />
+                  <h4 className="font-semibold text-blue-900">Nutrition Facts (per serving)</h4>
+                </div>
+                
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  {product.macros.calories && (
+                    <div className="text-center p-3 bg-white rounded border border-blue-200">
+                      <div className="text-2xl font-bold text-blue-900">{product.macros.calories}</div>
+                      <div className="text-xs text-blue-700">Calories</div>
+                    </div>
+                  )}
+                  {product.macros.protein && (
+                    <div className="text-center p-3 bg-white rounded border border-blue-200">
+                      <div className="text-2xl font-bold text-blue-900">{product.macros.protein}g</div>
+                      <div className="text-xs text-blue-700">Protein</div>
+                    </div>
+                  )}
+                  {product.macros.carbs && (
+                    <div className="text-center p-3 bg-white rounded border border-blue-200">
+                      <div className="text-2xl font-bold text-blue-900">{product.macros.carbs}g</div>
+                      <div className="text-xs text-blue-700">Carbs</div>
+                    </div>
+                  )}
+                  {product.macros.fat && (
+                    <div className="text-center p-3 bg-white rounded border border-blue-200">
+                      <div className="text-2xl font-bold text-blue-900">{product.macros.fat}g</div>
+                      <div className="text-xs text-blue-700">Fat</div>
+                    </div>
+                  )}
+                  {product.macros.fiber && (
+                    <div className="text-center p-3 bg-white rounded border border-blue-200">
+                      <div className="text-2xl font-bold text-blue-900">{product.macros.fiber}g</div>
+                      <div className="text-xs text-blue-700">Fiber</div>
+                    </div>
+                  )}
+                  {product.macros.sugar && (
+                    <div className="text-center p-3 bg-white rounded border border-blue-200">
+                      <div className="text-2xl font-bold text-blue-900">{product.macros.sugar}g</div>
+                      <div className="text-xs text-blue-700">Sugar</div>
+                    </div>
+                  )}
+                  {product.macros.sodium && (
+                    <div className="text-center p-3 bg-white rounded border border-blue-200">
+                      <div className="text-2xl font-bold text-blue-900">{product.macros.sodium}mg</div>
+                      <div className="text-xs text-blue-700">Sodium</div>
+                    </div>
+                  )}
+                </div>
+                
+                {product.weight && (
+                  <div className="mt-3 text-sm text-blue-700 text-center">
+                    Serving size: {product.weight}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -614,6 +1232,59 @@ Perfect for sandwiches, toast, or simply enjoyed with butter and honey.`,
           </div>
         </div>
 
+        {/* Enhanced Fulfillment Module */}
+        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <h3 className="text-xl font-semibold text-gray-900 mb-4">Fulfillment & Delivery</h3>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Pickup Locations */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-3">
+                <MapPin className="w-5 h-5 text-brand-green" />
+                <h4 className="font-medium text-gray-900">Pickup Locations</h4>
+              </div>
+              
+              {product.availability.locations?.map((location, index) => (
+                <div key={index} className="p-4 border border-gray-200 rounded-lg">
+                  <div className="font-medium text-gray-900">{location.name}</div>
+                  <div className="text-sm text-gray-600">{location.address}</div>
+                  <div className="text-sm text-gray-600">{location.hours}</div>
+                  {location.nextSlot && (
+                    <div className="text-sm text-blue-600 font-medium mt-1">
+                      Next slot: {location.nextSlot}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Delivery Information */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-3">
+                <TruckIcon className="w-5 h-5 text-brand-green" />
+                <h4 className="font-medium text-gray-900">Delivery Options</h4>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="p-4 border border-gray-200 rounded-lg">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-medium">Delivery Radius</span>
+                    <span className="text-sm text-gray-600">{product.availability.deliveryRadius} miles</span>
+                  </div>
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="font-medium">Delivery Fee</span>
+                    <span className="text-sm text-gray-600">${product.availability.deliveryFee.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">ETA</span>
+                    <span className="text-sm text-gray-600">{product.availability.deliveryETA}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Mobile Sticky Add to Cart */}
         <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t p-4 z-50">
           <div className="flex items-center gap-3">
@@ -693,6 +1364,222 @@ Perfect for sandwiches, toast, or simply enjoyed with butter and honey.`,
                       ))}
                     </ul>
                   </div>
+
+                  {/* Sourcing & Values */}
+                  {product.sourcing && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-3">Sourcing & Values</h3>
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {product.sourcing.organic && (
+                          <span className="px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded-full border border-green-200">
+                            🌱 Organic
+                          </span>
+                        )}
+                        {product.sourcing.local && (
+                          <span className="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full border border-blue-200">
+                            🏠 Local
+                          </span>
+                        )}
+                        {product.sourcing.nonGMO && (
+                          <span className="px-3 py-1 bg-purple-100 text-purple-800 text-sm font-medium rounded-full border border-purple-200">
+                            🧬 Non-GMO
+                          </span>
+                        )}
+                        {product.sourcing.fairTrade && (
+                          <span className="px-3 py-1 bg-orange-100 text-orange-800 text-sm font-medium rounded-full border border-orange-200">
+                            🤝 Fair Trade
+                          </span>
+                        )}
+                        {product.sourcing.sustainable && (
+                          <span className="px-3 py-1 bg-teal-100 text-teal-800 text-sm font-medium rounded-full border border-teal-200">
+                            🌿 Sustainable
+                          </span>
+                        )}
+                        {product.sourcing.farmToTable && (
+                          <span className="px-3 py-1 bg-amber-100 text-amber-800 text-sm font-medium rounded-full border border-amber-200">
+                            🚜 Farm to Table
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-gray-600 text-sm">
+                        We're committed to sourcing the highest quality ingredients while supporting sustainable practices and local farmers.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Made-to-Order Notes */}
+                  {product.madeToOrder && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-3">Made-to-Order Details</h3>
+                      <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 space-y-3">
+                        {product.prepTime && (
+                          <div className="flex items-center gap-2">
+                            <Clock className="w-4 h-4 text-purple-600" />
+                            <span className="text-sm text-purple-800">
+                              <span className="font-medium">Prep Time:</span> {product.prepTime}
+                            </span>
+                          </div>
+                        )}
+                        
+                        {product.shelfLife && (
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4 text-purple-600" />
+                            <span className="text-sm text-purple-800">
+                              <span className="font-medium">Shelf Life:</span> {product.shelfLife}
+                            </span>
+                          </div>
+                        )}
+                        
+                        {product.reheatInstructions && (
+                          <div className="flex items-center gap-2">
+                            <Zap className="w-4 h-4 text-purple-600" />
+                            <span className="text-sm text-purple-800">
+                              <span className="font-medium">Reheat:</span> {product.reheatInstructions}
+                            </span>
+                          </div>
+                        )}
+                        
+                        {product.serveInstructions && (
+                          <div className="flex items-center gap-2">
+                            <Star className="w-4 h-4 text-purple-600" />
+                            <span className="text-sm text-purple-800">
+                              <span className="font-medium">Serve:</span> {product.serveInstructions}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Policies */}
+                  {(product.cancellationPolicy || product.customOrderRules) && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-3">Policies & Rules</h3>
+                      <div className="space-y-4">
+                        {product.cancellationPolicy && (
+                          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                            <div className="flex items-center gap-2 mb-2">
+                              <AlertTriangle className="w-4 h-4 text-orange-600" />
+                              <h4 className="font-medium text-orange-900">Cancellation Policy</h4>
+                            </div>
+                            <p className="text-sm text-orange-800 mb-2">
+                              Cancellation window: <span className="font-medium">{product.cancellationPolicy.window}</span>
+                            </p>
+                            <ul className="list-disc list-inside text-sm text-orange-700 space-y-1">
+                              {product.cancellationPolicy.rules.map((rule, index) => (
+                                <li key={index}>{rule}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        
+                        {product.customOrderRules && (
+                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Settings className="w-4 h-4 text-blue-600" />
+                              <h4 className="font-medium text-blue-900">Custom Order Rules</h4>
+                            </div>
+                            <ul className="list-disc list-inside text-sm text-blue-700 space-y-1">
+                              {product.customOrderRules.map((rule, index) => (
+                                <li key={index}>{rule}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Cross-Sells */}
+                  {(product.frequentlyBoughtTogether || product.pairsWith || product.fromThisVendor) && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-3">You Might Also Like</h3>
+                      <div className="space-y-4">
+                        {product.frequentlyBoughtTogether && (
+                          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <div className="flex items-center gap-2 mb-3">
+                              <Package className="w-4 h-4 text-green-600" />
+                              <h4 className="font-medium text-green-900">Frequently Bought Together</h4>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {product.frequentlyBoughtTogether.map((item, index) => (
+                                <span key={index} className="px-3 py-1 bg-white text-green-700 text-sm rounded-full border border-green-200">
+                                  {item}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {product.pairsWith && (
+                          <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                            <div className="flex items-center gap-2 mb-3">
+                              <Heart className="w-4 h-4 text-purple-600" />
+                              <h4 className="font-medium text-purple-900">Pairs With</h4>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {product.pairsWith.map((item, index) => (
+                                <span key={index} className="px-3 py-1 bg-white text-purple-700 text-sm rounded-full border border-purple-200">
+                                  {item}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {product.fromThisVendor && (
+                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <div className="flex items-center gap-2 mb-3">
+                              <Store className="w-4 h-4 text-blue-600" />
+                              <h4 className="font-medium text-blue-900">From This Vendor</h4>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {product.fromThisVendor.map((item, index) => (
+                                <span key={index} className="px-3 py-1 bg-white text-blue-700 text-sm rounded-full border border-blue-200">
+                                  {item}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Q&A Section */}
+                  {product.questions && product.questions.length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-3">Questions & Answers</h3>
+                      <div className="space-y-4">
+                        {product.questions.map((qa) => (
+                          <div key={qa.id} className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                            <div className="mb-3">
+                              <div className="flex items-center gap-2 mb-2">
+                                <HelpCircle className="w-4 h-4 text-gray-600" />
+                                <h4 className="font-medium text-gray-900">{qa.question}</h4>
+                              </div>
+                              {qa.answer && (
+                                <div className="ml-6">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <MessageSquare className="w-4 h-4 text-green-600" />
+                                    <span className="text-sm text-green-700 font-medium">Answer from {qa.answeredBy}</span>
+                                  </div>
+                                  <p className="text-gray-700 text-sm">{qa.answer}</p>
+                                  <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                                    <span>{qa.date}</span>
+                                    <button className="flex items-center gap-1 hover:text-gray-700">
+                                      <ThumbsUp className="w-3 h-3" />
+                                      Helpful ({qa.helpful})
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   <div>
                     <h3 className="text-lg font-semibold mb-3">Origin Story</h3>

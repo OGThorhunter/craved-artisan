@@ -1,4 +1,4 @@
-import { PrismaClient, OrderStatus, Role, TaxAlertType, WalletTransactionType } from '@prisma/client';
+import { PrismaClient, OrderStatus, Role } from '@prisma/client';
 
 // Create a singleton Prisma client instance
 let prisma: PrismaClient;
@@ -15,4 +15,4 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 export default prisma;
-export { OrderStatus, Role, TaxAlertType, WalletTransactionType }; 
+export { OrderStatus, Role }; 

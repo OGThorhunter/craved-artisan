@@ -48,7 +48,8 @@ import {
   ChevronDown,
   ChevronUp,
   Minus,
-  Plus
+  Plus,
+  Wrench
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -127,6 +128,21 @@ interface Product {
   createdAt: string;
   availability: string[];
   pickupDays: string[];
+  // Enhanced properties for advanced PLP features
+  preorder?: boolean;
+  madeToOrder?: boolean;
+  glutenFree?: boolean;
+  dairyFree?: boolean;
+  vegan?: boolean;
+  containsNuts?: boolean;
+  unit?: string; // per loaf, per dozen, per lb, per hour
+  leadTime?: string; // "Same day", "Next day", "2 days", "1 week"
+  nextAvailable?: string; // "Saturday pickup"
+  orderBy?: string; // "Thursday 6pm"
+  deliveryZips?: string[]; // ZIP codes where delivery is available
+  pickupAvailable?: boolean;
+  personalization?: string; // "For your ZIP this Friday", "Pairs with your last order"
+  crossSell?: string; // "Popular sides", "Add a dip"
 }
 
 interface Review {
@@ -169,8 +185,29 @@ export default function VendorStorefrontPage() {
   const [pickupDaysFilter, setPickupDaysFilter] = useState<string[]>([]);
   const [showFilters, setShowFilters] = useState(false);
   const [galleryIndex, setGalleryIndex] = useState(0);
+  const [filters, setFilters] = useState({
+    glutenFree: false,
+    dairyFree: false,
+    vegan: false,
+    inStock: false,
+    preorder: false,
+    localOnly: false,
+    minRating: 0,
+    maxLeadTime: 'any' as 'any' | 'same-day' | 'next-day' | '2-days' | '1-week'
+  });
 
   if (!vendorId) return <div>Missing vendor id.</div>;
+
+  // Handle Quick Add modal from ProductCard
+  useEffect(() => {
+    const handleQuickAdd = (event: CustomEvent) => {
+      setSelectedProduct(event.detail);
+      setShowQuickAddModal(true);
+    };
+
+    window.addEventListener('openQuickAdd', handleQuickAdd as EventListener);
+    return () => window.removeEventListener('openQuickAdd', handleQuickAdd as EventListener);
+  }, []);
 
   // Mock data - replace with actual API calls
   useEffect(() => {
@@ -256,7 +293,22 @@ Every loaf is hand-shaped, every ingredient carefully sourced, and every custome
         weight: '6 oz each',
         createdAt: '2024-01-15',
         availability: ['Same Day', 'Next Day'],
-        pickupDays: ['Wednesday', 'Friday', 'Saturday']
+        pickupDays: ['Wednesday', 'Friday', 'Saturday'],
+        // Enhanced properties
+        preorder: false,
+        madeToOrder: false,
+        glutenFree: false,
+        dairyFree: false,
+        vegan: false,
+        containsNuts: false,
+        unit: 'roll',
+        leadTime: 'Same day',
+        nextAvailable: 'Friday pickup',
+        orderBy: 'Thursday 6pm',
+        deliveryZips: ['30248', '30253', '30281', '30236'],
+        pickupAvailable: true,
+        personalization: 'For your ZIP this Friday',
+        crossSell: 'Add a coffee or tea'
       },
       {
         id: '2',
@@ -278,7 +330,96 @@ Every loaf is hand-shaped, every ingredient carefully sourced, and every custome
         weight: '1 lb',
         createdAt: '2024-01-10',
         availability: ['Same Day', 'Next Day'],
-        pickupDays: ['Wednesday', 'Friday', 'Saturday']
+        pickupDays: ['Wednesday', 'Friday', 'Saturday'],
+        // Enhanced properties
+        preorder: false,
+        madeToOrder: true,
+        glutenFree: false,
+        dairyFree: true,
+        vegan: true,
+        containsNuts: false,
+        unit: 'loaf',
+        leadTime: 'Next day',
+        nextAvailable: 'Saturday pickup',
+        orderBy: 'Friday 6pm',
+        deliveryZips: ['30248', '30253', '30281', '30236'],
+        pickupAvailable: true,
+        personalization: 'Pairs with your last order',
+        crossSell: 'Try our artisanal butter'
+      },
+      {
+        id: '3',
+        name: 'Gluten-Free Chocolate Chip Cookies',
+        description: 'Delicious gluten-free cookies made with almond flour and dark chocolate chips.',
+        price: 8.50,
+        category: 'Cookies',
+        tags: ['gluten-free', 'sweet', 'dessert', 'organic', 'handmade'],
+        image: '/images/products/gf-cookies.jpg',
+        inStock: false,
+        featured: true,
+        rating: 4.7,
+        reviewCount: 45,
+        isBestseller: false,
+        isLowStock: false,
+        isNew: true,
+        allergens: ['eggs', 'nuts'],
+        dietary: ['gluten-free', 'vegetarian'],
+        weight: '4 oz each',
+        createdAt: '2024-01-20',
+        availability: ['Preorder Only'],
+        pickupDays: ['Friday', 'Saturday'],
+        // Enhanced properties
+        preorder: true,
+        madeToOrder: true,
+        glutenFree: true,
+        dairyFree: false,
+        vegan: false,
+        containsNuts: true,
+        unit: 'cookie',
+        leadTime: '1 week',
+        nextAvailable: 'Friday pickup',
+        orderBy: 'Monday 6pm',
+        deliveryZips: ['30248', '30253'],
+        pickupAvailable: true,
+        personalization: 'New gluten-free option for you',
+        crossSell: 'Perfect with our dairy-free milk'
+      },
+      {
+        id: '4',
+        name: 'Vegan Croissants',
+        description: 'Flaky, buttery croissants made without dairy or eggs.',
+        price: 6.50,
+        category: 'Pastries',
+        tags: ['vegan', 'flaky', 'breakfast', 'organic', 'handmade'],
+        image: '/images/products/vegan-croissants.jpg',
+        inStock: true,
+        featured: false,
+        rating: 4.6,
+        reviewCount: 32,
+        isBestseller: false,
+        isLowStock: true,
+        isNew: false,
+        allergens: ['wheat', 'gluten'],
+        dietary: ['vegan', 'dairy-free'],
+        weight: '3 oz each',
+        createdAt: '2024-01-12',
+        availability: ['Same Day'],
+        pickupDays: ['Wednesday', 'Friday', 'Saturday'],
+        // Enhanced properties
+        preorder: false,
+        madeToOrder: false,
+        glutenFree: false,
+        dairyFree: true,
+        vegan: true,
+        containsNuts: false,
+        unit: 'croissant',
+        leadTime: 'Same day',
+        nextAvailable: 'Friday pickup',
+        orderBy: 'Thursday 6pm',
+        deliveryZips: ['30248', '30253', '30281'],
+        pickupAvailable: true,
+        personalization: 'Low stock alert for your area',
+        crossSell: 'Add our house-made jam'
       }
     ];
 
@@ -497,16 +638,16 @@ Every loaf is hand-shaped, every ingredient carefully sourced, and every custome
                 </div>
               </div>
 
-              {/* Filters Panel */}
+              {/* Enhanced Filters Panel - Sticky on Mobile */}
               <AnimatePresence>
                 {showFilters && (
                   <motion.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    className="mb-6 p-4 bg-gray-50 rounded-lg overflow-hidden"
+                    className="mb-6 p-4 bg-gray-50 rounded-lg overflow-hidden sticky top-0 z-10 md:relative"
                   >
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                       {/* ZIP Code Filter */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">ZIP Code</label>
@@ -516,6 +657,7 @@ Every loaf is hand-shaped, every ingredient carefully sourced, and every custome
                           onChange={(e) => setZipCode(e.target.value)}
                           placeholder="Enter ZIP"
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green"
+                          aria-label="Enter your ZIP code for delivery availability"
                         />
                       </div>
 
@@ -529,6 +671,7 @@ Every loaf is hand-shaped, every ingredient carefully sourced, and every custome
                             onChange={(e) => setPriceRange([Number(e.target.value), priceRange[1]])}
                             placeholder="Min"
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green"
+                            aria-label="Minimum price"
                           />
                           <input
                             type="number"
@@ -536,11 +679,12 @@ Every loaf is hand-shaped, every ingredient carefully sourced, and every custome
                             onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
                             placeholder="Max"
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green"
+                            aria-label="Maximum price"
                           />
                         </div>
                       </div>
 
-                      {/* Sort */}
+                      {/* Enhanced Sort */}
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">Sort By</label>
                         <select
@@ -549,11 +693,13 @@ Every loaf is hand-shaped, every ingredient carefully sourced, and every custome
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green"
                           aria-label="Sort products by"
                         >
-                          <option value="featured">Featured</option>
-                          <option value="price">Price</option>
-                          <option value="rating">Rating</option>
-                          <option value="newest">Newest</option>
-                          <option value="name">Name</option>
+                          <option value="relevance">Relevance</option>
+                          <option value="bestsellers">Best Sellers</option>
+                          <option value="rating">Highest Rated</option>
+                          <option value="price-low">Price: Low to High</option>
+                          <option value="price-high">Price: High to Low</option>
+                          <option value="newest">Newest First</option>
+                          <option value="available-soonest">Available Soonest</option>
                         </select>
                       </div>
 
@@ -569,9 +715,154 @@ Every loaf is hand-shaped, every ingredient carefully sourced, and every custome
                           <option value="all">All Categories</option>
                           <option value="Bread">Bread</option>
                           <option value="Pastries">Pastries</option>
+                          <option value="Cakes">Cakes</option>
+                          <option value="Cookies">Cookies</option>
+                          <option value="Savory">Savory Items</option>
+                        </select>
+                      </div>
+
+                      {/* Dietary & Allergen Filters */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Dietary</label>
+                        <div className="space-y-2">
+                          <label className="flex items-center gap-2 text-sm">
+                            <input
+                              type="checkbox"
+                              checked={filters.glutenFree}
+                              onChange={(e) => setFilters(prev => ({ ...prev, glutenFree: e.target.checked }))}
+                              className="rounded border-gray-300 text-brand-green focus:ring-brand-green"
+                              aria-label="Gluten free only"
+                            />
+                            <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">GF</span>
+                          </label>
+                          <label className="flex items-center gap-2 text-sm">
+                            <input
+                              type="checkbox"
+                              checked={filters.dairyFree}
+                              onChange={(e) => setFilters(prev => ({ ...prev, dairyFree: e.target.checked }))}
+                              className="rounded border-gray-300 text-brand-green focus:ring-brand-green"
+                              aria-label="Dairy free only"
+                            />
+                            <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">DF</span>
+                          </label>
+                          <label className="flex items-center gap-2 text-sm">
+                            <input
+                              type="checkbox"
+                              checked={filters.vegan}
+                              onChange={(e) => setFilters(prev => ({ ...prev, vegan: e.target.checked }))}
+                              className="rounded border-gray-300 text-brand-green focus:ring-brand-green"
+                              aria-label="Vegan only"
+                            />
+                            <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Vegan</span>
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Availability Filters */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Availability</label>
+                        <div className="space-y-2">
+                          <label className="flex items-center gap-2 text-sm">
+                            <input
+                              type="checkbox"
+                              checked={filters.inStock}
+                              onChange={(e) => setFilters(prev => ({ ...prev, inStock: e.target.checked }))}
+                              className="rounded border-gray-300 text-brand-green focus:ring-brand-green"
+                              aria-label="In stock only"
+                            />
+                            In Stock
+                          </label>
+                          <label className="flex items-center gap-2 text-sm">
+                            <input
+                              type="checkbox"
+                              checked={filters.preorder}
+                              onChange={(e) => setFilters(prev => ({ ...prev, preorder: e.target.checked }))}
+                              className="rounded border-gray-300 text-brand-green focus:ring-brand-green"
+                              aria-label="Preorder available"
+                            />
+                            Preorder
+                          </label>
+                          <label className="flex items-center gap-2 text-sm">
+                            <input
+                              type="checkbox"
+                              checked={filters.localOnly}
+                              onChange={(e) => setFilters(prev => ({ ...prev, localOnly: e.target.checked }))}
+                              className="rounded border-gray-300 text-brand-green focus:ring-brand-green"
+                              aria-label="Local pickup only"
+                            />
+                            Local Pickup Only
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Rating Filter */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Minimum Rating</label>
+                        <select
+                          value={filters.minRating}
+                          onChange={(e) => setFilters(prev => ({ ...prev, minRating: Number(e.target.value) }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green"
+                          aria-label="Filter by minimum rating"
+                        >
+                          <option value={0}>Any Rating</option>
+                          <option value={4}>4+ Stars</option>
+                          <option value={4.5}>4.5+ Stars</option>
+                          <option value={5}>5 Stars Only</option>
+                        </select>
+                      </div>
+
+                      {/* Lead Time Filter */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Max Lead Time</label>
+                        <select
+                          value={filters.maxLeadTime}
+                          onChange={(e) => setFilters(prev => ({ ...prev, maxLeadTime: e.target.value }))}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green"
+                          aria-label="Filter by maximum lead time"
+                        >
+                          <option value="any">Any Time</option>
+                          <option value="same-day">Same Day</option>
+                          <option value="next-day">Next Day</option>
+                          <option value="2-days">2 Days</option>
+                          <option value="1-week">1 Week</option>
                         </select>
                       </div>
                     </div>
+
+                    {/* Active Filters Display */}
+                    {Object.values(filters).some(v => v !== false && v !== 0 && v !== 'any') && (
+                      <div className="mt-4 pt-4 border-t border-gray-200">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-sm font-medium text-gray-700">Active Filters:</span>
+                          <button
+                            onClick={() => setFilters({
+                              glutenFree: false,
+                              dairyFree: false,
+                              vegan: false,
+                              inStock: false,
+                              preorder: false,
+                              localOnly: false,
+                              minRating: 0,
+                              maxLeadTime: 'any'
+                            })}
+                            className="text-sm text-brand-green hover:underline"
+                            aria-label="Clear all filters"
+                          >
+                            Clear All
+                          </button>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {filters.glutenFree && <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">GF Only</span>}
+                          {filters.dairyFree && <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">DF Only</span>}
+                          {filters.vegan && <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Vegan Only</span>}
+                          {filters.inStock && <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">In Stock</span>}
+                          {filters.preorder && <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">Preorder</span>}
+                          {filters.localOnly && <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs">Local Only</span>}
+                          {filters.minRating > 0 && <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">{filters.minRating}+ Stars</span>}
+                          {filters.maxLeadTime !== 'any' && <span className="bg-orange-100 text-orange-800 px-2 py-1 rounded text-xs">Max {filters.maxLeadTime}</span>}
+                        </div>
+                      </div>
+                    )}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -772,6 +1063,142 @@ Every loaf is hand-shaped, every ingredient carefully sourced, and every custome
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Quick Add Modal */}
+      <AnimatePresence>
+        {showQuickAddModal && selectedProduct && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+            onClick={() => setShowQuickAddModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-lg p-6 max-w-md w-full max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">Quick Add to Cart</h3>
+                <button
+                  onClick={() => setShowQuickAddModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                  aria-label="Close quick add modal"
+                  title="Close quick add modal"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                {/* Product Image & Info */}
+                <div className="flex gap-4">
+                  <img
+                    src={selectedProduct.image}
+                    alt={selectedProduct.name}
+                    className="w-20 h-20 object-cover rounded-lg"
+                  />
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-gray-900">{selectedProduct.name}</h4>
+                    <p className="text-sm text-gray-600">{selectedProduct.description}</p>
+                    <p className="text-lg font-bold text-brand-maroon mt-1">
+                      ${selectedProduct.price.toFixed(2)}
+                      {selectedProduct.unit && <span className="text-sm text-gray-600 ml-1">per {selectedProduct.unit}</span>}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Quantity Selector */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {/* TODO: Decrease quantity */}}
+                      className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                      aria-label="Decrease quantity"
+                      title="Decrease quantity"
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    <input
+                      type="number"
+                      min="1"
+                      value={1}
+                      onChange={() => {/* TODO: Handle quantity change */}}
+                      className="w-20 text-center border border-gray-300 rounded-lg px-3 py-2"
+                      aria-label="Product quantity"
+                    />
+                    <button
+                      onClick={() => {/* TODO: Increase quantity */}}
+                      className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                      aria-label="Increase quantity"
+                      title="Increase quantity"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Special Instructions */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Special Instructions (Optional)</label>
+                  <textarea
+                    placeholder="Any special requests or dietary notes..."
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-green"
+                    rows={3}
+                    aria-label="Special instructions for this order"
+                  />
+                </div>
+
+                {/* Pickup/Delivery Options */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Fulfillment Method</label>
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="fulfillment"
+                        value="pickup"
+                        defaultChecked
+                        className="text-brand-green focus:ring-brand-green"
+                      />
+                      <span>Local Pickup - {vendor?.nextPickup}</span>
+                    </label>
+                    {vendor?.fulfillmentOptions.delivery && (
+                      <label className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="fulfillment"
+                          value="delivery"
+                          className="text-brand-green focus:ring-brand-green"
+                        />
+                        <span>Delivery - ${vendor?.deliveryCost?.toFixed(2)}</span>
+                      </label>
+                    )}
+                  </div>
+                </div>
+
+                {/* Add to Cart Button */}
+                <button
+                  onClick={() => {
+                    // TODO: Add to cart logic
+                    setShowQuickAddModal(false);
+                  }}
+                  className="w-full bg-brand-green text-white py-3 px-4 rounded-lg font-medium hover:bg-brand-green/80 transition-colors"
+                  aria-label="Add to cart"
+                  title="Add to cart"
+                >
+                  <ShoppingCart className="w-4 h-4 inline mr-2" />
+                  Add to Cart
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -780,6 +1207,7 @@ Every loaf is hand-shaped, every ingredient carefully sourced, and every custome
 function ProductCard({ product }: { product: Product }) {
   const [wishlist, setWishlist] = useState(false);
   const [showQuickAdd, setShowQuickAdd] = useState(false);
+  const [quantity, setQuantity] = useState(1);
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
@@ -803,21 +1231,60 @@ function ProductCard({ product }: { product: Product }) {
           className="w-full h-48 object-cover"
         />
         
-        {/* Badges */}
+        {/* Enhanced Badges & States */}
         <div className="absolute top-2 left-2 flex flex-col gap-1">
           {product.isBestseller && (
-            <span className="bg-brand-maroon text-white px-2 py-1 rounded text-xs font-medium">
+            <span className="bg-brand-maroon text-white px-2 py-1 rounded text-xs font-medium flex items-center gap-1">
+              <TrendingUp className="w-3 h-3" />
               Bestseller
             </span>
           )}
           {product.isNew && (
-            <span className="bg-green-500 text-white px-2 py-1 rounded text-xs font-medium">
+            <span className="bg-green-500 text-white px-2 py-1 rounded text-xs font-medium flex items-center gap-1">
+              <Sparkles className="w-3 h-3" />
               New
             </span>
           )}
           {product.isLowStock && (
-            <span className="bg-orange-500 text-white px-2 py-1 rounded text-xs font-medium">
+            <span className="bg-orange-500 text-white px-2 py-1 rounded text-xs font-medium flex items-center gap-1">
+              <AlertTriangle className="w-3 h-3" />
               Low Stock
+            </span>
+          )}
+          {product.preorder && (
+            <span className="bg-blue-500 text-white px-2 py-1 rounded text-xs font-medium flex items-center gap-1">
+              <Calendar className="w-3 h3" />
+              Preorder
+            </span>
+          )}
+          {product.madeToOrder && (
+            <span className="bg-purple-500 text-white px-2 py-1 rounded text-xs font-medium flex items-center gap-1">
+              <Wrench className="w-3 h-3" />
+              Made-to-Order
+            </span>
+          )}
+        </div>
+
+        {/* Dietary & Allergen Badges */}
+        <div className="absolute top-2 right-2 flex flex-col gap-1">
+          {product.glutenFree && (
+            <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs font-medium border border-yellow-200">
+              GF
+            </span>
+          )}
+          {product.dairyFree && (
+            <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-medium border border-blue-200">
+              DF
+            </span>
+          )}
+          {product.vegan && (
+            <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-xs font-medium border border-green-200">
+              Vegan
+            </span>
+          )}
+          {product.containsNuts && (
+            <span className="bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-medium border border-red-200">
+              Contains Nuts
             </span>
           )}
         </div>
@@ -854,17 +1321,46 @@ function ProductCard({ product }: { product: Product }) {
           </div>
         </div>
 
+        {/* Enhanced Pricing & Availability */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center">
             <span className="text-lg font-bold text-brand-maroon">${product.price.toFixed(2)}</span>
             {product.originalPrice && (
               <span className="text-sm text-gray-500 line-through ml-2">${product.originalPrice.toFixed(2)}</span>
             )}
+            {product.unit && (
+              <span className="text-sm text-gray-600 ml-1">per {product.unit}</span>
+            )}
           </div>
-          <span className={`text-xs px-2 py-1 rounded ${product.inStock ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-            {product.inStock ? 'In Stock' : 'Out of Stock'}
-          </span>
+          <div className="flex flex-col items-end gap-1">
+            <span className={`text-xs px-2 py-1 rounded ${product.inStock ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+              {product.inStock ? 'In Stock' : 'Out of Stock'}
+            </span>
+            {product.leadTime && (
+              <span className="text-xs text-gray-600">
+                <Clock className="w-3 h-3 inline mr-1" />
+                {product.leadTime}
+              </span>
+            )}
+          </div>
         </div>
+
+        {/* Schedule Indicator */}
+        {product.nextAvailable && (
+          <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-800">
+            <Calendar className="w-3 h-3 inline mr-1" />
+            Order by {product.orderBy} for {product.nextAvailable} pickup
+          </div>
+        )}
+
+        {/* ZIP-Aware Availability */}
+        {zipCode && product.deliveryZips && !product.deliveryZips.includes(zipCode) && (
+          <div className="mb-3 p-2 bg-orange-50 border border-orange-200 rounded text-xs text-orange-800">
+            <MapPin className="w-3 h-3 inline mr-1" />
+            Not available for delivery to {zipCode}. 
+            {product.pickupAvailable && ' Local pickup available.'}
+          </div>
+        )}
 
         <div className="flex flex-wrap gap-1 mb-3">
           {product.tags.slice(0, 3).map(tag => (
@@ -874,22 +1370,46 @@ function ProductCard({ product }: { product: Product }) {
           ))}
         </div>
 
+        {/* Enhanced Action Buttons */}
         <div className="flex gap-2">
           <button
-            onClick={() => setShowQuickAdd(true)}
-            disabled={!product.inStock}
+            onClick={() => {
+              // This will be handled by the parent component
+              window.dispatchEvent(new CustomEvent('openQuickAdd', { detail: product }));
+            }}
+            disabled={!product.inStock && !product.preorder}
             className="flex-1 bg-brand-green text-white py-2 px-3 rounded text-sm font-medium hover:bg-brand-green/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            aria-label={`Quick add ${product.name} to cart`}
+            title={`Quick add ${product.name} to cart`}
           >
             <ShoppingCart className="w-4 h-4 mr-1" />
-            Quick Add
+            {product.preorder ? 'Preorder' : 'Quick Add'}
           </button>
           <Link
             href={`/product/${product.id}`}
             className="bg-gray-100 text-gray-700 py-2 px-3 rounded text-sm font-medium hover:bg-gray-200 transition-colors"
+            aria-label={`View details for ${product.name}`}
+            title={`View details for ${product.name}`}
           >
             View
           </Link>
         </div>
+
+        {/* Personalization Hooks */}
+        {product.personalization && (
+          <div className="mt-3 p-2 bg-purple-50 border border-purple-200 rounded text-xs text-purple-800">
+            <Heart className="w-3 h-3 inline mr-1" />
+            {product.personalization}
+          </div>
+        )}
+
+        {/* Cross-sell Context */}
+        {product.crossSell && (
+          <div className="mt-3 p-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-800">
+            <Package className="w-3 h-3 inline mr-1" />
+            {product.crossSell}
+          </div>
+        )}
       </div>
     </motion.div>
   );

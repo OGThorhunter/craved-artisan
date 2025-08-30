@@ -4,6 +4,7 @@ import cors from 'cors';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import session from 'express-session';
+import cookieParser from 'cookie-parser';
 // import pgSession from 'connect-pg-simple';
 import { createLogger, format, transports } from 'winston';
 import rateLimit from 'express-rate-limit';
@@ -18,12 +19,13 @@ import { env } from './utils/validateEnv';
 import { logCors, corsWithLogging, getCorsConfigForSession } from './middleware/logCors';
 import { helmetConfig, devHelmetConfig } from './middleware/helmetConfig';
 import { healthz, readyz } from './infra/health';
-import authRoutes from './routes/auth-test';
+import authRoutes from '../routes/auth';
 import protectedRoutes from './routes/protected-demo';
 import vendorRoutes from './routes/vendor';
 import vendorProductsRoutes from './routes/vendor-products';
 import vendorRecipesRoutes from './routes/vendor-recipes';
 import vendorOrdersRoutes from './routes/vendor-orders';
+import vendorProductsRouter from '../routes/vendorProducts';
 import ingredientRoutes from './routes/ingredients';
 import recipeRoutes from './routes/recipes';
 import orderRoutes from './routes/orders';
@@ -57,18 +59,20 @@ import debugRoutes from './routes/debug';
 import vendorRouter from './routes/vendor.routes';
 import productRouter from './routes/product.routes';
 import { initializeTaxReminderCron } from './services/taxReminderCron';
+import prisma from './lib/prisma';
 
 // Load environment variables
 dotenv.config();
 
 // Initialize Sentry
-if (env.SENTRY_DSN) {
-  Sentry.init({ 
-    dsn: env.SENTRY_DSN, 
-    environment: env.NODE_ENV, 
-    release: env.SENTRY_RELEASE 
-  });
-}
+// Temporarily disabled to fix server startup
+// if (env.SENTRY_DSN) {
+//   Sentry.init({ 
+//     dsn: env.SENTRY_DSN, 
+//     environment: env.NODE_ENV, 
+//     release: env.SENTRY_RELEASE 
+//   });
+// }
 
 // Create Winston logger
 const logger = createLogger({
@@ -153,8 +157,11 @@ app.use(logCors);
 
 // CORS configuration with logging
 app.use(cors(corsWithLogging));
+
+// Middleware in correct order: express.json() -> cookieParser -> session
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 // Session middleware - using default memory store for SQLite compatibility
 app.use(session({
@@ -162,9 +169,9 @@ app.use(session({
   resave: true,
   saveUninitialized: true,
   cookie: {
-    ...getCorsConfigForSession(),
+    name: 'ca.sid',
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    secure: env.NODE_ENV === 'production',
+    secure: false,
     sameSite: 'lax',
   },
 }));
@@ -241,10 +248,11 @@ app.get('/test-error', (req, res) => {
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/protected', protectedRoutes);
-app.use('/api/vendor', vendorRoutes);
 app.use('/api/vendor/products', vendorProductsRoutes);
 app.use('/api/vendor/recipes', vendorRecipesRoutes);
 app.use('/api/vendor/orders', vendorOrdersRoutes);
+app.use('/api/vendor', vendorRoutes);
+app.use(vendorProductsRouter); // Bulletproof route that works with or without session
 app.use('/api/ingredients', ingredientRoutes);
 app.use('/api/recipes', recipeRoutes);
 app.use('/api/orders', orderRoutes);
@@ -278,6 +286,29 @@ app.use('/api/dashboard', dashboardRouter);
 // Debug routes (development only)
 if (env.NODE_ENV === 'development') {
   app.use('/api/_debug', debugRoutes);
+  
+  // Auth diagnostic route
+  app.get('/api/_health/auth', (req, res) => {
+    const hasSessionObject = !!req.session;
+    const sessionId = req.sessionID;
+    
+    if (!req.session) {
+      return res.status(500).json({ 
+        code: "NO_SESSION_MIDDLEWARE",
+        message: "Session middleware not working",
+        hasSessionObject,
+        sessionId
+      });
+    }
+    
+    res.json({
+      code: "SESSION_OK",
+      message: "Session middleware working",
+      hasSessionObject,
+      sessionId,
+      sessionData: req.session
+    });
+  });
 }
 
 // Mount new vendor and product routes

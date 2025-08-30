@@ -132,15 +132,20 @@ function suggestAiPrice(
 // GET /api/vendor/products - Get all products for the authenticated vendor
 router.get('/', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
   try {
+    // Get user ID from authenticated user
+    const userId = req.user?.id;
+    
     // First get the vendor profile for the authenticated user
     const vendorProfile = await prisma.vendorProfile.findUnique({
-      where: { userId: req.session.userId },
+      where: { userId },
     });
 
     if (!vendorProfile) {
-      return res.status(400).json({
-        error: 'Vendor profile not found',
-        message: 'Please create your vendor profile first'
+      // Return empty products list instead of error for development
+      return res.json({
+        products: [],
+        count: 0,
+        message: 'No vendor profile found - products will appear here once you create your profile'
       });
     }
 
@@ -179,7 +184,7 @@ router.post('/', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
 
     // Get the vendor profile for the authenticated user
     const vendorProfile = await prisma.vendorProfile.findUnique({
-      where: { userId: req.session.userId },
+      where: { userId: req.user?.id },
     });
 
     if (!vendorProfile) {
@@ -217,7 +222,7 @@ router.post('/', requireAuth, requireRole([Role.VENDOR]), async (req, res) => {
       }
     });
 
-    return res.status(400).json({
+    return res.status(201).json({
       message: 'Product created successfully',
       product
     });

@@ -22,22 +22,34 @@ export const requireAuth = async (
   next: NextFunction
 ) => {
   try {
-    if (!req.session.userId) {
+    // Check for both session structures (userId and user.id)
+    const userId = req.session.userId || (req.session.user as any)?.id;
+    
+    if (!userId) {
       return res.status(401).json({ 
         error: 'Authentication required',
         message: 'Please log in to access this resource'
       });
     }
 
-    // Get user from database
-    const user = await prisma.user.findUnique({
-      where: { id: req.session.userId },
+    // First try to get user from database
+    let user = await prisma.user.findUnique({
+      where: { id: userId },
       select: {
         id: true,
         email: true,
         role: true,
       }
     });
+
+    // If no database user, check session user (for development)
+    if (!user && req.session.user) {
+      user = {
+        id: req.session.user.id,
+        email: req.session.user.email,
+        role: req.session.user.role as any
+      };
+    }
 
     if (!user) {
       // Clear invalid session

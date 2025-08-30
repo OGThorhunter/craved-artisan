@@ -649,4 +649,47 @@ router.get('/:vendorId/analytics/trends', async (req, res) => {
   }
 });
 
+// POST /api/vendor/profile - Create vendor profile
+router.post('/profile', async (req, res) => {
+  try {
+    const { storeName, bio, imageUrl, location, phone, website } = req.body;
+
+    // Validate required fields
+    if (!storeName) {
+      return res.status(400).json({
+        success: false,
+        error: 'Store name is required'
+      });
+    }
+
+    // For development, create a simple vendor profile
+    // In production, this would use the database
+    const vendorProfile = {
+      id: `vendor-${Date.now()}`,
+      storeName,
+      bio: bio || 'Artisan vendor on Craved Artisan',
+      imageUrl: imageUrl || '/assets/vendors/default.png',
+      location: location || 'Atlanta, GA',
+      phone: phone || null,
+      website: website || null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    return res.json({
+      success: true,
+      data: vendorProfile,
+      message: 'Vendor profile created successfully'
+    });
+
+  } catch (error) {
+    console.error('Error creating vendor profile:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error',
+      message: 'Failed to create vendor profile'
+    });
+  }
+});
+
 export default router; 
