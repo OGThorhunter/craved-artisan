@@ -1,270 +1,138 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
-import type { ReactNode } from 'react';
-import { useLocation } from 'wouter';
-import axios from 'axios';
-import type { AxiosResponse } from 'axios';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import api from '../lib/api';
 
 // Types
-export interface User {
-  id: string;
+interface User {
+  userId: string;
   email: string;
-  role: 'CUSTOMER' | 'VENDOR' | 'ADMIN' | 'SUPPLIER' | 'EVENT_COORDINATOR' | 'DROPOFF';
-  profile?: {
-    firstName: string;
-    lastName: string;
-    phone?: string;
-    bio?: string;
-    website?: string;
-    businessName?: string;
-  } | null;
-}
-
-export interface AuthState {
-  user: User | null;
+  role: 'VENDOR' | 'ADMIN' | 'CUSTOMER';
   isAuthenticated: boolean;
-  isLoading: boolean;
-  error: string | null;
+  lastActivity: Date;
 }
 
-export interface AuthContextType extends AuthState {
+interface AuthContextType {
+  user: User | null;
+  loading: boolean;
+  isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
-  signup: (userData: SignupData) => Promise<void>;
   logout: () => Promise<void>;
-  fetchUser: () => Promise<void>;
-  clearError: () => void;
+  register: (email: string, password: string, name: string, role: 'VENDOR' | 'CUSTOMER') => Promise<void>;
+  checkAuth: () => Promise<void>;
 }
-
-export interface SignupData {
-  email: string;
-  password: string;
-  role: 'CUSTOMER' | 'VENDOR' | 'ADMIN' | 'SUPPLIER' | 'EVENT_COORDINATOR' | 'DROPOFF';
-  firstName: string;
-  lastName: string;
-  phone?: string;
-  bio?: string;
-  website?: string;
-}
-
-// Action types
-type AuthAction =
-  | { type: 'AUTH_START' }
-  | { type: 'AUTH_SUCCESS'; payload: User }
-  | { type: 'AUTH_FAILURE'; payload: string }
-  | { type: 'LOGOUT' }
-  | { type: 'CLEAR_ERROR' }
-  | { type: 'SET_LOADING'; payload: boolean }
-  | { type: 'FETCH_USER_START' }
-  | { type: 'FETCH_USER_SUCCESS'; payload: User }
-  | { type: 'FETCH_USER_FAILURE'; payload: string | null };
-
-// Initial state
-const initialState: AuthState = {
-  user: null,
-  isAuthenticated: false,
-  isLoading: true,
-  error: null,
-};
-
-// Reducer
-const authReducer = (state: AuthState, action: AuthAction): AuthState => {
-  switch (action.type) {
-    case 'AUTH_START':
-      return {
-        ...state,
-        isLoading: true,
-        error: null,
-      };
-    case 'AUTH_SUCCESS':
-      return {
-        ...state,
-        user: action.payload,
-        isAuthenticated: true,
-        isLoading: false,
-        error: null,
-      };
-    case 'AUTH_FAILURE':
-      return {
-        ...state,
-        user: null,
-        isAuthenticated: false,
-        isLoading: false,
-        error: action.payload,
-      };
-    case 'LOGOUT':
-      return {
-        ...state,
-        user: null,
-        isAuthenticated: false,
-        isLoading: false,
-        error: null,
-      };
-    case 'CLEAR_ERROR':
-      return {
-        ...state,
-        error: null,
-      };
-    case 'SET_LOADING':
-      return {
-        ...state,
-        isLoading: action.payload,
-      };
-    case 'FETCH_USER_START':
-      return {
-        ...state,
-        isLoading: true,
-        error: null,
-      };
-    case 'FETCH_USER_SUCCESS':
-      return {
-        ...state,
-        user: action.payload,
-        isAuthenticated: true,
-        isLoading: false,
-        error: null,
-      };
-    case 'FETCH_USER_FAILURE':
-      return {
-        ...state,
-        user: null,
-        isAuthenticated: false,
-        isLoading: false,
-        error: action.payload,
-      };
-    default:
-      return state;
-  }
-};
 
 // Create context
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Use centralized API instance from lib/api.ts
-
-// Auth provider component
+// Provider component
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [state, dispatch] = useReducer(authReducer, initialState);
-  const [, setLocation] = useLocation();
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Fetch user on mount
+  // Check authentication status on mount
   useEffect(() => {
-    fetchUser();
+    checkAuth();
   }, []);
 
-  const fetchUser = async () => {
+  // Check if user is authenticated
+  const checkAuth = async () => {
     try {
-      dispatch({ type: 'FETCH_USER_START' });
-
+      setLoading(true);
       const response = await api.get('/auth/session');
       
-      if (response.data.authenticated && response.data.user) {
-        dispatch({ type: 'FETCH_USER_SUCCESS', payload: response.data.user });
+      if (response.data.success && response.data.user) {
+        setUser({
+          userId: response.data.user.userId,
+          email: response.data.user.email,
+          role: response.data.user.role,
+          isAuthenticated: true,
+          lastActivity: new Date(response.data.user.lastActivity)
+        });
       } else {
-        // Don't treat this as an error - just no active session
-        dispatch({ type: 'FETCH_USER_FAILURE', payload: null });
+        setUser(null);
       }
     } catch (error) {
-      // Only log the error, don't treat 401 as a failure since it's expected when not logged in
-      if (axios.isAxiosError(error) && error.response?.status === 401) {
-        dispatch({ type: 'FETCH_USER_FAILURE', payload: null });
-      } else {
-        console.error('Fetch user error:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Failed to fetch user';
-        dispatch({ type: 'FETCH_USER_FAILURE', payload: errorMessage });
-      }
+      console.log('No active session found');
+      setUser(null);
+    } finally {
+      setLoading(false);
     }
   };
 
+  // Login function
   const login = async (email: string, password: string) => {
     try {
-      dispatch({ type: 'AUTH_START' });
-
+      setLoading(true);
       const response = await api.post('/auth/login', { email, password });
       
-      if (response.data.user) {
-        dispatch({ type: 'AUTH_SUCCESS', payload: response.data.user });
+      if (response.data.success && response.data.user) {
+        setUser({
+          userId: response.data.user.userId,
+          email: response.data.user.email,
+          role: response.data.user.role,
+          isAuthenticated: true,
+          lastActivity: new Date(response.data.user.lastActivity)
+        });
       } else {
-        throw new Error('Login response missing user data');
+        throw new Error(response.data.message || 'Login failed');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
-      let errorMessage = 'Login failed';
-      
-      if (axios.isAxiosError(error)) {
-        if (error.response?.status === 429) {
-          errorMessage = 'Rate limit exceeded. Please wait a moment and try again.';
-        } else {
-          errorMessage = error.response?.data?.message || error.response?.data?.error || 'Login failed';
-        }
-      } else if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-      
-      dispatch({ type: 'AUTH_FAILURE', payload: errorMessage });
-      throw new Error(errorMessage);
+      throw new Error(error.response?.data?.message || error.message || 'Login failed');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const signup = async (userData: SignupData) => {
-    try {
-      dispatch({ type: 'AUTH_START' });
-
-      const response = await api.post('/auth/register', userData);
-      
-      if (response.data.user) {
-        dispatch({ type: 'AUTH_SUCCESS', payload: response.data.user });
-      } else {
-        throw new Error('Registration response missing user data');
-      }
-    } catch (error) {
-      console.error('Signup error:', error);
-      let errorMessage = 'Registration failed';
-      
-      if (axios.isAxiosError(error)) {
-        if (error.response?.data?.details) {
-          // Handle validation errors
-          const validationErrors = error.response.data.details
-            .map((err: any) => `${err.field}: ${err.message}`)
-            .join(', ');
-          errorMessage = `Validation failed: ${validationErrors}`;
-        } else {
-          errorMessage = error.response?.data?.message || error.response?.data?.error || 'Registration failed';
-        }
-      } else if (error instanceof Error) {
-        errorMessage = error.message;
-      }
-      
-      dispatch({ type: 'AUTH_FAILURE', payload: errorMessage });
-      throw new Error(errorMessage);
-    }
-  };
-
+  // Logout function
   const logout = async () => {
     try {
+      setLoading(true);
       await api.post('/auth/logout');
+      setUser(null);
     } catch (error) {
       console.error('Logout error:', error);
-      // Continue with logout even if the request fails
+      // Even if logout fails, clear local state
+      setUser(null);
     } finally {
-      dispatch({ type: 'LOGOUT' });
-      setLocation('/');
+      setLoading(false);
     }
   };
 
-  const clearError = () => {
-    dispatch({ type: 'CLEAR_ERROR' });
+  // Register function
+  const register = async (email: string, password: string, name: string, role: 'VENDOR' | 'CUSTOMER') => {
+    try {
+      setLoading(true);
+      const response = await api.post('/auth/register', { email, password, name, role });
+      
+      if (response.data.success) {
+        // After successful registration, log the user in
+        await login(email, password);
+      } else {
+        throw new Error(response.data.message || 'Registration failed');
+      }
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      throw new Error(error.response?.data?.message || error.message || 'Registration failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const value: AuthContextType = {
-    ...state,
+    user,
+    loading,
     login,
-    signup,
     logout,
-    fetchUser,
-    clearError,
+    register,
+    checkAuth,
+    isAuthenticated: !!user?.isAuthenticated
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 // Custom hook to use auth context
@@ -274,4 +142,6 @@ export const useAuth = (): AuthContextType => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-}; 
+};
+
+export default AuthContext;

@@ -2,7 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
-import { Plus, Package, Tag, DollarSign, FileText, Edit, Trash2, Eye, X, Image as ImageIcon, Brain, AlertTriangle, RefreshCw, Search, Filter, Grid, List } from 'lucide-react';
+import { Plus, Package, Tag, DollarSign, FileText, Edit, Trash2, Eye, X, Image as ImageIcon, Brain, AlertTriangle, RefreshCw, Search, Filter, Grid, List, Info, AlertCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import VendorDashboardLayout from '../layouts/VendorDashboardLayout';
@@ -19,6 +19,8 @@ interface Product {
   isAvailable: boolean;
   targetMargin?: number;
   recipeId?: string;
+  productType?: 'food' | 'service' | 'non-food';
+  ingredients?: ProductIngredient[];
   onWatchlist: boolean;
   lastAiSuggestion?: number;
   aiSuggestionNote?: string;
@@ -36,6 +38,30 @@ interface CreateProductForm {
   isAvailable: boolean;
   targetMargin: number;
   recipeId: string;
+  productType: 'food' | 'service' | 'non-food';
+  ingredients: ProductIngredient[];
+}
+
+interface ProductIngredient {
+  id: string;
+  ingredientId: string;
+  ingredientName: string;
+  quantity: number;
+  unit: string;
+  cost: number;
+  isCustom: boolean;
+}
+
+interface Ingredient {
+  id: string;
+  name: string;
+  description?: string;
+  unit: string;
+  costPerUnit: number;
+  supplier?: string;
+  isAvailable: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // API functions
@@ -65,7 +91,9 @@ const createProduct = async (productData: CreateProductForm): Promise<{ message:
     price: Number(productData.price),
     stock: Number(productData.stock),
     targetMargin: productData.targetMargin ? Number(productData.targetMargin) : null,
-    recipeId: productData.recipeId || null
+    recipeId: productData.recipeId || null,
+    productType: productData.productType || 'non-food',
+    ingredients: productData.ingredients || []
   }, {
     withCredentials: true
   });
@@ -84,7 +112,9 @@ const updateProduct = async (productData: CreateProductForm & { id: string }): P
     price: Number(productData.price),
     stock: Number(productData.stock),
     targetMargin: productData.targetMargin ? Number(productData.targetMargin) : null,
-    recipeId: productData.recipeId || null
+    recipeId: productData.recipeId || null,
+    productType: productData.productType || 'non-food',
+    ingredients: productData.ingredients || []
   }, {
     withCredentials: true
   });
@@ -103,9 +133,12 @@ const VendorProductsPage: React.FC = () => {
   const [imagePreview, setImagePreview] = useState<string>('');
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState<string>('');
+  const [customIngredientInput, setCustomIngredientInput] = useState('');
+  const [showCustomIngredientForm, setShowCustomIngredientForm] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterAvailable, setFilterAvailable] = useState<boolean | null>(null);
+  const [filterProductType, setFilterProductType] = useState<string>('all');
 
   // React Query for fetching products
   const {
@@ -117,6 +150,26 @@ const VendorProductsPage: React.FC = () => {
     queryKey: ['vendor-products'],
     queryFn: fetchProducts,
     retry: 1,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // React Query for fetching ingredients
+  const {
+    data: ingredients = [],
+    isLoading: ingredientsLoading
+  } = useQuery({
+    queryKey: ['ingredients'],
+    queryFn: async () => {
+      try {
+        const response = await axios.get('/api/ingredients', {
+          withCredentials: true
+        });
+        return response.data.ingredients as Ingredient[];
+      } catch (error) {
+        console.error('Failed to fetch ingredients:', error);
+        return [];
+      }
+    },
     staleTime: 5 * 60 * 1000,
   });
 
@@ -137,9 +190,13 @@ const VendorProductsPage: React.FC = () => {
     if (filterAvailable !== null) {
       filtered = filtered.filter(product => product.isAvailable === filterAvailable);
     }
+
+    if (filterProductType !== 'all') {
+      filtered = filtered.filter(product => product.productType === filterProductType);
+    }
     
     return filtered;
-  }, [productsData?.products, searchTerm, filterAvailable]);
+  }, [productsData?.products, searchTerm, filterAvailable, filterProductType]);
 
   // React Query mutations
   const createProductMutation = useMutation({
@@ -207,7 +264,9 @@ const VendorProductsPage: React.FC = () => {
       stock: 0,
       isAvailable: true,
       targetMargin: 0,
-      recipeId: ''
+      recipeId: '',
+      productType: 'non-food',
+      ingredients: []
     }
   });
 
@@ -246,11 +305,15 @@ const VendorProductsPage: React.FC = () => {
     setShowAddForm(true);
     setTags(product.tags || []);
     setImagePreview(product.imageUrl || '');
+    setCustomIngredientInput('');
+    setShowCustomIngredientForm(false);
     reset({
       ...product,
       tags: '',
       targetMargin: product.targetMargin || 0,
-      recipeId: product.recipeId || ''
+      recipeId: product.recipeId || '',
+      ingredients: product.ingredients || [],
+      productType: product.productType || 'non-food'
     });
   };
 
@@ -274,6 +337,33 @@ const VendorProductsPage: React.FC = () => {
 
   const removeTag = (tagToRemove: string) => {
     setTags(tags.filter(tag => tag !== tagToRemove));
+  };
+
+  const addCustomIngredient = () => {
+    if (customIngredientInput.trim()) {
+      const newIngredient: ProductIngredient = {
+        id: `custom-${Date.now()}`,
+        ingredientId: `custom-${Date.now()}`,
+        ingredientName: customIngredientInput.trim(),
+        quantity: 0,
+        unit: 'pieces',
+        cost: 0,
+        isCustom: true
+      };
+      
+      const currentIngredients = watch('ingredients') || [];
+      setValue('ingredients', [...currentIngredients, newIngredient]);
+      setCustomIngredientInput('');
+      setShowCustomIngredientForm(false);
+      
+      toast.success('Custom ingredient added! It will be added to your inventory at zero stock.');
+    }
+  };
+
+  const removeIngredient = (index: number) => {
+    const currentIngredients = watch('ingredients') || [];
+    const updatedIngredients = currentIngredients.filter((_, i) => i !== index);
+    setValue('ingredients', updatedIngredients);
   };
 
   if (isLoading) {
@@ -429,6 +519,24 @@ const VendorProductsPage: React.FC = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Product Type *
+                    </label>
+                    <select
+                      {...register('productType', { required: 'Product type is required' })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Select product type...</option>
+                      <option value="food">Food Product</option>
+                      <option value="service">Service</option>
+                      <option value="non-food">Non-Food Product</option>
+                    </select>
+                    {errors.productType && (
+                      <p className="text-red-500 text-sm mt-1">{errors.productType.message}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                       Price *
                     </label>
                     <input
@@ -567,6 +675,113 @@ const VendorProductsPage: React.FC = () => {
                   )}
                 </div>
 
+                {/* Ingredients Section */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Ingredients
+                  </label>
+                  <div className="space-y-3">
+                    {/* Existing Ingredients */}
+                    {watch('ingredients')?.map((ingredient, index) => (
+                      <div key={ingredient.id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                        <div className="flex-1">
+                          <div className="text-sm font-medium text-gray-900">
+                            {ingredient.ingredientName}
+                            {ingredient.isCustom && (
+                              <span className="ml-2 inline-flex items-center px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">
+                                Custom
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            {ingredient.quantity} {ingredient.unit} - ${ingredient.cost}
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeIngredient(index)}
+                          className="text-red-600 hover:text-red-800 transition-colors"
+                          title="Remove ingredient"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+
+                    {/* Add Custom Ingredient Button */}
+                    <button
+                      type="button"
+                      onClick={() => setShowCustomIngredientForm(true)}
+                      className="w-full p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-gray-400 hover:text-gray-700 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add Custom Ingredient
+                    </button>
+
+                    {/* Custom Ingredient Disclaimer */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <div className="flex items-start gap-2">
+                        <Info className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                        <div className="text-sm text-blue-800">
+                          <p className="font-medium mb-1">Custom Ingredient Notice</p>
+                          <p>When you add a custom ingredient, it will automatically be added to your vendor inventory at zero stock. You can manage inventory levels later in your inventory dashboard.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Custom Ingredient Form */}
+                  {showCustomIngredientForm && (
+                    <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                      <h4 className="text-sm font-medium text-gray-900 mb-3">Add Custom Ingredient</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                            Ingredient Name *
+                          </label>
+                          <input
+                            type="text"
+                            value={customIngredientInput}
+                            onChange={(e) => setCustomIngredientInput(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                            placeholder="e.g., Organic Vanilla Extract"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                            Unit
+                          </label>
+                          <input
+                            type="text"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                            placeholder="e.g., ml, oz"
+                          />
+                        </div>
+                        <div className="flex items-end gap-2">
+                          <button
+                            type="button"
+                            onClick={addCustomIngredient}
+                            disabled={!customIngredientInput.trim()}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                          >
+                            Add
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowCustomIngredientForm(false);
+                              setCustomIngredientInput('');
+                            }}
+                            className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors text-sm"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 <div className="flex items-center">
                   <input
                     type="checkbox"
@@ -605,6 +820,8 @@ const VendorProductsPage: React.FC = () => {
                       setTags([]);
                       setImagePreview('');
                       setTagInput('');
+                      setCustomIngredientInput('');
+                      setShowCustomIngredientForm(false);
                     }}
                     className="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition-colors"
                   >
@@ -692,6 +909,12 @@ const VendorProductsPage: React.FC = () => {
                                 <Package className="h-4 w-4" />
                                 <span>{product.stock} in stock</span>
                               </div>
+                              {product.productType && (
+                                <div className="flex items-center gap-1">
+                                  <span className="text-gray-500">Type:</span>
+                                  <span className="font-medium capitalize">{product.productType}</span>
+                                </div>
+                              )}
                               {product.targetMargin && (
                                 <div className="flex items-center gap-1">
                                   <span className="text-gray-500">Target:</span>
@@ -716,6 +939,34 @@ const VendorProductsPage: React.FC = () => {
                                     {tag}
                                   </span>
                                 ))}
+                              </div>
+                            )}
+
+                            {product.ingredients && product.ingredients.length > 0 && (
+                              <div className="mt-2">
+                                <div className="text-xs text-gray-500 mb-1">Ingredients:</div>
+                                <div className="flex flex-wrap gap-1">
+                                  {product.ingredients.map((ingredient, index) => (
+                                    <span
+                                      key={index}
+                                      className={`px-2 py-1 text-xs rounded-full ${
+                                        ingredient.isCustom 
+                                          ? 'bg-yellow-100 text-yellow-800' 
+                                          : 'bg-blue-100 text-blue-800'
+                                      }`}
+                                    >
+                                      {ingredient.ingredientName}
+                                      {ingredient.isCustom && (
+                                        <span className="ml-1 text-yellow-600">*</span>
+                                      )}
+                                    </span>
+                                  ))}
+                                </div>
+                                {product.ingredients.some(ing => ing.isCustom) && (
+                                  <div className="text-xs text-yellow-600 mt-1">
+                                    * Custom ingredients (in inventory at zero stock)
+                                  </div>
+                                )}
                               </div>
                             )}
 

@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
-import { useLocation } from 'wouter';
 import { useAuth } from '../contexts/AuthContext';
-import toast from 'react-hot-toast';
-import { Chrome, Facebook, Apple } from 'lucide-react';
+import { useLocation } from 'wouter';
+import { toast } from 'react-hot-toast';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const { login, error, clearError } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
   const [, setLocation] = useLocation();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -19,111 +18,49 @@ const LoginPage: React.FC = () => {
       return;
     }
 
-    if (isLoading) {
-      return; // Prevent multiple submissions
-    }
-
-    setIsLoading(true);
-    clearError();
-
     try {
-      // Add a small delay to prevent rapid successive requests
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
+      setLoading(true);
       await login(email, password);
       toast.success('Login successful!');
-      
-      // Redirect based on user role (this will be handled by the dashboard routes)
-      setLocation('/dashboard');
-    } catch (error) {
-      // Error is already handled in the AuthContext
-      console.error('Login failed:', error);
+      setLocation('/dashboard'); // Redirect to dashboard after login
+    } catch (error: any) {
+      toast.error(error.message || 'Login failed');
     } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSocialLogin = async (provider: 'google' | 'facebook' | 'apple') => {
-    setIsLoading(true);
-    clearError();
-
-    try {
-      // TODO: Implement social login logic
-      toast.info(`${provider.charAt(0).toUpperCase() + provider.slice(1)} login coming soon!`);
-      console.log(`Logging in with ${provider}`);
-    } catch (error) {
-      toast.error(`${provider.charAt(0).toUpperCase() + provider.slice(1)} login failed`);
-      console.error(`${provider} login failed:`, error);
-    } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="page-content bg-gray-50 flex flex-col justify-center min-h-screen py-8 sm:py-12">
-      <div className="form-responsive">
-        <h2 className="mt-6 text-center responsive-heading text-gray-900">
+    <div className="min-h-screen bg-white flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      {/* Logo at top center */}
+      <div className="flex justify-center mb-8">
+        <img 
+          src="/images/logo.png" 
+          alt="Craved Artisan Logo" 
+          className="h-40 w-auto"
+        />
+      </div>
+
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <h2 className="mt-6 text-center text-3xl font-extrabold text-black">
           Sign in to your account
         </h2>
-        <p className="mt-2 text-center responsive-text text-gray-600">
+        <p className="mt-2 text-center text-sm text-black">
           Or{' '}
           <button
             onClick={() => setLocation('/signup')}
-            className="font-medium text-blue-600 hover:text-blue-500"
+            className="font-medium text-[#5B6E02] hover:text-[#4A5D01]"
           >
             create a new account
           </button>
         </p>
       </div>
 
-      <div className="mt-8 form-responsive">
-        <div className="responsive-card">
-          {/* Social Login Buttons */}
-          <div className="space-y-3 mb-6">
-            <button
-              type="button"
-              onClick={() => handleSocialLogin('google')}
-              disabled={isLoading}
-              className="w-full flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Chrome className="h-5 w-5 mr-2 text-red-600" />
-              Continue with Google
-            </button>
-            
-            <button
-              type="button"
-              onClick={() => handleSocialLogin('facebook')}
-              disabled={isLoading}
-              className="w-full flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Facebook className="h-5 w-5 mr-2 text-blue-600" />
-              Continue with Facebook
-            </button>
-            
-            <button
-              type="button"
-              onClick={() => handleSocialLogin('apple')}
-              disabled={isLoading}
-              className="w-full flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Apple className="h-5 w-5 mr-2 text-gray-900" />
-              Continue with Apple
-            </button>
-          </div>
-
-          {/* Divider */}
-          <div className="relative mb-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or continue with email</span>
-            </div>
-          </div>
-
+      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-[#F7F2EC] py-8 px-4 shadow-lg sm:rounded-lg sm:px-10 border border-[#E8CBAE]">
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="email" className="block text-sm font-medium text-black">
                 Email address
               </label>
               <div className="mt-1">
@@ -135,14 +72,14 @@ const LoginPage: React.FC = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  className="appearance-none block w-full px-3 py-2 border border-[#E8CBAE] rounded-md placeholder-[#777] focus:outline-none focus:ring-[#5B6E02] focus:border-[#5B6E02] sm:text-sm bg-white text-black"
                   placeholder="Enter your email"
                 />
               </div>
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="password" className="block text-sm font-medium text-black">
                 Password
               </label>
               <div className="mt-1">
@@ -154,32 +91,19 @@ const LoginPage: React.FC = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  className="appearance-none block w-full px-3 py-2 border border-[#E8CBAE] rounded-md placeholder-[#777] focus:outline-none focus:ring-[#5B6E02] focus:border-[#5B6E02] sm:text-sm bg-white text-black"
                   placeholder="Enter your password"
                 />
               </div>
             </div>
 
-            {error && (
-              <div className="rounded-md bg-red-50 p-4">
-                <div className="text-sm text-red-700">{error}</div>
-              </div>
-            )}
-
             <div>
               <button
                 type="submit"
-                disabled={isLoading}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={loading}
+                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[#5B6E02] hover:bg-[#4A5D01] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#5B6E02] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {isLoading ? (
-                  <div className="flex items-center">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    Signing in...
-                  </div>
-                ) : (
-                  'Sign in'
-                )}
+                {loading ? 'Signing in...' : 'Sign in'}
               </button>
             </div>
           </form>
@@ -187,22 +111,15 @@ const LoginPage: React.FC = () => {
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
+                <div className="w-full border-t border-[#E8CBAE]" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Test Accounts</span>
+                <span className="px-2 bg-[#F7F2EC] text-black">Test Account</span>
               </div>
             </div>
-
-            <div className="mt-6 grid grid-cols-1 gap-3">
-              <div className="text-xs text-gray-500 space-y-2">
-                <p><strong>Admin:</strong> support@cravedartisan.com / password</p>
-                <p><strong>Customer:</strong> customer@cravedartisan.com / customer123</p>
-                <p><strong>Vendor:</strong> vendor@cravedartisan.com / vendor123</p>
-                <p><strong>Supplier:</strong> supplier@cravedartisan.com / supplier123</p>
-                <p><strong>Event Coordinator:</strong> coordinator@cravedartisan.com / coordinator123</p>
-                <p><strong>Dropoff:</strong> dropoff@cravedartisan.com / dropoff123</p>
-              </div>
+            <div className="mt-4 text-center text-sm text-black">
+              <p>Email: test@example.com</p>
+              <p>Password: password123</p>
             </div>
           </div>
         </div>
@@ -211,4 +128,4 @@ const LoginPage: React.FC = () => {
   );
 };
 
-export default LoginPage; 
+export default LoginPage;

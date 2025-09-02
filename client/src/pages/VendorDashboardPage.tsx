@@ -1,21 +1,20 @@
-﻿import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useLocation } from 'wouter';
-import InspirationalQuote from '@/components/InspirationalQuote';
+﻿import React, { useState } from 'react';
 import { 
   TrendingUp, 
-  ShoppingCart, 
   DollarSign, 
   Package, 
   Bell, 
   MessageSquare, 
   Settings, 
-  BarChart3, 
   Users, 
   Calendar,
-  CheckCircle,
-  AlertTriangle,
-  Star,
+  Activity,
+  Brain,
+  Sparkles,
+  ChevronRight,
+  TrendingDown,
+  Minus,
+  Filter,
   ArrowUpRight,
   ArrowDownRight
 } from 'lucide-react';
@@ -34,34 +33,67 @@ const vendor = {
   totalCustomers: 156
 };
 
-// Mock data for dashboard
-const recentOrders = [
-  { id: 1, customer: 'Emma Wilson', product: 'Handmade Soap Set', amount: 45.99, status: 'Delivered', date: '2 hours ago' },
-  { id: 2, customer: 'Michael Brown', product: 'Artisan Bread', amount: 28.50, status: 'In Transit', date: '4 hours ago' },
-  { id: 3, customer: 'Lisa Davis', product: 'Organic Honey', amount: 32.00, status: 'Processing', date: '6 hours ago' },
-  { id: 4, customer: 'John Smith', product: 'Handcrafted Mug', amount: 18.75, status: 'Delivered', date: '1 day ago' }
-];
-
-const recentMessages = [
-  { id: 1, customer: 'Emma Wilson', message: 'When will my order arrive?', unread: true, time: '5 min ago' },
-  { id: 2, customer: 'Michael Brown', message: 'Thank you for the quick delivery!', unread: false, time: '1 hour ago' },
-  { id: 3, customer: 'Lisa Davis', message: 'Do you have more of the lavender soap?', unread: true, time: '2 hours ago' }
-];
-
-const achievements = [
-  { id: 1, title: 'First Sale', description: 'Completed your first order', icon: '🎉', achieved: true },
-  { id: 2, title: '50 Orders', description: 'Reached 50 total orders', icon: '📦', achieved: true },
-  { id: 3, title: '5-Star Rating', description: 'Maintained 4.5+ rating for 30 days', icon: '⭐', achieved: false },
-  { id: 4, title: '100 Customers', description: 'Served 100 unique customers', icon: '👥', achieved: false }
-];
+// Mock Pulse data
+const pulseData = {
+  pendingOrders: {
+    count: 8,
+    value: 1247.50,
+    change: '+15%',
+    changeType: 'positive'
+  },
+  salesWindows: {
+    upcoming: 3,
+    totalTraffic: 156,
+    nextEvent: 'Farmers Market - Tomorrow 9AM'
+  },
+  revenue: {
+    today: 342.50,
+    thisWeek: 2847.30,
+    thisMonth: 12450.80,
+    todayChange: '+8.5%',
+    weekChange: '+12.3%',
+    monthChange: '+5.7%'
+  },
+  orderFunnel: {
+    new: 12,
+    inProgress: 8,
+    ready: 5,
+    completed: 342
+  },
+  topProducts: [
+    { name: 'Handmade Soap Set', units: 45, revenue: 1247.50, trend: 'up' },
+    { name: 'Artisan Bread', units: 38, revenue: 1083.00, trend: 'up' },
+    { name: 'Organic Honey', units: 32, revenue: 896.00, trend: 'stable' }
+  ],
+  underperformers: [
+    { name: 'Handcrafted Mug', units: 3, revenue: 56.25, inventory: 12 },
+    { name: 'Lavender Sachet', units: 2, revenue: 18.00, inventory: 8 }
+  ],
+  customerHealth: {
+    returning: 78,
+    new: 22,
+    engagement: 85,
+    atRisk: 12
+  },
+  inventory: {
+    lowStock: 3,
+    wasteTrend: 'decreasing',
+    spoilageRate: 2.1
+  },
+  profitability: {
+    grossMargin: 68.5,
+    cogs: 5120.30,
+    revenue: 15420.00
+  }
+};
 
 const VendorDashboardPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('overview');
-  const [timeRange, setTimeRange] = useState('daily');
-  const [location, setLocation] = useLocation();
+  const [activeTab, setActiveTab] = useState('pulse');
+  const [timeRange, setTimeRange] = useState('weekly');
+  const [seasonalFilter, setSeasonalFilter] = useState('current');
 
   const tabs = [
-    { id: 'overview', label: 'Overview', icon: BarChart3 },
+    { id: 'pulse', label: 'Pulse', icon: Activity },
     { id: 'analytics', label: 'Analytics', icon: TrendingUp },
     { id: 'crm', label: 'CRM', icon: Users },
     { id: 'inventory', label: 'Inventory', icon: Package },
@@ -70,343 +102,411 @@ const VendorDashboardPage: React.FC = () => {
     { id: 'settings', label: 'Settings', icon: Settings }
   ];
 
-  const performanceMetrics = [
-    {
-      title: 'Total Revenue',
-      value: `$${vendor.totalRevenue.toLocaleString()}`,
-      change: '+12.5%',
-      changeType: 'positive',
-      icon: DollarSign,
-      color: 'text-green-600'
-    },
-    {
-      title: 'Total Orders',
-      value: vendor.totalOrders.toLocaleString(),
-      change: '+8.2%',
-      changeType: 'positive',
-      icon: ShoppingCart,
-      color: 'text-blue-600'
-    },
-    {
-      title: 'Average Order Value',
-      value: `$${(vendor.totalRevenue / vendor.totalOrders).toFixed(2)}`,
-      change: '+3.1%',
-      changeType: 'positive',
-      icon: TrendingUp,
-      color: 'text-purple-600'
-    },
-    {
-      title: 'Top Product',
-      value: 'Handmade Soap',
-      change: '24 sold',
-      changeType: 'neutral',
-      icon: Package,
-      color: 'text-orange-600'
-    }
+  const seasonalFilters = [
+    { id: 'current', label: 'Current Season' },
+    { id: 'summer', label: 'Summer' },
+    { id: 'winter', label: 'Winter' },
+    { id: 'holiday', label: 'Holiday Season' }
   ];
 
+  const getChangeIcon = (changeType: string) => {
+    if (changeType === 'positive') return <ArrowUpRight className="w-4 h-4 text-green-600" />;
+    if (changeType === 'negative') return <ArrowDownRight className="w-4 h-4 text-red-600" />;
+    return <Minus className="w-4 h-4 text-gray-600" />;
+  };
+
+  const getChangeColor = (changeType: string) => {
+    if (changeType === 'positive') return 'text-green-600';
+    if (changeType === 'negative') return 'text-red-600';
+    return 'text-gray-600';
+  };
+
+  const getTrendIcon = (trend: string) => {
+    if (trend === 'up') return <TrendingUp className="w-4 h-4 text-green-600" />;
+    if (trend === 'down') return <TrendingDown className="w-4 h-4 text-red-600" />;
+    return <Minus className="w-4 h-4 text-gray-600" />;
+  };
+
   return (
-    <div className="min-h-screen bg-white">
-      {/* Secondary Navigation Tabs */}
-      <div className="bg-blue-50 border-b border-green-700 shadow-sm sticky top-14 z-30">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="flex space-x-8">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => {
-                    if (tab.id === 'analytics') {
-                      setLocation('/dashboard/vendor/analytics');
-                    } else if (tab.id === 'products') {
-                      setLocation('/dashboard/vendor/products');
-                    } else if (tab.id === 'orders') {
-                      setLocation('/dashboard/orders');
-                    } else if (tab.id === 'inventory') {
-                      setLocation('/dashboard/vendor/inventory');
-                    } else if (tab.id === 'crm') {
-                      setLocation('/dashboard/vendor/crm');
-                    } else if (tab.id === 'settings') {
-                      setLocation('/dashboard/vendor/site-settings');
-                    } else {
-                      setActiveTab(tab.id as any);
-                    }
-                  }}
-                  className={`flex items-center gap-2 px-6 py-4 font-medium transition-colors whitespace-nowrap ${
-                    activeTab === tab.id
-                      ? 'bg-[#F7F2EC] text-green-700 border-b-2 border-green-700'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
+    <div className="min-h-screen bg-[#F7F2EC]">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <img 
+              src={vendor.avatar} 
+              alt={vendor.name}
+              className="w-12 h-12 rounded-full border-2 border-gray-200"
+            />
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">{vendor.storeName}</h1>
+              <p className="text-gray-600">Welcome back, {vendor.name}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+                            <button 
+                  className="p-2 text-gray-400 hover:text-gray-600"
+                  title="Notifications"
+                  aria-label="View notifications"
                 >
-                  <Icon className="w-4 h-4" />
-                  {tab.label}
+                  <Bell className="w-6 h-6" />
                 </button>
-              );
-            })}
+                <button 
+                  className="p-2 text-gray-400 hover:text-gray-600"
+                  title="Settings"
+                  aria-label="Open settings"
+                >
+                  <Settings className="w-6 h-6" />
+                </button>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-8 mt-12">
-        {/* Hero Banner */}
-        <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-100 shadow-xl mb-6 hover:shadow-2xl transition-shadow duration-300">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold mb-2 text-gray-900">Dashboard Overview</h2>
-              <p className="text-gray-600">Track your business performance and stay ahead</p>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-gray-900">{vendor.averageRating}</div>
-                <div className="text-sm text-gray-600">Average Rating</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-gray-900">{vendor.totalProducts}</div>
-                <div className="text-sm text-gray-600">Active Products</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-gray-900">{vendor.totalCustomers}</div>
-                <div className="text-sm text-gray-600">Total Customers</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Inspirational Quote */}
-        <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm mb-6">
-          <InspirationalQuote />
-        </div>
-
-        {/* Performance Tiles */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-          {performanceMetrics.map((metric, index) => {
-            const Icon = metric.icon;
+      {/* Navigation Tabs */}
+      <div className="bg-white border-b border-gray-200 px-6">
+        <div className="flex space-x-8">
+          {tabs.map((tab) => {
+            const Icon = tab.icon;
             return (
-              <motion.div
-                key={metric.title}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm"
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  activeTab === tab.id
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
               >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">{metric.title}</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">{metric.value}</p>
-                    <div className="flex items-center gap-1 mt-2">
-                      {metric.changeType === 'positive' ? (
-                        <ArrowUpRight className="w-4 h-4 text-green-600" />
-                      ) : metric.changeType === 'negative' ? (
-                        <ArrowDownRight className="w-4 h-4 text-red-600" />
-                      ) : null}
-                      <span className={`text-sm font-medium ${
-                        metric.changeType === 'positive' ? 'text-green-600' : 
-                        metric.changeType === 'negative' ? 'text-red-600' : 'text-gray-600'
-                      }`}>
-                        {metric.change}
-                      </span>
-                    </div>
-                  </div>
-                  <div className={`p-3 rounded-lg bg-white shadow-sm`}>
-                    <Icon className={`w-6 h-6 ${metric.color}`} />
-                  </div>
-                </div>
-              </motion.div>
+                <Icon className="w-5 h-5" />
+                {tab.label}
+              </button>
             );
           })}
         </div>
+      </div>
 
-        {/* Time Range Toggle */}
-        <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm mb-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900">Performance Overview</h3>
-            <div className="flex bg-white rounded-lg p-1 shadow-sm">
-              {['daily', 'weekly', 'monthly'].map((range) => (
-                <button
-                  key={range}
-                  onClick={() => setTimeRange(range)}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    timeRange === range
-                      ? 'bg-blue-500 text-white'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
+      {/* Main Content */}
+      <div className="p-6">
+        {activeTab === 'pulse' && (
+          <div className="space-y-6">
+            {/* Header with Seasonal Filter */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900">Business Pulse</h2>
+                <p className="text-gray-600 mt-1">Your business at a glance - updated in real-time</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <select
+                  value={seasonalFilter}
+                  onChange={(e) => setSeasonalFilter(e.target.value)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  title="Select seasonal filter"
+                  aria-label="Select seasonal filter"
                 >
-                  {range.charAt(0).toUpperCase() + range.slice(1)}
+                  {seasonalFilters.map((filter) => (
+                    <option key={filter.id} value={filter.id}>{filter.label}</option>
+                  ))}
+                </select>
+                <button 
+                  className="p-2 text-gray-400 hover:text-gray-600"
+                  title="Filter options"
+                  aria-label="Open filter options"
+                >
+                  <Filter className="w-5 h-5" />
                 </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Business Health & AI Insights */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          {/* Business Health */}
-          <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Business Health</h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <CheckCircle className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">Inventory Status</p>
-                    <p className="text-sm text-gray-600">All products in stock</p>
-                  </div>
-                </div>
-                <span className="text-sm text-green-600 font-medium">Good</span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-yellow-100 rounded-lg">
-                    <AlertTriangle className="w-5 h-5 text-yellow-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">Customer Satisfaction</p>
-                    <p className="text-sm text-gray-600">4.8/5 average rating</p>
-                  </div>
-                </div>
-                <span className="text-sm text-yellow-600 font-medium">Excellent</span>
               </div>
             </div>
-          </div>
 
-          {/* AI Insights */}
-          <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">AI Insights</h3>
-            <div className="space-y-4">
-              <div className="p-3 bg-white rounded-lg shadow-sm">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <TrendingUp className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">Revenue Opportunity</p>
-                    <p className="text-sm text-gray-600">Consider increasing prices by 5-10% on your top-selling products</p>
-                  </div>
+            {/* Must-Have Top-Level Metrics */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Pending Orders */}
+              <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Pending Orders</h3>
+                                  <button 
+                  className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
+                  title="View fulfillment queue"
+                  aria-label="View fulfillment queue"
+                >
+                  View Queue
+                  <ChevronRight className="w-4 h-4" />
+                </button>
                 </div>
-              </div>
-              <div className="p-3 bg-white rounded-lg shadow-sm">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <Package className="w-5 h-5 text-purple-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900">Inventory Alert</p>
-                    <p className="text-sm text-gray-600">Restock "Handmade Soap" - only 3 units remaining</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Actions & Recent Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          {/* Quick Actions */}
-          <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <button className="flex flex-col items-center gap-2 p-4 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors shadow-sm">
-                <Package className="w-6 h-6 text-blue-600" />
-                <span className="text-sm font-medium text-gray-900">Add Product</span>
-              </button>
-              <button className="flex flex-col items-center gap-2 p-4 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors shadow-sm">
-                <BarChart3 className="w-6 h-6 text-green-600" />
-                <span className="text-sm font-medium text-gray-900">View Analytics</span>
-              </button>
-              <button className="flex flex-col items-center gap-2 p-4 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors shadow-sm">
-                <MessageSquare className="w-6 h-6 text-purple-600" />
-                <span className="text-sm font-medium text-gray-900">Messages</span>
-              </button>
-              <button className="flex flex-col items-center gap-2 p-4 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 transition-colors shadow-sm">
-                <Settings className="w-6 h-6 text-gray-600" />
-                <span className="text-sm font-medium text-gray-900">Settings</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Recent Orders */}
-          <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Orders</h3>
-            <div className="space-y-3">
-              {recentOrders.map((order) => (
-                <div key={order.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg bg-white shadow-sm">
-                  <div>
-                    <p className="font-medium text-gray-900">{order.customer}</p>
-                    <p className="text-sm text-gray-600">{order.product}</p>
-                    <p className="text-xs text-gray-500">{order.date}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium text-gray-900">${order.amount}</p>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      order.status === 'Delivered' ? 'bg-green-100 text-green-800' :
-                      order.status === 'In Transit' ? 'bg-blue-100 text-blue-800' :
-                      'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {order.status}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Messages & Achievements */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Recent Messages */}
-          <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Messages</h3>
-            <div className="space-y-3">
-              {recentMessages.map((message) => (
-                <div key={message.id} className={`flex items-center gap-3 p-3 border border-gray-200 rounded-lg bg-white shadow-sm ${
-                  message.unread ? 'bg-blue-50' : ''
-                }`}>
-                  <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-medium text-gray-600">
-                      {message.customer.split(' ').map(n => n[0]).join('')}
-                    </span>
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900">{message.customer}</p>
-                    <p className="text-sm text-gray-600">{message.message}</p>
-                    <p className="text-xs text-gray-500">{message.time}</p>
-                  </div>
-                  {message.unread && (
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Achievements & Milestones */}
-          <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Achievements & Milestones</h3>
-            <div className="grid grid-cols-2 gap-4">
-              {achievements.map((achievement) => (
-                <div key={achievement.id} className={`p-4 rounded-lg border ${
-                  achievement.achieved 
-                    ? 'bg-white border-green-200 shadow-sm' 
-                    : 'bg-gray-50 border-gray-200'
-                }`}>
-                  <div className="text-2xl mb-2">{achievement.icon}</div>
-                  <h4 className="font-medium text-gray-900 text-sm">{achievement.title}</h4>
-                  <p className="text-xs text-gray-600 mt-1">{achievement.description}</p>
-                  {achievement.achieved && (
-                    <div className="flex items-center gap-1 mt-2">
-                      <CheckCircle className="w-3 h-3 text-green-600" />
-                      <span className="text-xs text-green-600 font-medium">Achieved</span>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-3xl font-bold text-gray-900">{pulseData.pendingOrders.count}</span>
+                    <div className="flex items-center gap-1">
+                      {getChangeIcon(pulseData.pendingOrders.changeType)}
+                      <span className={`text-sm font-medium ${getChangeColor(pulseData.pendingOrders.changeType)}`}>
+                        {pulseData.pendingOrders.change}
+                      </span>
                     </div>
-                  )}
+                  </div>
+                  <p className="text-2xl font-bold text-green-600">
+                    ${pulseData.pendingOrders.value.toLocaleString()}
+                  </p>
+                  <p className="text-sm text-gray-600">Total value pending</p>
                 </div>
-              ))}
+              </div>
+
+              {/* Open Sales Windows */}
+              <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Sales Windows</h3>
+                  <Calendar className="w-5 h-5 text-blue-600" />
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-3xl font-bold text-gray-900">{pulseData.salesWindows.upcoming}</span>
+                    <span className="text-sm text-gray-600">Upcoming</span>
+                  </div>
+                  <p className="text-lg font-medium text-gray-900">{pulseData.salesWindows.totalTraffic}</p>
+                  <p className="text-sm text-gray-600">Orders associated</p>
+                  <div className="text-xs text-blue-600 font-medium">
+                    {pulseData.salesWindows.nextEvent}
+                  </div>
+                </div>
+              </div>
+
+              {/* AI Insight Card */}
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg p-6 border border-blue-200 shadow-sm">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <Brain className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900">AI Insight</h3>
+                </div>
+                <p className="text-gray-800 font-medium mb-3">
+                  Sales are up 12% vs last week, but average basket size is down. Recommend promoting bundles.
+                </p>
+                <div className="flex items-center gap-2 text-sm text-blue-600">
+                  <Sparkles className="w-4 h-4" />
+                  <span>Updated 2 hours ago</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Revenue Snapshots */}
+            <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold text-gray-900">Revenue Pulse</h3>
+                <div className="flex bg-white rounded-lg p-1 shadow-sm">
+                  {['daily', 'weekly', 'monthly'].map((range) => (
+                    <button
+                      key={range}
+                      onClick={() => setTimeRange(range)}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                        timeRange === range
+                          ? 'bg-blue-500 text-white'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      {range.charAt(0).toUpperCase() + range.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-600">Today</span>
+                    <div className="flex items-center gap-1">
+                      {getChangeIcon('positive')}
+                      <span className="text-sm font-medium text-green-600">
+                        {pulseData.revenue.todayChange}
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-2xl font-bold text-gray-900">
+                    ${pulseData.revenue.today.toLocaleString()}
+                  </p>
+                  <div className="w-full bg-gray-200 rounded-full h-1 mt-2">
+                    <div className="bg-green-500 h-1 rounded-full" style={{ width: '75%' }}></div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-600">This Week</span>
+                    <div className="flex items-center gap-1">
+                      {getChangeIcon('positive')}
+                      <span className="text-sm font-medium text-green-600">
+                        {pulseData.revenue.weekChange}
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-2xl font-bold text-gray-900">
+                    ${pulseData.revenue.thisWeek.toLocaleString()}
+                  </p>
+                  <div className="w-full bg-gray-200 rounded-full h-1 mt-2">
+                    <div className="bg-green-500 h-1 rounded-full" style={{ width: '85%' }}></div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-gray-600">This Month</span>
+                    <div className="flex items-center gap-1">
+                      {getChangeIcon('positive')}
+                      <span className="text-sm font-medium text-green-600">
+                        {pulseData.revenue.monthChange}
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-2xl font-bold text-gray-900">
+                    ${pulseData.revenue.thisMonth.toLocaleString()}
+                  </p>
+                  <div className="w-full bg-gray-200 rounded-full h-1 mt-2">
+                    <div className="bg-green-500 h-1 rounded-full" style={{ width: '65%' }}></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Secondary KPI Panels */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Order Funnel */}
+              <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Funnel</h3>
+                <div className="space-y-4">
+                  {Object.entries(pulseData.orderFunnel).map(([stage, count]) => (
+                    <div key={stage} className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-3 h-3 rounded-full ${
+                          stage === 'new' ? 'bg-blue-500' :
+                          stage === 'inProgress' ? 'bg-yellow-500' :
+                          stage === 'ready' ? 'bg-orange-500' :
+                          'bg-green-500'
+                        }`}></div>
+                        <span className="text-sm font-medium text-gray-700 capitalize">
+                          {stage === 'inProgress' ? 'In Progress' : stage}
+                        </span>
+                      </div>
+                      <span className="text-lg font-bold text-gray-900">{count}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Product Performance */}
+              <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Performers</h3>
+                <div className="space-y-3">
+                  {pulseData.topProducts.map((product, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm">
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-medium text-gray-500">#{index + 1}</span>
+                        <div>
+                          <p className="font-medium text-gray-900">{product.name}</p>
+                          <p className="text-sm text-gray-600">{product.units} units</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium text-gray-900">${product.revenue.toLocaleString()}</p>
+                        {getTrendIcon(product.trend)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Customer Health & Inventory */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Customer Health */}
+              <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Customer Health</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Returning</span>
+                    <span className="text-lg font-bold text-green-600">{pulseData.customerHealth.returning}%</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">New</span>
+                    <span className="text-lg font-bold text-blue-600">{pulseData.customerHealth.new}%</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Engagement</span>
+                    <span className="text-lg font-bold text-purple-600">{pulseData.customerHealth.engagement}%</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">At Risk</span>
+                    <span className="text-lg font-bold text-red-600">{pulseData.customerHealth.atRisk}%</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Inventory Status */}
+              <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Inventory Status</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Low Stock Alerts</span>
+                    <span className="text-lg font-bold text-orange-600">{pulseData.inventory.lowStock}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Waste Trend</span>
+                    <span className="text-lg font-bold text-green-600 capitalize">{pulseData.inventory.wasteTrend}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Spoilage Rate</span>
+                    <span className="text-lg font-bold text-blue-600">{pulseData.inventory.spoilageRate}%</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Profitability Pulse */}
+              <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Profitability</h3>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Gross Margin</span>
+                    <span className="text-lg font-bold text-green-600">{pulseData.profitability.grossMargin}%</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">COGS</span>
+                    <span className="text-lg font-bold text-red-600">${pulseData.profitability.cogs.toLocaleString()}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Revenue</span>
+                    <span className="text-lg font-bold text-green-600">${pulseData.profitability.revenue.toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Underperformers Alert */}
+            <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Underperformers</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {pulseData.underperformers.map((product, index) => (
+                  <div key={index} className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border-l-4 border-orange-400">
+                    <div>
+                      <p className="font-medium text-gray-900">{product.name}</p>
+                      <p className="text-sm text-gray-600">{product.units} units sold</p>
+                      <p className="text-sm text-orange-600">{product.inventory} in inventory</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium text-gray-900">${product.revenue.toLocaleString()}</p>
+                      <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
+                        Take Action
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        )}
+
+        {/* Other tabs content would go here */}
+        {activeTab !== 'pulse' && (
+          <div className="text-center py-12">
+            <h3 className="text-lg font-medium text-gray-900 mb-2">{tabs.find(t => t.id === activeTab)?.label} Coming Soon</h3>
+            <p className="text-gray-600">This section is under development</p>
+          </div>
+        )}
       </div>
     </div>
   );

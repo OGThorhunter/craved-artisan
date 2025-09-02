@@ -57,8 +57,8 @@
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.35.1",
     "vite": "^7.0.4",
-    "vite-plugin-checker": "^0.10.2",
-    "vite-plugin-inspect": "^11.3.2",
+    "vite-plugin-checker": "^0.10.3",
+    "vite-plugin-inspect": "^11.3.3",
     "vitest": "^2.0.0"
   }
 }

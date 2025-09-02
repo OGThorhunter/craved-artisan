@@ -1,0 +1,5 @@
+[33me7a8a96[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mrefactor/markets-vs-sales-windows[m[33m)[m VD6
+[33m04c31aa[m VD5
+[33m4160f44[m fix(analytics): import type for ComprehensiveFinancialsData from useFinancials
+[33m78375e6[m vd4
+[33m014f55b[m fix(analytics): resolve JSX syntax errors in RecurringManager and fix tab routing

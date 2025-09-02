@@ -7,7 +7,7 @@ import { Layout } from './components/Layout';
 import { QueryProvider } from './lib/query';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
-import { SignupPage } from './pages/SignupPage';
+import SignupPage from './pages/SignupPage';
 import { JoinPage } from './pages/JoinPage';
 import { JoinVendorPage } from './pages/JoinVendorPage';
 import { JoinCustomerPage } from './pages/JoinCustomerPage';
@@ -34,6 +34,7 @@ import BatchPricingPage from './pages/BatchPricingPage';
 import VendorRelationshipsPage from './pages/vendor/VendorRelationshipsPage';
 import VendorEventsPage from './pages/vendor/VendorEventsPage';
 import VendorFinancialsPage from './pages/vendor/VendorFinancialsPage';
+import PulsePage from './pages/dashboard/vendor/PulsePage';
 
 import DemoStorefrontPage from './pages/vendor/DemoStorefrontPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
@@ -60,6 +61,7 @@ import NotFoundPage from './pages/NotFoundPage';
 import MaintenancePage from './pages/MaintenancePage';
 import VendorAnalyticsPage from './pages/VendorAnalyticsPage';
 import VendorAnalyticsKpiPage from './pages/dashboard/vendor/analytics';
+import VendorDashboardPage from './pages/dashboard/vendor';
 import { VendorFinancialPage } from './pages/VendorFinancialPage';
 import VendorOnboardingPage from './pages/VendorOnboardingPage';
 import TestDataPage from './pages/TestDataPage';
@@ -130,7 +132,7 @@ function App() {
             </Route>
             <Route path="/dashboard/vendor">
               <ProtectedRoute role="VENDOR">
-                <VendorAnalyticsKpiPage />
+                <VendorDashboardPage />
               </ProtectedRoute>
             </Route>
             <Route path="/dashboard/event-coordinator">
@@ -279,6 +281,12 @@ function App() {
             <Route path="/dashboard/vendor/relationships">
               <ProtectedRoute role="VENDOR">
                 <VendorRelationshipsPage />
+              </ProtectedRoute>
+            </Route>
+
+            <Route path="/dashboard/vendor/pulse">
+              <ProtectedRoute role="VENDOR">
+                <PulsePage />
               </ProtectedRoute>
             </Route>
 

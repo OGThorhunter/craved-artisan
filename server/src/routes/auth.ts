@@ -1,299 +1,169 @@
-import { Router, Request, Response, NextFunction } from 'express';
-import bcrypt from 'bcryptjs';
-import { Role } from '@prisma/client';
-import { requireAuth } from '../middleware/auth';
+import { Router } from 'express';
+import bcrypt from 'bcrypt';
 import { z } from 'zod';
-import prisma from '../lib/prisma';
+import { logger } from '../logger';
+import { requireAuth } from '../middleware/session-simple';
+import type { LoginRequest, RegisterRequest, AuthResponse, AuthenticatedRequest } from '../types/session';
 
 const router = Router();
 
-// Zod schemas for validation
-const registerSchema = z.object({
-  email: z.string().email('Please provide a valid email address'),
-  password: z.string()
-    .min(8, 'Password must be at least 8 characters long')
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, 'Password must contain at least one uppercase letter, one lowercase letter, and one number'),
-  role: z.enum(['CUSTOMER', 'VENDOR', 'ADMIN', 'SUPPLIER', 'EVENT_COORDINATOR', 'DROPOFF']).default('CUSTOMER'),
-  firstName: z.string().min(1, 'First name is required').max(50, 'First name must be less than 50 characters'),
-  lastName: z.string().min(1, 'Last name is required').max(50, 'Last name must be less than 50 characters'),
-  phone: z.string().optional(),
-  bio: z.string().optional(),
-  website: z.string().url().optional().or(z.literal('')),
-});
-
+// Validation schemas
 const loginSchema = z.object({
-  email: z.string().email('Please provide a valid email address'),
-  password: z.string().min(1, 'Password is required'),
+  email: z.string().email(),
+  password: z.string().min(6)
 });
 
-// Custom Zod validation middleware
-const validateRequest = (schema: z.ZodSchema) => {
-  return async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const validatedData = await schema.parseAsync(req.body);
-      req.body = validatedData;
-      next();
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({
-          error: 'Validation failed',
-          details: error.errors.map(err => ({
-            field: err.path.join('.'),
-            message: err.message
-          }))
-        });
-      }
-      next(error);
-    }
-  };
-};
+const registerSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6),
+  name: z.string().min(2),
+  role: z.enum(['VENDOR', 'CUSTOMER'])
+});
 
-// Register route
-router.post('/register', validateRequest(registerSchema), async (req: Request, res: Response) => {
+// Login route
+router.post('/login', async (req, res) => {
   try {
-    const { email, password, role, firstName, lastName, phone, bio, website } = req.body;
-
-    // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email }
-    });
-
-    if (existingUser) {
+    const { email, password }: LoginRequest = req.body;
+    
+    // Validate input
+    const validation = loginSchema.safeParse({ email, password });
+    if (!validation.success) {
       return res.status(400).json({
-        error: 'User already exists',
-        message: 'An account with this email already exists'
+        success: false,
+        message: 'Invalid input data',
+        errors: validation.error.errors
       });
     }
 
-    // Hash password
-    const saltRounds = 12;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-    // Create user and profile in a transaction
-    const result = await prisma.$transaction(async (tx) => {
-      // Create user
-      const user = await tx.user.create({
-        data: {
-          email,
-          password: hashedPassword,
-          role: role as Role,
+    // TODO: Replace with actual database query
+    // For now, use mock data
+    if (email === 'test@example.com' && password === 'password123') {
+      console.log('🔍 [DEBUG] Login successful, setting session data...');
+      console.log('🔍 [DEBUG] Session ID before:', req.sessionID);
+      console.log('🔍 [DEBUG] Session data before:', JSON.stringify(req.session, null, 2));
+      
+      req.session.userId = 'mock-user-id';
+      req.session.email = email;
+      req.session.role = 'VENDOR';
+      
+      console.log('🔍 [DEBUG] Session data after setting:', JSON.stringify(req.session, null, 2));
+      
+      // Force session save
+      req.session.save((err) => {
+        if (err) {
+          console.error('🔍 [DEBUG] Session save error:', err);
+        } else {
+          console.log('🔍 [DEBUG] Session saved successfully');
         }
       });
-
-      // Create profile
-      const profile = await tx.profile.create({
-        data: {
-          firstName,
-          lastName,
-          phone,
-          bio,
-          website,
-          userId: user.id,
+      
+      logger.info({ email, userId: req.session.userId }, 'User logged in');
+      
+      return res.json({
+        success: true,
+        message: 'Login successful',
+        user: {
+          userId: req.session.userId,
+          email: req.session.email,
+          role: req.session.role,
+          isAuthenticated: true,
+          lastActivity: new Date()
         }
       });
+    }
 
-      return { user, profile };
-    });
-
-    // Set session
-    req.session.userId = result.user.id;
-
-    // Return user data (without password)
-    return res.status(201).json({
-      message: 'Account created successfully',
-      user: {
-        id: result.user.id,
-        email: result.user.email,
-        role: result.user.role,
-        profile: {
-          firstName: result.profile.firstName,
-          lastName: result.profile.lastName,
-          phone: result.profile.phone,
-          bio: result.profile.bio,
-          website: result.profile.website,
-        }
-      }
+    return res.status(401).json({
+      success: false,
+      message: 'Invalid email or password'
     });
 
   } catch (error) {
-    console.error('Register error:', error);
-    return res.status(400).json({
-      error: 'Internal server error',
-      message: 'Failed to create account'
+    logger.error({ error }, 'Login error');
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error'
     });
   }
 });
 
-// Login route
-router.post('/login', validateRequest(loginSchema), async (req: Request, res: Response) => {
+// Register route
+router.post('/register', async (req, res) => {
   try {
-    const { email, password } = req.body;
-
-    // Find user with profile
-    const user = await prisma.user.findUnique({
-      where: { email },
-      include: {
-        profile: true
-      }
-    });
-
-    if (!user) {
+    const { email, password, name, role }: RegisterRequest = req.body;
+    
+    // Validate input
+    const validation = registerSchema.safeParse({ email, password, name, role });
+    if (!validation.success) {
       return res.status(400).json({
-        error: 'Invalid credentials',
-        message: 'Email or password is incorrect'
+        success: false,
+        message: 'Invalid input data',
+        errors: validation.error.errors
       });
     }
 
-    // Check password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res.status(400).json({
-        error: 'Invalid credentials',
-        message: 'Email or password is incorrect'
-      });
-    }
-
-    // Set session
-    req.session.userId = user.id;
-
-    // Return user data (without password)
-    return res.status(200).json({
-      message: 'Login successful',
+    // TODO: Replace with actual database insertion
+    // For now, just return success
+    logger.info({ email, name, role }, 'User registration attempted');
+    
+    return res.json({
+      success: true,
+      message: 'Registration successful (mock)',
       user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        profile: user.profile ? {
-          firstName: user.profile.firstName,
-          lastName: user.profile.lastName,
-          phone: user.profile.phone,
-          bio: user.profile.bio,
-          website: user.profile.website,
-        } : null
+        userId: 'mock-new-user-id',
+        email,
+        role,
+        isAuthenticated: false,
+        lastActivity: new Date()
       }
     });
 
   } catch (error) {
-    console.error('Login error:', error);
-    return res.status(400).json({
-      error: 'Internal server error',
-      message: 'Failed to authenticate'
+    logger.error({ error }, 'Registration error');
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error'
     });
   }
 });
 
 // Logout route
-router.post('/logout', (req: Request, res: Response) => {
+router.post('/logout', requireAuth, (req: AuthenticatedRequest, res) => {
   req.session.destroy((err) => {
     if (err) {
-      console.error('Logout error:', err);
-      return res.status(400).json({
-        error: 'Internal server error',
-        message: 'Failed to logout'
+      logger.error({ error: err }, 'Logout error');
+      return res.status(500).json({
+        success: false,
+        message: 'Error during logout'
       });
     }
-
-    res.clearCookie('connect.sid');
+    
+    logger.info({ userId: req.user?.userId }, 'User logged out');
     return res.json({
+      success: true,
       message: 'Logout successful'
     });
   });
 });
 
-// Get current user route
-router.get('/me', requireAuth, async (req: Request, res: Response) => {
-  try {
-    const user = await prisma.user.findUnique({
-      where: { id: req.session.userId! },
-      include: {
-        profile: true
-      }
-    });
-
-    if (!user) {
-      return res.status(400).json({
-        error: 'User not found',
-        message: 'User account not found'
-      });
-    }
-
+// Check session route
+router.get('/session', (req, res) => {
+  if (req.session.userId) {
     return res.json({
+      success: true,
       user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        profile: user.profile ? {
-          firstName: user.profile.firstName,
-          lastName: user.profile.lastName,
-          phone: user.profile.phone,
-          bio: user.profile.bio,
-          website: user.profile.website,
-        } : null
+        userId: req.session.userId,
+        email: req.session.email,
+        role: req.session.role,
+        isAuthenticated: true,
+        lastActivity: new Date()
       }
-    });
-
-  } catch (error) {
-    console.error('Get current user error:', error);
-    return res.status(400).json({
-      error: 'Internal server error',
-      message: 'Failed to get user data'
     });
   }
+  
+  return res.status(401).json({
+    success: false,
+    message: 'No active session'
+  });
 });
 
-// Check session route (for frontend to check if user is logged in)
-router.get('/session', async (req: Request, res: Response) => {
-  try {
-    if (!req.session.userId) {
-      return res.status(200).json({
-        authenticated: false,
-        message: 'No active session'
-      });
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { id: req.session.userId },
-      include: {
-        profile: true
-      }
-    });
-
-    if (!user) {
-      // Clear invalid session
-      req.session.destroy((err) => {
-        if (err) {
-          console.error('Error destroying session:', err);
-        }
-      });
-      return res.status(200).json({
-        authenticated: false,
-        message: 'Invalid session'
-      });
-    }
-
-    return res.json({
-      authenticated: true,
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        profile: user.profile ? {
-          firstName: user.profile.firstName,
-          lastName: user.profile.lastName,
-          phone: user.profile.phone,
-          bio: user.profile.bio,
-          website: user.profile.website,
-        } : null
-      }
-    });
-
-  } catch (error) {
-    console.error('Session check error:', error);
-    return res.status(500).json({
-      error: 'Internal server error',
-      message: 'Failed to check session'
-    });
-  }
-});
-
-export default router; 
+export default router;

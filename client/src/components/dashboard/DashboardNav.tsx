@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 
 const navItems = [
-  { label: 'Snapshot', href: '/dashboard', icon: Home },
+  { label: 'Pulse', href: '/dashboard', icon: Home },
   { label: 'Analytics', href: '/dashboard/vendor/analytics', icon: BarChart3 },
   { label: 'Products', href: '/dashboard/vendor/products', icon: Package },
           { label: 'Sales Events', href: '/dashboard/vendor/orders', icon: ShoppingCart },
