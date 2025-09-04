@@ -52,6 +52,7 @@ import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import VendorWatchlistPage from './pages/VendorWatchlistPage';
 import VendorOrdersPage from './pages/VendorOrdersPage';
+import VendorSalesWindowsPage from './pages/VendorSalesWindowsPage';
 import VendorDeliveryBatchingPage from './pages/VendorDeliveryBatchingPage';
 import VendorDeliveryPage from './pages/VendorDeliveryPage';
 import CustomerOrdersPage from './pages/CustomerOrdersPage';
@@ -82,6 +83,15 @@ function App() {
             <Layout>
             <Switch>
             <Route path="/" component={HomePage} />
+            <Route path="/test">
+              <div className="min-h-screen bg-blue-50 flex items-center justify-center">
+                <div className="text-center">
+                  <h1 className="text-4xl font-bold text-blue-900 mb-4">Test Page Working!</h1>
+                  <p className="text-blue-700">If you can see this, React is loading correctly.</p>
+                  <a href="/" className="text-blue-600 underline">Go to Home</a>
+                </div>
+              </div>
+            </Route>
             <Route path="/login" component={LoginPage} />
             <Route path="/signup" component={SignupPage} />
             <Route path="/join" component={JoinPage} />
@@ -167,7 +177,7 @@ function App() {
             </Route>
             <Route path="/dashboard/vendor/products">
               <ProtectedRoute role="VENDOR">
-                <EnhancedVendorProductsPage />
+                <VendorProductsPage />
               </ProtectedRoute>
             </Route>
             <Route path="/dashboard/vendor/recipes">
@@ -266,9 +276,9 @@ function App() {
             </Route>
 
             {/* Add missing vendor dashboard routes */}
-            <Route path="/dashboard/vendor/orders">
+            <Route path="/dashboard/vendor/sales-windows">
               <ProtectedRoute role="VENDOR">
-                <VendorOrdersPage />
+                <VendorSalesWindowsPage />
               </ProtectedRoute>
             </Route>
             

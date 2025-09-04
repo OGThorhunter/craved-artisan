@@ -19,5 +19,15 @@ export default tseslint.config([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      '@typescript-eslint/consistent-type-imports': [
+        'error',
+        { 
+          prefer: 'type-imports',
+          disallowTypeAnnotations: false
+        }
+      ],
+      '@typescript-eslint/no-import-type-side-effects': 'error',
+    },
   },
 ])

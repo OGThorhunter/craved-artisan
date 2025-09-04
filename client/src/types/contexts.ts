@@ -13,15 +13,7 @@ export type Market = {
   locationId?: string | null;
 };
 
-export type SalesWindow = {
-  id: string; 
-  vendorId: string; 
-  title: string;
-  openAt: string; 
-  closeAt: string;
-  fulfillStart?: string | null; 
-  fulfillEnd?: string | null;
-  status: 'DRAFT' | 'SCHEDULED' | 'OPEN' | 'CLOSED' | 'CANCELED';
-  marketId?: string | null;
-};
+// SalesWindow type moved to sales-windows.ts to avoid conflicts
+
+
 

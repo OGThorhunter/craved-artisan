@@ -258,7 +258,7 @@ const DashboardPage: React.FC = () => {
               Sales Events
             </h3>
             <button
-              onClick={() => setLocation('/dashboard/vendor/orders')}
+              onClick={() => setLocation('/dashboard/vendor/sales-windows')}
               className="bg-[#8B4513] hover:bg-[#A0522D] text-white px-4 py-2 rounded-lg transition-colors shadow-md hover:shadow-lg text-sm"
             >
               View Sales Events →

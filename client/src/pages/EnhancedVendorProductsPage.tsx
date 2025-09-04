@@ -200,6 +200,10 @@ const EnhancedVendorProductsPage: React.FC = () => {
   
   // Trade supplies modal
   const [showTradeSuppliesModal, setShowTradeSuppliesModal] = useState(false);
+  const [showCustomIngredientForm, setShowCustomIngredientForm] = useState(false);
+  const [customIngredientInput, setCustomIngredientInput] = useState('');
+  const [customIngredientUnit, setCustomIngredientUnit] = useState('');
+  const [customIngredientLineId, setCustomIngredientLineId] = useState<string | null>(null);
   
   // Mock product cards for development
   const [productCards, setProductCards] = useState<ProductCard[]>([
@@ -400,6 +404,10 @@ const EnhancedVendorProductsPage: React.FC = () => {
     setEditingCard(null);
     setIngredientLines([]);
     setTradeSupplyLines([]);
+    setShowCustomIngredientForm(false);
+    setCustomIngredientInput('');
+    setCustomIngredientUnit('');
+    setCustomIngredientLineId(null);
     reset();
   };
 
@@ -423,17 +431,95 @@ const EnhancedVendorProductsPage: React.FC = () => {
     setIngredientLines(ingredientLines.map(line => {
       if (line.id === id) {
         const updated = { ...line, [field]: value };
-        // Recalculate cost based on ingredient selection
-        if (field === 'ingredientId' || field === 'quantity') {
-          const ingredient = MOCK_INGREDIENTS.find(ing => ing.id === updated.ingredientId);
-          if (ingredient) {
-            updated.cost = ingredient.costPerUnit * updated.quantity;
+        
+        if (field === 'ingredientId') {
+          if (value === 'custom') {
+            // Show custom ingredient form when custom is selected
+            setShowCustomIngredientForm(true);
+            // Set the current line ID to track which line is getting the custom ingredient
+            setCustomIngredientLineId(line.id);
+            setCustomIngredientInput('');
+            setCustomIngredientUnit('');
+          } else {
+            // Recalculate cost based on ingredient selection
+            const ingredient = MOCK_INGREDIENTS.find(ing => ing.id === updated.ingredientId);
+            if (ingredient) {
+              updated.cost = ingredient.costPerUnit * updated.quantity;
+            }
+          }
+        } else if (field === 'quantity') {
+          // Recalculate cost based on quantity change
+          if (updated.ingredientId && updated.ingredientId !== 'custom') {
+            const ingredient = MOCK_INGREDIENTS.find(ing => ing.id === updated.ingredientId);
+            if (ingredient) {
+              updated.cost = ingredient.costPerUnit * updated.quantity;
+            }
           }
         }
+        
         return updated;
       }
       return line;
     }));
+  };
+
+  // Custom ingredient management function
+  const addCustomIngredient = () => {
+    if (customIngredientInput.trim() && customIngredientLineId) {
+      const currentCategory = watch('category');
+      
+      if (currentCategory === 'food') {
+        // Update the existing ingredient line with custom ingredient data
+        setIngredientLines(ingredientLines.map(line => {
+          if (line.id === customIngredientLineId) {
+            return {
+              ...line,
+              ingredientId: `custom-${Date.now()}`,
+              unit: customIngredientUnit || 'pieces',
+              notes: 'Custom ingredient - added to inventory at zero stock'
+            };
+          }
+          return line;
+        }));
+        
+        toast.success('Custom ingredient added! It will be added to your inventory at zero stock.');
+      } else if (currentCategory === 'service') {
+        // Update the existing trade supply line with custom supply data
+        setTradeSupplyLines(tradeSupplyLines.map(line => {
+          if (line.id === customIngredientLineId) {
+            return {
+              ...line,
+              supplyId: `custom-${Date.now()}`,
+              unit: customIngredientUnit || 'pieces',
+              notes: 'Custom trade supply - added to inventory at zero stock'
+            };
+          }
+          return line;
+        }));
+        
+        toast.success('Custom trade supply added! It will be added to your inventory at zero stock.');
+      } else if (currentCategory === 'non-food') {
+        // Update the existing ingredient line with custom material data
+        setIngredientLines(ingredientLines.map(line => {
+          if (line.id === customIngredientLineId) {
+            return {
+              ...line,
+              ingredientId: `custom-${Date.now()}`,
+              unit: customIngredientUnit || 'pieces',
+              notes: 'Custom material - added to inventory at zero stock'
+            };
+          }
+          return line;
+        }));
+        
+        toast.success('Custom material added! It will be added to your inventory at zero stock.');
+      }
+      
+      setCustomIngredientInput('');
+      setCustomIngredientUnit('');
+      setShowCustomIngredientForm(false);
+      setCustomIngredientLineId(null);
+    }
   };
 
   // Trade supply management functions
@@ -456,13 +542,32 @@ const EnhancedVendorProductsPage: React.FC = () => {
     setTradeSupplyLines(tradeSupplyLines.map(line => {
       if (line.id === id) {
         const updated = { ...line, [field]: value };
-        // Recalculate cost based on supply selection
-        if (field === 'supplyId' || field === 'quantity') {
-          const supply = MOCK_TRADE_SUPPLIES.find(sup => sup.id === updated.supplyId);
-          if (supply) {
-            updated.cost = supply.costPerUnit * updated.quantity;
+        
+        if (field === 'supplyId') {
+          if (value === 'custom') {
+            // Show custom ingredient form when custom is selected
+            setShowCustomIngredientForm(true);
+            // Set the current line ID to track which line is getting the custom ingredient
+            setCustomIngredientLineId(line.id);
+            setCustomIngredientInput('');
+            setCustomIngredientUnit('');
+          } else {
+            // Recalculate cost based on supply selection
+            const supply = MOCK_TRADE_SUPPLIES.find(sup => sup.id === updated.supplyId);
+            if (supply) {
+              updated.cost = supply.costPerUnit * updated.quantity;
+            }
+          }
+        } else if (field === 'quantity') {
+          // Recalculate cost based on quantity change
+          if (updated.supplyId && updated.supplyId !== 'custom') {
+            const supply = MOCK_TRADE_SUPPLIES.find(sup => sup.id === updated.supplyId);
+            if (supply) {
+              updated.cost = supply.costPerUnit * updated.quantity;
+            }
           }
         }
+        
         return updated;
       }
       return line;
@@ -1132,6 +1237,92 @@ const EnhancedVendorProductsPage: React.FC = () => {
                      <p className="text-xs text-gray-500 mt-1">Upload a product image to help customers visualize your product</p>
                    </div>
 
+                   {/* Custom Material Management - Only for Non-Food Products */}
+                   {watch('category') === 'non-food' && (
+                     <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                       <div className="flex items-center justify-between mb-4">
+                         <h3 className="text-lg font-medium text-purple-900">Custom Material Management</h3>
+                         <div className="flex items-center gap-2">
+                           <button
+                             type="button"
+                             onClick={() => setShowCustomIngredientForm(true)}
+                             className="bg-purple-600 text-white px-3 py-1 rounded-md hover:bg-purple-700 transition-colors text-sm flex items-center gap-1"
+                           >
+                             <Plus className="w-4 w-4" />
+                             Add Custom Material
+                           </button>
+                         </div>
+                       </div>
+
+                       {/* Custom Material Disclaimer */}
+                       <div className="bg-purple-100 border border-purple-300 rounded-lg p-3 mb-3">
+                         <div className="flex items-start gap-2">
+                           <div className="w-4 h-4 bg-purple-500 rounded-full mt-0.5 flex-shrink-0"></div>
+                           <div className="text-xs text-purple-800">
+                             <p className="font-medium mb-1">Custom Material Notice</p>
+                             <p>When you add a custom material, it will automatically be added to your vendor inventory at zero stock. You can manage inventory levels later in your inventory dashboard.</p>
+                           </div>
+                         </div>
+                       </div>
+
+                       {/* Custom Material Form */}
+                       {showCustomIngredientForm && (
+                         <div className="bg-white rounded-lg border border-purple-200 p-3">
+                           <h5 className="text-sm font-medium text-purple-900 mb-3">Add Custom Material</h5>
+                           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                             <div>
+                               <label className="block text-xs font-medium text-purple-700 mb-1">
+                                 Material Name *
+                               </label>
+                               <input
+                                 type="text"
+                                 value={customIngredientInput}
+                                 onChange={(e) => setCustomIngredientInput(e.target.value)}
+                                 className="w-full px-3 py-2 border border-purple-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                                 placeholder="e.g., Custom Fabric"
+                               />
+                             </div>
+                             <div>
+                               <label className="block text-xs font-medium text-purple-700 mb-1">
+                                 Unit
+                               </label>
+                               <input
+                                 type="text"
+                                 value={customIngredientUnit}
+                                 onChange={(e) => setCustomIngredientUnit(e.target.value)}
+                                 className="w-full px-3 py-2 border border-purple-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+                                 placeholder="e.g., yard, piece"
+                               />
+                             </div>
+                             <div className="flex items-end gap-2">
+                               <button
+                                 type="button"
+                                 onClick={addCustomIngredient}
+                                 disabled={!customIngredientInput.trim()}
+                                 className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                 title="Add custom material"
+                               >
+                                 Add
+                               </button>
+                               <button
+                                 type="button"
+                                 onClick={() => {
+                                   setShowCustomIngredientForm(false);
+                                   setCustomIngredientInput('');
+                                   setCustomIngredientUnit('');
+                                 }}
+                                 className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors text-sm"
+                                 title="Cancel custom material"
+                               >
+                                 Cancel
+                               </button>
+                             </div>
+                           </div>
+                         </div>
+                       )}
+                     </div>
+                   )}
+
                                      {/* Ingredient Management - Only for Food Products */}
                    {watch('category') === 'food' && (
                      <div className="bg-green-50 p-4 rounded-lg border border-green-200">
@@ -1145,14 +1336,26 @@ const EnhancedVendorProductsPage: React.FC = () => {
                            >
                              Unit Converter
                            </button>
-                           <button
-                             type="button"
-                             onClick={addIngredientLine}
-                             className="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 transition-colors text-sm flex items-center gap-1"
-                           >
-                             <Plus className="w-4 h-4" />
-                             Add Ingredient
-                           </button>
+                                                       <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={addIngredientLine}
+                                className="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 transition-colors text-sm flex items-center gap-1"
+                                title="Add ingredient from existing inventory"
+                              >
+                                <Plus className="w-4 h-4" />
+                                Add Ingredient
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setShowCustomIngredientForm(true)}
+                                className="bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition-colors text-sm flex items-center gap-1"
+                                title="Add custom ingredient"
+                              >
+                                <Plus className="w-4 h-4" />
+                                Custom
+                              </button>
+                            </div>
                          </div>
                        </div>
                        
@@ -1161,21 +1364,24 @@ const EnhancedVendorProductsPage: React.FC = () => {
                        ) : (
                          <div className="space-y-3">
                            {ingredientLines.map((line, index) => (
+                             <>
                              <div key={line.id} className="grid grid-cols-12 gap-2 items-center p-3 bg-white rounded-md border border-green-200">
-                               <div className="col-span-5">
-                                 <select
-                                   value={line.ingredientId}
-                                   onChange={(e) => updateIngredientLine(line.id, 'ingredientId', e.target.value)}
-                                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
-                                 >
-                                   <option value="">Select Ingredient</option>
-                                   {MOCK_INGREDIENTS.map(ingredient => (
-                                     <option key={ingredient.id} value={ingredient.id}>
-                                       {ingredient.name} (${ingredient.costPerUnit}/{ingredient.unit})
-                                     </option>
-                                   ))}
-                                 </select>
-                               </div>
+                                                               <div className="col-span-5">
+                                  <select
+                                    value={line.ingredientId}
+                                    onChange={(e) => updateIngredientLine(line.id, 'ingredientId', e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                                    aria-label="Select ingredient"
+                                  >
+                                    <option value="">Select Ingredient</option>
+                                    {MOCK_INGREDIENTS.map(ingredient => (
+                                      <option key={ingredient.id} value={ingredient.id}>
+                                        {ingredient.name} (${ingredient.costPerUnit}/{ingredient.unit})
+                                      </option>
+                                    ))}
+                                    <option value="custom">+ Add Custom Ingredient</option>
+                                  </select>
+                                </div>
                                <div className="col-span-2">
                                  <input
                                    type="number"
@@ -1201,25 +1407,99 @@ const EnhancedVendorProductsPage: React.FC = () => {
                                <div className="col-span-2 text-sm text-gray-600">
                                  ${line.cost.toFixed(2)}
                                </div>
-                               <div className="col-span-1">
-                                 <button
-                                   type="button"
-                                   onClick={() => removeIngredientLine(line.id)}
-                                   className="text-red-600 hover:text-red-800 p-1"
-                                   aria-label="Remove ingredient line"
-                                 >
-                                   <X className="w-4 h-4" />
-                                 </button>
-                               </div>
-                             </div>
-                           ))}
-                           
-                           <div className="flex justify-between items-center pt-2 border-t border-green-200">
-                             <span className="text-sm font-medium text-green-900">Total Ingredient Cost:</span>
-                             <span className="text-lg font-semibold text-green-900">${getTotalIngredientCost().toFixed(2)}</span>
-                           </div>
+                                                               <div className="col-span-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => removeIngredientLine(line.id)}
+                                    className="text-red-600 hover:text-red-800 p-1"
+                                    aria-label="Remove ingredient line"
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </div>
+                              
+                              {/* Custom Ingredient Disclaimer */}
+                              {line.ingredientId === 'custom' && (
+                                <div className="col-span-12 mt-2">
+                                  <div className="bg-blue-100 border border-blue-300 rounded-lg p-3">
+                                    <div className="flex items-start gap-2">
+                                      <div className="w-4 h-4 bg-blue-500 rounded-full mt-0.5 flex-shrink-0"></div>
+                                      <div className="text-xs text-blue-800">
+                                        <p className="font-medium mb-1">Custom Ingredient Notice</p>
+                                        <p>This custom ingredient will be added to your vendor inventory at zero stock. You can manage inventory levels later in your inventory dashboard.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </>
+                          ))}
+                         
+                         <div className="flex justify-between items-center pt-2 border-t border-green-200">
+                           <span className="text-sm font-medium text-green-900">Total Ingredient Cost:</span>
+                           <span className="text-lg font-semibold text-green-900">${getTotalIngredientCost().toFixed(2)}</span>
+                         </div>
                          </div>
                        )}
+
+                                               {/* Custom Ingredient Form */}
+                        {showCustomIngredientForm && (
+                          <div className="bg-white rounded-lg border border-blue-200 p-3 mt-3">
+                            <h5 className="text-sm font-medium text-blue-900 mb-3">
+                              Add Custom Ingredient {customIngredientLineId && `(Line ${ingredientLines.findIndex(line => line.id === customIngredientLineId) + 1})`}
+                            </h5>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                              <div>
+                                <label className="block text-xs font-medium text-blue-700 mb-1">
+                                  Ingredient Name *
+                                </label>
+                                <input
+                                  type="text"
+                                  value={customIngredientInput}
+                                  onChange={(e) => setCustomIngredientInput(e.target.value)}
+                                  className="w-full px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                  placeholder="e.g., Organic Vanilla Extract"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-blue-700 mb-1">
+                                  Unit
+                                </label>
+                                <input
+                                  type="text"
+                                  value={customIngredientUnit}
+                                  onChange={(e) => setCustomIngredientUnit(e.target.value)}
+                                  className="w-full px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                  placeholder="e.g., ml, oz"
+                                />
+                              </div>
+                              <div className="flex items-end gap-2">
+                                <button
+                                  type="button"
+                                  onClick={addCustomIngredient}
+                                  disabled={!customIngredientInput.trim()}
+                                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                                  title="Add custom ingredient"
+                                >
+                                  Add
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setShowCustomIngredientForm(false);
+                                    setCustomIngredientInput('');
+                                    setCustomIngredientUnit('');
+                                  }}
+                                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors text-sm"
+                                  title="Cancel custom ingredient"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                      </div>
                    )}
 
@@ -1236,14 +1516,26 @@ const EnhancedVendorProductsPage: React.FC = () => {
                            >
                              View Available Supplies
                            </button>
-                           <button
-                             type="button"
-                             onClick={addTradeSupplyLine}
-                             className="bg-orange-600 text-white px-3 py-1 rounded-md hover:bg-orange-700 transition-colors text-sm flex items-center gap-1"
-                           >
-                             <Plus className="w-4 h-4" />
-                             Add Trade Supply
-                           </button>
+                                                       <div className="flex gap-2">
+                              <button
+                                type="button"
+                                onClick={addTradeSupplyLine}
+                                className="bg-orange-600 text-white px-3 py-1 rounded-md hover:bg-orange-700 transition-colors text-sm flex items-center gap-1"
+                                title="Add trade supply from existing inventory"
+                              >
+                                <Plus className="w-4 h-4" />
+                                Add Trade Supply
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setShowCustomIngredientForm(true)}
+                                className="bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition-colors text-sm flex items-center gap-1"
+                                title="Add custom trade supply"
+                              >
+                                <Plus className="w-4 h-4" />
+                                Custom
+                              </button>
+                            </div>
                          </div>
                        </div>
                        
@@ -1252,21 +1544,24 @@ const EnhancedVendorProductsPage: React.FC = () => {
                        ) : (
                          <div className="space-y-3">
                            {tradeSupplyLines.map((line, index) => (
+                             <>
                              <div key={line.id} className="grid grid-cols-12 gap-2 items-center p-3 bg-white rounded-md border border-orange-200">
-                               <div className="col-span-5">
-                                 <select
-                                   value={line.supplyId}
-                                   onChange={(e) => updateTradeSupplyLine(line.id, 'supplyId', e.target.value)}
-                                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
-                                 >
-                                   <option value="">Select Trade Supply</option>
-                                   {MOCK_TRADE_SUPPLIES.map(supply => (
-                                     <option key={supply.id} value={supply.id}>
-                                       {supply.name} (${supply.costPerUnit}/{supply.unit})
-                                     </option>
-                                   ))}
-                                 </select>
-                               </div>
+                                                               <div className="col-span-5">
+                                  <select
+                                    value={line.supplyId}
+                                    onChange={(e) => updateTradeSupplyLine(line.id, 'supplyId', e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+                                    aria-label="Select trade supply"
+                                  >
+                                    <option value="">Select Trade Supply</option>
+                                    {MOCK_TRADE_SUPPLIES.map(supply => (
+                                      <option key={supply.id} value={supply.id}>
+                                        {supply.name} (${supply.costPerUnit}/{supply.unit})
+                                      </option>
+                                    ))}
+                                    <option value="custom">+ Add Custom Trade Supply</option>
+                                  </select>
+                                </div>
                                <div className="col-span-2">
                                  <input
                                    type="number"
@@ -1292,25 +1587,44 @@ const EnhancedVendorProductsPage: React.FC = () => {
                                <div className="col-span-2 text-sm text-gray-600">
                                  ${line.cost.toFixed(2)}
                                </div>
-                               <div className="col-span-1">
-                                 <button
-                                   type="button"
-                                   onClick={() => removeTradeSupplyLine(line.id)}
-                                   className="text-red-600 hover:text-red-800 p-1"
-                                   aria-label="Remove trade supply line"
-                                 >
-                                   <X className="w-4 h-4" />
-                                 </button>
-                               </div>
-                             </div>
-                           ))}
-                           
-                           <div className="flex justify-between items-center pt-2 border-t border-orange-200">
-                             <span className="text-sm font-medium text-orange-900">Total Trade Supplies Cost:</span>
-                             <span className="text-lg font-semibold text-orange-900">${getTotalTradeSuppliesCost().toFixed(2)}</span>
-                           </div>
+                                                               <div className="col-span-1">
+                                  <button
+                                    type="button"
+                                    onClick={() => removeTradeSupplyLine(line.id)}
+                                    className="text-red-600 hover:text-red-800 p-1"
+                                    aria-label="Remove trade supply line"
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </button>
+                                </div>
+                              </div>
+                              
+                              {/* Custom Trade Supply Disclaimer */}
+                              {line.supplyId === 'custom' && (
+                                <div className="col-span-12 mt-2">
+                                  <div className="bg-blue-100 border border-blue-300 rounded-lg p-3">
+                                    <div className="flex items-start gap-2">
+                                      <div className="w-4 h-4 bg-blue-500 rounded-full mt-0.5 flex-shrink-0"></div>
+                                      <div className="text-xs text-blue-800">
+                                        <p className="font-medium mb-1">Custom Trade Supply Notice</p>
+                                        <p>This custom trade supply will be added to your vendor inventory at zero stock. You can manage inventory levels later in your inventory dashboard.</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </>
+                          ))}
+                         
+                         <div className="flex justify-between items-center pt-2 border-t border-orange-200">
+                           <span className="text-sm font-medium text-orange-900">Total Trade Supplies Cost:</span>
+                           <span className="text-lg font-semibold text-orange-900">${getTotalTradeSuppliesCost().toFixed(2)}</span>
+                         </div>
                          </div>
                        )}
+
+
+
                      </div>
                    )}
 

@@ -5,6 +5,8 @@ import { logger } from './logger';
 import { sessionMiddleware, attachUser } from './middleware/session-simple';
 import authRoutes from './routes/auth';
 import { pulseRouter } from './routes/pulse.router';
+import { vendorRouter } from './routes/vendor.router';
+import { ingredientsRouter } from './routes/ingredients.router';
 
 const app = express();
 const PORT = Number(process.env.PORT || 3001);
@@ -36,6 +38,12 @@ app.use('/api/auth', authRoutes);
 
 // Pulse routes
 app.use('/api', pulseRouter);
+
+// Vendor routes
+app.use('/api', vendorRouter);
+
+// Ingredients routes
+app.use('/api', ingredientsRouter);
 
 // Start server
 app.listen(PORT, () => {

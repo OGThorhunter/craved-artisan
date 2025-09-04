@@ -60,6 +60,11 @@ const YIELD_UNITS = ['pieces', 'servings', 'batches', 'loaves', 'cookies', 'cake
 
 export default function VendorRecipeCreatePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showUnitConverter, setShowUnitConverter] = useState(false);
+  const [showCustomIngredient, setShowCustomIngredient] = useState(false);
+  const [customIngredientName, setCustomIngredientName] = useState('');
+  const [customIngredientAmount, setCustomIngredientAmount] = useState(0);
+  const [customIngredientUnit, setCustomIngredientUnit] = useState('');
   const queryClient = useQueryClient();
 
   const { register, control, handleSubmit, reset, watch, formState: { errors } } = useForm<CreateRecipeData>({
@@ -134,6 +139,25 @@ export default function VendorRecipeCreatePage() {
       unit: '',
       notes: ''
     });
+  };
+
+  const addCustomIngredient = () => {
+    if (customIngredientName.trim() && customIngredientAmount > 0 && customIngredientUnit.trim()) {
+      append({
+        ingredientId: `custom-${Date.now()}`,
+        quantity: customIngredientAmount,
+        unit: customIngredientUnit,
+        notes: `Custom ingredient: ${customIngredientName}`
+      });
+      
+      // Reset form
+      setCustomIngredientName('');
+      setCustomIngredientAmount(0);
+      setCustomIngredientUnit('');
+      setShowCustomIngredient(false);
+      
+      toast.success('Custom ingredient added!');
+    }
   };
 
   const removeIngredient = (index: number) => {
@@ -338,15 +362,32 @@ export default function VendorRecipeCreatePage() {
             {/* Ingredients Section */}
             <div className="border-t border-gray-200 pt-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="responsive-subheading text-gray-900">Ingredients</h3>
-                <button
-                  type="button"
-                  onClick={addIngredient}
-                  className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add Ingredient
-                </button>
+                <h3 className="responsive-subheading text-gray-900">Ingredient Management</h3>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowUnitConverter(!showUnitConverter)}
+                    className="inline-flex items-center px-3 py-2 border border-gray-300 text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    Unit Converter
+                  </button>
+                  <button
+                    type="button"
+                    onClick={addIngredient}
+                    className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add Ingredient
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowCustomIngredient(!showCustomIngredient)}
+                    className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Custom
+                  </button>
+                </div>
               </div>
 
               {fields.length === 0 ? (
@@ -434,6 +475,206 @@ export default function VendorRecipeCreatePage() {
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+
+              {/* Custom Ingredient Form */}
+              {showCustomIngredient && (
+                <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <h4 className="text-sm font-medium text-gray-900 mb-3">Add Custom Ingredient</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Ingredient Name *
+                      </label>
+                      <input
+                        type="text"
+                        value={customIngredientName}
+                        onChange={(e) => setCustomIngredientName(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        placeholder="e.g., Organic Vanilla Extract"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Amount *
+                      </label>
+                      <input
+                        type="number"
+                        value={customIngredientAmount}
+                        onChange={(e) => setCustomIngredientAmount(parseFloat(e.target.value) || 0)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        placeholder="0"
+                        min="0"
+                        step="0.1"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Unit *
+                      </label>
+                      <select
+                        value={customIngredientUnit}
+                        onChange={(e) => setCustomIngredientUnit(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        aria-label="Select unit for custom ingredient"
+                      >
+                        <option value="">Select unit...</option>
+                        <option value="grams">grams (g)</option>
+                        <option value="kilograms">kilograms (kg)</option>
+                        <option value="ounces">ounces (oz)</option>
+                        <option value="pounds">pounds (lb)</option>
+                        <option value="milliliters">milliliters (ml)</option>
+                        <option value="liters">liters (l)</option>
+                        <option value="cups">cups</option>
+                        <option value="tablespoons">tablespoons (tbsp)</option>
+                        <option value="teaspoons">teaspoons (tsp)</option>
+                        <option value="pieces">pieces</option>
+                        <option value="pinch">pinch</option>
+                        <option value="dash">dash</option>
+                      </select>
+                    </div>
+                    <div className="flex items-end gap-2">
+                      <button
+                        type="button"
+                        onClick={addCustomIngredient}
+                        disabled={!customIngredientName.trim() || !customIngredientAmount || !customIngredientUnit}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                      >
+                        Add
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCustomIngredientName('');
+                          setCustomIngredientAmount(0);
+                          setCustomIngredientUnit('');
+                          setShowCustomIngredient(false);
+                        }}
+                        className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors text-sm"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Custom Ingredient Notice */}
+                  <div className="mt-3 bg-blue-100 border border-blue-200 rounded-lg p-3">
+                    <div className="text-sm text-blue-800">
+                      <p className="font-medium mb-1">Custom Ingredient Notice</p>
+                      <p>This custom ingredient will be added to your vendor inventory at zero stock. You can manage inventory levels later in your inventory dashboard.</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Unit Converter */}
+              {showUnitConverter && (
+                <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <h4 className="text-sm font-medium text-gray-900 mb-3">Unit Converter</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Converter Input */}
+                    <div>
+                      <h5 className="text-sm font-medium text-gray-900 mb-3">Convert Units</h5>
+                      <div className="space-y-3">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                            From
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              type="number"
+                              placeholder="0"
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                            />
+                            <select className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" aria-label="Select from unit">
+                              <option value="grams">grams (g)</option>
+                              <option value="kilograms">kg</option>
+                              <option value="ounces">oz</option>
+                              <option value="pounds">lb</option>
+                              <option value="milliliters">ml</option>
+                              <option value="liters">l</option>
+                              <option value="cups">cups</option>
+                              <option value="tablespoons">tbsp</option>
+                              <option value="teaspoons">tsp</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                            To
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              type="number"
+                              placeholder="0"
+                              readOnly
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-gray-100 text-sm"
+                            />
+                            <select className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm" aria-label="Select to unit">
+                              <option value="grams">grams (g)</option>
+                              <option value="kilograms">kg</option>
+                              <option value="ounces">oz</option>
+                              <option value="pounds">lb</option>
+                              <option value="milliliters">ml</option>
+                              <option value="liters">l</option>
+                              <option value="cups">cups</option>
+                              <option value="tablespoons">tbsp</option>
+                              <option value="teaspoons">tsp</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Quick Reference Table */}
+                    <div>
+                      <h5 className="text-sm font-medium text-gray-900 mb-3">Quick Reference</h5>
+                      <div className="bg-white rounded border border-gray-200 overflow-hidden">
+                        <table className="w-full text-xs">
+                          <thead className="bg-gray-100">
+                            <tr>
+                              <th className="px-2 py-1 text-left font-medium text-gray-700">Unit</th>
+                              <th className="px-2 py-1 text-left font-medium text-gray-700">Grams</th>
+                              <th className="px-2 py-1 text-left font-medium text-gray-700">Ounces</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-200">
+                            <tr>
+                              <td className="px-2 py-1 text-gray-600">1 cup flour</td>
+                              <td className="px-2 py-1 text-gray-600">120g</td>
+                              <td className="px-2 py-1 text-gray-600">4.2oz</td>
+                            </tr>
+                            <tr>
+                              <td className="px-2 py-1 text-gray-600">1 cup sugar</td>
+                              <td className="px-2 py-1 text-gray-600">200g</td>
+                              <td className="px-2 py-1 text-gray-600">7.1oz</td>
+                            </tr>
+                            <tr>
+                              <td className="px-2 py-1 text-gray-600">1 cup butter</td>
+                              <td className="px-2 py-1 text-gray-600">227g</td>
+                              <td className="px-2 py-1 text-gray-600">8oz</td>
+                            </tr>
+                            <tr>
+                              <td className="px-2 py-1 text-gray-600">1 tbsp</td>
+                              <td className="px-2 py-1 text-gray-600">15g</td>
+                              <td className="px-2 py-1 text-gray-600">0.5oz</td>
+                            </tr>
+                            <tr>
+                              <td className="px-2 py-1 text-gray-600">1 tsp</td>
+                              <td className="px-2 py-1 text-gray-600">5g</td>
+                              <td className="px-2 py-1 text-gray-600">0.18oz</td>
+                            </tr>
+                            <tr>
+                              <td className="px-2 py-1 text-gray-600">1 lb</td>
+                              <td className="px-2 py-1 text-gray-600">454g</td>
+                              <td className="px-2 py-1 text-gray-600">16oz</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
