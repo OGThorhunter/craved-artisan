@@ -7,6 +7,12 @@ import authRoutes from './routes/auth';
 import { pulseRouter } from './routes/pulse.router';
 import { vendorRouter } from './routes/vendor.router';
 import { ingredientsRouter } from './routes/ingredients.router';
+import { inventoryRouter } from './routes/inventory.router';
+import { aiInsightsRouter } from './routes/ai-insights.router';
+import { b2bNetworkRouter } from './routes/b2b-network.router';
+import { aiReceiptParserRouter } from './routes/ai-receipt-parser.router';
+import { unitConverterRouter } from './routes/unit-converter.router';
+import { advancedInventoryRouter } from './routes/advanced-inventory.router';
 
 const app = express();
 const PORT = Number(process.env.PORT || 3001);
@@ -44,6 +50,24 @@ app.use('/api', vendorRouter);
 
 // Ingredients routes
 app.use('/api', ingredientsRouter);
+
+// Inventory routes
+app.use('/api', inventoryRouter);
+
+// AI Insights routes
+app.use('/api', aiInsightsRouter);
+
+// B2B Network routes
+app.use('/api', b2bNetworkRouter);
+
+// AI Receipt Parser routes
+app.use('/api', aiReceiptParserRouter);
+
+// Unit Converter routes
+app.use('/api', unitConverterRouter);
+
+// Advanced Inventory routes
+app.use('/api', advancedInventoryRouter);
 
 // Start server
 app.listen(PORT, () => {

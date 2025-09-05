@@ -1,0 +1,934 @@
+import { Router } from 'express';
+import { logger } from '../logger';
+
+export const advancedInventoryRouter = Router();
+
+// Advanced inventory management interfaces
+interface WarehouseLocation {
+  id: string;
+  name: string;
+  zone: string;
+  aisle: string;
+  shelf: string;
+  position: string;
+  capacity: number;
+  currentStock: number;
+  temperature?: number;
+  humidity?: number;
+  isActive: boolean;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface Batch {
+  id: string;
+  batchNumber: string;
+  itemId: string;
+  itemName: string;
+  quantity: number;
+  unit: string;
+  supplier: string;
+  purchaseDate: string;
+  expirationDate?: string;
+  locationId: string;
+  locationName: string;
+  costPerUnit: number;
+  totalCost: number;
+  status: 'active' | 'expired' | 'recalled' | 'consumed';
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface ExpirationAlert {
+  id: string;
+  itemId: string;
+  itemName: string;
+  batchId: string;
+  batchNumber: string;
+  expirationDate: string;
+  daysUntilExpiration: number;
+  alertLevel: 'warning' | 'critical' | 'expired';
+  locationId: string;
+  locationName: string;
+  quantity: number;
+  unit: string;
+  isAcknowledged: boolean;
+  acknowledgedBy?: string;
+  acknowledgedAt?: string;
+  createdAt: string;
+}
+
+interface WarehouseAnalytics {
+  totalLocations: number;
+  occupiedLocations: number;
+  utilizationRate: number;
+  zoneBreakdown: Record<string, number>;
+  capacityByZone: Record<string, number>;
+  stockValueByZone: Record<string, number>;
+  topItems: Array<{
+    itemId: string;
+    itemName: string;
+    totalQuantity: number;
+    totalValue: number;
+    locations: number;
+  }>;
+  expiringItems: number;
+  expiredItems: number;
+  lowStockItems: number;
+  recentActivity: Array<{
+    type: 'inbound' | 'outbound' | 'transfer' | 'adjustment';
+    itemName: string;
+    quantity: number;
+    location: string;
+    timestamp: string;
+  }>;
+}
+
+interface InventoryMovement {
+  id: string;
+  type: 'inbound' | 'outbound' | 'transfer' | 'adjustment' | 'cycle_count';
+  itemId: string;
+  itemName: string;
+  batchId?: string;
+  batchNumber?: string;
+  quantity: number;
+  unit: string;
+  fromLocationId?: string;
+  fromLocationName?: string;
+  toLocationId?: string;
+  toLocationName?: string;
+  reason: string;
+  performedBy: string;
+  timestamp: string;
+  notes?: string;
+}
+
+// In-memory storage (in production, use database)
+let warehouseLocations: WarehouseLocation[] = [];
+let batches: Batch[] = [];
+let expirationAlerts: ExpirationAlert[] = [];
+let inventoryMovements: InventoryMovement[] = [];
+
+// Initialize with sample data
+const initializeSampleData = () => {
+  // Sample warehouse locations
+  warehouseLocations = [
+    {
+      id: 'loc-1',
+      name: 'A1-01-01',
+      zone: 'A',
+      aisle: '1',
+      shelf: '01',
+      position: '01',
+      capacity: 100,
+      currentStock: 45,
+      temperature: 20,
+      humidity: 45,
+      isActive: true,
+      description: 'Dry storage - top shelf',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 'loc-2',
+      name: 'A1-01-02',
+      zone: 'A',
+      aisle: '1',
+      shelf: '01',
+      position: '02',
+      capacity: 100,
+      currentStock: 78,
+      temperature: 20,
+      humidity: 45,
+      isActive: true,
+      description: 'Dry storage - middle shelf',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 'loc-3',
+      name: 'B2-03-01',
+      zone: 'B',
+      aisle: '2',
+      shelf: '03',
+      position: '01',
+      capacity: 50,
+      currentStock: 23,
+      temperature: 4,
+      humidity: 60,
+      isActive: true,
+      description: 'Cold storage - refrigerated',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 'loc-4',
+      name: 'C3-02-01',
+      zone: 'C',
+      aisle: '3',
+      shelf: '02',
+      position: '01',
+      capacity: 200,
+      currentStock: 156,
+      temperature: 18,
+      humidity: 40,
+      isActive: true,
+      description: 'Packaging materials',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+  ];
+
+  // Sample batches
+  const now = new Date();
+  const futureDate = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 days from now
+  const pastDate = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000); // 5 days ago
+
+  batches = [
+    {
+      id: 'batch-1',
+      batchNumber: 'FLR-2024-001',
+      itemId: 'item-1',
+      itemName: 'Organic All-Purpose Flour',
+      quantity: 45,
+      unit: 'kg',
+      supplier: 'Local Flour Mill',
+      purchaseDate: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+      expirationDate: futureDate.toISOString(),
+      locationId: 'loc-1',
+      locationName: 'A1-01-01',
+      costPerUnit: 2.50,
+      totalCost: 112.50,
+      status: 'active',
+      notes: 'Premium organic flour',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 'batch-2',
+      batchNumber: 'YST-2024-002',
+      itemId: 'item-2',
+      itemName: 'Active Dry Yeast',
+      quantity: 78,
+      unit: 'packets',
+      supplier: 'Baker\'s Supply Co',
+      purchaseDate: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      expirationDate: new Date(now.getTime() + 15 * 24 * 60 * 60 * 1000).toISOString(),
+      locationId: 'loc-2',
+      locationName: 'A1-01-02',
+      costPerUnit: 0.75,
+      totalCost: 58.50,
+      status: 'active',
+      notes: 'Fast-acting yeast',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 'batch-3',
+      batchNumber: 'MLK-2024-003',
+      itemId: 'item-3',
+      itemName: 'Fresh Milk',
+      quantity: 23,
+      unit: 'liters',
+      supplier: 'Dairy Farm Direct',
+      purchaseDate: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      expirationDate: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+      locationId: 'loc-3',
+      locationName: 'B2-03-01',
+      costPerUnit: 1.20,
+      totalCost: 27.60,
+      status: 'active',
+      notes: 'Fresh from local dairy',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    {
+      id: 'batch-4',
+      batchNumber: 'BOX-2024-004',
+      itemId: 'item-4',
+      itemName: 'Custom Gift Boxes',
+      quantity: 156,
+      unit: 'pieces',
+      supplier: 'Packaging Solutions',
+      purchaseDate: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      locationId: 'loc-4',
+      locationName: 'C3-02-01',
+      costPerUnit: 0.85,
+      totalCost: 132.60,
+      status: 'active',
+      notes: 'Eco-friendly packaging',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+  ];
+
+  // Generate expiration alerts
+  expirationAlerts = batches
+    .filter(batch => batch.expirationDate)
+    .map(batch => {
+      const expDate = new Date(batch.expirationDate!);
+      const daysUntilExpiration = Math.ceil((expDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      
+      let alertLevel: 'warning' | 'critical' | 'expired' = 'warning';
+      if (daysUntilExpiration < 0) alertLevel = 'expired';
+      else if (daysUntilExpiration <= 3) alertLevel = 'critical';
+      else if (daysUntilExpiration <= 7) alertLevel = 'warning';
+
+      return {
+        id: `alert-${batch.id}`,
+        itemId: batch.itemId,
+        itemName: batch.itemName,
+        batchId: batch.id,
+        batchNumber: batch.batchNumber,
+        expirationDate: batch.expirationDate!,
+        daysUntilExpiration,
+        alertLevel,
+        locationId: batch.locationId,
+        locationName: batch.locationName,
+        quantity: batch.quantity,
+        unit: batch.unit,
+        isAcknowledged: false,
+        createdAt: new Date().toISOString()
+      };
+    });
+
+  // Sample inventory movements
+  inventoryMovements = [
+    {
+      id: 'mov-1',
+      type: 'inbound',
+      itemId: 'item-1',
+      itemName: 'Organic All-Purpose Flour',
+      batchId: 'batch-1',
+      batchNumber: 'FLR-2024-001',
+      quantity: 50,
+      unit: 'kg',
+      toLocationId: 'loc-1',
+      toLocationName: 'A1-01-01',
+      reason: 'New stock received',
+      performedBy: 'Warehouse Manager',
+      timestamp: new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+      notes: 'Initial stock'
+    },
+    {
+      id: 'mov-2',
+      type: 'outbound',
+      itemId: 'item-1',
+      itemName: 'Organic All-Purpose Flour',
+      batchId: 'batch-1',
+      batchNumber: 'FLR-2024-001',
+      quantity: 5,
+      unit: 'kg',
+      fromLocationId: 'loc-1',
+      fromLocationName: 'A1-01-01',
+      reason: 'Production use',
+      performedBy: 'Production Team',
+      timestamp: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      notes: 'Used in bread production'
+    }
+  ];
+};
+
+// Initialize sample data
+initializeSampleData();
+
+// GET /api/advanced-inventory/warehouse/locations - Get all warehouse locations
+advancedInventoryRouter.get('/advanced-inventory/warehouse/locations', (req, res) => {
+  try {
+    const { zone, aisle, active } = req.query;
+    
+    let filteredLocations = warehouseLocations;
+    
+    if (zone) {
+      filteredLocations = filteredLocations.filter(loc => loc.zone === zone);
+    }
+    
+    if (aisle) {
+      filteredLocations = filteredLocations.filter(loc => loc.aisle === aisle);
+    }
+    
+    if (active !== undefined) {
+      const isActive = active === 'true';
+      filteredLocations = filteredLocations.filter(loc => loc.isActive === isActive);
+    }
+    
+    res.json({
+      locations: filteredLocations,
+      total: filteredLocations.length
+    });
+  } catch (error) {
+    logger.error('Error fetching warehouse locations:', error);
+    res.status(500).json({ error: 'Failed to fetch warehouse locations' });
+  }
+});
+
+// POST /api/advanced-inventory/warehouse/locations - Create new warehouse location
+advancedInventoryRouter.post('/advanced-inventory/warehouse/locations', (req, res) => {
+  try {
+    const { name, zone, aisle, shelf, position, capacity, temperature, humidity, description } = req.body;
+    
+    if (!name || !zone || !aisle || !shelf || !position || !capacity) {
+      return res.status(400).json({ error: 'Name, zone, aisle, shelf, position, and capacity are required' });
+    }
+    
+    // Check if location already exists
+    const existingLocation = warehouseLocations.find(loc => loc.name === name);
+    if (existingLocation) {
+      return res.status(400).json({ error: 'Location with this name already exists' });
+    }
+    
+    const newLocation: WarehouseLocation = {
+      id: `loc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      name,
+      zone,
+      aisle,
+      shelf,
+      position,
+      capacity,
+      currentStock: 0,
+      temperature,
+      humidity,
+      isActive: true,
+      description,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    warehouseLocations.push(newLocation);
+    
+    logger.info('New warehouse location created', { locationId: newLocation.id, name });
+    
+    res.json({
+      success: true,
+      location: newLocation,
+      message: 'Warehouse location created successfully'
+    });
+  } catch (error) {
+    logger.error('Error creating warehouse location:', error);
+    res.status(500).json({ error: 'Failed to create warehouse location' });
+  }
+});
+
+// GET /api/advanced-inventory/batches - Get all batches
+advancedInventoryRouter.get('/advanced-inventory/batches', (req, res) => {
+  try {
+    const { status, locationId, itemId, expiring } = req.query;
+    
+    let filteredBatches = batches;
+    
+    if (status) {
+      filteredBatches = filteredBatches.filter(batch => batch.status === status);
+    }
+    
+    if (locationId) {
+      filteredBatches = filteredBatches.filter(batch => batch.locationId === locationId);
+    }
+    
+    if (itemId) {
+      filteredBatches = filteredBatches.filter(batch => batch.itemId === itemId);
+    }
+    
+    if (expiring === 'true') {
+      const now = new Date();
+      const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+      filteredBatches = filteredBatches.filter(batch => 
+        batch.expirationDate && new Date(batch.expirationDate) <= sevenDaysFromNow
+      );
+    }
+    
+    res.json({
+      batches: filteredBatches,
+      total: filteredBatches.length
+    });
+  } catch (error) {
+    logger.error('Error fetching batches:', error);
+    res.status(500).json({ error: 'Failed to fetch batches' });
+  }
+});
+
+// POST /api/advanced-inventory/batches - Create new batch
+advancedInventoryRouter.post('/advanced-inventory/batches', (req, res) => {
+  try {
+    const {
+      batchNumber,
+      itemId,
+      itemName,
+      quantity,
+      unit,
+      supplier,
+      purchaseDate,
+      expirationDate,
+      locationId,
+      costPerUnit,
+      notes
+    } = req.body;
+    
+    if (!batchNumber || !itemId || !itemName || !quantity || !unit || !supplier || !locationId || !costPerUnit) {
+      return res.status(400).json({ error: 'Required fields are missing' });
+    }
+    
+    // Check if batch number already exists
+    const existingBatch = batches.find(batch => batch.batchNumber === batchNumber);
+    if (existingBatch) {
+      return res.status(400).json({ error: 'Batch number already exists' });
+    }
+    
+    // Find location
+    const location = warehouseLocations.find(loc => loc.id === locationId);
+    if (!location) {
+      return res.status(400).json({ error: 'Location not found' });
+    }
+    
+    const totalCost = quantity * costPerUnit;
+    
+    const newBatch: Batch = {
+      id: `batch-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      batchNumber,
+      itemId,
+      itemName,
+      quantity,
+      unit,
+      supplier,
+      purchaseDate: purchaseDate || new Date().toISOString(),
+      expirationDate,
+      locationId,
+      locationName: location.name,
+      costPerUnit,
+      totalCost,
+      status: 'active',
+      notes,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    batches.push(newBatch);
+    
+    // Update location current stock
+    location.currentStock += quantity;
+    location.updatedAt = new Date().toISOString();
+    
+    // Create inventory movement record
+    const movement: InventoryMovement = {
+      id: `mov-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      type: 'inbound',
+      itemId,
+      itemName,
+      batchId: newBatch.id,
+      batchNumber,
+      quantity,
+      unit,
+      toLocationId: locationId,
+      toLocationName: location.name,
+      reason: 'New batch received',
+      performedBy: req.user?.userId || 'system',
+      timestamp: new Date().toISOString(),
+      notes: `Batch ${batchNumber} received`
+    };
+    
+    inventoryMovements.push(movement);
+    
+    logger.info('New batch created', { batchId: newBatch.id, batchNumber, itemName });
+    
+    res.json({
+      success: true,
+      batch: newBatch,
+      message: 'Batch created successfully'
+    });
+  } catch (error) {
+    logger.error('Error creating batch:', error);
+    res.status(500).json({ error: 'Failed to create batch' });
+  }
+});
+
+// GET /api/advanced-inventory/expiration-alerts - Get expiration alerts
+advancedInventoryRouter.get('/advanced-inventory/expiration-alerts', (req, res) => {
+  try {
+    const { level, acknowledged } = req.query;
+    
+    let filteredAlerts = expirationAlerts;
+    
+    if (level) {
+      filteredAlerts = filteredAlerts.filter(alert => alert.alertLevel === level);
+    }
+    
+    if (acknowledged !== undefined) {
+      const isAcknowledged = acknowledged === 'true';
+      filteredAlerts = filteredAlerts.filter(alert => alert.isAcknowledged === isAcknowledged);
+    }
+    
+    // Sort by urgency (expired first, then by days until expiration)
+    filteredAlerts.sort((a, b) => {
+      if (a.alertLevel === 'expired' && b.alertLevel !== 'expired') return -1;
+      if (b.alertLevel === 'expired' && a.alertLevel !== 'expired') return 1;
+      return a.daysUntilExpiration - b.daysUntilExpiration;
+    });
+    
+    res.json({
+      alerts: filteredAlerts,
+      total: filteredAlerts.length,
+      summary: {
+        expired: filteredAlerts.filter(a => a.alertLevel === 'expired').length,
+        critical: filteredAlerts.filter(a => a.alertLevel === 'critical').length,
+        warning: filteredAlerts.filter(a => a.alertLevel === 'warning').length,
+        acknowledged: filteredAlerts.filter(a => a.isAcknowledged).length
+      }
+    });
+  } catch (error) {
+    logger.error('Error fetching expiration alerts:', error);
+    res.status(500).json({ error: 'Failed to fetch expiration alerts' });
+  }
+});
+
+// POST /api/advanced-inventory/expiration-alerts/:id/acknowledge - Acknowledge expiration alert
+advancedInventoryRouter.post('/advanced-inventory/expiration-alerts/:id/acknowledge', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { notes } = req.body;
+    
+    const alert = expirationAlerts.find(a => a.id === id);
+    if (!alert) {
+      return res.status(404).json({ error: 'Alert not found' });
+    }
+    
+    alert.isAcknowledged = true;
+    alert.acknowledgedBy = req.user?.userId || 'system';
+    alert.acknowledgedAt = new Date().toISOString();
+    
+    logger.info('Expiration alert acknowledged', { alertId: id, itemName: alert.itemName });
+    
+    res.json({
+      success: true,
+      alert,
+      message: 'Alert acknowledged successfully'
+    });
+  } catch (error) {
+    logger.error('Error acknowledging alert:', error);
+    res.status(500).json({ error: 'Failed to acknowledge alert' });
+  }
+});
+
+// GET /api/advanced-inventory/movements - Get inventory movements
+advancedInventoryRouter.get('/advanced-inventory/movements', (req, res) => {
+  try {
+    const { type, itemId, locationId, limit = 50, offset = 0 } = req.query;
+    
+    let filteredMovements = inventoryMovements;
+    
+    if (type) {
+      filteredMovements = filteredMovements.filter(movement => movement.type === type);
+    }
+    
+    if (itemId) {
+      filteredMovements = filteredMovements.filter(movement => movement.itemId === itemId);
+    }
+    
+    if (locationId) {
+      filteredMovements = filteredMovements.filter(movement => 
+        movement.fromLocationId === locationId || movement.toLocationId === locationId
+      );
+    }
+    
+    // Sort by timestamp (newest first)
+    filteredMovements.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    
+    const paginatedMovements = filteredMovements.slice(Number(offset), Number(offset) + Number(limit));
+    
+    res.json({
+      movements: paginatedMovements,
+      total: filteredMovements.length,
+      limit: Number(limit),
+      offset: Number(offset)
+    });
+  } catch (error) {
+    logger.error('Error fetching inventory movements:', error);
+    res.status(500).json({ error: 'Failed to fetch inventory movements' });
+  }
+});
+
+// POST /api/advanced-inventory/movements - Record inventory movement
+advancedInventoryRouter.post('/advanced-inventory/movements', (req, res) => {
+  try {
+    const {
+      type,
+      itemId,
+      itemName,
+      batchId,
+      batchNumber,
+      quantity,
+      unit,
+      fromLocationId,
+      toLocationId,
+      reason,
+      notes
+    } = req.body;
+    
+    if (!type || !itemId || !itemName || !quantity || !unit || !reason) {
+      return res.status(400).json({ error: 'Required fields are missing' });
+    }
+    
+    // Validate locations
+    let fromLocation, toLocation;
+    if (fromLocationId) {
+      fromLocation = warehouseLocations.find(loc => loc.id === fromLocationId);
+      if (!fromLocation) {
+        return res.status(400).json({ error: 'From location not found' });
+      }
+    }
+    
+    if (toLocationId) {
+      toLocation = warehouseLocations.find(loc => loc.id === toLocationId);
+      if (!toLocation) {
+        return res.status(400).json({ error: 'To location not found' });
+      }
+    }
+    
+    const movement: InventoryMovement = {
+      id: `mov-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      type,
+      itemId,
+      itemName,
+      batchId,
+      batchNumber,
+      quantity,
+      unit,
+      fromLocationId,
+      fromLocationName: fromLocation?.name,
+      toLocationId,
+      toLocationName: toLocation?.name,
+      reason,
+      performedBy: req.user?.userId || 'system',
+      timestamp: new Date().toISOString(),
+      notes
+    };
+    
+    inventoryMovements.push(movement);
+    
+    // Update location stock levels
+    if (fromLocation && (type === 'outbound' || type === 'transfer')) {
+      fromLocation.currentStock = Math.max(0, fromLocation.currentStock - quantity);
+      fromLocation.updatedAt = new Date().toISOString();
+    }
+    
+    if (toLocation && (type === 'inbound' || type === 'transfer')) {
+      toLocation.currentStock += quantity;
+      toLocation.updatedAt = new Date().toISOString();
+    }
+    
+    logger.info('Inventory movement recorded', { 
+      movementId: movement.id, 
+      type, 
+      itemName, 
+      quantity 
+    });
+    
+    res.json({
+      success: true,
+      movement,
+      message: 'Inventory movement recorded successfully'
+    });
+  } catch (error) {
+    logger.error('Error recording inventory movement:', error);
+    res.status(500).json({ error: 'Failed to record inventory movement' });
+  }
+});
+
+// GET /api/advanced-inventory/analytics - Get warehouse analytics
+advancedInventoryRouter.get('/advanced-inventory/analytics', (req, res) => {
+  try {
+    const now = new Date();
+    const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    
+    // Calculate analytics
+    const totalLocations = warehouseLocations.length;
+    const occupiedLocations = warehouseLocations.filter(loc => loc.currentStock > 0).length;
+    const utilizationRate = totalLocations > 0 ? (occupiedLocations / totalLocations) * 100 : 0;
+    
+    // Zone breakdown
+    const zoneBreakdown = warehouseLocations.reduce((acc, loc) => {
+      acc[loc.zone] = (acc[loc.zone] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    const capacityByZone = warehouseLocations.reduce((acc, loc) => {
+      acc[loc.zone] = (acc[loc.zone] || 0) + loc.capacity;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    const stockValueByZone = batches.reduce((acc, batch) => {
+      const location = warehouseLocations.find(loc => loc.id === batch.locationId);
+      if (location) {
+        acc[location.zone] = (acc[location.zone] || 0) + batch.totalCost;
+      }
+      return acc;
+    }, {} as Record<string, number>);
+    
+    // Top items
+    const itemStats = batches.reduce((acc, batch) => {
+      if (!acc[batch.itemId]) {
+        acc[batch.itemId] = {
+          itemId: batch.itemId,
+          itemName: batch.itemName,
+          totalQuantity: 0,
+          totalValue: 0,
+          locations: new Set()
+        };
+      }
+      acc[batch.itemId].totalQuantity += batch.quantity;
+      acc[batch.itemId].totalValue += batch.totalCost;
+      acc[batch.itemId].locations.add(batch.locationId);
+    }, {} as Record<string, any>);
+    
+    const topItems = Object.values(itemStats)
+      .map((item: any) => ({
+        ...item,
+        locations: item.locations.size
+      }))
+      .sort((a: any, b: any) => b.totalValue - a.totalValue)
+      .slice(0, 10);
+    
+    // Expiration stats
+    const expiringItems = batches.filter(batch => 
+      batch.expirationDate && new Date(batch.expirationDate) <= sevenDaysFromNow
+    ).length;
+    
+    const expiredItems = batches.filter(batch => 
+      batch.expirationDate && new Date(batch.expirationDate) < now
+    ).length;
+    
+    const lowStockItems = batches.filter(batch => batch.quantity < 10).length;
+    
+    // Recent activity
+    const recentActivity = inventoryMovements
+      .slice(0, 10)
+      .map(movement => ({
+        type: movement.type,
+        itemName: movement.itemName,
+        quantity: movement.quantity,
+        location: movement.toLocationName || movement.fromLocationName || 'Unknown',
+        timestamp: movement.timestamp
+      }));
+    
+    const analytics: WarehouseAnalytics = {
+      totalLocations,
+      occupiedLocations,
+      utilizationRate: Math.round(utilizationRate * 100) / 100,
+      zoneBreakdown,
+      capacityByZone,
+      stockValueByZone,
+      topItems,
+      expiringItems,
+      expiredItems,
+      lowStockItems,
+      recentActivity
+    };
+    
+    res.json({ analytics });
+  } catch (error) {
+    logger.error('Error fetching warehouse analytics:', error);
+    res.status(500).json({ error: 'Failed to fetch warehouse analytics' });
+  }
+});
+
+// GET /api/advanced-inventory/warehouse/zones - Get warehouse zones
+advancedInventoryRouter.get('/advanced-inventory/warehouse/zones', (req, res) => {
+  try {
+    const zones = Array.from(new Set(warehouseLocations.map(loc => loc.zone)))
+      .map(zone => {
+        const zoneLocations = warehouseLocations.filter(loc => loc.zone === zone);
+        const totalCapacity = zoneLocations.reduce((sum, loc) => sum + loc.capacity, 0);
+        const currentStock = zoneLocations.reduce((sum, loc) => sum + loc.currentStock, 0);
+        const utilizationRate = totalCapacity > 0 ? (currentStock / totalCapacity) * 100 : 0;
+        
+        return {
+          zone,
+          locationCount: zoneLocations.length,
+          totalCapacity,
+          currentStock,
+          utilizationRate: Math.round(utilizationRate * 100) / 100,
+          aisles: Array.from(new Set(zoneLocations.map(loc => loc.aisle))).sort()
+        };
+      })
+      .sort((a, b) => a.zone.localeCompare(b.zone));
+    
+    res.json({ zones });
+  } catch (error) {
+    logger.error('Error fetching warehouse zones:', error);
+    res.status(500).json({ error: 'Failed to fetch warehouse zones' });
+  }
+});
+
+// PUT /api/advanced-inventory/batches/:id - Update batch
+advancedInventoryRouter.put('/advanced-inventory/batches/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+    
+    const batch = batches.find(b => b.id === id);
+    if (!batch) {
+      return res.status(404).json({ error: 'Batch not found' });
+    }
+    
+    // Update batch properties
+    Object.assign(batch, updates, {
+      updatedAt: new Date().toISOString()
+    });
+    
+    // Recalculate total cost if quantity or cost per unit changed
+    if (updates.quantity || updates.costPerUnit) {
+      batch.totalCost = batch.quantity * batch.costPerUnit;
+    }
+    
+    logger.info('Batch updated', { batchId: id, batchNumber: batch.batchNumber });
+    
+    res.json({
+      success: true,
+      batch,
+      message: 'Batch updated successfully'
+    });
+  } catch (error) {
+    logger.error('Error updating batch:', error);
+    res.status(500).json({ error: 'Failed to update batch' });
+  }
+});
+
+// DELETE /api/advanced-inventory/batches/:id - Delete batch
+advancedInventoryRouter.delete('/advanced-inventory/batches/:id', (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const batchIndex = batches.findIndex(b => b.id === id);
+    if (batchIndex === -1) {
+      return res.status(404).json({ error: 'Batch not found' });
+    }
+    
+    const batch = batches[batchIndex];
+    
+    // Update location stock
+    const location = warehouseLocations.find(loc => loc.id === batch.locationId);
+    if (location) {
+      location.currentStock = Math.max(0, location.currentStock - batch.quantity);
+      location.updatedAt = new Date().toISOString();
+    }
+    
+    // Remove batch
+    batches.splice(batchIndex, 1);
+    
+    // Remove associated expiration alert
+    const alertIndex = expirationAlerts.findIndex(alert => alert.batchId === id);
+    if (alertIndex !== -1) {
+      expirationAlerts.splice(alertIndex, 1);
+    }
+    
+    logger.info('Batch deleted', { batchId: id, batchNumber: batch.batchNumber });
+    
+    res.json({
+      success: true,
+      message: 'Batch deleted successfully'
+    });
+  } catch (error) {
+    logger.error('Error deleting batch:', error);
+    res.status(500).json({ error: 'Failed to delete batch' });
+  }
+});

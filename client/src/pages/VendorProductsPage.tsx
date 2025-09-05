@@ -18,6 +18,7 @@ import {
   SortAsc,
   SortDesc,
   Camera,
+  ChevronDown,
   Wrench,
   UtensilsCrossed,
   ShoppingBag,
@@ -162,6 +163,25 @@ const VendorProductsPage: React.FC = () => {
   const [setUploadedImage] = useState<File | null>(null);
   const [parsingRecipe, setParsingRecipe] = useState(false);
   
+  // Add product dropdown
+  const [showAddProductDropdown, setShowAddProductDropdown] = useState(false);
+  const [showCsvImport, setShowCsvImport] = useState(false);
+  
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showAddProductDropdown) {
+        const target = event.target as Element;
+        if (!target.closest('.relative')) {
+          setShowAddProductDropdown(false);
+        }
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showAddProductDropdown]);
+  
   // Ingredient management
   const [ingredientLines, setIngredientLines] = useState<Array<{
     id: string;
@@ -234,10 +254,6 @@ const VendorProductsPage: React.FC = () => {
   
   // Trade supplies modal
   const [showTradeSuppliesModal, setShowTradeSuppliesModal] = useState(false);
-  const [showCustomIngredientForm, setShowCustomIngredientForm] = useState(false);
-  const [customIngredientInput, setCustomIngredientInput] = useState('');
-  const [customIngredientUnit, setCustomIngredientUnit] = useState('');
-  const [customIngredientLineId, setCustomIngredientLineId] = useState<string | null>(null);
   
   // Mock product cards for development
   const [productCards, setProductCards] = useState<ProductCard[]>([
@@ -268,6 +284,7 @@ const VendorProductsPage: React.FC = () => {
       overheadCost: 2.50,
       totalCost: 26.25,
       profitMargin: 30,
+      servings: 8,
       recipe: {
         instructions: ['Mix ingredients', 'Knead dough', 'Let rise', 'Bake'],
         prepTime: 30,
@@ -438,10 +455,6 @@ const VendorProductsPage: React.FC = () => {
     setEditingCard(null);
     setIngredientLines([]);
     setTradeSupplyLines([]);
-    setShowCustomIngredientForm(false);
-    setCustomIngredientInput('');
-    setCustomIngredientUnit('');
-    setCustomIngredientLineId(null);
     reset();
   };
 
@@ -468,17 +481,24 @@ const VendorProductsPage: React.FC = () => {
         
         if (field === 'ingredientId') {
           if (value === 'custom') {
-            // Show custom ingredient form when custom is selected
-            setShowCustomIngredientForm(true);
-            // Set the current line ID to track which line is getting the custom ingredient
-            setCustomIngredientLineId(line.id);
-            setCustomIngredientInput('');
-            setCustomIngredientUnit('');
+            // Transform this line into a custom ingredient input
+            updated.ingredientId = 'custom';
+            updated.ingredient = {
+              id: 'custom',
+              name: '',
+              costPerUnit: 0,
+              unit: 'pieces',
+              category: 'Custom',
+              isAvailable: true,
+              currentStock: 0
+            };
+            updated.cost = 0;
           } else {
             // Recalculate cost based on ingredient selection
             const ingredient = MOCK_INGREDIENTS.find(ing => ing.id === updated.ingredientId);
             if (ingredient) {
               updated.cost = ingredient.costPerUnit * updated.quantity;
+              updated.ingredient = ingredient;
             }
           }
         } else if (field === 'quantity') {
@@ -489,6 +509,23 @@ const VendorProductsPage: React.FC = () => {
               updated.cost = ingredient.costPerUnit * updated.quantity;
             }
           }
+        } else if (field === 'customName') {
+          // Update custom ingredient name
+          if (updated.ingredientId === 'custom' && updated.ingredient) {
+            updated.ingredient.name = value;
+            // If we have a name, quantity, and unit, we can finalize this custom ingredient
+            if (value.trim() && updated.quantity > 0 && updated.unit) {
+              // Create a proper custom ingredient ID and add to inventory
+              const customId = `custom-${Date.now()}`;
+              updated.ingredientId = customId;
+              updated.ingredient.id = customId;
+              updated.ingredient.unit = updated.unit;
+              updated.cost = 0; // Custom ingredients start with zero cost
+              
+              // Show success message
+              toast.success(`Custom ingredient "${value.trim()}" added to inventory with zero stock!`);
+            }
+          }
         }
         
         return updated;
@@ -497,64 +534,6 @@ const VendorProductsPage: React.FC = () => {
     }));
   };
 
-  // Custom ingredient management function
-  const addCustomIngredient = () => {
-    if (customIngredientInput.trim() && customIngredientLineId) {
-      const currentCategory = watch('category');
-      
-      if (currentCategory === 'food') {
-        // Update the existing ingredient line with custom ingredient data
-        setIngredientLines(ingredientLines.map(line => {
-          if (line.id === customIngredientLineId) {
-            return {
-              ...line,
-        ingredientId: `custom-${Date.now()}`,
-              unit: customIngredientUnit || 'pieces',
-              notes: 'Custom ingredient - added to inventory at zero stock'
-            };
-          }
-          return line;
-        }));
-        
-        toast.success('Custom ingredient added! It will be added to your inventory at zero stock.');
-      } else if (currentCategory === 'service') {
-        // Update the existing trade supply line with custom supply data
-        setTradeSupplyLines(tradeSupplyLines.map(line => {
-          if (line.id === customIngredientLineId) {
-            return {
-              ...line,
-              supplyId: `custom-${Date.now()}`,
-              unit: customIngredientUnit || 'pieces',
-              notes: 'Custom trade supply - added to inventory at zero stock'
-            };
-          }
-          return line;
-        }));
-        
-        toast.success('Custom trade supply added! It will be added to your inventory at zero stock.');
-      } else if (currentCategory === 'non-food') {
-        // Update the existing ingredient line with custom material data
-        setIngredientLines(ingredientLines.map(line => {
-          if (line.id === customIngredientLineId) {
-            return {
-              ...line,
-              ingredientId: `custom-${Date.now()}`,
-              unit: customIngredientUnit || 'pieces',
-              notes: 'Custom material - added to inventory at zero stock'
-            };
-          }
-          return line;
-        }));
-        
-        toast.success('Custom material added! It will be added to your inventory at zero stock.');
-      }
-      
-      setCustomIngredientInput('');
-      setCustomIngredientUnit('');
-      setShowCustomIngredientForm(false);
-      setCustomIngredientLineId(null);
-    }
-  };
 
   // Trade supply management functions
   const addTradeSupplyLine = () => {
@@ -579,17 +558,21 @@ const VendorProductsPage: React.FC = () => {
         
         if (field === 'supplyId') {
           if (value === 'custom') {
-            // Show custom ingredient form when custom is selected
-            setShowCustomIngredientForm(true);
-            // Set the current line ID to track which line is getting the custom ingredient
-            setCustomIngredientLineId(line.id);
-            setCustomIngredientInput('');
-            setCustomIngredientUnit('');
+            // Transform this line into a custom supply input
+            updated.supplyId = 'custom';
+            updated.supply = {
+              id: 'custom',
+              name: '',
+              costPerUnit: 0,
+              unit: 'pieces'
+            };
+            updated.cost = 0;
           } else {
             // Recalculate cost based on supply selection
             const supply = MOCK_TRADE_SUPPLIES.find(sup => sup.id === updated.supplyId);
             if (supply) {
               updated.cost = supply.costPerUnit * updated.quantity;
+              updated.supply = supply;
             }
           }
         } else if (field === 'quantity') {
@@ -598,6 +581,23 @@ const VendorProductsPage: React.FC = () => {
             const supply = MOCK_TRADE_SUPPLIES.find(sup => sup.id === updated.supplyId);
             if (supply) {
               updated.cost = supply.costPerUnit * updated.quantity;
+            }
+          }
+        } else if (field === 'customSupplyName') {
+          // Update custom supply name
+          if (updated.supplyId === 'custom' && updated.supply) {
+            updated.supply.name = value;
+            // If we have a name, quantity, and unit, we can finalize this custom supply
+            if (value.trim() && updated.quantity > 0 && updated.unit) {
+              // Create a proper custom supply ID and add to inventory
+              const customId = `custom-supply-${Date.now()}`;
+              updated.supplyId = customId;
+              updated.supply.id = customId;
+              updated.supply.unit = updated.unit;
+              updated.cost = 0; // Custom supplies start with zero cost
+              
+              // Show success message
+              toast.success(`Custom supply "${value.trim()}" added to inventory with zero stock!`);
             }
           }
         }
@@ -644,6 +644,65 @@ const VendorProductsPage: React.FC = () => {
       card.name.toLowerCase() === name.toLowerCase() && 
       card.category === category
     );
+  };
+
+  // CSV Import
+  const handleCsvImport = async (file: File) => {
+    try {
+      const text = await file.text();
+      const lines = text.split('\n');
+      const headers = lines[0].split(',').map(h => h.trim());
+      
+      // Expected CSV format: name,description,price,category,subcategory
+      const expectedHeaders = ['name', 'description', 'price', 'category', 'subcategory'];
+      const hasValidHeaders = expectedHeaders.every(header => headers.includes(header));
+      
+      if (!hasValidHeaders) {
+        toast.error('Invalid CSV format. Expected columns: name, description, price, category, subcategory');
+        return;
+      }
+      
+      let importedCount = 0;
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        
+        const values = line.split(',').map(v => v.trim());
+        if (values.length !== headers.length) continue;
+        
+        const productData = {
+          name: values[headers.indexOf('name')],
+          description: values[headers.indexOf('description')],
+          price: parseFloat(values[headers.indexOf('price')]) || 0,
+          category: values[headers.indexOf('category')] as 'food' | 'service' | 'non-food',
+          subcategory: values[headers.indexOf('subcategory')],
+        };
+        
+        // Create product card
+        const newCard: ProductCard = {
+          id: `imported-${Date.now()}-${i}`,
+          name: productData.name,
+          description: productData.description,
+          price: productData.price,
+          category: productData.category,
+          subcategory: productData.subcategory,
+          profitMargin: 30,
+          isAvailable: true,
+          tags: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        
+        setProductCards(prev => [...prev, newCard]);
+        importedCount++;
+      }
+      
+      toast.success(`Successfully imported ${importedCount} products from CSV!`);
+      setShowCsvImport(false);
+    } catch (error) {
+      console.error('Error importing CSV:', error);
+      toast.error('Failed to import CSV file. Please check the format and try again.');
+    }
   };
 
   // AI Recipe Parsing
@@ -747,7 +806,7 @@ const VendorProductsPage: React.FC = () => {
                 <div class="section-title">Recipe Details</div>
                 <div>Prep Time: ${viewingCard.recipe.prepTime} minutes</div>
                 <div>Cook Time: ${viewingCard.recipe.cookTime} minutes</div>
-                <div>Servings: ${viewingCard.servings}</div>
+                <div>Servings: ${viewingCard.recipe.servings}</div>
                 <div>Yield: ${viewingCard.recipe.yield} ${viewingCard.recipe.yieldUnit}</div>
               </div>
             ` : ''}
@@ -829,7 +888,7 @@ const VendorProductsPage: React.FC = () => {
 
   return (
     <VendorDashboardLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 bg-white min-h-screen">
           {/* Header */}
           <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Product Management</h1>
@@ -843,28 +902,57 @@ const VendorProductsPage: React.FC = () => {
         </div>
 
         {/* Action Bar */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <div className="bg-offwhite rounded-lg shadow-lg border border-amber-200 p-6 mb-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-              <button
-                onClick={() => {
-                      setSelectedCategoryForCard('');
-                      setShowProductCard(true);
-                    }}
-                    className="bg-brand-green text-white px-6 py-3 rounded-lg hover:bg-brand-green/90 transition-colors flex items-center gap-2 text-lg font-medium"
-                  >
-                    <Plus className="w-5 h-5" />
-                Add Product
-              </button>
+              <div className="relative">
+                    <button
+                      onClick={() => setShowAddProductDropdown(!showAddProductDropdown)}
+                      className="bg-brand-green text-white px-6 py-3 rounded-lg hover:bg-brand-green/90 transition-colors flex items-center gap-2 text-lg font-medium"
+                    >
+                      <Plus className="w-5 h-5" />
+                      Add Product
+                      <ChevronDown className="w-4 h-4" />
+                    </button>
+                    
+                    {showAddProductDropdown && (
+                      <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                        <button
+                          onClick={() => {
+                            setSelectedCategoryForCard('');
+                            setShowProductCard(true);
+                            setShowAddProductDropdown(false);
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-t-lg flex items-center gap-2"
+                        >
+                          <Plus className="w-4 h-4" />
+                          Manual Entry
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowImageUpload(true);
+                            setShowAddProductDropdown(false);
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                        >
+                          <Camera className="w-4 h-4" />
+                          AI Recipe Parser
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowCsvImport(true);
+                            setShowAddProductDropdown(false);
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-b-lg flex items-center gap-2"
+                        >
+                          <Upload className="w-4 h-4" />
+                          Import CSV
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setShowImageUpload(true)}
-                    className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2"
-                  >
-                    <Camera className="w-4 h-4" />
-                    AI Recipe Parser
-                  </button>
                   <button
                     onClick={handleExport}
                     className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2"
@@ -877,7 +965,7 @@ const VendorProductsPage: React.FC = () => {
           </div>
 
           {/* Search and Filters */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <div className="bg-offwhite rounded-lg shadow-lg border border-amber-200 p-6 mb-6">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -951,7 +1039,7 @@ const VendorProductsPage: React.FC = () => {
             {viewMode === 'cards' ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredAndSortedCards.map((card) => (
-                  <div key={card.id} className="bg-white rounded-lg shadow-md border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow flex flex-col">
+                  <div key={card.id} className="bg-offwhite rounded-lg shadow-lg border border-amber-200 overflow-hidden hover:shadow-xl transition-shadow flex flex-col">
                     <div className="aspect-video bg-gray-100 flex items-center justify-center">
                       {card.imageUrl ? (
                         <img src={card.imageUrl} alt={card.name} className="w-full h-full object-cover" />
@@ -1023,7 +1111,7 @@ const VendorProductsPage: React.FC = () => {
                 ))}
               </div>
             ) : (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <div className="bg-offwhite rounded-lg shadow-lg border border-amber-200 overflow-hidden">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
@@ -1035,9 +1123,9 @@ const VendorProductsPage: React.FC = () => {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-offwhite divide-y divide-amber-200">
                     {filteredAndSortedCards.map((card) => (
-                      <tr key={card.id} className="hover:bg-gray-50">
+                      <tr key={card.id} className="hover:bg-brand-beige">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <div className="flex-shrink-0 h-10 w-10">
@@ -1104,16 +1192,52 @@ const VendorProductsPage: React.FC = () => {
                 </p>
                 {!searchTerm && !selectedCategory && (
                   <div className="flex justify-center">
-                    <button
-                      onClick={() => {
-                        setSelectedCategoryForCard('');
-                        setShowProductCard(true);
-                      }}
-                      className="bg-brand-green text-white px-6 py-3 rounded-lg hover:bg-brand-green/90 transition-colors flex items-center gap-2 text-lg font-medium"
-                    >
-                      <Plus className="w-5 h-5" />
-                      Add Product
-                    </button>
+                    <div className="relative">
+                      <button
+                        onClick={() => setShowAddProductDropdown(!showAddProductDropdown)}
+                        className="bg-brand-green text-white px-6 py-3 rounded-lg hover:bg-brand-green/90 transition-colors flex items-center gap-2 text-lg font-medium"
+                      >
+                        <Plus className="w-5 h-5" />
+                        Add Product
+                        <ChevronDown className="w-4 h-4" />
+                      </button>
+                      
+                      {showAddProductDropdown && (
+                        <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                          <button
+                            onClick={() => {
+                              setSelectedCategoryForCard('');
+                              setShowProductCard(true);
+                              setShowAddProductDropdown(false);
+                            }}
+                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-t-lg flex items-center gap-2"
+                          >
+                            <Plus className="w-4 h-4" />
+                            Manual Entry
+                          </button>
+                          <button
+                            onClick={() => {
+                              setShowImageUpload(true);
+                              setShowAddProductDropdown(false);
+                            }}
+                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                          >
+                            <Camera className="w-4 h-4" />
+                            AI Recipe Parser
+                          </button>
+                          <button
+                            onClick={() => {
+                              setShowCsvImport(true);
+                              setShowAddProductDropdown(false);
+                            }}
+                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-b-lg flex items-center gap-2"
+                          >
+                            <Upload className="w-4 h-4" />
+                            Import CSV
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
@@ -1122,7 +1246,7 @@ const VendorProductsPage: React.FC = () => {
         {/* Product Card Modal */}
         {showProductCard && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-offwhite rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-amber-200">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-semibold text-gray-900">
@@ -1401,20 +1525,31 @@ const VendorProductsPage: React.FC = () => {
                              <>
                              <div key={line.id} className="grid grid-cols-12 gap-2 items-center p-3 bg-white rounded-md border border-green-200">
                                                                <div className="col-span-5">
-                                  <select
-                                    value={line.ingredientId}
-                                    onChange={(e) => updateIngredientLine(line.id, 'ingredientId', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
-                                    aria-label="Select ingredient"
-                                  >
-                                    <option value="">Select Ingredient</option>
-                                    {MOCK_INGREDIENTS.map(ingredient => (
-                                      <option key={ingredient.id} value={ingredient.id}>
-                                        {ingredient.name} (${ingredient.costPerUnit}/{ingredient.unit})
-                                      </option>
-                                    ))}
-                                    <option value="custom">+ Add Custom Ingredient</option>
-                                  </select>
+                                  {line.ingredientId === 'custom' ? (
+                                    <input
+                                      type="text"
+                                      value={line.ingredient?.name || ''}
+                                      onChange={(e) => updateIngredientLine(line.id, 'customName', e.target.value)}
+                                      className="w-full px-3 py-2 border border-blue-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                                      placeholder="Enter custom ingredient name"
+                                      aria-label="Custom ingredient name"
+                                    />
+                                  ) : (
+                                    <select
+                                      value={line.ingredientId}
+                                      onChange={(e) => updateIngredientLine(line.id, 'ingredientId', e.target.value)}
+                                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                                      aria-label="Select ingredient"
+                                    >
+                                      <option value="">Select Ingredient</option>
+                                      {MOCK_INGREDIENTS.map(ingredient => (
+                                        <option key={ingredient.id} value={ingredient.id}>
+                                          {ingredient.name} (${ingredient.costPerUnit}/{ingredient.unit})
+                                        </option>
+                                      ))}
+                                      <option value="custom">+ Add Custom Ingredient</option>
+                                    </select>
+                                  )}
                       </div>
                                <div className="col-span-2">
                                  <input
@@ -1432,6 +1567,7 @@ const VendorProductsPage: React.FC = () => {
                                    value={line.unit}
                                    onChange={(e) => updateIngredientLine(line.id, 'unit', e.target.value)}
                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
+                                   aria-label="Select unit"
                                  >
                                    {MOCK_UNITS.map(unit => (
                                      <option key={unit} value={unit}>{unit}</option>
@@ -1477,63 +1613,6 @@ const VendorProductsPage: React.FC = () => {
                          </div>
                        )}
 
-                  {/* Custom Ingredient Form */}
-                  {showCustomIngredientForm && (
-                          <div className="bg-white rounded-lg border border-blue-200 p-3 mt-3">
-                            <h5 className="text-sm font-medium text-blue-900 mb-3">
-                              Add Custom Ingredient {customIngredientLineId && `(Line ${ingredientLines.findIndex(line => line.id === customIngredientLineId) + 1})`}
-                            </h5>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <div>
-                                <label className="block text-xs font-medium text-blue-700 mb-1">
-                            Ingredient Name *
-                          </label>
-                          <input
-                            type="text"
-                            value={customIngredientInput}
-                            onChange={(e) => setCustomIngredientInput(e.target.value)}
-                                  className="w-full px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                            placeholder="e.g., Organic Vanilla Extract"
-                          />
-                        </div>
-                        <div>
-                                <label className="block text-xs font-medium text-blue-700 mb-1">
-                            Unit
-                          </label>
-                          <input
-                            type="text"
-                                  value={customIngredientUnit}
-                                  onChange={(e) => setCustomIngredientUnit(e.target.value)}
-                                  className="w-full px-3 py-2 border border-blue-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                            placeholder="e.g., ml, oz"
-                          />
-                        </div>
-                        <div className="flex items-end gap-2">
-                          <button
-                            type="button"
-                            onClick={addCustomIngredient}
-                            disabled={!customIngredientInput.trim()}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                                  title="Add custom ingredient"
-                          >
-                            Add
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setShowCustomIngredientForm(false);
-                              setCustomIngredientInput('');
-                                    setCustomIngredientUnit('');
-                            }}
-                            className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors text-sm"
-                                  title="Cancel custom ingredient"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
                 </div>
                    )}
 
@@ -1581,20 +1660,31 @@ const VendorProductsPage: React.FC = () => {
                              <>
                              <div key={line.id} className="grid grid-cols-12 gap-2 items-center p-3 bg-white rounded-md border border-orange-200">
                                                                <div className="col-span-5">
-                                  <select
-                                    value={line.supplyId}
-                                    onChange={(e) => updateTradeSupplyLine(line.id, 'supplyId', e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
-                                    aria-label="Select trade supply"
-                                  >
-                                    <option value="">Select Trade Supply</option>
-                                    {MOCK_TRADE_SUPPLIES.map(supply => (
-                                      <option key={supply.id} value={supply.id}>
-                                        {supply.name} (${supply.costPerUnit}/{supply.unit})
-                                      </option>
-                                    ))}
-                                    <option value="custom">+ Add Custom Trade Supply</option>
-                                  </select>
+                                  {line.supplyId === 'custom' ? (
+                                    <input
+                                      type="text"
+                                      value={line.supply?.name || ''}
+                                      onChange={(e) => updateTradeSupplyLine(line.id, 'customSupplyName', e.target.value)}
+                                      className="w-full px-3 py-2 border border-orange-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+                                      placeholder="Enter custom supply name"
+                                      aria-label="Custom supply name"
+                                    />
+                                  ) : (
+                                    <select
+                                      value={line.supplyId}
+                                      onChange={(e) => updateTradeSupplyLine(line.id, 'supplyId', e.target.value)}
+                                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+                                      aria-label="Select trade supply"
+                                    >
+                                      <option value="">Select Trade Supply</option>
+                                      {MOCK_TRADE_SUPPLIES.map(supply => (
+                                        <option key={supply.id} value={supply.id}>
+                                          {supply.name} (${supply.costPerUnit}/{supply.unit})
+                                        </option>
+                                      ))}
+                                      <option value="custom">+ Add Custom Trade Supply</option>
+                                    </select>
+                                  )}
                                 </div>
                                <div className="col-span-2">
                                  <input
@@ -1612,6 +1702,7 @@ const VendorProductsPage: React.FC = () => {
                                    value={line.unit}
                                    onChange={(e) => updateTradeSupplyLine(line.id, 'unit', e.target.value)}
                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+                                   aria-label="Select unit"
                                  >
                                    {MOCK_TRADE_UNITS.map(unit => (
                                      <option key={unit} value={unit}>{unit}</option>
@@ -1831,7 +1922,7 @@ const VendorProductsPage: React.FC = () => {
         {/* View Details Modal */}
         {showViewDetails && viewingCard && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-offwhite rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-amber-200">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold text-gray-900">{viewingCard.name}</h2>
@@ -1860,7 +1951,7 @@ const VendorProductsPage: React.FC = () => {
                           </div>
 
                 {/* Recipe Card Layout */}
-                <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg p-6 mb-6 border border-amber-200">
+                <div className="bg-gradient-to-br from-amber-100 to-orange-100 rounded-lg p-6 mb-6 border border-amber-300 shadow-lg">
                   <div className="text-center mb-6">
                     <h3 className="text-xl font-semibold text-gray-800 mb-2">{viewingCard.name}</h3>
                     <p className="text-gray-600 mb-3">{viewingCard.description}</p>
@@ -1883,19 +1974,19 @@ const VendorProductsPage: React.FC = () => {
                   {/* Recipe Details for Food Items */}
                   {viewingCard.category === 'food' && viewingCard.recipe && (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 text-center">
-                      <div className="bg-white rounded-lg p-3 border border-amber-200">
+                      <div className="bg-white rounded-lg p-3 border border-amber-300 shadow-md">
                         <div className="text-2xl font-bold text-amber-600">{viewingCard.recipe.prepTime}</div>
                         <div className="text-sm text-gray-600">Prep (min)</div>
                     </div>
-                      <div className="bg-white rounded-lg p-3 border border-amber-200">
+                      <div className="bg-white rounded-lg p-3 border border-amber-300 shadow-md">
                         <div className="text-2xl font-bold text-amber-600">{viewingCard.recipe.cookTime}</div>
                         <div className="text-sm text-gray-600">Cook (min)</div>
                   </div>
-                      <div className="bg-white rounded-lg p-3 border border-amber-200">
+                      <div className="bg-white rounded-lg p-3 border border-amber-300 shadow-md">
                         <div className="text-2xl font-bold text-amber-600">{viewingCard.recipe.servings}</div>
                         <div className="text-sm text-gray-600">Servings</div>
                       </div>
-                      <div className="bg-white rounded-lg p-3 border border-amber-200">
+                      <div className="bg-white rounded-lg p-3 border border-amber-300 shadow-md">
                         <div className="text-2xl font-bold text-amber-600">{viewingCard.recipe.yield}</div>
                         <div className="text-sm text-gray-600">{viewingCard.recipe.yieldUnit}</div>
                       </div>
@@ -1907,7 +1998,7 @@ const VendorProductsPage: React.FC = () => {
                     <h4 className="text-lg font-semibold text-gray-800 mb-3 border-b border-amber-200 pb-2">Ingredients</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {viewingCard.ingredients.map((ingredient, index) => (
-                        <div key={index} className="bg-white rounded-lg p-3 border border-amber-200 flex items-center justify-between">
+                        <div key={index} className="bg-white rounded-lg p-3 border border-amber-300 shadow-md flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center">
                               <span className="text-amber-600 font-semibold text-sm">{index + 1}</span>
@@ -1934,9 +2025,9 @@ const VendorProductsPage: React.FC = () => {
                       <h4 className="text-lg font-semibold text-gray-800 mb-3 border-b border-amber-200 pb-2">Instructions</h4>
                       <div className="space-y-3">
                         {viewingCard.recipe.instructions.map((instruction, index) => (
-                          <div key={index} className="bg-white rounded-lg p-4 border border-amber-200">
+                          <div key={index} className="bg-white rounded-lg p-4 border border-amber-300 shadow-md">
                             <div className="flex items-start gap-3">
-                              <div className="w-6 h-6 bg-amber-500 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">
+                              <div className="w-6 h-6 bg-offwhite0 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">
                                 {index + 1}
               </div>
                               <p className="text-gray-700">{instruction}</p>
@@ -1968,6 +2059,74 @@ const VendorProductsPage: React.FC = () => {
                         <div className="text-lg font-bold text-purple-600">${viewingCard.price.toFixed(2)}</div>
                       </div>
                     </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* CSV Import Modal */}
+        {showCsvImport && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-offwhite rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-amber-200">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-medium text-gray-900">Import Products from CSV</h3>
+                  <button
+                    onClick={() => setShowCsvImport(false)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h4 className="font-medium text-blue-900 mb-2">CSV Format Requirements</h4>
+                    <p className="text-sm text-blue-800 mb-2">Your CSV file must include these columns:</p>
+                    <ul className="text-sm text-blue-800 list-disc list-inside space-y-1">
+                      <li><strong>name</strong> - Product name</li>
+                      <li><strong>description</strong> - Product description</li>
+                      <li><strong>price</strong> - Product price (number)</li>
+                      <li><strong>category</strong> - food, service, or non-food</li>
+                      <li><strong>subcategory</strong> - Product subcategory</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+                    <div className="text-center">
+                      <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-gray-600 mb-4">Upload your CSV file</p>
+                      <input
+                        type="file"
+                        accept=".csv"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            handleCsvImport(file);
+                          }
+                        }}
+                        className="hidden"
+                        id="csv-upload"
+                      />
+                      <label
+                        htmlFor="csv-upload"
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer inline-block"
+                      >
+                        Choose CSV File
+                      </label>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <h4 className="font-medium text-gray-900 mb-2">Example CSV Format</h4>
+                    <pre className="text-sm text-gray-700 bg-white p-3 rounded border overflow-x-auto">
+{`name,description,price,category,subcategory
+Artisan Bread,Hand-baked sourdough bread,8.99,food,Baked Goods
+Garden Cleanup,Weekly yard maintenance,75.00,service,Yard Work
+Honey Jar,Local organic honey,12.50,food,Preserved Foods`}
+                    </pre>
                   </div>
                 </div>
               </div>

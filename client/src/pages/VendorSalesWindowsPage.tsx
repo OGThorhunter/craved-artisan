@@ -549,7 +549,7 @@ const VendorSalesWindowsPage = () => {
 
   return (
     <VendorDashboardLayout>
-      <div className="p-6">
+      <div className="p-6 bg-white min-h-screen">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="mb-8">
@@ -568,7 +568,7 @@ const VendorSalesWindowsPage = () => {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
-            <div className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-all duration-300">
+            <div className="bg-offwhite rounded-lg shadow-lg p-6 hover:shadow-xl transition-all duration-300 border border-amber-200">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-100 rounded-lg">
                   <Calendar className="h-6 w-6 text-blue-600" />
@@ -580,7 +580,7 @@ const VendorSalesWindowsPage = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-all duration-300">
+            <div className="bg-offwhite rounded-lg shadow-lg p-6 hover:shadow-xl transition-all duration-300 border border-amber-200">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-green-100 rounded-lg">
                   <CheckCircle className="h-6 w-6 text-green-600" />
@@ -592,7 +592,7 @@ const VendorSalesWindowsPage = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-all duration-300">
+            <div className="bg-offwhite rounded-lg shadow-lg p-6 hover:shadow-xl transition-all duration-300 border border-amber-200">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-yellow-100 rounded-lg">
                   <Clock className="h-6 w-6 text-yellow-600" />
@@ -604,7 +604,7 @@ const VendorSalesWindowsPage = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-all duration-300">
+            <div className="bg-offwhite rounded-lg shadow-lg p-6 hover:shadow-xl transition-all duration-300 border border-amber-200">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-gray-100 rounded-lg">
                   <Edit className="h-6 w-6 text-gray-600" />
@@ -616,7 +616,7 @@ const VendorSalesWindowsPage = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-all duration-300">
+            <div className="bg-offwhite rounded-lg shadow-lg p-6 hover:shadow-xl transition-all duration-300 border border-amber-200">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-red-100 rounded-lg">
                   <X className="h-6 w-6 text-red-600" />
@@ -628,7 +628,7 @@ const VendorSalesWindowsPage = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-all duration-300">
+            <div className="bg-offwhite rounded-lg shadow-lg p-6 hover:shadow-xl transition-all duration-300 border border-amber-200">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-purple-100 rounded-lg">
                   <ShoppingCart className="h-6 w-6 text-purple-600" />
@@ -642,7 +642,7 @@ const VendorSalesWindowsPage = () => {
           </div>
 
           {/* Action Bar */}
-          <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
+          <div className="bg-offwhite rounded-lg shadow-lg border border-amber-200 p-6 mb-8">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="flex flex-col gap-2">
@@ -690,7 +690,7 @@ const VendorSalesWindowsPage = () => {
           </div>
 
           {/* Tabs */}
-          <div className="bg-white rounded-lg shadow-sm border mb-8">
+          <div className="bg-offwhite rounded-lg shadow-lg border border-amber-200 mb-8">
             <div className="border-b border-gray-200">
               <nav className="flex space-x-8 px-6">
                 {[
@@ -732,7 +732,7 @@ const VendorSalesWindowsPage = () => {
 
 
           {/* Quick Filters */}
-          <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
+          <div className="bg-offwhite rounded-lg shadow-lg border border-amber-200 p-4 mb-6">
             <div className="flex flex-wrap gap-4 items-center">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium text-gray-700">Filter:</span>
@@ -821,7 +821,7 @@ const VendorSalesWindowsPage = () => {
           {viewMode === 'list' ? (
             <div className="space-y-6">
               {filteredWindows.length === 0 ? (
-                <div className="bg-white rounded-lg shadow p-12 text-center">
+                <div className="bg-offwhite rounded-lg shadow-lg p-12 text-center border border-amber-200">
                   <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No sales windows found</h3>
                   <p className="text-gray-600 mb-6">
@@ -840,7 +840,7 @@ const VendorSalesWindowsPage = () => {
                 </div>
               ) : (
                 filteredWindows.map((window) => (
-                  <div key={window.id} className={`bg-white rounded-lg shadow p-6 hover:shadow-md transition-all duration-300 ${window.status === 'OPEN' ? 'ring-2 ring-green-500 ring-opacity-50' : ''}`}>
+                  <div key={window.id} className={`bg-offwhite rounded-lg shadow-lg p-6 hover:shadow-xl transition-all duration-300 border border-amber-200 ${window.status === 'OPEN' ? 'ring-2 ring-green-500 ring-opacity-50' : ''}`}>
                     {window.status === 'OPEN' && (
                       <div className="bg-green-500 text-white px-4 py-2 rounded-lg mb-4 flex items-center gap-2">
                         <CheckCircle className="h-5 w-5 animate-pulse" />
@@ -926,7 +926,7 @@ const VendorSalesWindowsPage = () => {
                       <div className="flex items-center gap-2 ml-4">
                         <button
                           onClick={() => handleEditWindow(window)}
-                          className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                          className="p-2 text-gray-500 hover:text-gray-700 hover:bg-brand-beige rounded-md transition-colors"
                           title="Edit window"
                         >
                           <Edit className="h-4 w-4" />
@@ -934,7 +934,7 @@ const VendorSalesWindowsPage = () => {
                         
                         <button
                           onClick={() => handleDuplicateWindow(window)}
-                          className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                          className="p-2 text-gray-500 hover:text-gray-700 hover:bg-brand-beige rounded-md transition-colors"
                           title="Duplicate window"
                         >
                           <Copy className="h-4 w-4" />
