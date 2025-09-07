@@ -15,7 +15,7 @@ interface ExpenseCategory {
   date: string;
 }
 
-interface AIInsight {
+interface FinancialInsight {
   type: "warning" | "success" | "info";
   title: string;
   message: string;
@@ -31,7 +31,7 @@ const mockExpenses: ExpenseCategory[] = [
   { id: "4", name: "Marketing & Advertising", amount: 200, type: "variable", source: "manual", date: "2024-08-10" },
 ];
 
-const aiInsights: AIInsight[] = [
+const aiInsights: FinancialInsight[] = [
   {
     type: "warning",
     title: "High COGS Ratio",

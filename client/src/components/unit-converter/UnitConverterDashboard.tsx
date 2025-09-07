@@ -114,61 +114,253 @@ export default function UnitConverterDashboard({ isOpen, onClose }: UnitConverte
   ]);
   const queryClient = useQueryClient();
 
-  // Fetch unit categories
-  const { data: categoriesData, isLoading: categoriesLoading } = useQuery({
+  // Fallback units data for when API fails
+  const getFallbackUnits = (categoryId: string): Unit[] => {
+    const fallbackData: Record<string, Unit[]> = {
+      weight: [
+        { id: 'gram', name: 'Gram', symbol: 'g', factor: 1, category: 'weight', isCommon: true },
+        { id: 'kilogram', name: 'Kilogram', symbol: 'kg', factor: 1000, category: 'weight', isCommon: true },
+        { id: 'pound', name: 'Pound', symbol: 'lb', factor: 453.592, category: 'weight', isCommon: true },
+        { id: 'ounce', name: 'Ounce', symbol: 'oz', factor: 28.3495, category: 'weight', isCommon: true },
+      ],
+      volume: [
+        { id: 'liter', name: 'Liter', symbol: 'l', factor: 1, category: 'volume', isCommon: true },
+        { id: 'milliliter', name: 'Milliliter', symbol: 'ml', factor: 0.001, category: 'volume', isCommon: true },
+        { id: 'gallon', name: 'Gallon', symbol: 'gal', factor: 3.78541, category: 'volume', isCommon: true },
+        { id: 'cup', name: 'Cup', symbol: 'cup', factor: 0.236588, category: 'volume', isCommon: true },
+        { id: 'tablespoon', name: 'Tablespoon', symbol: 'tbsp', factor: 0.0147868, category: 'volume', isCommon: true },
+        { id: 'teaspoon', name: 'Teaspoon', symbol: 'tsp', factor: 0.00492892, category: 'volume', isCommon: true },
+      ],
+      length: [
+        { id: 'meter', name: 'Meter', symbol: 'm', factor: 1, category: 'length', isCommon: true },
+        { id: 'centimeter', name: 'Centimeter', symbol: 'cm', factor: 0.01, category: 'length', isCommon: true },
+        { id: 'kilometer', name: 'Kilometer', symbol: 'km', factor: 1000, category: 'length', isCommon: true },
+        { id: 'foot', name: 'Foot', symbol: 'ft', factor: 0.3048, category: 'length', isCommon: true },
+        { id: 'inch', name: 'Inch', symbol: 'in', factor: 0.0254, category: 'length', isCommon: true },
+        { id: 'mile', name: 'Mile', symbol: 'mi', factor: 1609.34, category: 'length', isCommon: true },
+      ],
+      area: [
+        { id: 'square_meter', name: 'Square Meter', symbol: 'm²', factor: 1, category: 'area', isCommon: true },
+        { id: 'square_foot', name: 'Square Foot', symbol: 'ft²', factor: 0.092903, category: 'area', isCommon: true },
+        { id: 'acre', name: 'Acre', symbol: 'ac', factor: 4046.86, category: 'area', isCommon: true },
+        { id: 'hectare', name: 'Hectare', symbol: 'ha', factor: 10000, category: 'area', isCommon: true },
+      ],
+      temperature: [
+        { id: 'celsius', name: 'Celsius', symbol: '°C', factor: 1, category: 'temperature', isCommon: true },
+        { id: 'fahrenheit', name: 'Fahrenheit', symbol: '°F', factor: 1, category: 'temperature', isCommon: true },
+        { id: 'kelvin', name: 'Kelvin', symbol: 'K', factor: 1, category: 'temperature', isCommon: false },
+      ],
+      custom: [
+        { id: 'piece', name: 'Piece', symbol: 'pc', factor: 1, category: 'custom', isCommon: true },
+        { id: 'dozen', name: 'Dozen', symbol: 'dz', factor: 12, category: 'custom', isCommon: true },
+        { id: 'gross', name: 'Gross', symbol: 'gr', factor: 144, category: 'custom', isCommon: false },
+      ]
+    };
+    return fallbackData[categoryId] || [];
+  };
+
+  // Client-side conversion function for fallback
+  const performClientSideConversion = (data: { value: number; fromUnit: string; toUnit: string; precision: number }) => {
+    const { value, fromUnit, toUnit, precision } = data;
+    
+    // Get fallback units for all categories
+    const allFallbackUnits = [
+      ...getFallbackUnits('weight'),
+      ...getFallbackUnits('volume'),
+      ...getFallbackUnits('length'),
+      ...getFallbackUnits('area'),
+      ...getFallbackUnits('temperature'),
+      ...getFallbackUnits('custom')
+    ];
+    
+    const fromUnitData = allFallbackUnits.find(unit => unit.id === fromUnit);
+    const toUnitData = allFallbackUnits.find(unit => unit.id === toUnit);
+    
+    if (!fromUnitData || !toUnitData) {
+      throw new Error('Invalid unit specified');
+    }
+    
+    if (fromUnitData.category !== toUnitData.category) {
+      throw new Error('Cannot convert between different unit categories');
+    }
+    
+    let convertedValue: number;
+    let formula: string | undefined;
+    
+    // Handle temperature conversion (special case)
+    if (fromUnitData.category === 'temperature') {
+      convertedValue = convertTemperatureClientSide(value, fromUnit, toUnit);
+      formula = `Temperature conversion: ${fromUnit} → ${toUnit}`;
+    } else {
+      // Standard conversion through base unit
+      const baseValue = value * fromUnitData.factor;
+      convertedValue = baseValue / toUnitData.factor;
+      formula = `${value} ${fromUnit} × ${fromUnitData.factor} ÷ ${toUnitData.factor} = ${convertedValue} ${toUnit}`;
+    }
+    
+    // Round to specified precision
+    const roundedValue = Math.round(convertedValue * Math.pow(10, precision)) / Math.pow(10, precision);
+    
+    const result: ConversionResult = {
+      from: {
+        value,
+        unit: fromUnit,
+        unitName: fromUnitData.name
+      },
+      to: {
+        value: roundedValue,
+        unit: toUnit,
+        unitName: toUnitData.name
+      },
+      factor: toUnitData.factor / fromUnitData.factor,
+      precision,
+      formula
+    };
+    
+    return { result };
+  };
+
+  // Temperature conversion function for client-side fallback
+  const convertTemperatureClientSide = (value: number, fromUnit: string, toUnit: string): number => {
+    // Convert to Celsius first
+    let celsius: number;
+    switch (fromUnit) {
+      case 'celsius':
+        celsius = value;
+        break;
+      case 'fahrenheit':
+        celsius = (value - 32) * 5/9;
+        break;
+      case 'kelvin':
+        celsius = value - 273.15;
+        break;
+      default:
+        throw new Error(`Unsupported temperature unit: ${fromUnit}`);
+    }
+
+    // Convert from Celsius to target unit
+    switch (toUnit) {
+      case 'celsius':
+        return celsius;
+      case 'fahrenheit':
+        return celsius * 9/5 + 32;
+      case 'kelvin':
+        return celsius + 273.15;
+      default:
+        throw new Error(`Unsupported temperature unit: ${toUnit}`);
+    }
+  };
+
+  // Fetch unit categories with error handling and fallback
+  const { data: categoriesData, isLoading: categoriesLoading, error: categoriesError } = useQuery({
     queryKey: ['unit-converter-categories'],
     queryFn: async () => {
-      const response = await axios.get('/api/unit-converter/categories');
-      return response.data;
+      try {
+        const response = await axios.get('/api/unit-converter/categories');
+        return response.data;
+      } catch (error) {
+        console.warn('Failed to fetch unit categories, using fallback data:', error);
+        // Return fallback data
+        return {
+          categories: [
+            { id: 'weight', name: 'Weight/Mass', baseUnit: 'gram', unitCount: 8 },
+            { id: 'volume', name: 'Volume', baseUnit: 'liter', unitCount: 10 },
+            { id: 'length', name: 'Length/Distance', baseUnit: 'meter', unitCount: 8 },
+            { id: 'area', name: 'Area', baseUnit: 'square_meter', unitCount: 6 },
+            { id: 'temperature', name: 'Temperature', baseUnit: 'celsius', unitCount: 4 },
+            { id: 'custom', name: 'Custom Units', baseUnit: 'piece', unitCount: 5 }
+          ]
+        };
+      }
     },
-    enabled: isOpen,
+    enabled: Boolean(isOpen),
+    retry: 1,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  // Fetch units for selected category
-  const { data: unitsData, isLoading: unitsLoading } = useQuery({
+  // Fetch units for selected category with error handling and fallback
+  const { data: unitsData, isLoading: unitsLoading, error: unitsError } = useQuery({
     queryKey: ['unit-converter-units', selectedCategory],
     queryFn: async () => {
-      const response = await axios.get(`/api/unit-converter/categories/${selectedCategory}`);
-      return response.data;
+      try {
+        const response = await axios.get(`/api/unit-converter/categories/${selectedCategory}`);
+        return response.data;
+      } catch (error) {
+        console.warn('Failed to fetch units, using fallback data:', error);
+        // Return fallback data based on category
+        const fallbackUnits = getFallbackUnits(selectedCategory);
+        return { category: { id: selectedCategory, name: selectedCategory, units: fallbackUnits } };
+      }
     },
-    enabled: isOpen && selectedCategory,
+    enabled: Boolean(isOpen && selectedCategory),
+    retry: 1,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  // Fetch conversion history
+  // Fetch conversion history with error handling
   const { data: historyData, isLoading: historyLoading } = useQuery({
     queryKey: ['unit-converter-history'],
     queryFn: async () => {
-      const response = await axios.get('/api/unit-converter/history');
-      return response.data;
+      try {
+        const response = await axios.get('/api/unit-converter/history');
+        return response.data;
+      } catch (error) {
+        console.warn('Failed to fetch conversion history:', error);
+        return { history: [] };
+      }
     },
-    enabled: isOpen && activeTab === 'history',
+    enabled: Boolean(isOpen && activeTab === 'history'),
+    retry: 1,
   });
 
-  // Fetch quick reference
+  // Fetch quick reference with error handling
   const { data: referenceData, isLoading: referenceLoading } = useQuery({
     queryKey: ['unit-converter-quick-reference'],
     queryFn: async () => {
-      const response = await axios.get('/api/unit-converter/quick-reference');
-      return response.data;
+      try {
+        const response = await axios.get('/api/unit-converter/quick-reference');
+        return response.data;
+      } catch (error) {
+        console.warn('Failed to fetch quick reference:', error);
+        return { quickReference: {} };
+      }
     },
-    enabled: isOpen && activeTab === 'reference',
+    enabled: Boolean(isOpen && activeTab === 'reference'),
+    retry: 1,
   });
 
-  // Fetch analytics
+  // Fetch analytics with error handling
   const { data: analyticsData, isLoading: analyticsLoading } = useQuery({
     queryKey: ['unit-converter-analytics'],
     queryFn: async () => {
-      const response = await axios.get('/api/unit-converter/analytics');
-      return response.data;
+      try {
+        const response = await axios.get('/api/unit-converter/analytics');
+        return response.data;
+      } catch (error) {
+        console.warn('Failed to fetch analytics:', error);
+        return {
+          overview: { totalConversions: 0, totalCategories: 6, totalUnits: 30 },
+          categoryBreakdown: {},
+          recentActivity: { last24Hours: 0, last7Days: 0, last30Days: 0 },
+          topUnits: []
+        };
+      }
     },
-    enabled: isOpen && activeTab === 'analytics',
+    enabled: Boolean(isOpen && activeTab === 'analytics'),
+    retry: 1,
   });
 
-  // Convert units mutation
+  // Convert units mutation with fallback calculation
   const convertMutation = useMutation({
     mutationFn: async (data: { value: number; fromUnit: string; toUnit: string; precision: number }) => {
-      const response = await axios.post('/api/unit-converter/convert', data);
-      return response.data;
+      try {
+        const response = await axios.post('/api/unit-converter/convert', data);
+        return response.data;
+      } catch (error) {
+        console.warn('API conversion failed, using client-side calculation:', error);
+        // Fallback to client-side calculation
+        return performClientSideConversion(data);
+      }
     },
     onSuccess: (data) => {
       setConversionResult(data.result);
@@ -176,8 +368,9 @@ export default function UnitConverterDashboard({ isOpen, onClose }: UnitConverte
       queryClient.invalidateQueries(['unit-converter-history']);
       queryClient.invalidateQueries(['unit-converter-analytics']);
     },
-    onError: () => {
-      toast.error('Failed to convert units');
+    onError: (error) => {
+      console.error('Conversion failed:', error);
+      toast.error('Failed to convert units. Please check your input.');
     },
   });
 

@@ -38,27 +38,27 @@ export default function DashboardNav() {
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex space-x-4 lg:space-x-6 overflow-x-auto">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isItemActive = isActive(item.href);
-              
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  aria-current={isItemActive ? "page" : undefined}
-                  className={`inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                    isItemActive
-                      ? 'text-[#5B6E02] bg-[#F7F2EC] border-2 border-[#5B6E02] shadow-md'
-                      : 'text-[#2C2C2C] hover:text-[#5B6E02] hover:bg-[#F7F2EC] hover:border-2 hover:border-[#5B6E02] hover:shadow-md'
-                  }`}
-                >
-                  {Icon && <Icon className="w-4 h-4" />}
-                  {item.label}
-                </Link>
-              );
-            })}
-          </div>
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isItemActive = isActive(item.href);
+                
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    aria-current={isItemActive ? "page" : undefined}
+                    className={`inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                      isItemActive
+                        ? 'text-[#5B6E02] bg-[#F7F2EC] border-2 border-[#5B6E02] shadow-md'
+                        : 'text-[#2C2C2C] hover:text-[#5B6E02] hover:bg-[#F7F2EC] hover:border-2 hover:border-[#5B6E02] hover:shadow-md'
+                    }`}
+                  >
+                    {Icon && <Icon className="w-4 h-4" />}
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </div>
           </div>
         </nav>
       </header>

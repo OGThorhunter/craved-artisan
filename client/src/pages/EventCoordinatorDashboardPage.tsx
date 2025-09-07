@@ -93,7 +93,7 @@ interface Message {
   readAt?: string;
 }
 
-interface AIInsight {
+interface EventInsight {
   id: string;
   type: 'layout' | 'traffic' | 'weather' | 'revenue' | 'vendor';
   title: string;
@@ -122,7 +122,7 @@ export default function EventCoordinatorDashboardPage() {
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [booths, setBooths] = useState<Booth[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [aiInsights, setAiInsights] = useState<AIInsight[]>([]);
+  const [aiInsights, setAiInsights] = useState<EventInsight[]>([]);
   const [salesData, setSalesData] = useState<SalesData | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'events' | 'vendors' | 'map' | 'messaging' | 'sales' | 'settings'>('overview');
@@ -272,7 +272,7 @@ export default function EventCoordinatorDashboardPage() {
       }
     ];
 
-    const mockAIInsights: AIInsight[] = [
+    const mockAIInsights: EventInsight[] = [
       {
         id: 'ai1',
         type: 'layout',

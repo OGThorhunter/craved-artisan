@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { logger } from '../logger';
+import { AuthenticatedRequest } from '../types/session';
 
 export const unitConverterRouter = Router();
 
@@ -247,9 +248,11 @@ unitConverterRouter.get('/unit-converter/categories', (req, res) => {
         unitCount: category.units.length
       }))
     });
+    return;
   } catch (error) {
-    logger.error('Error fetching unit categories:', error);
+    logger.error({ error }, 'Error fetching unit categories');
     res.status(500).json({ error: 'Failed to fetch unit categories' });
+    return;
   }
 });
 
@@ -264,9 +267,11 @@ unitConverterRouter.get('/unit-converter/categories/:categoryId', (req, res) => 
     }
     
     res.json({ category });
+    return;
   } catch (error) {
-    logger.error('Error fetching category units:', error);
+    logger.error({ error }, 'Error fetching category units');
     res.status(500).json({ error: 'Failed to fetch category units' });
+    return;
   }
 });
 
@@ -286,14 +291,16 @@ unitConverterRouter.get('/unit-converter/units', (req, res) => {
     }
     
     res.json({ units: allUnits });
+    return;
   } catch (error) {
-    logger.error('Error fetching units:', error);
+    logger.error({ error }, 'Error fetching units');
     res.status(500).json({ error: 'Failed to fetch units' });
+    return;
   }
 });
 
 // POST /api/unit-converter/convert - Convert between units
-unitConverterRouter.post('/unit-converter/convert', (req, res) => {
+unitConverterRouter.post('/unit-converter/convert', (req: AuthenticatedRequest, res) => {
   try {
     const { value, fromUnit, toUnit, precision = 6 } = req.body;
     
@@ -370,16 +377,18 @@ unitConverterRouter.post('/unit-converter/convert', (req, res) => {
       conversionHistory = conversionHistory.slice(0, 1000);
     }
     
-    logger.info('Unit conversion completed', {
+    logger.info({
       from: `${value} ${fromUnit}`,
       to: `${roundedValue} ${toUnit}`,
       category: fromUnitData.category
-    });
+    }, 'Unit conversion completed');
     
     res.json({ result });
+    return;
   } catch (error) {
-    logger.error('Error converting units:', error);
+    logger.error({ error }, 'Error converting units');
     res.status(500).json({ error: 'Failed to convert units' });
+    return;
   }
 });
 
@@ -438,9 +447,11 @@ unitConverterRouter.post('/unit-converter/batch-convert', (req, res) => {
     });
     
     res.json({ results });
+    return;
   } catch (error) {
-    logger.error('Error in batch conversion:', error);
+    logger.error({ error }, 'Error in batch conversion');
     res.status(500).json({ error: 'Failed to perform batch conversion' });
+    return;
   }
 });
 
@@ -464,9 +475,11 @@ unitConverterRouter.get('/unit-converter/history', (req, res) => {
       limit: Number(limit),
       offset: Number(offset)
     });
+    return;
   } catch (error) {
-    logger.error('Error fetching conversion history:', error);
+    logger.error({ error }, 'Error fetching conversion history');
     res.status(500).json({ error: 'Failed to fetch conversion history' });
+    return;
   }
 });
 
@@ -523,12 +536,15 @@ unitConverterRouter.get('/unit-converter/quick-reference', (req, res) => {
         category, 
         conversions: quickReference[category as keyof typeof quickReference] 
       });
+      return;
     } else {
       res.json({ quickReference });
+      return;
     }
   } catch (error) {
-    logger.error('Error fetching quick reference:', error);
+    logger.error({ error }, 'Error fetching quick reference');
     res.status(500).json({ error: 'Failed to fetch quick reference' });
+    return;
   }
 });
 
@@ -574,9 +590,11 @@ unitConverterRouter.get('/unit-converter/analytics', (req, res) => {
       recentActivity,
       topUnits
     });
+    return;
   } catch (error) {
-    logger.error('Error fetching analytics:', error);
+    logger.error({ error }, 'Error fetching analytics');
     res.status(500).json({ error: 'Failed to fetch analytics' });
+    return;
   }
 });
 
@@ -617,16 +635,18 @@ unitConverterRouter.post('/unit-converter/custom-unit', (req, res) => {
     
     categoryData.units.push(newUnit);
     
-    logger.info('Custom unit added', { name, symbol, category, factor });
+    logger.info({ name, symbol, category, factor }, 'Custom unit added');
     
     res.json({ 
       success: true, 
       unit: newUnit,
       message: 'Custom unit added successfully' 
     });
+    return;
   } catch (error) {
-    logger.error('Error adding custom unit:', error);
+    logger.error({ error }, 'Error adding custom unit');
     res.status(500).json({ error: 'Failed to add custom unit' });
+    return;
   }
 });
 
@@ -646,9 +666,11 @@ unitConverterRouter.delete('/unit-converter/history/:id', (req, res) => {
       success: true,
       message: 'Conversion deleted successfully' 
     });
+    return;
   } catch (error) {
-    logger.error('Error deleting conversion:', error);
+    logger.error({ error }, 'Error deleting conversion');
     res.status(500).json({ error: 'Failed to delete conversion' });
+    return;
   }
 });
 
@@ -661,8 +683,10 @@ unitConverterRouter.delete('/unit-converter/history', (req, res) => {
       success: true,
       message: 'Conversion history cleared successfully' 
     });
+    return;
   } catch (error) {
-    logger.error('Error clearing conversion history:', error);
+    logger.error({ error }, 'Error clearing conversion history');
     res.status(500).json({ error: 'Failed to clear conversion history' });
+    return;
   }
 });

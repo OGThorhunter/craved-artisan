@@ -139,7 +139,7 @@ interface CustomerPickup {
   }>;
 }
 
-interface AIInsight {
+interface DropoffInsight {
   id: string;
   type: 'delivery' | 'pickup' | 'capacity' | 'revenue' | 'staffing';
   title: string;
@@ -170,7 +170,7 @@ export default function DropoffDashboardPage() {
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [pickups, setPickups] = useState<CustomerPickup[]>([]);
-  const [aiInsights, setAiInsights] = useState<AIInsight[]>([]);
+  const [aiInsights, setAiInsights] = useState<DropoffInsight[]>([]);
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'schedule' | 'vendors' | 'deliveries' | 'pickups' | 'ai' | 'metrics' | 'settings'>('overview');
@@ -357,7 +357,7 @@ export default function DropoffDashboardPage() {
       }
     ];
 
-    const mockAIInsights: AIInsight[] = [
+    const mockAIInsights: DropoffInsight[] = [
       {
         id: 'ai1',
         type: 'delivery',

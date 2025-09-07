@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/api';
 import { toast } from 'react-hot-toast';
 import {
   Receipt,
@@ -102,7 +102,7 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
   const { data: receiptsData, isLoading: receiptsLoading } = useQuery({
     queryKey: ['ai-receipt-parser-receipts'],
     queryFn: async () => {
-      const response = await axios.get('/api/ai-receipt-parser/receipts');
+      const response = await api.get('/ai-receipt-parser/receipts');
       return response.data;
     },
     enabled: isOpen,
@@ -112,7 +112,7 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
   const { data: shoppingListsData, isLoading: shoppingListsLoading } = useQuery({
     queryKey: ['ai-receipt-parser-shopping-lists'],
     queryFn: async () => {
-      const response = await axios.get('/api/ai-receipt-parser/shopping-lists');
+      const response = await api.get('/ai-receipt-parser/shopping-lists');
       return response.data;
     },
     enabled: isOpen,
@@ -122,7 +122,7 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
   const { data: analyticsData, isLoading: analyticsLoading } = useQuery({
     queryKey: ['ai-receipt-parser-analytics'],
     queryFn: async () => {
-      const response = await axios.get('/api/ai-receipt-parser/analytics');
+      const response = await api.get('/ai-receipt-parser/analytics');
       return response.data;
     },
     enabled: isOpen,
@@ -135,7 +135,7 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
       if (data.text) formData.append('text', data.text);
       if (data.image) formData.append('image', data.image);
       
-      const response = await axios.post('/api/ai-receipt-parser/parse-receipt', formData, {
+      const response = await api.post('/ai-receipt-parser/parse-receipt', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       return response.data;
@@ -155,7 +155,7 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
   // Parse shopping list mutation
   const parseShoppingListMutation = useMutation({
     mutationFn: async (text: string) => {
-      const response = await axios.post('/api/ai-receipt-parser/parse-shopping-list', { text });
+      const response = await api.post('/ai-receipt-parser/parse-shopping-list', { text });
       return response.data;
     },
     onSuccess: (data) => {
@@ -173,7 +173,7 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
   // Import to inventory mutation
   const importToInventoryMutation = useMutation({
     mutationFn: async (data: { receiptId?: string; shoppingListId?: string; selectedItems: string[] }) => {
-      const response = await axios.post('/api/ai-receipt-parser/import-to-inventory', data);
+      const response = await api.post('/ai-receipt-parser/import-to-inventory', data);
       return response.data;
     },
     onSuccess: (data) => {
@@ -189,7 +189,7 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
   // Delete receipt mutation
   const deleteReceiptMutation = useMutation({
     mutationFn: async (id: string) => {
-      const response = await axios.delete(`/api/ai-receipt-parser/receipts/${id}`);
+      const response = await api.delete(`/ai-receipt-parser/receipts/${id}`);
       return response.data;
     },
     onSuccess: () => {
@@ -205,7 +205,7 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
   // Delete shopping list mutation
   const deleteShoppingListMutation = useMutation({
     mutationFn: async (id: string) => {
-      const response = await axios.delete(`/api/ai-receipt-parser/shopping-lists/${id}`);
+      const response = await api.delete(`/ai-receipt-parser/shopping-lists/${id}`);
       return response.data;
     },
     onSuccess: () => {
@@ -304,13 +304,13 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-7xl w-full max-h-[90vh] overflow-hidden">
+      <div className="bg-white rounded-lg max-w-7xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
+        <div className="px-6 py-4 border-b border-gray-200 bg-white">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Brain className="w-6 h-6 text-blue-600" />
+              <div className="p-2 bg-gray-100 rounded-lg">
+                <Brain className="w-6 h-6 text-gray-600" />
               </div>
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">AI Receipt & Shopping List Parser</h2>
@@ -344,8 +344,8 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
                 onClick={() => setActiveTab(id as any)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
                   activeTab === id
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-600 hover:bg-gray-100'
+                    ? 'bg-gray-100 text-gray-700'
+                    : 'text-gray-600 hover:bg-gray-50'
                 }`}
               >
                 <Icon className="w-4 h-4" />
@@ -361,15 +361,15 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
           {activeTab === 'parse' && (
             <div className="space-y-6">
               {/* Parse Mode Selection */}
-              <div className="bg-gray-50 rounded-lg p-4">
+              <div className="bg-gray-50 rounded-lg p-4 shadow-sm border border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Select Parse Mode</h3>
                 <div className="flex gap-4">
                   <button
                     onClick={() => setParseMode('receipt')}
                     className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
                       parseMode === 'receipt'
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'bg-white text-gray-600 hover:bg-gray-100'
+                        ? 'bg-gray-100 text-gray-700'
+                        : 'bg-white text-gray-600 hover:bg-gray-50'
                     }`}
                   >
                     <Receipt className="w-4 h-4" />
@@ -379,8 +379,8 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
                     onClick={() => setParseMode('shopping-list')}
                     className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
                       parseMode === 'shopping-list'
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'bg-white text-gray-600 hover:bg-gray-100'
+                        ? 'bg-gray-100 text-gray-700'
+                        : 'bg-white text-gray-600 hover:bg-gray-50'
                     }`}
                   >
                     <FileText className="w-4 h-4" />
@@ -392,7 +392,7 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
               {/* Input Methods */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Text Input */}
-                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Text Input</h3>
                   <textarea
                     value={inputText}
@@ -406,7 +406,7 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
                   <button
                     onClick={handleParseText}
                     disabled={parseReceiptMutation.isPending || parseShoppingListMutation.isPending}
-                    className="mt-4 w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    className="mt-4 w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-900 transition-colors disabled:opacity-50"
                   >
                     <Brain className="w-4 h-4" />
                     {parseReceiptMutation.isPending || parseShoppingListMutation.isPending ? 'Parsing...' : 'Parse Text'}
@@ -414,7 +414,7 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
                 </div>
 
                 {/* Image Upload */}
-                <div className="bg-white border border-gray-200 rounded-lg p-6">
+                <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Image Upload</h3>
                   <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
                     <div className="flex flex-col items-center gap-4">
@@ -428,7 +428,7 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
                       <button
                         onClick={() => fileInputRef.current?.click()}
                         disabled={parseReceiptMutation.isPending}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-900 transition-colors disabled:opacity-50"
                       >
                         <Upload className="w-4 h-4" />
                         Choose File
@@ -447,11 +447,11 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
               </div>
 
               {/* Recent Parsed Documents */}
-              <div className="bg-gray-50 rounded-lg p-4">
+              <div className="bg-gray-50 rounded-lg p-4 shadow-sm border border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Documents</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {receiptsData?.receipts?.slice(0, 2).map((receipt: ParsedReceipt) => (
-                    <div key={receipt.id} className="bg-white border border-gray-200 rounded-lg p-4">
+                    <div key={receipt.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="font-medium text-gray-900">{receipt.storeName || 'Receipt'}</h4>
                         <span className="text-sm text-gray-600">{receipt.items.length} items</span>
@@ -465,7 +465,7 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
                           setSelectedDocument(receipt);
                           setShowDocumentDetails(true);
                         }}
-                        className="inline-flex items-center gap-1 text-blue-600 hover:underline text-sm"
+                        className="inline-flex items-center gap-1 text-gray-800 hover:underline text-sm"
                       >
                         <Eye className="w-3 h-3" />
                         View Details
@@ -473,7 +473,7 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
                     </div>
                   ))}
                   {shoppingListsData?.shoppingLists?.slice(0, 2).map((list: ParsedShoppingList) => (
-                    <div key={list.id} className="bg-white border border-gray-200 rounded-lg p-4">
+                    <div key={list.id} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="font-medium text-gray-900">{list.title || 'Shopping List'}</h4>
                         <span className="text-sm text-gray-600">{list.items.length} items</span>
@@ -486,7 +486,7 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
                           setSelectedDocument(list);
                           setShowDocumentDetails(true);
                         }}
-                        className="inline-flex items-center gap-1 text-blue-600 hover:underline text-sm"
+                        className="inline-flex items-center gap-1 text-gray-800 hover:underline text-sm"
                       >
                         <Eye className="w-3 h-3" />
                         View Details
@@ -502,7 +502,7 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
           {activeTab === 'receipts' && (
             <div className="space-y-4">
               {receiptsData?.receipts?.map((receipt: ParsedReceipt) => (
-                <div key={receipt.id} className="bg-white border border-gray-200 rounded-lg p-6">
+                <div key={receipt.id} className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-green-100 rounded-lg">
@@ -566,7 +566,7 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
                         setSelectedDocument(receipt);
                         setShowDocumentDetails(true);
                       }}
-                      className="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors"
+                      className="inline-flex items-center gap-2 px-3 py-1 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
                     >
                       <Eye className="w-4 h-4" />
                       View Details
@@ -581,7 +581,7 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
           {activeTab === 'shopping-lists' && (
             <div className="space-y-4">
               {shoppingListsData?.shoppingLists?.map((list: ParsedShoppingList) => (
-                <div key={list.id} className="bg-white border border-gray-200 rounded-lg p-6">
+                <div key={list.id} className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-blue-100 rounded-lg">
@@ -637,7 +637,7 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
                         setSelectedDocument(list);
                         setShowDocumentDetails(true);
                       }}
-                      className="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 transition-colors"
+                      className="inline-flex items-center gap-2 px-3 py-1 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
                     >
                       <Eye className="w-4 h-4" />
                       View Details
@@ -653,7 +653,7 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
             <div className="space-y-6">
               {/* Summary Cards */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 shadow-sm">
                   <div className="flex items-center gap-3">
                     <Receipt className="w-8 h-8 text-green-600" />
                     <div>
@@ -662,7 +662,7 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
                     </div>
                   </div>
                 </div>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 shadow-sm">
                   <div className="flex items-center gap-3">
                     <FileText className="w-8 h-8 text-blue-600" />
                     <div>
@@ -671,7 +671,7 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
                     </div>
                   </div>
                 </div>
-                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 shadow-sm">
                   <div className="flex items-center gap-3">
                     <Package className="w-8 h-8 text-purple-600" />
                     <div>
@@ -680,7 +680,7 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
                     </div>
                   </div>
                 </div>
-                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 shadow-sm">
                   <div className="flex items-center gap-3">
                     <TrendingUp className="w-8 h-8 text-orange-600" />
                     <div>
@@ -692,7 +692,7 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
               </div>
 
               {/* Category Breakdown */}
-              <div className="bg-white border border-gray-200 rounded-lg p-6">
+              <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Category Breakdown</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {Object.entries(analyticsData.categoryBreakdown).map(([category, count]) => (
@@ -708,7 +708,7 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
               </div>
 
               {/* Recent Activity */}
-              <div className="bg-white border border-gray-200 rounded-lg p-6">
+              <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex items-center gap-3">
@@ -734,7 +734,7 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
         {/* Document Details Modal */}
         {showDocumentDetails && selectedDocument && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60 p-4">
-            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[80vh] overflow-hidden">
+            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[80vh] overflow-hidden shadow-2xl">
               <div className="px-6 py-4 border-b border-gray-200">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold text-gray-900">
@@ -775,7 +775,7 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
                     <div className="flex gap-2">
                       <button
                         onClick={selectAllItems}
-                        className="text-sm text-blue-600 hover:underline"
+                        className="text-sm text-gray-800 hover:underline"
                       >
                         Select All
                       </button>
@@ -792,7 +792,7 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
                     <div key={item.id} className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg">
                       <button
                         onClick={() => toggleItemSelection(item.id)}
-                        className="text-blue-600 hover:text-blue-700"
+                        className="text-gray-800 hover:text-gray-900"
                         title={selectedItems.includes(item.id) ? 'Deselect item' : 'Select item'}
                         aria-label={selectedItems.includes(item.id) ? 'Deselect item' : 'Select item'}
                       >
@@ -852,7 +852,7 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
         )}
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+        <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 shadow-sm">
           <div className="flex items-center justify-between">
             <p className="text-sm text-gray-600">
               AI Receipt Parser • {analyticsData?.overview?.totalReceipts || 0} receipts • {analyticsData?.overview?.totalShoppingLists || 0} shopping lists

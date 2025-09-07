@@ -4,7 +4,6 @@ import { AuthProvider } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
 import { ZipProvider } from './contexts/ZipContext';
 import { Layout } from './components/Layout';
-import { QueryProvider } from './lib/query';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
@@ -75,11 +74,10 @@ import TopHandmadeSoapsAtlantaPage from './pages/seo/TopHandmadeSoapsAtlantaPage
 
 function App() {
   return (
-    <QueryProvider>
-      <AuthProvider>
-        <CartProvider>
-          <ZipProvider>
-          <Router>
+    <AuthProvider>
+      <CartProvider>
+        <ZipProvider>
+        <Router>
             <Layout>
             <Switch>
             <Route path="/" component={HomePage} />
@@ -367,7 +365,6 @@ function App() {
     </ZipProvider>
     </CartProvider>
     </AuthProvider>
-    </QueryProvider>
   );
 }
 

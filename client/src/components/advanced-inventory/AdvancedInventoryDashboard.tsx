@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import axios from 'axios';
+import api from '@/lib/api';
 import { toast } from 'react-hot-toast';
 import {
   Warehouse,
@@ -30,7 +30,6 @@ import {
   Layers,
   Target,
   Zap,
-  Settings,
   Download,
   Upload,
   Save,
@@ -112,13 +111,15 @@ export default function AdvancedInventoryDashboard({ isOpen, onClose }: Advanced
   const [selectedLocation, setSelectedLocation] = useState<WarehouseLocation | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterZone, setFilterZone] = useState('');
+  const [editingLocation, setEditingLocation] = useState<WarehouseLocation | null>(null);
+  const [editingBatch, setEditingBatch] = useState<Batch | null>(null);
   const queryClient = useQueryClient();
 
   // Fetch warehouse locations
   const { data: locationsData, isLoading: locationsLoading } = useQuery({
     queryKey: ['warehouse-locations', filterZone],
     queryFn: async () => {
-      const response = await axios.get('/api/advanced-inventory/warehouse/locations', {
+      const response = await api.get('/advanced-inventory/warehouse/locations', {
         params: { zone: filterZone || undefined }
       });
       return response.data;
@@ -130,7 +131,7 @@ export default function AdvancedInventoryDashboard({ isOpen, onClose }: Advanced
   const { data: batchesData, isLoading: batchesLoading } = useQuery({
     queryKey: ['batches'],
     queryFn: async () => {
-      const response = await axios.get('/api/advanced-inventory/batches');
+      const response = await api.get('/advanced-inventory/batches');
       return response.data;
     },
     enabled: isOpen,
@@ -140,7 +141,7 @@ export default function AdvancedInventoryDashboard({ isOpen, onClose }: Advanced
   const { data: alertsData, isLoading: alertsLoading } = useQuery({
     queryKey: ['expiration-alerts'],
     queryFn: async () => {
-      const response = await axios.get('/api/advanced-inventory/expiration-alerts');
+      const response = await api.get('/advanced-inventory/expiration-alerts');
       return response.data;
     },
     enabled: isOpen && activeTab === 'alerts',
@@ -150,16 +151,82 @@ export default function AdvancedInventoryDashboard({ isOpen, onClose }: Advanced
   const { data: analyticsData, isLoading: analyticsLoading } = useQuery({
     queryKey: ['warehouse-analytics'],
     queryFn: async () => {
-      const response = await axios.get('/api/advanced-inventory/analytics');
+      const response = await api.get('/advanced-inventory/analytics');
       return response.data;
     },
     enabled: isOpen && activeTab === 'analytics',
   });
 
+  // Create location mutation
+  const createLocationMutation = useMutation({
+    mutationFn: async (data: Partial<WarehouseLocation>) => {
+      const response = await api.post('/advanced-inventory/warehouse/locations', data);
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success('Location created successfully');
+      queryClient.invalidateQueries(['warehouse-locations']);
+      setShowAddLocation(false);
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to create location');
+    },
+  });
+
+  // Create batch mutation
+  const createBatchMutation = useMutation({
+    mutationFn: async (data: Partial<Batch>) => {
+      const response = await api.post('/advanced-inventory/batches', data);
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success('Batch created successfully');
+      queryClient.invalidateQueries(['batches']);
+      queryClient.invalidateQueries(['warehouse-locations']);
+      setShowAddBatch(false);
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to create batch');
+    },
+  });
+
+  // Update location mutation
+  const updateLocationMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<WarehouseLocation> }) => {
+      const response = await api.put(`/advanced-inventory/warehouse/locations/${id}`, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success('Location updated successfully');
+      queryClient.invalidateQueries(['warehouse-locations']);
+      setEditingLocation(null);
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to update location');
+    },
+  });
+
+  // Update batch mutation
+  const updateBatchMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<Batch> }) => {
+      const response = await api.put(`/advanced-inventory/batches/${id}`, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      toast.success('Batch updated successfully');
+      queryClient.invalidateQueries(['batches']);
+      queryClient.invalidateQueries(['warehouse-locations']);
+      setEditingBatch(null);
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.error || 'Failed to update batch');
+    },
+  });
+
   // Acknowledge alert mutation
   const acknowledgeAlertMutation = useMutation({
     mutationFn: async (alertId: string) => {
-      const response = await axios.post(`/api/advanced-inventory/expiration-alerts/${alertId}/acknowledge`);
+      const response = await api.post(`/advanced-inventory/expiration-alerts/${alertId}/acknowledge`);
       return response.data;
     },
     onSuccess: () => {
@@ -170,6 +237,7 @@ export default function AdvancedInventoryDashboard({ isOpen, onClose }: Advanced
       toast.error('Failed to acknowledge alert');
     },
   });
+
 
   // Get alert level color
   const getAlertLevelColor = (level: string) => {
@@ -191,24 +259,36 @@ export default function AdvancedInventoryDashboard({ isOpen, onClose }: Advanced
     }
   };
 
-  // Filter locations based on search
-  const filteredLocations = locationsData?.locations?.filter((location: WarehouseLocation) =>
-    location.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    location.zone.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    location.description?.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  // Get unique zones from warehouse locations
+  const availableZones = React.useMemo(() => {
+    if (!locationsData?.locations) return [];
+    const zones = locationsData.locations
+      .map((location: WarehouseLocation) => location.zone)
+      .filter((zone: string, index: number, array: string[]) => array.indexOf(zone) === index)
+      .sort();
+    return zones;
+  }, [locationsData?.locations]);
+
+  // Filter locations based on search term and zone
+  const filteredLocations = locationsData?.locations?.filter((location: WarehouseLocation) => {
+    const matchesSearch = location.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         location.zone.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         location.description?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesZone = !filterZone || location.zone === filterZone;
+    return matchesSearch && matchesZone;
+  }) || [];
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-7xl w-full max-h-[90vh] overflow-hidden">
+        <div className="bg-white rounded-lg max-w-7xl w-full max-h-[90vh] overflow-hidden">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
+        <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-stone-50 to-amber-50">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Warehouse className="w-6 h-6 text-blue-600" />
+              <div className="p-2 bg-stone-100 rounded-lg">
+                <Warehouse className="w-6 h-6 text-stone-600" />
               </div>
               <div>
                 <h2 className="text-xl font-semibold text-gray-900">Advanced Inventory Management</h2>
@@ -233,17 +313,19 @@ export default function AdvancedInventoryDashboard({ isOpen, onClose }: Advanced
           <div className="flex gap-1">
             {[
               { id: 'warehouse', label: 'Warehouse Layout', icon: MapPin },
-              { id: 'batches', label: 'Batch Tracking', icon: Package },
+              { id: 'batches', label: 'Inventory Tracking', icon: Package },
               { id: 'alerts', label: 'Expiration Alerts', icon: AlertTriangle },
               { id: 'analytics', label: 'Analytics', icon: BarChart3 },
             ].map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
                 onClick={() => setActiveTab(id as any)}
+                title={`Switch to ${label} tab`}
+                aria-label={`Switch to ${label} tab`}
                 className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
                   activeTab === id
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-600 hover:bg-gray-100'
+                    ? 'bg-red-100 text-red-700'
+                    : 'text-gray-600 hover:bg-gray-50'
                 }`}
               >
                 <Icon className="w-4 h-4" />
@@ -278,14 +360,18 @@ export default function AdvancedInventoryDashboard({ isOpen, onClose }: Advanced
                     aria-label="Filter by zone"
                   >
                     <option value="">All Zones</option>
-                    <option value="A">Zone A</option>
-                    <option value="B">Zone B</option>
-                    <option value="C">Zone C</option>
+                    {availableZones.map((zone) => (
+                      <option key={zone} value={zone}>
+                        Zone {zone}
+                      </option>
+                    ))}
                   </select>
                 </div>
                 <button
                   onClick={() => setShowAddLocation(true)}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  title="Add new warehouse location"
+                  aria-label="Add new warehouse location"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-red-800 text-white rounded-md hover:bg-red-900 transition-colors shadow-md"
                 >
                   <Plus className="w-4 h-4" />
                   Add Location
@@ -297,11 +383,11 @@ export default function AdvancedInventoryDashboard({ isOpen, onClose }: Advanced
                 {filteredLocations.map((location: WarehouseLocation) => (
                   <div
                     key={location.id}
-                    className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                    className="bg-offwhite rounded-lg p-4 shadow-md hover:shadow-lg transition-shadow border border-gray-100"
                   >
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4 text-blue-600" />
+                        <MapPin className="w-4 h-4 text-red-800" />
                         <h3 className="font-semibold text-gray-900">{location.name}</h3>
                       </div>
                       <div className="flex items-center gap-1">
@@ -314,6 +400,7 @@ export default function AdvancedInventoryDashboard({ isOpen, onClose }: Advanced
                           <Eye className="w-4 h-4" />
                         </button>
                         <button
+                          onClick={() => setEditingLocation(location)}
                           className="text-gray-400 hover:text-gray-600"
                           title="Edit location"
                           aria-label="Edit location"
@@ -367,7 +454,7 @@ export default function AdvancedInventoryDashboard({ isOpen, onClose }: Advanced
                     <div className="mt-3">
                       <div className="w-full bg-gray-200 rounded-full h-2">
                         <div
-                          className="bg-blue-600 h-2 rounded-full"
+                          className="bg-red-800 h-2 rounded-full"
                           style={{ width: `${Math.min((location.currentStock / location.capacity) * 100, 100)}%` }}
                         ></div>
                       </div>
@@ -387,21 +474,26 @@ export default function AdvancedInventoryDashboard({ isOpen, onClose }: Advanced
             </div>
           )}
 
-          {/* Batch Tracking Tab */}
+          {/* Inventory Tracking Tab */}
           {activeTab === 'batches' && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">Batch Tracking</h3>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Inventory Tracking</h3>
+                  <p className="text-sm text-gray-600">Track inventory batches, expiration dates, and stock movements</p>
+                </div>
                 <button
                   onClick={() => setShowAddBatch(true)}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  title="Add new inventory batch"
+                  aria-label="Add new inventory batch"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-red-800 text-white rounded-md hover:bg-red-900 transition-colors shadow-md"
                 >
                   <Plus className="w-4 h-4" />
-                  Add Batch
+                  Add Inventory Batch
                 </button>
               </div>
 
-              <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+              <div className="bg-offwhite rounded-lg shadow-md overflow-hidden border border-gray-100">
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
@@ -429,7 +521,7 @@ export default function AdvancedInventoryDashboard({ isOpen, onClose }: Advanced
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
+                    <tbody className="bg-offwhite divide-y divide-gray-200">
                       {batchesData?.batches?.map((batch: Batch) => (
                         <tr key={batch.id} className="hover:bg-gray-50">
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
@@ -460,13 +552,15 @@ export default function AdvancedInventoryDashboard({ isOpen, onClose }: Advanced
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div className="flex items-center gap-2">
                               <button 
-                                className="text-blue-600 hover:text-blue-900"
+                                onClick={() => setSelectedLocation(batch)}
+                                className="text-red-800 hover:text-red-900"
                                 title="View batch details"
                                 aria-label="View batch details"
                               >
                                 <Eye className="w-4 h-4" />
                               </button>
                               <button 
+                                onClick={() => setEditingBatch(batch)}
                                 className="text-gray-600 hover:text-gray-900"
                                 title="Edit batch"
                                 aria-label="Edit batch"
@@ -553,7 +647,16 @@ export default function AdvancedInventoryDashboard({ isOpen, onClose }: Advanced
           )}
 
           {/* Analytics Tab */}
-          {activeTab === 'analytics' && analyticsData && (
+          {activeTab === 'analytics' && (
+            <div className="space-y-6">
+              {analyticsLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading analytics...</p>
+                  </div>
+                </div>
+              ) : analyticsData ? (
             <div className="space-y-6">
               {/* Summary Cards */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -596,7 +699,7 @@ export default function AdvancedInventoryDashboard({ isOpen, onClose }: Advanced
               </div>
 
               {/* Zone Breakdown */}
-              <div className="bg-white border border-gray-200 rounded-lg p-6">
+              <div className="bg-offwhite border border-gray-200 rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Zone Utilization</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {Object.entries(analyticsData.analytics.zoneBreakdown).map(([zone, count]) => (
@@ -609,7 +712,7 @@ export default function AdvancedInventoryDashboard({ isOpen, onClose }: Advanced
               </div>
 
               {/* Top Items */}
-              <div className="bg-white border border-gray-200 rounded-lg p-6">
+              <div className="bg-offwhite border border-gray-200 rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Items by Value</h3>
                 <div className="space-y-2">
                   {analyticsData.analytics.topItems.slice(0, 5).map((item: any, index: number) => (
@@ -625,6 +728,60 @@ export default function AdvancedInventoryDashboard({ isOpen, onClose }: Advanced
                   ))}
                 </div>
               </div>
+
+              {/* Stock Value by Zone */}
+              <div className="bg-offwhite border border-gray-200 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Stock Value by Zone</h3>
+                <div className="space-y-3">
+                  {Object.entries(analyticsData.analytics.stockValueByZone).map(([zone, value]) => (
+                    <div key={zone} className="flex items-center justify-between">
+                      <span className="font-medium text-gray-900">Zone {zone}</span>
+                      <span className="text-lg font-bold text-green-600">${(value as number).toFixed(2)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Capacity by Zone */}
+              <div className="bg-offwhite border border-gray-200 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Capacity by Zone</h3>
+                <div className="space-y-3">
+                  {Object.entries(analyticsData.analytics.capacityByZone).map(([zone, capacity]) => (
+                    <div key={zone} className="flex items-center justify-between">
+                      <span className="font-medium text-gray-900">Zone {zone}</span>
+                      <span className="text-lg font-bold text-blue-600">{capacity as number} units</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Inventory Alerts */}
+              <div className="bg-offwhite border border-gray-200 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Inventory Alerts</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="text-center p-4 bg-red-50 rounded-lg">
+                    <div className="text-2xl font-bold text-red-600">{analyticsData.analytics.expiredItems}</div>
+                    <p className="text-sm text-red-600">Expired Items</p>
+                  </div>
+                  <div className="text-center p-4 bg-orange-50 rounded-lg">
+                    <div className="text-2xl font-bold text-orange-600">{analyticsData.analytics.expiringItems}</div>
+                    <p className="text-sm text-orange-600">Expiring Soon</p>
+                  </div>
+                  <div className="text-center p-4 bg-yellow-50 rounded-lg">
+                    <div className="text-2xl font-bold text-yellow-600">{analyticsData.analytics.lowStockItems}</div>
+                    <p className="text-sm text-yellow-600">Low Stock</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+              ) : (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <AlertTriangle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-600">Failed to load analytics data</p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -641,6 +798,635 @@ export default function AdvancedInventoryDashboard({ isOpen, onClose }: Advanced
             </div>
           </div>
         </div>
+
+        {/* Add Location Modal */}
+        {showAddLocation && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg max-w-md w-full mx-4 p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Add Warehouse Location</h3>
+                <button
+                  onClick={() => setShowAddLocation(false)}
+                  title="Close modal"
+                  aria-label="Close modal"
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target as HTMLFormElement);
+                const data = {
+                  name: formData.get('name') as string,
+                  zone: formData.get('zone') as string,
+                  aisle: formData.get('aisle') as string,
+                  shelf: formData.get('shelf') as string,
+                  position: formData.get('position') as string,
+                  capacity: Number(formData.get('capacity')),
+                  temperature: formData.get('temperature') ? Number(formData.get('temperature')) : undefined,
+                  humidity: formData.get('humidity') ? Number(formData.get('humidity')) : undefined,
+                  description: formData.get('description') as string,
+                };
+                createLocationMutation.mutate(data);
+              }}>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Zone</label>
+                      <select name="zone" required className="w-full p-2 border border-gray-300 rounded-md" aria-label="Select zone">
+                        <option value="">Select Zone</option>
+                        <option value="A">Zone A</option>
+                        <option value="B">Zone B</option>
+                        <option value="C">Zone C</option>
+                        <option value="D">Zone D</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Aisle</label>
+                      <input name="aisle" type="text" required className="w-full p-2 border border-gray-300 rounded-md" placeholder="Enter aisle number" />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Shelf</label>
+                      <input name="shelf" type="text" required className="w-full p-2 border border-gray-300 rounded-md" placeholder="Enter shelf number" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
+                      <input name="position" type="text" required className="w-full p-2 border border-gray-300 rounded-md" placeholder="Enter position number" />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Location Name</label>
+                    <input name="name" type="text" required className="w-full p-2 border border-gray-300 rounded-md" placeholder="e.g., A1-01-01" />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Capacity</label>
+                    <input name="capacity" type="number" required min="1" className="w-full p-2 border border-gray-300 rounded-md" placeholder="Enter capacity" />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Temperature (°C)</label>
+                      <input name="temperature" type="number" className="w-full p-2 border border-gray-300 rounded-md" placeholder="Enter temperature" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Humidity (%)</label>
+                      <input name="humidity" type="number" className="w-full p-2 border border-gray-300 rounded-md" placeholder="Enter humidity" />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea name="description" rows={3} className="w-full p-2 border border-gray-300 rounded-md" placeholder="Enter description" />
+                  </div>
+                </div>
+                
+                <div className="flex gap-3 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddLocation(false)}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={createLocationMutation.isPending}
+                    className="flex-1 px-4 py-2 bg-red-800 text-white rounded-md hover:bg-red-900 disabled:opacity-50 shadow-md"
+                  >
+                    {createLocationMutation.isPending ? 'Creating...' : 'Create Location'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Add Batch Modal */}
+        {showAddBatch && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg max-w-md w-full mx-4 p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Add Inventory Batch</h3>
+                <button
+                  onClick={() => setShowAddBatch(false)}
+                  title="Close modal"
+                  aria-label="Close modal"
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target as HTMLFormElement);
+                const data = {
+                  batchNumber: formData.get('batchNumber') as string,
+                  itemId: formData.get('itemId') as string,
+                  itemName: formData.get('itemName') as string,
+                  quantity: Number(formData.get('quantity')),
+                  unit: formData.get('unit') as string,
+                  supplier: formData.get('supplier') as string,
+                  purchaseDate: formData.get('purchaseDate') as string,
+                  expirationDate: formData.get('expirationDate') as string,
+                  locationId: formData.get('locationId') as string,
+                  costPerUnit: Number(formData.get('costPerUnit')),
+                  notes: formData.get('notes') as string,
+                };
+                createBatchMutation.mutate(data);
+              }}>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Batch Number</label>
+                    <input name="batchNumber" type="text" required className="w-full p-2 border border-gray-300 rounded-md" placeholder="Enter batch number" />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Item Name</label>
+                    <input name="itemName" type="text" required className="w-full p-2 border border-gray-300 rounded-md" placeholder="Enter item name" />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Item ID</label>
+                    <input name="itemId" type="text" required className="w-full p-2 border border-gray-300 rounded-md" placeholder="Enter item ID" />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                      <input name="quantity" type="number" required min="1" className="w-full p-2 border border-gray-300 rounded-md" placeholder="Enter quantity" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Unit</label>
+                      <select name="unit" required className="w-full p-2 border border-gray-300 rounded-md" aria-label="Select unit">
+                        <option value="">Select Unit</option>
+                        <option value="kg">Kilograms</option>
+                        <option value="g">Grams</option>
+                        <option value="lb">Pounds</option>
+                        <option value="oz">Ounces</option>
+                        <option value="l">Liters</option>
+                        <option value="ml">Milliliters</option>
+                        <option value="pieces">Pieces</option>
+                        <option value="packets">Packets</option>
+                        <option value="boxes">Boxes</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Supplier</label>
+                    <input name="supplier" type="text" required className="w-full p-2 border border-gray-300 rounded-md" placeholder="Enter supplier name" />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                    <select name="locationId" required className="w-full p-2 border border-gray-300 rounded-md" aria-label="Select location">
+                      <option value="">Select Location</option>
+                      {locationsData?.locations?.map((loc: WarehouseLocation) => (
+                        <option key={loc.id} value={loc.id}>{loc.name} - {loc.zone}{loc.aisle}-{loc.shelf}-{loc.position}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Purchase Date</label>
+                      <input name="purchaseDate" type="date" className="w-full p-2 border border-gray-300 rounded-md" title="Select purchase date" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Expiration Date</label>
+                      <input name="expirationDate" type="date" className="w-full p-2 border border-gray-300 rounded-md" title="Select expiration date" />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Cost per Unit ($)</label>
+                    <input name="costPerUnit" type="number" step="0.01" required min="0" className="w-full p-2 border border-gray-300 rounded-md" placeholder="Enter cost per unit" />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                    <textarea name="notes" rows={3} className="w-full p-2 border border-gray-300 rounded-md" placeholder="Enter notes" />
+                  </div>
+                </div>
+                
+                <div className="flex gap-3 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddBatch(false)}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={createBatchMutation.isPending}
+                    className="flex-1 px-4 py-2 bg-red-800 text-white rounded-md hover:bg-red-900 disabled:opacity-50 shadow-md"
+                  >
+                    {createBatchMutation.isPending ? 'Creating...' : 'Create Batch'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Location Modal */}
+        {editingLocation && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg max-w-md w-full mx-4 p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Edit Warehouse Location</h3>
+                <button
+                  onClick={() => setEditingLocation(null)}
+                  title="Close modal"
+                  aria-label="Close modal"
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target as HTMLFormElement);
+                const data = {
+                  name: formData.get('name') as string,
+                  zone: formData.get('zone') as string,
+                  aisle: formData.get('aisle') as string,
+                  shelf: formData.get('shelf') as string,
+                  position: formData.get('position') as string,
+                  capacity: Number(formData.get('capacity')),
+                  temperature: formData.get('temperature') ? Number(formData.get('temperature')) : undefined,
+                  humidity: formData.get('humidity') ? Number(formData.get('humidity')) : undefined,
+                  description: formData.get('description') as string,
+                };
+                updateLocationMutation.mutate({ id: editingLocation.id, data });
+              }}>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Zone</label>
+                      <select name="zone" required className="w-full p-2 border border-gray-300 rounded-md" aria-label="Select zone" defaultValue={editingLocation.zone}>
+                        <option value="">Select Zone</option>
+                        <option value="A">Zone A</option>
+                        <option value="B">Zone B</option>
+                        <option value="C">Zone C</option>
+                        <option value="D">Zone D</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Aisle</label>
+                      <input name="aisle" type="text" required className="w-full p-2 border border-gray-300 rounded-md" placeholder="Enter aisle number" defaultValue={editingLocation.aisle} />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Shelf</label>
+                      <input name="shelf" type="text" required className="w-full p-2 border border-gray-300 rounded-md" placeholder="Enter shelf number" defaultValue={editingLocation.shelf} />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
+                      <input name="position" type="text" required className="w-full p-2 border border-gray-300 rounded-md" placeholder="Enter position number" defaultValue={editingLocation.position} />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Location Name</label>
+                    <input name="name" type="text" required className="w-full p-2 border border-gray-300 rounded-md" placeholder="e.g., A1-01-01" defaultValue={editingLocation.name} />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Capacity</label>
+                    <input name="capacity" type="number" required min="1" className="w-full p-2 border border-gray-300 rounded-md" placeholder="Enter capacity" defaultValue={editingLocation.capacity} />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Temperature (°C)</label>
+                      <input name="temperature" type="number" className="w-full p-2 border border-gray-300 rounded-md" placeholder="Enter temperature" defaultValue={editingLocation.temperature || ''} />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Humidity (%)</label>
+                      <input name="humidity" type="number" className="w-full p-2 border border-gray-300 rounded-md" placeholder="Enter humidity" defaultValue={editingLocation.humidity || ''} />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea name="description" rows={3} className="w-full p-2 border border-gray-300 rounded-md" placeholder="Enter description" defaultValue={editingLocation.description || ''} />
+                  </div>
+                </div>
+                
+                <div className="flex gap-3 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setEditingLocation(null)}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={updateLocationMutation.isPending}
+                    className="flex-1 px-4 py-2 bg-red-800 text-white rounded-md hover:bg-red-900 disabled:opacity-50 shadow-md"
+                  >
+                    {updateLocationMutation.isPending ? 'Updating...' : 'Update Location'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Batch Modal */}
+        {editingBatch && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg max-w-md w-full mx-4 p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Edit Inventory Batch</h3>
+                <button
+                  onClick={() => setEditingBatch(null)}
+                  title="Close modal"
+                  aria-label="Close modal"
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.target as HTMLFormElement);
+                const data = {
+                  batchNumber: formData.get('batchNumber') as string,
+                  itemId: formData.get('itemId') as string,
+                  itemName: formData.get('itemName') as string,
+                  quantity: Number(formData.get('quantity')),
+                  unit: formData.get('unit') as string,
+                  supplier: formData.get('supplier') as string,
+                  purchaseDate: formData.get('purchaseDate') as string,
+                  expirationDate: formData.get('expirationDate') as string,
+                  locationId: formData.get('locationId') as string,
+                  costPerUnit: Number(formData.get('costPerUnit')),
+                  notes: formData.get('notes') as string,
+                };
+                updateBatchMutation.mutate({ id: editingBatch.id, data });
+              }}>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Batch Number</label>
+                    <input name="batchNumber" type="text" required className="w-full p-2 border border-gray-300 rounded-md" placeholder="Enter batch number" defaultValue={editingBatch.batchNumber} />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Item Name</label>
+                    <input name="itemName" type="text" required className="w-full p-2 border border-gray-300 rounded-md" placeholder="Enter item name" defaultValue={editingBatch.itemName} />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Item ID</label>
+                    <input name="itemId" type="text" required className="w-full p-2 border border-gray-300 rounded-md" placeholder="Enter item ID" defaultValue={editingBatch.itemId} />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
+                      <input name="quantity" type="number" required min="1" className="w-full p-2 border border-gray-300 rounded-md" placeholder="Enter quantity" defaultValue={editingBatch.quantity} />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Unit</label>
+                      <select name="unit" required className="w-full p-2 border border-gray-300 rounded-md" aria-label="Select unit" defaultValue={editingBatch.unit}>
+                        <option value="">Select Unit</option>
+                        <option value="kg">Kilograms</option>
+                        <option value="g">Grams</option>
+                        <option value="lb">Pounds</option>
+                        <option value="oz">Ounces</option>
+                        <option value="l">Liters</option>
+                        <option value="ml">Milliliters</option>
+                        <option value="pieces">Pieces</option>
+                        <option value="packets">Packets</option>
+                        <option value="boxes">Boxes</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Supplier</label>
+                    <input name="supplier" type="text" required className="w-full p-2 border border-gray-300 rounded-md" placeholder="Enter supplier name" defaultValue={editingBatch.supplier} />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                    <select name="locationId" required className="w-full p-2 border border-gray-300 rounded-md" aria-label="Select location" defaultValue={editingBatch.locationId}>
+                      <option value="">Select Location</option>
+                      {locationsData?.locations?.map((loc: WarehouseLocation) => (
+                        <option key={loc.id} value={loc.id}>{loc.name} - {loc.zone}{loc.aisle}-{loc.shelf}-{loc.position}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Purchase Date</label>
+                      <input name="purchaseDate" type="date" className="w-full p-2 border border-gray-300 rounded-md" title="Select purchase date" defaultValue={editingBatch.purchaseDate ? editingBatch.purchaseDate.split('T')[0] : ''} />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Expiration Date</label>
+                      <input name="expirationDate" type="date" className="w-full p-2 border border-gray-300 rounded-md" title="Select expiration date" defaultValue={editingBatch.expirationDate ? editingBatch.expirationDate.split('T')[0] : ''} />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Cost per Unit ($)</label>
+                    <input name="costPerUnit" type="number" step="0.01" required min="0" className="w-full p-2 border border-gray-300 rounded-md" placeholder="Enter cost per unit" defaultValue={editingBatch.costPerUnit} />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                    <textarea name="notes" rows={3} className="w-full p-2 border border-gray-300 rounded-md" placeholder="Enter notes" defaultValue={editingBatch.notes || ''} />
+                  </div>
+                </div>
+                
+                <div className="flex gap-3 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setEditingBatch(null)}
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={updateBatchMutation.isPending}
+                    className="flex-1 px-4 py-2 bg-red-800 text-white rounded-md hover:bg-red-900 disabled:opacity-50 shadow-md"
+                  >
+                    {updateBatchMutation.isPending ? 'Updating...' : 'Update Batch'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* View Details Modal */}
+        {selectedLocation && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg max-w-md w-full mx-4 p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {selectedLocation.name ? 'Location Details' : 'Batch Details'}
+                </h3>
+                <button
+                  onClick={() => setSelectedLocation(null)}
+                  title="Close modal"
+                  aria-label="Close modal"
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                {selectedLocation.name ? (
+                  // Location details
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Zone</label>
+                        <p className="text-gray-900">{selectedLocation.zone}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Aisle</label>
+                        <p className="text-gray-900">{selectedLocation.aisle}</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Shelf</label>
+                        <p className="text-gray-900">{selectedLocation.shelf}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Position</label>
+                        <p className="text-gray-900">{selectedLocation.position}</p>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Capacity</label>
+                      <p className="text-gray-900">{selectedLocation.capacity}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Current Stock</label>
+                      <p className="text-gray-900">{selectedLocation.currentStock}</p>
+                    </div>
+                    {selectedLocation.temperature && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Temperature</label>
+                        <p className="text-gray-900">{selectedLocation.temperature}°C</p>
+                      </div>
+                    )}
+                    {selectedLocation.humidity && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Humidity</label>
+                        <p className="text-gray-900">{selectedLocation.humidity}%</p>
+                      </div>
+                    )}
+                    {selectedLocation.description && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Description</label>
+                        <p className="text-gray-900">{selectedLocation.description}</p>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  // Batch details
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Batch Number</label>
+                      <p className="text-gray-900">{selectedLocation.batchNumber}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Item Name</label>
+                      <p className="text-gray-900">{selectedLocation.itemName}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Quantity</label>
+                      <p className="text-gray-900">{selectedLocation.quantity} {selectedLocation.unit}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Supplier</label>
+                      <p className="text-gray-900">{selectedLocation.supplier}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Location</label>
+                      <p className="text-gray-900">{selectedLocation.locationName}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Cost per Unit</label>
+                      <p className="text-gray-900">${selectedLocation.costPerUnit}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Total Cost</label>
+                      <p className="text-gray-900">${selectedLocation.totalCost}</p>
+                    </div>
+                    {selectedLocation.expirationDate && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Expiration Date</label>
+                        <p className="text-gray-900">{new Date(selectedLocation.expirationDate).toLocaleDateString()}</p>
+                      </div>
+                    )}
+                    {selectedLocation.notes && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Notes</label>
+                        <p className="text-gray-900">{selectedLocation.notes}</p>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+              
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => setSelectedLocation(null)}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
+                >
+                  Close
+                </button>
+                {selectedLocation.name && (
+                  <button
+                    onClick={() => {
+                      setEditingLocation(selectedLocation);
+                      setSelectedLocation(null);
+                    }}
+                    className="flex-1 px-4 py-2 bg-red-800 text-white rounded-md hover:bg-red-900 shadow-md"
+                  >
+                    Edit Location
+                  </button>
+                )}
+                {selectedLocation.batchNumber && (
+                  <button
+                    onClick={() => {
+                      setEditingBatch(selectedLocation as any);
+                      setSelectedLocation(null);
+                    }}
+                    className="flex-1 px-4 py-2 bg-red-800 text-white rounded-md hover:bg-red-900 shadow-md"
+                  >
+                    Edit Batch
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );

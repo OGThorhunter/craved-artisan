@@ -410,7 +410,6 @@ advancedInventoryRouter.post('/advanced-inventory/warehouse/locations', (req, re
   } catch (error) {
     logger.error({ error }, 'Error creating warehouse location');
     res.status(500).json({ error: 'Failed to create warehouse location' });
-    return;
   }
 });
 
@@ -543,7 +542,6 @@ advancedInventoryRouter.post('/advanced-inventory/batches', (req: AuthenticatedR
   } catch (error) {
     logger.error({ error }, 'Error creating batch');
     res.status(500).json({ error: 'Failed to create batch' });
-    return;
   }
 });
 
@@ -612,7 +610,6 @@ advancedInventoryRouter.post('/advanced-inventory/expiration-alerts/:id/acknowle
   } catch (error) {
     logger.error({ error }, 'Error acknowledging alert');
     res.status(500).json({ error: 'Failed to acknowledge alert' });
-    return;
   }
 });
 
@@ -734,7 +731,6 @@ advancedInventoryRouter.post('/advanced-inventory/movements', (req: Authenticate
   } catch (error) {
     logger.error({ error }, 'Error recording inventory movement');
     res.status(500).json({ error: 'Failed to record inventory movement' });
-    return;
   }
 });
 
@@ -900,11 +896,9 @@ advancedInventoryRouter.put('/advanced-inventory/batches/:id', (req, res) => {
       batch,
       message: 'Batch updated successfully'
     });
-    return;
   } catch (error) {
     logger.error({ error }, 'Error updating batch');
     res.status(500).json({ error: 'Failed to update batch' });
-    return;
   }
 });
 
@@ -931,11 +925,9 @@ advancedInventoryRouter.put('/advanced-inventory/warehouse/locations/:id', (req,
       location,
       message: 'Location updated successfully'
     });
-    return;
   } catch (error) {
     logger.error({ error }, 'Error updating warehouse location');
     res.status(500).json({ error: 'Failed to update warehouse location' });
-    return;
   }
 });
 
@@ -973,11 +965,9 @@ advancedInventoryRouter.delete('/advanced-inventory/batches/:id', (req, res) => 
       success: true,
       message: 'Batch deleted successfully'
     });
-    return;
   } catch (error) {
-    logger.error({ error }, 'Error deleting batch');
+    logger.error('Error deleting batch:', error);
     res.status(500).json({ error: 'Failed to delete batch' });
-    return;
   }
 });
 

@@ -220,9 +220,11 @@ inventoryRouter.get('/inventory/:id', (req, res) => {
     }
     
     res.json(item);
+    return;
   } catch (error) {
     console.error('Error fetching inventory item:', error);
     res.status(500).json({ error: 'Failed to fetch inventory item' });
+    return;
   }
 });
 
@@ -262,9 +264,11 @@ inventoryRouter.put('/inventory/:id', (req, res) => {
     };
     
     res.json(mockInventoryItems[itemIndex]);
+    return;
   } catch (error) {
     console.error('Error updating inventory item:', error);
     res.status(500).json({ error: 'Failed to update inventory item' });
+    return;
   }
 });
 
@@ -281,9 +285,11 @@ inventoryRouter.delete('/inventory/:id', (req, res) => {
     const deletedItem = mockInventoryItems.splice(itemIndex, 1)[0];
     
     res.json({ message: 'Inventory item deleted successfully', item: deletedItem });
+    return;
   } catch (error) {
     console.error('Error deleting inventory item:', error);
     res.status(500).json({ error: 'Failed to delete inventory item' });
+    return;
   }
 });
 
@@ -319,9 +325,11 @@ inventoryRouter.post('/inventory/:id/adjust', (req, res) => {
         timestamp: new Date().toISOString(),
       },
     });
+    return;
   } catch (error) {
     console.error('Error adjusting inventory:', error);
     res.status(500).json({ error: 'Failed to adjust inventory' });
+    return;
   }
 });
 

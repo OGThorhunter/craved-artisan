@@ -25,7 +25,7 @@ interface PerformanceMetric {
   icon: React.ReactNode;
 }
 
-interface AIInsight {
+interface AnalyticsInsight {
   type: 'positive' | 'warning' | 'opportunity' | 'alert';
   title: string;
   description: string;
@@ -37,7 +37,7 @@ const AISummaryBuilder = () => {
   const { user } = useAuth();
   const { data: summaryData, isLoading } = useAnalyticsSummary(user?.id || '');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [insights, setInsights] = useState<AIInsight[]>([]);
+  const [insights, setInsights] = useState<AnalyticsInsight[]>([]);
 
   // Generate performance metrics
   const generateMetrics = (): PerformanceMetric[] => {
@@ -91,8 +91,8 @@ const AISummaryBuilder = () => {
   };
 
   // Generate AI insights
-  const generateInsights = (metrics: PerformanceMetric[]): AIInsight[] => {
-    const insights: AIInsight[] = [];
+  const generateInsights = (metrics: PerformanceMetric[]): AnalyticsInsight[] => {
+    const insights: AnalyticsInsight[] = [];
 
     // Revenue insights
     const revenueMetric = metrics.find(m => m.label.includes('Revenue'));

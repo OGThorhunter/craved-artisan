@@ -1,81 +1,28 @@
-﻿import { useState } from 'react';
+﻿import { useState, useMemo, useEffect, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
 import { Link } from 'wouter';
 import axios from 'axios';
-import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
-import AIInsightsDashboard from '@/components/ai-insights/AIInsightsDashboard';
-import B2BNetworkDashboard from '@/components/b2b-network/B2BNetworkDashboard';
-import AIReceiptParserDashboard from '@/components/ai-receipt-parser/AIReceiptParserDashboard';
-import UnitConverterDashboard from '@/components/unit-converter/UnitConverterDashboard';
-import AdvancedInventoryDashboard from '@/components/advanced-inventory/AdvancedInventoryDashboard';
+import VendorDashboardLayout from '../layouts/VendorDashboardLayout';
+import AIInsightsDashboard from '../components/ai-insights/AIInsightsDashboard';
+import B2BNetworkDashboard from '../components/b2b-network/B2BNetworkDashboard';
+import AIReceiptParserDashboard from '../components/ai-receipt-parser/AIReceiptParserDashboard';
+import UnitConverterDashboard from '../components/unit-converter/UnitConverterDashboard';
+import AdvancedInventoryDashboard from '../components/advanced-inventory/AdvancedInventoryDashboard';
+import InventoryAlertBar from '../components/inventory/InventoryAlertBar';
+import InventoryItemCard from '../components/inventory/InventoryItemCard';
+import AIInsightBadge from '../components/inventory/AIInsightBadge';
+import PageAIInsights from '../components/inventory/PageAIInsights';
 import { 
-  Plus, 
-  AlertTriangle, 
-  Package, 
-  Edit,
-  Trash2,
-  Eye,
-  TrendingUp,
-  DollarSign,
-  Package2,
-  AlertCircle,
-  CheckCircle,
-  X,
-  Warehouse,
-  BarChart3,
-  Search,
-  Filter,
-  Download,
-  Upload,
-  TrendingDown,
-  Calendar,
-  MapPin,
-  Hash,
-  MoreHorizontal,
-  ArrowUpDown,
-  RefreshCw,
-  Clock,
-  Tag,
-  Brain,
-  Building2,
-  Receipt,
-  Calculator,
-  Warehouse
-} from 'lucide-react';
+  calculateInventoryAlerts, 
+  generateAlertItems,
+  type AlertItem 
+} from '../utils/inventoryAlerts';
+import type { InventoryItem, CreateInventoryItemData, AIInsight } from '../types/inventory';
+import { AppIcon } from '@/components/ui/AppIcon';
 
-interface InventoryItem {
-  id: string;
-  name: string;
-  description?: string;
-  category: 'food_grade' | 'raw_materials' | 'packaging' | 'used_goods';
-  unit: string;
-  currentStock: number;
-  reorderPoint: number;
-  costPerUnit: number;
-  supplier?: string;
-  isAvailable: boolean;
-  expirationDate?: string;
-  batchNumber?: string;
-  location?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-interface CreateInventoryItemData {
-  name: string;
-  description?: string;
-  category: 'food_grade' | 'raw_materials' | 'packaging' | 'used_goods';
-  unit: string;
-  currentStock: number;
-  reorderPoint: number;
-  costPerUnit: number;
-  supplier?: string;
-  expirationDate?: string;
-  batchNumber?: string;
-  location?: string;
-}
+// Interfaces moved to types/inventory.ts
 
 interface StockAdjustment {
   id: string;
@@ -128,7 +75,33 @@ export default function VendorInventoryPage() {
   const [showAIReceiptParser, setShowAIReceiptParser] = useState(false);
   const [showUnitConverter, setShowUnitConverter] = useState(false);
   const [showAdvancedInventory, setShowAdvancedInventory] = useState(false);
+  const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
+  const [showShoppingList, setShowShoppingList] = useState(false);
+  const [dismissedInsights, setDismissedInsights] = useState<Set<string>>(new Set());
+  const [showExportDropdown, setShowExportDropdown] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const queryClient = useQueryClient();
+  
+  // Refs for click-outside detection
+  const exportDropdownRef = useRef<HTMLDivElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
+  
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (exportDropdownRef.current && !exportDropdownRef.current.contains(event.target as Node)) {
+        setShowExportDropdown(false);
+      }
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
+        setShowMobileMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const {
     register,
@@ -157,6 +130,34 @@ export default function VendorInventoryPage() {
 
   const inventoryItems = inventoryData?.items || [];
 
+  // Calculate inventory alerts
+  const inventoryAlerts = useMemo(() => {
+    return calculateInventoryAlerts(inventoryItems);
+  }, [inventoryItems]);
+
+  // Generate alert items for the alert bar
+  const alertItems = useMemo(() => {
+    return generateAlertItems(
+      inventoryAlerts,
+      () => {
+        // Filter to show only low stock items
+        setSelectedCategory('all');
+        setSearchTerm('');
+        // Could add a filter state for alerts
+      },
+      () => {
+        // Filter to show only expiring items
+        setSelectedCategory('all');
+        setSearchTerm('');
+      },
+      () => {
+        // Filter to show only expired items
+        setSelectedCategory('all');
+        setSearchTerm('');
+      }
+    ).filter(alert => !dismissedAlerts.has(alert.id));
+  }, [inventoryAlerts, dismissedAlerts]);
+
   // Fetch inventory analytics
   const { data: analytics } = useQuery({
     queryKey: ['inventory-analytics'],
@@ -170,6 +171,22 @@ export default function VendorInventoryPage() {
       }
     }
   });
+
+  // Fetch AI insights
+  const { data: aiInsightsData, isLoading: aiInsightsLoading } = useQuery({
+    queryKey: ['ai-insights-inventory'],
+    queryFn: async () => {
+      try {
+        const response = await axios.get('/api/ai-insights/inventory');
+        return response.data;
+      } catch (error) {
+        console.error('Error fetching AI insights:', error);
+        return { data: [], summary: null };
+      }
+    }
+  });
+
+  const aiInsights = aiInsightsData?.data || [];
 
   // Create inventory item mutation
   const createItemMutation = useMutation({
@@ -297,6 +314,50 @@ export default function VendorInventoryPage() {
     }
   };
 
+  // Alert handling functions
+  const handleDismissAlert = (alertId: string) => {
+    setDismissedAlerts(prev => new Set([...prev, alertId]));
+  };
+
+  const handleRefreshAlerts = () => {
+    setDismissedAlerts(new Set());
+    queryClient.invalidateQueries(['inventory']);
+    queryClient.invalidateQueries(['inventory-analytics']);
+  };
+
+  const handleCreateShoppingList = () => {
+    setShowShoppingList(true);
+    // TODO: Implement shopping list creation
+  };
+
+  const handleReorderItem = (item: InventoryItem) => {
+    // TODO: Implement reorder functionality
+    toast.success(`Reorder request sent for ${item.name}`);
+  };
+
+  // AI Insights handling functions
+  const handleDismissInsight = (insightId: string) => {
+    setDismissedInsights(prev => new Set([...prev, insightId]));
+    // TODO: Call API to dismiss insight
+  };
+
+  const handleInsightAction = (insight: AIInsight) => {
+    // TODO: Implement insight action based on type
+    toast.success(`Action taken on insight: ${insight.title}`);
+  };
+
+  const handleRefreshInsights = () => {
+    setDismissedInsights(new Set());
+    queryClient.invalidateQueries(['ai-insights-inventory']);
+  };
+
+  // Get insights for a specific item
+  const getItemInsights = (itemId: string) => {
+    return aiInsights.filter(insight => 
+      insight.itemId === itemId && !dismissedInsights.has(insight.id)
+    );
+  };
+
   const handleSort = (field: 'name' | 'stock' | 'value' | 'category') => {
     if (sortBy === field) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
@@ -306,28 +367,60 @@ export default function VendorInventoryPage() {
     }
   };
 
-  const handleExport = () => {
-    const csvContent = [
-      ['Name', 'Category', 'Current Stock', 'Reorder Point', 'Cost per Unit', 'Total Value', 'Supplier', 'Location'],
-      ...inventoryItems.map(item => [
-        item.name,
-        item.category,
-        item.currentStock.toString(),
-        item.reorderPoint.toString(),
-        item.costPerUnit.toString(),
-        (item.currentStock * item.costPerUnit).toString(),
-        item.supplier || '',
-        item.location || ''
-      ])
-    ].map(row => row.join(',')).join('\n');
+  const handleExport = (format: 'csv' | 'pdf' | 'json' | 'xlsx' = 'csv') => {
+    if (format === 'csv') {
+      const csvContent = [
+        ['Name', 'Category', 'Current Stock', 'Reorder Point', 'Cost per Unit', 'Total Value', 'Supplier', 'Location'],
+        ...inventoryItems.map(item => [
+          item.name,
+          item.category,
+          item.currentStock.toString(),
+          item.reorderPoint.toString(),
+          item.costPerUnit.toString(),
+          (item.currentStock * item.costPerUnit).toString(),
+          item.supplier || '',
+          item.location || ''
+        ])
+      ].map(row => row.join(',')).join('\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `inventory-export-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    window.URL.revokeObjectURL(url);
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `inventory-export-${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } else if (format === 'json') {
+      const jsonData = {
+        exportDate: new Date().toISOString(),
+        totalItems: inventoryItems.length,
+        items: inventoryItems.map(item => ({
+          name: item.name,
+          category: item.category,
+          currentStock: item.currentStock,
+          reorderPoint: item.reorderPoint,
+          costPerUnit: item.costPerUnit,
+          totalValue: item.currentStock * item.costPerUnit,
+          supplier: item.supplier || 'N/A',
+          location: item.location || 'N/A'
+        }))
+      };
+
+      const jsonString = JSON.stringify(jsonData, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `inventory-export-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } else {
+      // For PDF and XLSX, we'll show a toast for now
+      toast.info(`${format.toUpperCase()} export coming soon!`);
+    }
+    
+    setShowExportDropdown(false);
+    toast.success(`Inventory exported as ${format.toUpperCase()} successfully!`);
   };
 
   // Filter and sort inventory items
@@ -391,7 +484,7 @@ export default function VendorInventoryPage() {
       <VendorDashboardLayout>
         <div className="flex items-center justify-center">
           <div className="text-center">
-            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <AppIcon name="alert-circle" className="w-12 h-12 text-red-500 mx-auto mb-4" />
             <h2 className="responsive-subheading text-gray-900 mb-2">Error Loading Inventory</h2>
             <p className="text-gray-600">Failed to load your ingredients. Please try again.</p>
           </div>
@@ -411,73 +504,210 @@ export default function VendorInventoryPage() {
               <h1 className="responsive-heading text-gray-900">Warehouse Management</h1>
               <p className="mt-2 text-gray-600">Manage your inventory, track stock levels, and optimize your warehouse operations</p>
             </div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowAdvancedInventory(true)}
-                className="inline-flex items-center gap-2 responsive-button bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
-              >
-                <Warehouse className="w-4 h-4" />
-                Advanced Inventory
-              </button>
-              <button
-                onClick={() => setShowUnitConverter(true)}
-                className="inline-flex items-center gap-2 responsive-button bg-orange-600 text-white rounded-md hover:bg-orange-700 transition-colors"
-              >
-                <Calculator className="w-4 h-4" />
-                Unit Converter
-              </button>
-              <button
-                onClick={() => setShowAIReceiptParser(true)}
-                className="inline-flex items-center gap-2 responsive-button bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
-              >
-                <Receipt className="w-4 h-4" />
-                AI Parser
-              </button>
-              <button
-                onClick={() => setShowB2BNetwork(true)}
-                className="inline-flex items-center gap-2 responsive-button bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-              >
-                <Building2 className="w-4 h-4" />
-                B2B Network
-              </button>
-              <button
-                onClick={() => setShowAIInsights(true)}
-                className="inline-flex items-center gap-2 responsive-button bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
-              >
-                <Brain className="w-4 h-4" />
-                AI Insights
-              </button>
-              <button
-                onClick={() => setShowAnalytics(!showAnalytics)}
-                className="inline-flex items-center gap-2 responsive-button bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
-              >
-                <BarChart3 className="w-4 h-4" />
-                Analytics
-              </button>
-              <button
-                onClick={handleExport}
-                className="inline-flex items-center gap-2 responsive-button bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
-              >
-                <Download className="w-4 h-4" />
-                Export
-              </button>
+            
+            {/* Desktop Layout - EXACT copy of Pulse page RangeSelector */}
+            <div className="hidden lg:flex items-center gap-3">
+              <div className="flex bg-white rounded-lg p-1">
+                <button
+                  onClick={() => setShowAnalytics(!showAnalytics)}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    showAnalytics
+                      ? 'bg-[#5B6E02] text-white'
+                      : 'text-[#777] hover:text-[#333]'
+                  }`}
+                >
+                  Analytics
+                </button>
+
+                <button
+                  onClick={() => setShowB2BNetwork(true)}
+                  className="px-4 py-2 rounded-md text-sm font-medium transition-colors text-[#777] hover:text-[#333]"
+                >
+                  B2B Network
+                </button>
+
+                <button
+                  onClick={() => setShowAIReceiptParser(true)}
+                  className="px-4 py-2 rounded-md text-sm font-medium transition-colors text-[#777] hover:text-[#333]"
+                >
+                  AI Parser
+                </button>
+
+                <button
+                  onClick={() => setShowAIInsights(true)}
+                  className="px-4 py-2 rounded-md text-sm font-medium transition-colors text-[#777] hover:text-[#333]"
+                >
+                  AI Insights
+                </button>
+
+                <button
+                  onClick={() => setShowExportDropdown(!showExportDropdown)}
+                  className="px-4 py-2 rounded-md text-sm font-medium transition-colors text-[#777] hover:text-[#333]"
+                >
+                  Export
+                </button>
+              </div>
+
               <button
                 onClick={() => setShowAddForm(true)}
-                className="inline-flex items-center gap-2 responsive-button bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                className="px-4 py-2 rounded-md text-sm font-medium transition-colors bg-[#5B6E02] text-white hover:bg-[#4A5D01]"
               >
-                <Plus className="w-4 h-4" />
                 Add Stock Item
               </button>
+            </div>
+
+            {/* Export Dropdown */}
+            {showExportDropdown && (
+              <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                <button
+                  onClick={() => handleExport('csv')}
+                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left"
+                >
+                  <AppIcon name="file-csv" className="w-4 h-4" />
+                  Export CSV
+                </button>
+                <button
+                  onClick={() => handleExport('pdf')}
+                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left"
+                >
+                  <AppIcon name="file-pdf" className="w-4 h-4" />
+                  Export PDF
+                </button>
+                <button
+                  onClick={() => handleExport('json')}
+                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left"
+                >
+                  <AppIcon name="file-json" className="w-4 h-4" />
+                  Export JSON
+                </button>
+                <button
+                  onClick={() => handleExport('xlsx')}
+                  className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left"
+                >
+                  <AppIcon name="file-xlsx" className="w-4 h-4" />
+                  Export XLSX
+                </button>
+              </div>
+            )}
+            
+            {/* Mobile Layout */}
+            <div className="lg:hidden flex items-center gap-2">
+              <button
+                onClick={() => setShowAddForm(true)}
+                className="px-4 py-2 rounded-md text-sm font-medium transition-colors bg-[#5B6E02] text-white hover:bg-[#4A5D01]"
+              >
+                Add Item
+              </button>
+              
+              <div className="relative" ref={mobileMenuRef}>
+                <button
+                  onClick={() => setShowMobileMenu(!showMobileMenu)}
+                  className="px-4 py-2 rounded-md text-sm font-medium transition-colors text-[#777] hover:text-[#333] bg-white"
+                  title="More tools"
+                >
+                  Menu
+                </button>
+                
+                {/* Mobile Menu Dropdown */}
+                {showMobileMenu && (
+                  <div className="absolute right-0 top-full mt-1 w-56 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+                    <button
+                      onClick={() => {
+                        setShowAnalytics(!showAnalytics);
+                        setShowMobileMenu(false);
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <AppIcon name="bar-chart" className="w-4 h-4" />
+                      Analytics
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowB2BNetwork(true);
+                        setShowMobileMenu(false);
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <AppIcon name="users" className="w-4 h-4" />
+                      B2B Network
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowAIReceiptParser(true);
+                        setShowMobileMenu(false);
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <AppIcon name="file" className="w-4 h-4" />
+                      AI Parser
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowAIInsights(true);
+                        setShowMobileMenu(false);
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <AppIcon name="zap" className="w-4 h-4" />
+                      AI Insights
+                    </button>
+                    <div className="border-t border-gray-200">
+                      <button
+                        onClick={() => {
+                          handleExport('csv');
+                          setShowMobileMenu(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        <AppIcon name="download" className="w-4 h-4" />
+                        Export CSV
+                      </button>
+                      <button
+                        onClick={() => {
+                          handleExport('json');
+                          setShowMobileMenu(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        <AppIcon name="file-json" className="w-4 h-4" />
+                        Export JSON
+                      </button>
+                    </div>
+                    <div className="border-t border-gray-200">
+                      <button
+                        onClick={() => {
+                          setShowAdvancedInventory(true);
+                          setShowMobileMenu(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        <AppIcon name="warehouse" className="w-4 h-4" />
+                        Advanced Inventory
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowUnitConverter(true);
+                          setShowMobileMenu(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      >
+                        <AppIcon name="calculator" className="w-4 h-4" />
+                        Unit Converter
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-offwhite rounded-lg shadow-lg p-6 hover:shadow-xl transition-all duration-300 border border-amber-200">
+          <div className="bg-offwhite rounded-lg shadow-md p-6 hover:shadow-lg transition-all duration-300 ">
             <div className="flex items-center">
               <div className="p-2 bg-blue-100 rounded-lg">
-                <Warehouse className="w-6 h-6 text-blue-600" />
+                <AppIcon name="warehouse" className="w-6 h-6 text-blue-600" />
               </div>
               <div className="ml-4">
                 <p className="responsive-text font-medium text-gray-600">Total Items</p>
@@ -486,10 +716,10 @@ export default function VendorInventoryPage() {
             </div>
           </div>
 
-          <div className="bg-offwhite rounded-lg shadow-lg p-6 hover:shadow-xl transition-all duration-300 border border-amber-200">
+          <div className="bg-offwhite rounded-lg shadow-md p-6 hover:shadow-lg transition-all duration-300 ">
             <div className="flex items-center">
               <div className="p-2 bg-green-100 rounded-lg">
-                <CheckCircle className="w-6 h-6 text-green-600" />
+                <AppIcon name="check-circle" className="w-6 h-6 text-green-600" />
               </div>
               <div className="ml-4">
                 <p className="responsive-text font-medium text-gray-600">In Stock</p>
@@ -498,10 +728,10 @@ export default function VendorInventoryPage() {
             </div>
           </div>
 
-          <div className="bg-offwhite rounded-lg shadow-lg p-6 hover:shadow-xl transition-all duration-300 border border-amber-200">
+          <div className="bg-offwhite rounded-lg shadow-md p-6 hover:shadow-lg transition-all duration-300 ">
             <div className="flex items-center">
               <div className="p-2 bg-orange-100 rounded-lg">
-                <AlertTriangle className="w-6 h-6 text-orange-600" />
+                <AppIcon name="alert-circle" className="w-6 h-6 text-orange-600" />
               </div>
               <div className="ml-4">
                 <p className="responsive-text font-medium text-gray-600">Reorder Needed</p>
@@ -510,10 +740,10 @@ export default function VendorInventoryPage() {
             </div>
           </div>
 
-          <div className="bg-offwhite rounded-lg shadow-lg p-6 hover:shadow-xl transition-all duration-300 border border-amber-200">
+          <div className="bg-offwhite rounded-lg shadow-md p-6 hover:shadow-lg transition-all duration-300 ">
             <div className="flex items-center">
               <div className="p-2 bg-purple-100 rounded-lg">
-                <DollarSign className="w-6 h-6 text-purple-600" />
+                <AppIcon name="dollar-sign" className="w-6 h-6 text-purple-600" />
               </div>
               <div className="ml-4">
                 <p className="responsive-text font-medium text-gray-600">Total Value</p>
@@ -525,17 +755,33 @@ export default function VendorInventoryPage() {
           </div>
         </div>
 
+        {/* Alert Summary Bar */}
+        <InventoryAlertBar
+          alerts={alertItems}
+          onDismiss={handleDismissAlert}
+          onRefresh={handleRefreshAlerts}
+          onCreateShoppingList={handleCreateShoppingList}
+        />
+
+        {/* Page-Level AI Insights */}
+        <PageAIInsights
+          insights={aiInsights.filter(insight => !dismissedInsights.has(insight.id))}
+          onDismiss={handleDismissInsight}
+          onAction={handleInsightAction}
+          onRefresh={handleRefreshInsights}
+        />
+
         {/* Analytics Section */}
         {showAnalytics && analytics && (
-          <div className="bg-offwhite rounded-lg shadow-lg border border-amber-200 mb-8">
-            <div className="px-6 py-4 border-b border-amber-200">
+          <div className="bg-offwhite rounded-lg shadow-md mb-8">
+            <div className="px-6 py-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h3 className="responsive-subheading text-gray-900">Inventory Analytics</h3>
                 <button
                   onClick={() => setShowAIInsights(true)}
                   className="inline-flex items-center gap-2 px-3 py-1 bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 transition-colors text-sm"
                 >
-                  <Brain className="w-4 h-4" />
+                  <AppIcon name="zap" className="w-4 h-4" />
                   AI Insights
                 </button>
               </div>
@@ -584,7 +830,7 @@ export default function VendorInventoryPage() {
                           }}
                           className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded text-xs hover:bg-green-200 transition-colors"
                         >
-                          <Building2 className="w-3 h-3" />
+                          <AppIcon name="users" className="w-3 h-3" />
                           Auto-Source
                         </button>
                       </div>
@@ -620,12 +866,12 @@ export default function VendorInventoryPage() {
         )}
 
         {/* Search and Filter */}
-        <div className="bg-offwhite rounded-lg shadow-lg border border-amber-200 mb-8">
+        <div className="bg-offwhite rounded-lg shadow-md mb-8">
           <div className="p-6">
             <div className="flex flex-col lg:flex-row gap-4">
               <div className="flex-1">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <AppIcon name="search" className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <input
                     type="text"
                     placeholder="Search inventory items..."
@@ -672,14 +918,14 @@ export default function VendorInventoryPage() {
                     className={`px-3 py-2 ${viewMode === 'table' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
                     title="Table View"
                   >
-                    <BarChart3 className="w-4 h-4" />
+                    <AppIcon name="bar-chart" className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => setViewMode('grid')}
                     className={`px-3 py-2 ${viewMode === 'grid' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
                     title="Grid View"
                   >
-                    <Package className="w-4 h-4" />
+                    <AppIcon name="package" className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -689,8 +935,8 @@ export default function VendorInventoryPage() {
 
         {/* Add/Edit Form */}
         {showAddForm && (
-          <div className="bg-offwhite rounded-lg shadow-lg border border-amber-200 mb-8">
-            <div className="px-6 py-4 border-b border-amber-200">
+          <div className="bg-offwhite rounded-lg shadow-md mb-8">
+            <div className="px-6 py-4 border-b border-gray-200">
               <h3 className="responsive-subheading text-gray-900">
                 {editingItem ? 'Edit Inventory Item' : 'Add New Inventory Item'}
               </h3>
@@ -893,7 +1139,7 @@ export default function VendorInventoryPage() {
                     </>
                   ) : (
                     <>
-                      <CheckCircle className="w-4 h-4" />
+                      <AppIcon name="check-circle" className="w-4 h-4" />
                       {editingItem ? 'Update Item' : 'Add Item'}
                     </>
                   )}
@@ -911,27 +1157,49 @@ export default function VendorInventoryPage() {
         )}
 
         {/* Inventory List */}
-        <div className="bg-offwhite rounded-lg shadow-lg border border-amber-200">
-          <div className="px-6 py-4 border-b border-amber-200">
+        <div className="bg-offwhite rounded-lg shadow-md ">
+          <div className="px-6 py-4 border-b border-gray-200">
             <h3 className="responsive-subheading text-gray-900">Inventory Items</h3>
           </div>
           
           {inventoryItems.length === 0 ? (
             <div className="p-8 text-center">
-              <Warehouse className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <AppIcon name="warehouse" className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <h3 className="responsive-subheading text-gray-900 mb-2">No inventory items yet</h3>
               <p className="text-gray-600 mb-4">Start building your warehouse inventory by adding your first stock item.</p>
               <button
                 onClick={() => setShowAddForm(true)}
                 className="inline-flex items-center gap-2 responsive-button bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
               >
-                <Plus className="w-4 h-4" />
+                <AppIcon name="plus" className="w-4 h-4" />
                 Add First Item
               </button>
             </div>
+          ) : viewMode === 'grid' ? (
+            // Grid View with Enhanced Cards
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredItems.map((item) => (
+                  <InventoryItemCard
+                    key={item.id}
+                    item={item}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    onStockAdjustment={handleStockAdjustment}
+                    onReorder={handleReorderItem}
+                    onInsightAction={handleInsightAction}
+                    onDismissInsight={handleDismissInsight}
+                    showAlerts={true}
+                    showAIInsights={true}
+                    aiInsights={getItemInsights(item.id)}
+                  />
+                ))}
+              </div>
+            </div>
           ) : (
+            // Table View (Enhanced with Alert Indicators)
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-amber-200">
+              <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-offwhite">
                   <tr>
                     <th 
@@ -940,7 +1208,7 @@ export default function VendorInventoryPage() {
                     >
                       <div className="flex items-center gap-1">
                         Item
-                        <ArrowUpDown className="w-3 h-3" />
+                        <AppIcon name="arrow-up-down" className="w-3 h-3" />
                       </div>
                     </th>
                     <th 
@@ -949,7 +1217,7 @@ export default function VendorInventoryPage() {
                     >
                       <div className="flex items-center gap-1">
                         Category
-                        <ArrowUpDown className="w-3 h-3" />
+                        <AppIcon name="arrow-up-down" className="w-3 h-3" />
                       </div>
                     </th>
                     <th 
@@ -958,7 +1226,7 @@ export default function VendorInventoryPage() {
                     >
                       <div className="flex items-center gap-1">
                         Stock
-                        <ArrowUpDown className="w-3 h-3" />
+                        <AppIcon name="arrow-up-down" className="w-3 h-3" />
                       </div>
                     </th>
                     <th 
@@ -967,7 +1235,7 @@ export default function VendorInventoryPage() {
                     >
                       <div className="flex items-center gap-1">
                         Value
-                        <ArrowUpDown className="w-3 h-3" />
+                        <AppIcon name="arrow-up-down" className="w-3 h-3" />
                       </div>
                     </th>
                     <th className="responsive-button text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -981,104 +1249,135 @@ export default function VendorInventoryPage() {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-offwhite divide-y divide-amber-200">
-                  {filteredItems.map((item) => (
-                    <tr key={item.id} className="hover:bg-brand-beige">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div>
-                          <div className="responsive-text font-medium text-gray-900">
-                            {item.name}
-                          </div>
-                          {item.description && (
-                            <div className="responsive-text text-gray-500">
-                              {item.description}
+                <tbody className="bg-offwhite divide-y divide-gray-200">
+                  {filteredItems.map((item) => {
+                    const isLowStock = item.currentStock <= item.reorderPoint;
+                    const isExpiringSoon = item.expirationDate && 
+                      new Date(item.expirationDate) <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+                    const isExpired = item.expirationDate && new Date(item.expirationDate) <= new Date();
+                    
+                    const getRowClass = () => {
+                      if (isExpired) return 'bg-red-50 border-l-4 border-red-400';
+                      if (isExpiringSoon) return 'bg-orange-50 border-l-4 border-orange-400';
+                      if (isLowStock) return 'bg-red-50 border-l-4 border-red-400';
+                      return 'hover:bg-brand-beige';
+                    };
+
+                    return (
+                      <tr key={item.id} className={getRowClass()}>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                            <div>
+                              <div className="responsive-text font-medium text-gray-900">
+                                {item.name}
+                              </div>
+                              {item.description && (
+                                <div className="responsive-text text-gray-500">
+                                  {item.description}
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          item.category === 'food_grade' ? 'bg-green-100 text-green-800' :
-                          item.category === 'raw_materials' ? 'bg-blue-100 text-blue-800' :
-                          item.category === 'packaging' ? 'bg-purple-100 text-purple-800' :
-                          'bg-orange-100 text-orange-800'
-                        }`}>
-                          {item.category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <div>
-                          <div className="font-medium">{item.currentStock} {item.unit}</div>
-                          <div className="text-xs text-gray-500">Reorder: {item.reorderPoint}</div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <div>
-                          <div className="font-medium">${(item.currentStock * item.costPerUnit).toFixed(2)}</div>
-                          <div className="text-xs text-gray-500">@ ${item.costPerUnit.toFixed(2)}/{item.unit}</div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap responsive-text text-gray-500">
-                        {item.location || '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          item.currentStock > item.reorderPoint
-                            ? 'bg-green-100 text-green-800' 
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                          {item.currentStock > item.reorderPoint ? 'In Stock' : 'Reorder Needed'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap responsive-text font-medium">
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleStockAdjustment(item)}
-                            className="text-green-600 hover:text-green-900 transition-colors"
-                            title="Adjust stock"
-                          >
-                            <ArrowUpDown className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleEdit(item)}
-                            className="text-blue-600 hover:text-blue-900 transition-colors"
-                            title="Edit item"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(item)}
-                            className="text-red-600 hover:text-red-900 transition-colors"
-                            title="Delete item"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                            {/* Alert Indicators */}
+                            {isExpired && (
+                              <div className="flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">
+                                <AppIcon name="alert-circle" className="w-3 h-3" />
+                                EXPIRED
+                              </div>
+                            )}
+                            {isExpiringSoon && !isExpired && (
+                              <div className="flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">
+                                <AppIcon name="clock" className="w-3 h-3" />
+                                EXPIRES SOON
+                              </div>
+                            )}
+                            {isLowStock && !isExpired && (
+                              <div className="flex items-center gap-1 px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">
+                                <AppIcon name="alert-circle" className="w-3 h-3" />
+                                LOW STOCK
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            item.category === 'food_grade' ? 'bg-green-100 text-green-800' :
+                            item.category === 'raw_materials' ? 'bg-blue-100 text-blue-800' :
+                            item.category === 'packaging' ? 'bg-purple-100 text-purple-800' :
+                            'bg-orange-100 text-orange-800'
+                          }`}>
+                            {item.category.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <div>
+                            <div className={`font-medium ${isLowStock ? 'text-red-600' : 'text-gray-900'}`}>
+                              {item.currentStock} {item.unit}
+                            </div>
+                            <div className="text-xs text-gray-500">Reorder: {item.reorderPoint}</div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <div>
+                            <div className="font-medium">${(item.currentStock * item.costPerUnit).toFixed(2)}</div>
+                            <div className="text-xs text-gray-500">@ ${item.costPerUnit.toFixed(2)}/{item.unit}</div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap responsive-text text-gray-500">
+                          {item.location || '-'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            item.currentStock > item.reorderPoint
+                              ? 'bg-green-100 text-green-800' 
+                              : 'bg-red-100 text-red-800'
+                          }`}>
+                            {item.currentStock > item.reorderPoint ? 'In Stock' : 'Reorder Needed'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap responsive-text font-medium">
+                          <div className="flex gap-2">
+                            {isLowStock && (
+                              <button
+                                onClick={() => handleReorderItem(item)}
+                                className="text-green-600 hover:text-green-900 transition-colors"
+                                title="Reorder item"
+                              >
+                                <AppIcon name="package" className="w-4 h-4" />
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleStockAdjustment(item)}
+                              className="text-green-600 hover:text-green-900 transition-colors"
+                              title="Adjust stock"
+                            >
+                              <AppIcon name="arrow-up-down" className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleEdit(item)}
+                              className="text-blue-600 hover:text-blue-900 transition-colors"
+                              title="Edit item"
+                            >
+                              <AppIcon name="edit" className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(item)}
+                              className="text-red-600 hover:text-red-900 transition-colors"
+                              title="Delete item"
+                            >
+                              <AppIcon name="trash" className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
           )}
         </div>
 
-        {/* Low Stock Alerts */}
-        {lowStockItems > 0 && (
-          <div className="mt-8 bg-orange-50 border border-orange-200 rounded-lg shadow-lg p-4">
-            <div className="flex items-center">
-              <AlertTriangle className="w-5 h-5 text-orange-600 mr-3" />
-              <div>
-                <h4 className="responsive-text font-medium text-orange-800">
-                  Reorder Alert
-                </h4>
-                <p className="text-sm text-orange-700 mt-1">
-                  You have {lowStockItems} item{lowStockItems !== 1 ? 's' : ''} that need{lowStockItems !== 1 ? '' : 's'} reordering.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Old low stock alerts removed - now handled by InventoryAlertBar */}
         </div>
 
         {/* Stock Adjustment Modal */}
@@ -1096,7 +1395,7 @@ export default function VendorInventoryPage() {
                   title="Close modal"
                   aria-label="Close modal"
                 >
-                  <X className="w-5 h-5" />
+                  <AppIcon name="x" className="w-5 h-5" />
                 </button>
               </div>
               

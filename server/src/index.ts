@@ -13,6 +13,7 @@ import { b2bNetworkRouter } from './routes/b2b-network.router';
 import { aiReceiptParserRouter } from './routes/ai-receipt-parser.router';
 import { unitConverterRouter } from './routes/unit-converter.router';
 import { advancedInventoryRouter } from './routes/advanced-inventory.router';
+import { crmRouter } from './routes/crm.router';
 
 const app = express();
 const PORT = Number(process.env.PORT || 3001);
@@ -22,7 +23,7 @@ app.use(helmet({ crossOriginResourcePolicy: false }));
 
 // CORS middleware - must come before session middleware
 app.use(cors({
-  origin: 'http://localhost:5173', // Frontend URL
+  origin: ['http://localhost:5173', 'http://[::1]:5173'], // Frontend URL (IPv4 and IPv6)
   credentials: true, // Allow cookies
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -68,6 +69,9 @@ app.use('/api', unitConverterRouter);
 
 // Advanced Inventory routes
 app.use('/api', advancedInventoryRouter);
+
+// CRM routes
+app.use('/api', crmRouter);
 
 // Start server
 app.listen(PORT, () => {

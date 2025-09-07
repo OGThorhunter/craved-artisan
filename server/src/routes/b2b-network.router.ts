@@ -431,9 +431,11 @@ b2bNetworkRouter.get('/b2b/suppliers', (req, res) => {
         totalOrders: filteredSuppliers.reduce((sum, s) => sum + s.totalOrders, 0),
       },
     });
+    return;
   } catch (error) {
-    logger.error('Error fetching suppliers:', error);
+    logger.error({ error }, 'Error fetching suppliers');
     res.status(500).json({ error: 'Failed to fetch suppliers' });
+    return;
   }
 });
 
@@ -467,9 +469,11 @@ b2bNetworkRouter.get('/b2b/suppliers/:id', (req, res) => {
           : 0,
       },
     });
+    return;
   } catch (error) {
-    logger.error('Error fetching supplier details:', error);
+    logger.error({ error }, 'Error fetching supplier details');
     res.status(500).json({ error: 'Failed to fetch supplier details' });
+    return;
   }
 });
 
@@ -517,9 +521,11 @@ b2bNetworkRouter.get('/b2b/products', (req, res) => {
         categories: [...new Set(filteredProducts.map(p => p.category))],
       },
     });
+    return;
   } catch (error) {
-    logger.error('Error fetching B2B products:', error);
+    logger.error({ error }, 'Error fetching B2B products');
     res.status(500).json({ error: 'Failed to fetch B2B products' });
+    return;
   }
 });
 
@@ -548,9 +554,11 @@ b2bNetworkRouter.get('/b2b/sourcing-requests', (req, res) => {
         critical: filteredRequests.filter(r => r.urgency === 'critical').length,
       },
     });
+    return;
   } catch (error) {
-    logger.error('Error fetching sourcing requests:', error);
+    logger.error({ error }, 'Error fetching sourcing requests');
     res.status(500).json({ error: 'Failed to fetch sourcing requests' });
+    return;
   }
 });
 
@@ -613,8 +621,9 @@ b2bNetworkRouter.post('/b2b/sourcing-requests', (req, res) => {
       message: 'Sourcing request created. Quotes will be generated automatically.',
     });
   } catch (error) {
-    logger.error('Error creating sourcing request:', error);
+    logger.error({ error }, 'Error creating sourcing request');
     res.status(500).json({ error: 'Failed to create sourcing request' });
+    return;
   }
 });
 
@@ -679,9 +688,11 @@ b2bNetworkRouter.post('/b2b/sourcing-requests/:id/select-quote', (req, res) => {
       order: newOrder,
       message: 'Quote selected and order created successfully.',
     });
+    return;
   } catch (error) {
-    logger.error('Error selecting quote:', error);
+    logger.error({ error }, 'Error selecting quote');
     res.status(500).json({ error: 'Failed to select quote' });
+    return;
   }
 });
 
@@ -711,9 +722,11 @@ b2bNetworkRouter.get('/b2b/orders', (req, res) => {
         delivered: filteredOrders.filter(o => o.status === 'delivered').length,
       },
     });
+    return;
   } catch (error) {
-    logger.error('Error fetching B2B orders:', error);
+    logger.error({ error }, 'Error fetching B2B orders');
     res.status(500).json({ error: 'Failed to fetch B2B orders' });
+    return;
   }
 });
 
@@ -768,9 +781,11 @@ b2bNetworkRouter.get('/b2b/analytics', (req, res) => {
         ).length,
       },
     });
+    return;
   } catch (error) {
-    logger.error('Error fetching B2B analytics:', error);
+    logger.error({ error }, 'Error fetching B2B analytics');
     res.status(500).json({ error: 'Failed to fetch B2B analytics' });
+    return;
   }
 });
 
@@ -847,8 +862,10 @@ b2bNetworkRouter.post('/b2b/auto-source', (req, res) => {
       request: newRequest,
       message: 'Automatic sourcing initiated. Quotes will be generated shortly.',
     });
+    return;
   } catch (error) {
-    logger.error('Error triggering auto-sourcing:', error);
+    logger.error({ error }, 'Error triggering auto-sourcing');
     res.status(500).json({ error: 'Failed to trigger auto-sourcing' });
+    return;
   }
 });

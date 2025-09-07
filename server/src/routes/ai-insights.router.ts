@@ -1,397 +1,292 @@
 import { Router } from 'express';
+import { logger } from '../logger';
 
 export const aiInsightsRouter = Router();
 
 // Mock AI insights data
-const mockInsights = {
-  seasonalAlerts: [
-    {
-      id: 'seasonal-1',
-      type: 'seasonal_demand',
-      title: 'Holiday Season Preparation',
-      message: 'Based on historical data, expect 40% increase in gift packaging demand during December.',
-      priority: 'high',
-      category: 'packaging',
-      confidence: 0.85,
-      recommendedAction: 'Increase gift box inventory by 200 units',
-      timeframe: 'next_30_days',
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: 'seasonal-2',
-      type: 'seasonal_demand',
-      title: 'Summer BBQ Season',
-      message: 'Grilling season typically increases wood plank demand by 60% in June-July.',
-      priority: 'medium',
-      category: 'raw_materials',
-      confidence: 0.78,
-      recommendedAction: 'Stock up on oak wood planks and charcoal',
-      timeframe: 'next_60_days',
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: 'seasonal-3',
-      type: 'weather_impact',
-      title: 'Storm Season Alert',
-      message: 'Hurricane season may disrupt supply chains for imported ingredients.',
-      priority: 'high',
-      category: 'food_grade',
-      confidence: 0.92,
-      recommendedAction: 'Build 30-day safety stock for imported items',
-      timeframe: 'next_90_days',
-      createdAt: new Date().toISOString(),
-    },
-  ],
-  
-  lowStockPredictions: [
-    {
-      id: 'prediction-1',
-      itemId: 'inv-1',
-      itemName: 'All-Purpose Flour',
-      currentStock: 50,
-      predictedDepletionDate: '2025-01-15',
-      confidence: 0.88,
-      factors: ['Increased holiday baking', 'Current consumption rate'],
-      recommendedOrderQuantity: 100,
-      urgency: 'high',
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: 'prediction-2',
-      itemId: 'inv-6',
-      itemName: 'Gift Boxes',
-      currentStock: 100,
-      predictedDepletionDate: '2025-01-08',
-      confidence: 0.95,
-      factors: ['Holiday season demand spike', 'Historical patterns'],
-      recommendedOrderQuantity: 300,
-      urgency: 'critical',
-      createdAt: new Date().toISOString(),
-    },
-  ],
-  
-  marketTrends: [
-    {
-      id: 'trend-1',
-      category: 'food_grade',
-      trend: 'Organic ingredients demand up 25%',
-      impact: 'positive',
-      timeframe: 'next_quarter',
-      confidence: 0.82,
-      recommendation: 'Consider expanding organic ingredient line',
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: 'trend-2',
-      category: 'packaging',
-      trend: 'Sustainable packaging preference increasing',
-      impact: 'positive',
-      timeframe: 'next_6_months',
-      confidence: 0.76,
-      recommendation: 'Source eco-friendly packaging alternatives',
-      createdAt: new Date().toISOString(),
-    },
-  ],
-  
-  costOptimization: [
-    {
-      id: 'cost-1',
-      type: 'bulk_purchase',
-      itemId: 'inv-2',
-      itemName: 'Active Dry Yeast',
-      currentCost: 0.15,
-      bulkCost: 0.12,
-      savings: 0.03,
-      minOrderQuantity: 1000,
-      paybackPeriod: '2_months',
-      confidence: 0.89,
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: 'cost-2',
-      type: 'supplier_switch',
-      itemId: 'inv-5',
-      itemName: 'Steel Ingots',
-      currentSupplier: 'Metal Works Inc.',
-      alternativeSupplier: 'Steel Solutions Co.',
-      currentCost: 8.50,
-      alternativeCost: 7.80,
-      savings: 0.70,
-      confidence: 0.85,
-      createdAt: new Date().toISOString(),
-    },
-  ],
-  
-  qualityInsights: [
-    {
-      id: 'quality-1',
-      type: 'expiration_risk',
-      itemId: 'inv-10',
-      itemName: 'Olive Oil',
-      expirationDate: '2025-08-15',
-      riskLevel: 'medium',
-      recommendation: 'Use in high-volume products first',
-      confidence: 0.91,
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: 'quality-2',
-      type: 'storage_optimization',
-      itemId: 'inv-4',
-      itemName: 'Oak Wood Planks',
-      currentLocation: 'C-3-1',
-      recommendation: 'Move to climate-controlled area to prevent warping',
-      confidence: 0.87,
-      createdAt: new Date().toISOString(),
-    },
-  ],
-};
+const mockAIInsights = [
+  {
+    id: 'insight-1',
+    itemId: 'inv-1',
+    type: 'reorder_suggestion',
+    title: 'Bulk Purchase Opportunity',
+    message: 'AI suggests purchasing flour in bulk (50kg+) to save 15% on unit costs. Current supplier offers volume discounts.',
+    confidence: 92,
+    actionable: true,
+    priority: 'medium',
+    createdAt: new Date().toISOString(),
+    expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+  },
+  {
+    id: 'insight-2',
+    itemId: 'inv-2',
+    type: 'demand_forecast',
+    title: 'Demand Increase Expected',
+    message: 'Based on seasonal patterns, yeast demand is expected to increase 25% in the next 2 weeks. Consider increasing stock.',
+    confidence: 87,
+    actionable: true,
+    priority: 'high',
+    createdAt: new Date().toISOString(),
+    expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
+  },
+  {
+    id: 'insight-3',
+    type: 'price_alert',
+    title: 'Supplier Price Increase',
+    message: 'Steel ingots supplier announced 8% price increase effective next month. Consider pre-purchasing current stock.',
+    confidence: 95,
+    actionable: true,
+    priority: 'high',
+    createdAt: new Date().toISOString(),
+    expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+  },
+  {
+    id: 'insight-4',
+    type: 'seasonal_trend',
+    title: 'Seasonal Usage Pattern',
+    message: 'Historical data shows 40% increase in packaging materials usage during holiday season. Plan inventory accordingly.',
+    confidence: 89,
+    actionable: true,
+    priority: 'medium',
+    createdAt: new Date().toISOString(),
+    expiresAt: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString()
+  },
+  {
+    id: 'insight-5',
+    itemId: 'inv-3',
+    type: 'supplier_alert',
+    title: 'Alternative Supplier Available',
+    message: 'New supplier offers sea salt at 12% lower cost with same quality. Consider switching for cost optimization.',
+    confidence: 78,
+    actionable: true,
+    priority: 'low',
+    createdAt: new Date().toISOString(),
+    expiresAt: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString()
+  }
+];
 
-// GET /api/ai-insights - Get all AI insights
+// Get all AI insights
 aiInsightsRouter.get('/ai-insights', (req, res) => {
   try {
-    const { type, priority, category } = req.query;
+    logger.info('Fetching AI insights');
     
-    let filteredInsights = { ...mockInsights };
+    // Filter out expired insights
+    const activeInsights = mockAIInsights.filter(insight => 
+      !insight.expiresAt || new Date(insight.expiresAt) > new Date()
+    );
+
+    res.json({
+      success: true,
+      data: activeInsights,
+      total: activeInsights.length,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    logger.error({ error }, 'Error fetching AI insights');
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch AI insights'
+    });
+  }
+});
+
+// Get AI insights for a specific item
+aiInsightsRouter.get('/ai-insights/item/:itemId', (req, res) => {
+  try {
+    const { itemId } = req.params;
+    logger.info({ itemId }, 'Fetching AI insights for item');
     
-    // Filter seasonal alerts
-    if (type === 'seasonal' || !type) {
-      if (priority) {
-        filteredInsights.seasonalAlerts = filteredInsights.seasonalAlerts.filter(
-          alert => alert.priority === priority
-        );
+    const itemInsights = mockAIInsights.filter(insight => 
+      insight.itemId === itemId && 
+      (!insight.expiresAt || new Date(insight.expiresAt) > new Date())
+    );
+
+    res.json({
+      success: true,
+      data: itemInsights,
+      total: itemInsights.length,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    logger.error({ error }, 'Error fetching item AI insights');
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch item AI insights'
+    });
+  }
+});
+
+// Get inventory-specific AI insights
+aiInsightsRouter.get('/ai-insights/inventory', (req, res) => {
+  try {
+    logger.info('Fetching inventory AI insights');
+    
+    // Filter insights that are relevant to inventory management
+    const inventoryInsights = mockAIInsights.filter(insight => 
+      ['reorder_suggestion', 'demand_forecast', 'price_alert', 'supplier_alert', 'seasonal_trend'].includes(insight.type) &&
+      (!insight.expiresAt || new Date(insight.expiresAt) > new Date())
+    );
+
+    // Group insights by type
+    const insightsByType = inventoryInsights.reduce((acc, insight) => {
+      if (!acc[insight.type]) {
+        acc[insight.type] = [];
       }
-      if (category) {
-        filteredInsights.seasonalAlerts = filteredInsights.seasonalAlerts.filter(
-          alert => alert.category === category
-        );
-      }
-    } else {
-      filteredInsights.seasonalAlerts = [];
-    }
-    
-    // Filter low stock predictions
-    if (type === 'predictions' || !type) {
-      if (priority) {
-        const urgencyMap = { high: 'high', medium: 'medium', low: 'low', critical: 'critical' };
-        filteredInsights.lowStockPredictions = filteredInsights.lowStockPredictions.filter(
-          prediction => prediction.urgency === urgencyMap[priority as string]
-        );
-      }
-    } else {
-      filteredInsights.lowStockPredictions = [];
-    }
-    
+      acc[insight.type].push(insight);
+      return acc;
+    }, {} as Record<string, typeof inventoryInsights>);
+
+    // Calculate summary statistics
+    const summary = {
+      total: inventoryInsights.length,
+      highPriority: inventoryInsights.filter(i => i.priority === 'high').length,
+      mediumPriority: inventoryInsights.filter(i => i.priority === 'medium').length,
+      lowPriority: inventoryInsights.filter(i => i.priority === 'low').length,
+      actionable: inventoryInsights.filter(i => i.actionable).length,
+      averageConfidence: Math.round(
+        inventoryInsights.reduce((sum, i) => sum + i.confidence, 0) / inventoryInsights.length
+      )
+    };
+
     res.json({
-      insights: filteredInsights,
-      summary: {
-        totalAlerts: filteredInsights.seasonalAlerts.length,
-        criticalPredictions: filteredInsights.lowStockPredictions.filter(p => p.urgency === 'critical').length,
-        highPriorityAlerts: filteredInsights.seasonalAlerts.filter(a => a.priority === 'high').length,
-        costSavings: filteredInsights.costOptimization.reduce((sum, opt) => sum + opt.savings, 0),
-      },
-      lastUpdated: new Date().toISOString(),
+      success: true,
+      data: inventoryInsights,
+      summary,
+      insightsByType,
+      timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error('Error fetching AI insights:', error);
-    res.status(500).json({ error: 'Failed to fetch AI insights' });
+    logger.error({ error }, 'Error fetching inventory AI insights');
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch inventory AI insights'
+    });
   }
 });
 
-// GET /api/ai-insights/seasonal - Get seasonal insights only
-aiInsightsRouter.get('/ai-insights/seasonal', (req, res) => {
+// Dismiss an AI insight
+aiInsightsRouter.post('/ai-insights/:insightId/dismiss', (req, res) => {
   try {
-    const { priority, category } = req.query;
+    const { insightId } = req.params;
+    logger.info({ insightId }, 'Dismissing AI insight');
     
-    let alerts = [...mockInsights.seasonalAlerts];
-    
-    if (priority) {
-      alerts = alerts.filter(alert => alert.priority === priority);
-    }
-    
-    if (category) {
-      alerts = alerts.filter(alert => alert.category === category);
-    }
-    
-    res.json({
-      alerts,
-      summary: {
-        total: alerts.length,
-        high: alerts.filter(a => a.priority === 'high').length,
-        medium: alerts.filter(a => a.priority === 'medium').length,
-        low: alerts.filter(a => a.priority === 'low').length,
-      },
-    });
-  } catch (error) {
-    console.error('Error fetching seasonal insights:', error);
-    res.status(500).json({ error: 'Failed to fetch seasonal insights' });
-  }
-});
-
-// GET /api/ai-insights/predictions - Get stock predictions only
-aiInsightsRouter.get('/ai-insights/predictions', (req, res) => {
-  try {
-    const { urgency } = req.query;
-    
-    let predictions = [...mockInsights.lowStockPredictions];
-    
-    if (urgency) {
-      predictions = predictions.filter(prediction => prediction.urgency === urgency);
-    }
-    
-    res.json({
-      predictions,
-      summary: {
-        total: predictions.length,
-        critical: predictions.filter(p => p.urgency === 'critical').length,
-        high: predictions.filter(p => p.urgency === 'high').length,
-        medium: predictions.filter(p => p.urgency === 'medium').length,
-      },
-    });
-  } catch (error) {
-    console.error('Error fetching stock predictions:', error);
-    res.status(500).json({ error: 'Failed to fetch stock predictions' });
-  }
-});
-
-// GET /api/ai-insights/trends - Get market trends
-aiInsightsRouter.get('/ai-insights/trends', (req, res) => {
-  try {
-    const { category, impact } = req.query;
-    
-    let trends = [...mockInsights.marketTrends];
-    
-    if (category) {
-      trends = trends.filter(trend => trend.category === category);
-    }
-    
-    if (impact) {
-      trends = trends.filter(trend => trend.impact === impact);
-    }
-    
-    res.json({
-      trends,
-      summary: {
-        total: trends.length,
-        positive: trends.filter(t => t.impact === 'positive').length,
-        negative: trends.filter(t => t.impact === 'negative').length,
-        neutral: trends.filter(t => t.impact === 'neutral').length,
-      },
-    });
-  } catch (error) {
-    console.error('Error fetching market trends:', error);
-    res.status(500).json({ error: 'Failed to fetch market trends' });
-  }
-});
-
-// GET /api/ai-insights/optimization - Get cost optimization suggestions
-aiInsightsRouter.get('/ai-insights/optimization', (req, res) => {
-  try {
-    const { type } = req.query;
-    
-    let optimizations = [...mockInsights.costOptimization];
-    
-    if (type) {
-      optimizations = optimizations.filter(opt => opt.type === type);
-    }
-    
-    const totalSavings = optimizations.reduce((sum, opt) => sum + opt.savings, 0);
-    
-    res.json({
-      optimizations,
-      summary: {
-        total: optimizations.length,
-        totalSavings,
-        bulkPurchases: optimizations.filter(o => o.type === 'bulk_purchase').length,
-        supplierSwitches: optimizations.filter(o => o.type === 'supplier_switch').length,
-      },
-    });
-  } catch (error) {
-    console.error('Error fetching optimization insights:', error);
-    res.status(500).json({ error: 'Failed to fetch optimization insights' });
-  }
-});
-
-// POST /api/ai-insights/analyze - Trigger AI analysis
-aiInsightsRouter.post('/ai-insights/analyze', (req, res) => {
-  try {
-    const { analysisType, parameters } = req.body;
-    
-    // Simulate AI analysis processing
-    const analysisId = `analysis-${Date.now()}`;
-    
-    // Mock analysis results based on type
-    let results = {};
-    
-    switch (analysisType) {
-      case 'seasonal_forecast':
-        results = {
-          analysisId,
-          type: 'seasonal_forecast',
-          insights: mockInsights.seasonalAlerts.slice(0, 2),
-          confidence: 0.87,
-          processingTime: '2.3s',
-        };
-        break;
-      case 'demand_prediction':
-        results = {
-          analysisId,
-          type: 'demand_prediction',
-          insights: mockInsights.lowStockPredictions,
-          confidence: 0.91,
-          processingTime: '1.8s',
-        };
-        break;
-      case 'cost_optimization':
-        results = {
-          analysisId,
-          type: 'cost_optimization',
-          insights: mockInsights.costOptimization,
-          confidence: 0.84,
-          processingTime: '3.1s',
-        };
-        break;
-      default:
-        results = {
-          analysisId,
-          type: 'general_analysis',
-          insights: mockInsights,
-          confidence: 0.79,
-          processingTime: '4.2s',
-        };
-    }
+    // In a real implementation, this would mark the insight as dismissed in the database
+    // For now, we'll just return success
     
     res.json({
       success: true,
-      analysisId,
-      results,
-      timestamp: new Date().toISOString(),
+      message: 'Insight dismissed successfully',
+      timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error('Error running AI analysis:', error);
-    res.status(500).json({ error: 'Failed to run AI analysis' });
+    logger.error({ error }, 'Error dismissing AI insight');
+    res.status(500).json({
+      success: false,
+      error: 'Failed to dismiss AI insight'
+    });
   }
 });
 
-// GET /api/ai-insights/health - Check AI service health
-aiInsightsRouter.get('/ai-insights/health', (req, res) => {
+// Take action on an AI insight
+aiInsightsRouter.post('/ai-insights/:insightId/action', (req, res) => {
   try {
+    const { insightId } = req.params;
+    const { action, notes } = req.body;
+    
+    logger.info({ insightId, action, notes }, 'Taking action on AI insight');
+    
+    // In a real implementation, this would log the action taken and potentially trigger workflows
+    // For now, we'll just return success
+    
     res.json({
-      status: 'healthy',
-      service: 'AI Insights Engine',
-      version: '1.0.0',
-      uptime: process.uptime(),
-      lastAnalysis: new Date().toISOString(),
-      capabilities: [
-        'seasonal_forecasting',
-        'demand_prediction',
-        'cost_optimization',
-        'market_trend_analysis',
-        'quality_insights',
-      ],
+      success: true,
+      message: 'Action taken successfully',
+      action,
+      notes,
+      timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error('Error checking AI service health:', error);
-    res.status(500).json({ error: 'Failed to check AI service health' });
+    logger.error({ error }, 'Error taking action on AI insight');
+    res.status(500).json({
+      success: false,
+      error: 'Failed to take action on AI insight'
+    });
+  }
+});
+
+// Generate new AI insights (simulate AI processing)
+aiInsightsRouter.post('/ai-insights/generate', (req, res) => {
+  try {
+    logger.info('Generating new AI insights');
+    
+    // In a real implementation, this would trigger AI analysis of inventory data
+    // For now, we'll simulate generating new insights
+    
+    const newInsights = [
+      {
+        id: `insight-${Date.now()}`,
+        type: 'demand_forecast',
+        title: 'Weekly Usage Pattern Detected',
+        message: 'AI detected a 15% increase in weekly usage for packaging materials. Consider adjusting reorder points.',
+        confidence: 82,
+        actionable: true,
+        priority: 'medium',
+        createdAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+      }
+    ];
+    
+    res.json({
+      success: true,
+      data: newInsights,
+      message: 'New insights generated successfully',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    logger.error({ error }, 'Error generating AI insights');
+    res.status(500).json({
+      success: false,
+      error: 'Failed to generate AI insights'
+    });
+  }
+});
+
+// Get AI insights analytics
+aiInsightsRouter.get('/ai-insights/analytics', (req, res) => {
+  try {
+    logger.info('Fetching AI insights analytics');
+    
+    const analytics = {
+      totalInsights: mockAIInsights.length,
+      activeInsights: mockAIInsights.filter(i => !i.expiresAt || new Date(i.expiresAt) > new Date()).length,
+      insightsByType: {
+        reorder_suggestion: mockAIInsights.filter(i => i.type === 'reorder_suggestion').length,
+        price_alert: mockAIInsights.filter(i => i.type === 'price_alert').length,
+        demand_forecast: mockAIInsights.filter(i => i.type === 'demand_forecast').length,
+        supplier_alert: mockAIInsights.filter(i => i.type === 'supplier_alert').length,
+        seasonal_trend: mockAIInsights.filter(i => i.type === 'seasonal_trend').length
+      },
+      insightsByPriority: {
+        high: mockAIInsights.filter(i => i.priority === 'high').length,
+        medium: mockAIInsights.filter(i => i.priority === 'medium').length,
+        low: mockAIInsights.filter(i => i.priority === 'low').length
+      },
+      averageConfidence: Math.round(
+        mockAIInsights.reduce((sum, i) => sum + i.confidence, 0) / mockAIInsights.length
+      ),
+      actionableInsights: mockAIInsights.filter(i => i.actionable).length
+    };
+    
+    res.json({
+      success: true,
+      data: analytics,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    logger.error({ error }, 'Error fetching AI insights analytics');
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch AI insights analytics'
+    });
   }
 });

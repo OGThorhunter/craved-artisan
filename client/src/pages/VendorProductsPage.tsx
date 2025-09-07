@@ -902,7 +902,7 @@ const VendorProductsPage: React.FC = () => {
         </div>
 
         {/* Action Bar */}
-            <div className="bg-offwhite rounded-lg shadow-lg border border-amber-200 p-6 mb-6">
+            <div className="bg-offwhite rounded-lg shadow-lg p-6 mb-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
               <div className="relative">
@@ -916,14 +916,14 @@ const VendorProductsPage: React.FC = () => {
                     </button>
                     
                     {showAddProductDropdown && (
-                      <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                      <div className="absolute top-full left-0 mt-1 w-48 bg-offwhite rounded-lg shadow-lg border border-gray-200 z-10">
                         <button
                           onClick={() => {
                             setSelectedCategoryForCard('');
                             setShowProductCard(true);
                             setShowAddProductDropdown(false);
                           }}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-t-lg flex items-center gap-2"
+                          className="w-full text-left px-4 py-2 text-sm text-amber-600 hover:bg-amber-100 rounded-t-lg flex items-center gap-2"
                         >
                           <Plus className="w-4 h-4" />
                           Manual Entry
@@ -933,7 +933,7 @@ const VendorProductsPage: React.FC = () => {
                             setShowImageUpload(true);
                             setShowAddProductDropdown(false);
                           }}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                          className="w-full text-left px-4 py-2 text-sm text-amber-600 hover:bg-amber-100 flex items-center gap-2"
                         >
                           <Camera className="w-4 h-4" />
                           AI Recipe Parser
@@ -943,7 +943,7 @@ const VendorProductsPage: React.FC = () => {
                             setShowCsvImport(true);
                             setShowAddProductDropdown(false);
                           }}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-b-lg flex items-center gap-2"
+                          className="w-full text-left px-4 py-2 text-sm text-amber-600 hover:bg-amber-100 rounded-b-lg flex items-center gap-2"
                         >
                           <Upload className="w-4 h-4" />
                           Import CSV
@@ -965,7 +965,7 @@ const VendorProductsPage: React.FC = () => {
           </div>
 
           {/* Search and Filters */}
-            <div className="bg-offwhite rounded-lg shadow-lg border border-amber-200 p-6 mb-6">
+            <div className="bg-offwhite rounded-lg shadow-lg p-6 mb-6">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -997,14 +997,14 @@ const VendorProductsPage: React.FC = () => {
                 <div className="flex gap-2">
                   <button
                     onClick={() => setViewMode('cards')}
-                    className={`p-2 rounded-md ${viewMode === 'cards' ? 'bg-brand-green text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                    className={`p-2 rounded-md ${viewMode === 'cards' ? 'bg-brand-green text-white' : 'bg-amber-100 text-gray-600 hover:bg-gray-200'}`}
                     aria-label="View as cards"
                   >
                     <Grid3X3 className="w-5 h-5" />
                   </button>
                   <button
                     onClick={() => setViewMode('list')}
-                    className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-brand-green text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                    className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-brand-green text-white' : 'bg-amber-100 text-gray-600 hover:bg-gray-200'}`}
                     aria-label="View as list"
                   >
                     <List className="w-5 h-5" />
@@ -1039,8 +1039,8 @@ const VendorProductsPage: React.FC = () => {
             {viewMode === 'cards' ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredAndSortedCards.map((card) => (
-                  <div key={card.id} className="bg-offwhite rounded-lg shadow-lg border border-amber-200 overflow-hidden hover:shadow-xl transition-shadow flex flex-col">
-                    <div className="aspect-video bg-gray-100 flex items-center justify-center">
+                  <div key={card.id} className="bg-offwhite rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow flex flex-col">
+                    <div className="aspect-video bg-amber-100 flex items-center justify-center">
                       {card.imageUrl ? (
                         <img src={card.imageUrl} alt={card.name} className="w-full h-full object-cover" />
                       ) : (
@@ -1080,7 +1080,7 @@ const VendorProductsPage: React.FC = () => {
                         }`}>
                           {PRODUCT_CATEGORIES.find(c => c.id === card.category)?.name}
                         </span>
-                        <span className="inline-block bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">
+                        <span className="inline-block bg-amber-100 text-gray-800 text-xs px-2 py-1 rounded-full">
                           {card.subcategory}
                         </span>
                       </div>
@@ -1111,7 +1111,7 @@ const VendorProductsPage: React.FC = () => {
                 ))}
               </div>
             ) : (
-              <div className="bg-offwhite rounded-lg shadow-lg border border-amber-200 overflow-hidden">
+              <div className="bg-offwhite rounded-lg shadow-lg overflow-hidden">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
@@ -1123,7 +1123,7 @@ const VendorProductsPage: React.FC = () => {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-offwhite divide-y divide-amber-200">
+                  <tbody className="bg-offwhite divide-y divide-gray-200">
                     {filteredAndSortedCards.map((card) => (
                       <tr key={card.id} className="hover:bg-brand-beige">
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -1203,14 +1203,14 @@ const VendorProductsPage: React.FC = () => {
                       </button>
                       
                       {showAddProductDropdown && (
-                        <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                        <div className="absolute top-full left-0 mt-1 w-48 bg-offwhite rounded-lg shadow-lg border border-gray-200 z-10">
                           <button
                             onClick={() => {
                               setSelectedCategoryForCard('');
                               setShowProductCard(true);
                               setShowAddProductDropdown(false);
                             }}
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-t-lg flex items-center gap-2"
+                            className="w-full text-left px-4 py-2 text-sm text-amber-600 hover:bg-amber-100 rounded-t-lg flex items-center gap-2"
                           >
                             <Plus className="w-4 h-4" />
                             Manual Entry
@@ -1220,7 +1220,7 @@ const VendorProductsPage: React.FC = () => {
                               setShowImageUpload(true);
                               setShowAddProductDropdown(false);
                             }}
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                            className="w-full text-left px-4 py-2 text-sm text-amber-600 hover:bg-amber-100 flex items-center gap-2"
                           >
                             <Camera className="w-4 h-4" />
                             AI Recipe Parser
@@ -1230,7 +1230,7 @@ const VendorProductsPage: React.FC = () => {
                               setShowCsvImport(true);
                               setShowAddProductDropdown(false);
                             }}
-                            className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-b-lg flex items-center gap-2"
+                            className="w-full text-left px-4 py-2 text-sm text-amber-600 hover:bg-amber-100 rounded-b-lg flex items-center gap-2"
                           >
                             <Upload className="w-4 h-4" />
                             Import CSV
@@ -1246,7 +1246,7 @@ const VendorProductsPage: React.FC = () => {
         {/* Product Card Modal */}
         {showProductCard && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-offwhite rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-amber-200">
+            <div className="bg-offwhite rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-semibold text-gray-900">
@@ -1285,7 +1285,7 @@ const VendorProductsPage: React.FC = () => {
                   {/* Basic Information */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-amber-600 mb-1">
                       Product Name *
                     </label>
                     <input
@@ -1300,7 +1300,7 @@ const VendorProductsPage: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-amber-600 mb-1">
                         Category
                     </label>
                     <select
@@ -1321,7 +1321,7 @@ const VendorProductsPage: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-amber-600 mb-1">
                         Subcategory
                     </label>
                       <select
@@ -1340,7 +1340,7 @@ const VendorProductsPage: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-amber-600 mb-1">
                        Description
                     </label>
                      <textarea
@@ -1352,7 +1352,7 @@ const VendorProductsPage: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-amber-600 mb-1">
                        Tags (Optional)
                     </label>
                     <input
@@ -1366,7 +1366,7 @@ const VendorProductsPage: React.FC = () => {
 
                    {/* Image Upload */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-amber-600 mb-1">
                        Product Image (Optional)
                   </label>
                      <div className="flex items-center gap-3">
@@ -1383,7 +1383,7 @@ const VendorProductsPage: React.FC = () => {
                          className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-green focus:border-transparent"
                        />
                        {watch('imageUrl') && (
-                         <div className="w-16 h-16 bg-gray-100 rounded-md overflow-hidden">
+                         <div className="w-16 h-16 bg-amber-100 rounded-md overflow-hidden">
                            <img 
                              src={watch('imageUrl')} 
                         alt="Product preview"
@@ -1469,7 +1469,7 @@ const VendorProductsPage: React.FC = () => {
                                    setCustomIngredientInput('');
                                    setCustomIngredientUnit('');
                                  }}
-                                 className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors text-sm"
+                                 className="px-4 py-2 bg-gray-300 text-amber-600 rounded-md hover:bg-gray-400 transition-colors text-sm"
                                  title="Cancel custom material"
                                >
                                  Cancel
@@ -1758,7 +1758,7 @@ const VendorProductsPage: React.FC = () => {
                      <h3 className="text-lg font-medium text-gray-900 mb-4">Cost Management</h3>
                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                        <div>
-                         <label className="block text-sm font-medium text-gray-700 mb-1">
+                         <label className="block text-sm font-medium text-amber-600 mb-1">
                            Labor Cost
                          </label>
                          <div className="relative">
@@ -1775,7 +1775,7 @@ const VendorProductsPage: React.FC = () => {
                        </div>
 
                        <div>
-                         <label className="block text-sm font-medium text-gray-700 mb-1">
+                         <label className="block text-sm font-medium text-amber-600 mb-1">
                            Overhead Cost
                          </label>
                          <div className="relative">
@@ -1792,7 +1792,7 @@ const VendorProductsPage: React.FC = () => {
                        </div>
 
                        <div>
-                         <label className="block text-sm font-medium text-gray-700 mb-1">
+                         <label className="block text-sm font-medium text-amber-600 mb-1">
                            Target Profit Margin (%)
                          </label>
                          <input
@@ -1901,7 +1901,7 @@ const VendorProductsPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={handleCancel}
-                      className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+                      className="flex-1 px-4 py-2 border border-gray-300 text-amber-600 rounded-md hover:bg-gray-50 transition-colors"
                     >
                       Cancel
                     </button>
@@ -1922,7 +1922,7 @@ const VendorProductsPage: React.FC = () => {
         {/* View Details Modal */}
         {showViewDetails && viewingCard && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-offwhite rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-amber-200">
+            <div className="bg-offwhite rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold text-gray-900">{viewingCard.name}</h2>
@@ -1951,7 +1951,7 @@ const VendorProductsPage: React.FC = () => {
                           </div>
 
                 {/* Recipe Card Layout */}
-                <div className="bg-gradient-to-br from-amber-100 to-orange-100 rounded-lg p-6 mb-6 border border-amber-300 shadow-lg">
+                <div className="bg-gradient-to-br from-amber-100 to-orange-100 rounded-lg p-6 mb-6 border border-gray-300 shadow-lg">
                   <div className="text-center mb-6">
                     <h3 className="text-xl font-semibold text-gray-800 mb-2">{viewingCard.name}</h3>
                     <p className="text-gray-600 mb-3">{viewingCard.description}</p>
@@ -1974,19 +1974,19 @@ const VendorProductsPage: React.FC = () => {
                   {/* Recipe Details for Food Items */}
                   {viewingCard.category === 'food' && viewingCard.recipe && (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 text-center">
-                      <div className="bg-white rounded-lg p-3 border border-amber-300 shadow-md">
+                      <div className="bg-white rounded-lg p-3 border border-gray-300 shadow-md">
                         <div className="text-2xl font-bold text-amber-600">{viewingCard.recipe.prepTime}</div>
                         <div className="text-sm text-gray-600">Prep (min)</div>
                     </div>
-                      <div className="bg-white rounded-lg p-3 border border-amber-300 shadow-md">
+                      <div className="bg-white rounded-lg p-3 border border-gray-300 shadow-md">
                         <div className="text-2xl font-bold text-amber-600">{viewingCard.recipe.cookTime}</div>
                         <div className="text-sm text-gray-600">Cook (min)</div>
                   </div>
-                      <div className="bg-white rounded-lg p-3 border border-amber-300 shadow-md">
+                      <div className="bg-white rounded-lg p-3 border border-gray-300 shadow-md">
                         <div className="text-2xl font-bold text-amber-600">{viewingCard.recipe.servings}</div>
                         <div className="text-sm text-gray-600">Servings</div>
                       </div>
-                      <div className="bg-white rounded-lg p-3 border border-amber-300 shadow-md">
+                      <div className="bg-white rounded-lg p-3 border border-gray-300 shadow-md">
                         <div className="text-2xl font-bold text-amber-600">{viewingCard.recipe.yield}</div>
                         <div className="text-sm text-gray-600">{viewingCard.recipe.yieldUnit}</div>
                       </div>
@@ -1995,10 +1995,10 @@ const VendorProductsPage: React.FC = () => {
 
                   {/* Ingredients Section */}
                   <div className="mb-6">
-                    <h4 className="text-lg font-semibold text-gray-800 mb-3 border-b border-amber-200 pb-2">Ingredients</h4>
+                    <h4 className="text-lg font-semibold text-gray-800 mb-3 border-b border-gray-200 pb-2">Ingredients</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {viewingCard.ingredients.map((ingredient, index) => (
-                        <div key={index} className="bg-white rounded-lg p-3 border border-amber-300 shadow-md flex items-center justify-between">
+                        <div key={index} className="bg-white rounded-lg p-3 border border-gray-300 shadow-md flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center">
                               <span className="text-amber-600 font-semibold text-sm">{index + 1}</span>
@@ -2022,15 +2022,15 @@ const VendorProductsPage: React.FC = () => {
                   {/* Instructions for Food Items */}
                   {viewingCard.category === 'food' && viewingCard.recipe && (
                     <div className="mb-6">
-                      <h4 className="text-lg font-semibold text-gray-800 mb-3 border-b border-amber-200 pb-2">Instructions</h4>
+                      <h4 className="text-lg font-semibold text-gray-800 mb-3 border-b border-gray-200 pb-2">Instructions</h4>
                       <div className="space-y-3">
                         {viewingCard.recipe.instructions.map((instruction, index) => (
-                          <div key={index} className="bg-white rounded-lg p-4 border border-amber-300 shadow-md">
+                          <div key={index} className="bg-white rounded-lg p-4 border border-gray-300 shadow-md">
                             <div className="flex items-start gap-3">
                               <div className="w-6 h-6 bg-offwhite0 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">
                                 {index + 1}
               </div>
-                              <p className="text-gray-700">{instruction}</p>
+                              <p className="text-amber-600">{instruction}</p>
             </div>
                           </div>
                         ))}
@@ -2039,8 +2039,8 @@ const VendorProductsPage: React.FC = () => {
                   )}
 
                   {/* Cost Breakdown */}
-                  <div className="bg-white rounded-lg p-4 border border-amber-200">
-                    <h4 className="text-lg font-semibold text-gray-800 mb-3 border-b border-amber-200 pb-2">Cost Breakdown</h4>
+                  <div className="bg-white rounded-lg p-4 border border-gray-200">
+                    <h4 className="text-lg font-semibold text-gray-800 mb-3 border-b border-gray-200 pb-2">Cost Breakdown</h4>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                       <div>
                         <div className="text-sm text-gray-600">Total Cost</div>
@@ -2069,7 +2069,7 @@ const VendorProductsPage: React.FC = () => {
         {/* CSV Import Modal */}
         {showCsvImport && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-offwhite rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-amber-200">
+            <div className="bg-offwhite rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-medium text-gray-900">Import Products from CSV</h3>
@@ -2121,7 +2121,7 @@ const VendorProductsPage: React.FC = () => {
                   
                   <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                     <h4 className="font-medium text-gray-900 mb-2">Example CSV Format</h4>
-                    <pre className="text-sm text-gray-700 bg-white p-3 rounded border overflow-x-auto">
+                    <pre className="text-sm text-amber-600 bg-white p-3 rounded border overflow-x-auto">
 {`name,description,price,category,subcategory
 Artisan Bread,Hand-baked sourdough bread,8.99,food,Baked Goods
 Garden Cleanup,Weekly yard maintenance,75.00,service,Yard Work
@@ -2167,7 +2167,7 @@ Honey Jar,Local organic honey,12.50,food,Preserved Foods`}
                  <div className="flex gap-3">
               <button
                      onClick={() => setShowImageUpload(false)}
-                     className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
+                     className="flex-1 px-4 py-2 border border-gray-300 text-amber-600 rounded-md hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>
@@ -2237,7 +2237,7 @@ Honey Jar,Local organic honey,12.50,food,Preserved Foods`}
                    <h4 className="font-medium text-gray-900 mb-4">Convert Units</h4>
                    <div className="space-y-4">
                      <div>
-                       <label className="block text-sm font-medium text-gray-700 mb-2">
+                       <label className="block text-sm font-medium text-amber-600 mb-2">
                          From
                        </label>
                        <div className="flex gap-2">
@@ -2272,7 +2272,7 @@ Honey Jar,Local organic honey,12.50,food,Preserved Foods`}
                        </div>
                      </div>
                      <div>
-                       <label className="block text-sm font-medium text-gray-700 mb-2">
+                       <label className="block text-sm font-medium text-amber-600 mb-2">
                          To
                        </label>
                        <div className="flex gap-2">
@@ -2321,12 +2321,12 @@ Honey Jar,Local organic honey,12.50,food,Preserved Foods`}
                    <h4 className="font-medium text-gray-900 mb-4">Quick Reference Conversions</h4>
                    <div className="bg-white rounded border border-gray-200 overflow-hidden">
                      <table className="w-full text-sm">
-                       <thead className="bg-gray-100">
+                       <thead className="bg-amber-100">
                          <tr>
-                           <th className="px-3 py-2 text-left font-medium text-gray-700">Ingredient</th>
-                           <th className="px-3 py-2 text-left font-medium text-gray-700">Grams</th>
-                           <th className="px-3 py-2 text-left font-medium text-gray-700">Ounces</th>
-                           <th className="px-3 py-2 text-left font-medium text-gray-700">Cups</th>
+                           <th className="px-3 py-2 text-left font-medium text-amber-600">Ingredient</th>
+                           <th className="px-3 py-2 text-left font-medium text-amber-600">Grams</th>
+                           <th className="px-3 py-2 text-left font-medium text-amber-600">Ounces</th>
+                           <th className="px-3 py-2 text-left font-medium text-amber-600">Cups</th>
                          </tr>
                        </thead>
                        <tbody className="divide-y divide-gray-200">
