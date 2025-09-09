@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { usePulse, type PulseRange } from '@/features/pulse';
 import { useAuth } from '@/contexts/AuthContext';
+import MotivationalQuote from '@/components/dashboard/MotivationalQuote';
+import { getQuoteByCategory } from '@/data/motivationalQuotes';
 import {
   RangeSelector,
   KpiCard,
@@ -70,6 +72,16 @@ export default function PulsePage() {
             <RangeSelector range={range} onRangeChange={handleRangeChange} />
           </div>
         </header>
+
+        {/* Motivational Quote */}
+        <div className="bg-white rounded-lg p-6">
+          <MotivationalQuote
+            quote={getQuoteByCategory('growth').quote}
+            author={getQuoteByCategory('growth').author}
+            icon={getQuoteByCategory('growth').icon}
+            variant={getQuoteByCategory('growth').variant}
+          />
+        </div>
 
         {/* KPI Ribbon */}
         <section className="bg-[#E8CBAE] rounded-lg p-6">

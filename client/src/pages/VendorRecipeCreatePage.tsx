@@ -5,6 +5,9 @@ import { toast } from 'react-hot-toast';
 import { Link } from 'wouter';
 import axios from 'axios';
 import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
+import MotivationalQuote from '@/components/dashboard/MotivationalQuote';
+import DashboardHeader from '@/components/dashboard/DashboardHeader';
+import { getQuoteByCategory } from '@/data/motivationalQuotes';
 import {
   Plus, Minus, Save, ArrowLeft, Package, ChefHat, 
   Clock, Users, BarChart3, AlertCircle
@@ -115,7 +118,7 @@ export default function VendorRecipeCreatePage() {
     onSuccess: (data) => {
       toast.success('Recipe created successfully!');
       reset();
-      queryClient.invalidateQueries(['recipes']);
+      queryClient.invalidateQueries({ queryKey: ['recipes'] });
     },
     onError: (error: any) => {
       console.error('Error creating recipe:', error);
@@ -187,25 +190,33 @@ export default function VendorRecipeCreatePage() {
 
   return (
     <VendorDashboardLayout>
-      <div className="max-w-4xl mx-auto responsive-padding">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Link href="/dashboard/vendor/inventory" className="text-gray-500 hover:text-gray-700">
-                <ArrowLeft className="h-6 w-6" />
-              </Link>
+      <div className="py-8 bg-white min-h-screen">
+        <div className="container-responsive">
+          {/* Header */}
+          <DashboardHeader 
+            title="Recipe Creation"
+            description="Create and manage your culinary recipes with detailed ingredient tracking and cost analysis"
+          />
+
+          {/* Motivational Quote */}
+          <MotivationalQuote
+            quote={getQuoteByCategory('innovation').quote}
+            author={getQuoteByCategory('innovation').author}
+            icon={getQuoteByCategory('innovation').icon}
+            variant={getQuoteByCategory('innovation').variant}
+          />
+          
+          {/* Current View Indicator */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between">
               <div>
-                <h1 className="responsive-heading text-gray-900">Create New Recipe</h1>
-                <p className="text-gray-600 mt-1">Add a new recipe to your collection</p>
+                <p className="text-gray-600">Currently viewing: <span className="text-green-600 font-medium">Recipe Builder</span></p>
               </div>
-            </div>
-            <div className="flex items-center space-x-2 responsive-text text-gray-500">
-              <ChefHat className="h-4 w-4" />
-              <span>Recipe Builder</span>
+              <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                Recipe Builder
+              </button>
             </div>
           </div>
-        </div>
 
         {/* Recipe Form */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
@@ -708,6 +719,7 @@ export default function VendorRecipeCreatePage() {
               </button>
             </div>
           </form>
+        </div>
         </div>
       </div>
     </VendorDashboardLayout>

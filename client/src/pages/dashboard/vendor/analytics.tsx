@@ -11,7 +11,8 @@ import { PortfolioBuilder } from "@/components/vendor/analytics/PortfolioBuilder
 import { PriceOptimizer } from "@/components/vendor/analytics/PriceOptimizer";
 import { TaxSummary } from "@/components/vendor/analytics/TaxSummary";
 import TrendChart from "@/components/charts/TrendChart";
-import InspirationalQuote from "@/components/InspirationalQuote";
+import MotivationalQuote from "@/components/dashboard/MotivationalQuote";
+import { getQuoteByCategory } from "@/data/motivationalQuotes";
 import AIForecastWidget from "@/components/analytics/AIForecastWidget";
 import AISummaryBuilder from "@/components/analytics/AISummaryBuilder";
 import { mockKpis } from "@/mock/analyticsData";
@@ -303,7 +304,12 @@ export default function VendorAnalyticsPage() {
                 </div>
               </div>
             </div>
-            <InspirationalQuote />
+            <MotivationalQuote
+              quote={getQuoteByCategory('motivation').quote}
+              author={getQuoteByCategory('motivation').author}
+              icon={getQuoteByCategory('motivation').icon}
+              variant={getQuoteByCategory('motivation').variant}
+            />
             
             {/* Financial Data Disclaimer */}
             <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">

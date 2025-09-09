@@ -574,3 +574,4 @@ const LeadScoring: React.FC<LeadScoringProps> = ({ customers, onScoreUpdate }) =
 export default LeadScoring;
 
 
+

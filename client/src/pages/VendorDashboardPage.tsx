@@ -1,4 +1,8 @@
 ﻿import React, { useState } from 'react';
+import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
+import DashboardHeader from '@/components/dashboard/DashboardHeader';
+import MotivationalQuote from '@/components/dashboard/MotivationalQuote';
+import { getQuoteByCategory } from '@/data/motivationalQuotes';
 import { 
   TrendingUp, 
   DollarSign, 
@@ -128,65 +132,51 @@ const VendorDashboardPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F2EC]">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <img 
-              src={vendor.avatar} 
-              alt={vendor.name}
-              className="w-12 h-12 rounded-full border-2 border-gray-200"
-            />
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">{vendor.storeName}</h1>
-              <p className="text-gray-600">Welcome back, {vendor.name}</p>
+    <VendorDashboardLayout>
+      <div className="py-8 bg-white min-h-screen">
+        <div className="container-responsive">
+          {/* Header */}
+          <DashboardHeader
+            title="Business Dashboard"
+            description="Your business at a glance - updated in real-time"
+            currentView="Dashboard"
+            icon={Activity}
+            iconColor="text-blue-600"
+            iconBg="bg-blue-100"
+          />
+
+          {/* Motivational Quote */}
+          <MotivationalQuote
+            quote={getQuoteByCategory('success').quote}
+            author={getQuoteByCategory('success').author}
+            icon={getQuoteByCategory('success').icon}
+            variant={getQuoteByCategory('success').variant}
+          />
+
+          {/* Navigation Tabs */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-8">
+            <div className="flex space-x-8 px-6">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                      activeTab === tab.id
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" />
+                    {tab.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
-          <div className="flex items-center gap-3">
-                            <button 
-                  className="p-2 text-gray-400 hover:text-gray-600"
-                  title="Notifications"
-                  aria-label="View notifications"
-                >
-                  <Bell className="w-6 h-6" />
-                </button>
-                <button 
-                  className="p-2 text-gray-400 hover:text-gray-600"
-                  title="Settings"
-                  aria-label="Open settings"
-                >
-                  <Settings className="w-6 h-6" />
-                </button>
-          </div>
-        </div>
-      </div>
 
-      {/* Navigation Tabs */}
-      <div className="bg-white border-b border-gray-200 px-6">
-        <div className="flex space-x-8">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <Icon className="w-5 h-5" />
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="p-6">
+          {/* Main Content */}
         {activeTab === 'pulse' && (
           <div className="space-y-6">
             {/* Header with Seasonal Filter */}
@@ -322,7 +312,7 @@ const VendorDashboardPage: React.FC = () => {
                     ${pulseData.revenue.today.toLocaleString()}
                   </p>
                   <div className="w-full bg-gray-200 rounded-full h-1 mt-2">
-                    <div className="bg-green-500 h-1 rounded-full" style={{ width: '75%' }}></div>
+                    <div className="bg-green-500 h-1 rounded-full w-3/4"></div>
                   </div>
                 </div>
 
@@ -340,7 +330,7 @@ const VendorDashboardPage: React.FC = () => {
                     ${pulseData.revenue.thisWeek.toLocaleString()}
                   </p>
                   <div className="w-full bg-gray-200 rounded-full h-1 mt-2">
-                    <div className="bg-green-500 h-1 rounded-full" style={{ width: '85%' }}></div>
+                    <div className="bg-green-500 h-1 rounded-full w-5/6"></div>
                   </div>
                 </div>
 
@@ -358,7 +348,7 @@ const VendorDashboardPage: React.FC = () => {
                     ${pulseData.revenue.thisMonth.toLocaleString()}
                   </p>
                   <div className="w-full bg-gray-200 rounded-full h-1 mt-2">
-                    <div className="bg-green-500 h-1 rounded-full" style={{ width: '65%' }}></div>
+                    <div className="bg-green-500 h-1 rounded-full w-2/3"></div>
                   </div>
                 </div>
               </div>
@@ -507,8 +497,9 @@ const VendorDashboardPage: React.FC = () => {
             <p className="text-gray-600">This section is under development</p>
           </div>
         )}
+        </div>
       </div>
-    </div>
+    </VendorDashboardLayout>
   );
 };
 

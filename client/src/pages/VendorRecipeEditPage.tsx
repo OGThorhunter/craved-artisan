@@ -5,6 +5,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
 import axios from 'axios';
 import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
+import MotivationalQuote from '@/components/dashboard/MotivationalQuote';
 import { 
   ArrowLeft, 
   Save, 
@@ -111,7 +112,7 @@ const VendorRecipeEditPage: React.FC = () => {
     },
     onSuccess: () => {
       toast.success('Recipe updated successfully');
-      queryClient.invalidateQueries(['recipe', recipeId]);
+      queryClient.invalidateQueries({ queryKey: ['recipe', recipeId] });
     },
     onError: () => {
       toast.error('Failed to update recipe');
@@ -133,7 +134,7 @@ const VendorRecipeEditPage: React.FC = () => {
     },
     onSuccess: () => {
       toast.success('Ingredients updated successfully');
-      queryClient.invalidateQueries(['recipe', recipeId]);
+      queryClient.invalidateQueries({ queryKey: ['recipe', recipeId] });
     },
     onError: () => {
       toast.error('Failed to update ingredients');
@@ -292,6 +293,12 @@ const VendorRecipeEditPage: React.FC = () => {
             Update recipe details and ingredients
           </p>
         </div>
+
+        {/* Motivational Quote */}
+        <MotivationalQuote 
+          quote="The discovery of a new dish does more for human happiness than the discovery of a new star." 
+          author="Jean Anthelme Brillat-Savarin" 
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Recipe Form */}

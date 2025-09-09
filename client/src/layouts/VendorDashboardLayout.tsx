@@ -1,6 +1,5 @@
 import { ReactNode } from 'react';
 import DashboardNav from '@/components/dashboard/DashboardNav';
-import InspirationalQuote from '@/components/dashboard/InspirationalQuote';
 
 export default function VendorDashboardLayout({ children }: { children: ReactNode }) {
   return (

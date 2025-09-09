@@ -26,6 +26,9 @@ import {
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
+import MotivationalQuote from '@/components/dashboard/MotivationalQuote';
+import DashboardHeader from '@/components/dashboard/DashboardHeader';
+import { getQuoteByCategory } from '@/data/motivationalQuotes';
 
 interface OrderItem {
   id: string;
@@ -242,19 +245,18 @@ const VendorOrdersPage = () => {
     <VendorDashboardLayout>
       <div className="p-6">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-4">
-            <button
-              onClick={() => setLocation('/dashboard')}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <ArrowLeft className="h-5 w-5" />
-              Back to Dashboard
-            </button>
-          </div>
-          <h1 className="responsive-heading text-gray-900">Order Fulfillment</h1>
-          <p className="text-gray-600 mt-2">Manage and track your product orders</p>
-        </div>
+        <DashboardHeader 
+          title="Order Fulfillment"
+          description="Manage and track your product orders, fulfillment status, and delivery progress"
+        />
+
+        {/* Motivational Quote */}
+        <MotivationalQuote
+          quote={getQuoteByCategory('success').quote}
+          author={getQuoteByCategory('success').author}
+          icon={getQuoteByCategory('success').icon}
+          variant={getQuoteByCategory('success').variant}
+        />
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">

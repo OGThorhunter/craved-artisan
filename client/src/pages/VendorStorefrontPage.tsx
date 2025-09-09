@@ -451,7 +451,8 @@ Every loaf is hand-shaped, every ingredient carefully sourced, and every custome
   if (!vendor) return <div>Not found.</div>;
 
   return (
-    <div className="page-container bg-gray-50">
+    <div className="py-8 bg-white min-h-screen">
+      <div className="container-responsive">
       {/* Vacation Overlay */}
       {vendor.isOnVacation && (
         <div className="fixed inset-0 bg-brand-beige/90 z-50 flex items-center justify-center">
@@ -499,7 +500,7 @@ Every loaf is hand-shaped, every ingredient carefully sourced, and every custome
                 <div className="flex items-center gap-2 mb-1">
                   <h1 className="responsive-heading text-gray-900">{vendor.name}</h1>
                   {vendor.isVerified && (
-                    <CheckCircle className="h-6 w-6 text-blue-500" title="Verified Vendor" />
+                    <CheckCircle className="h-6 w-6 text-blue-500" />
                   )}
                 </div>
                 <p className="text-lg text-gray-600 mb-2">{vendor.tagline}</p>
@@ -1199,6 +1200,7 @@ Every loaf is hand-shaped, every ingredient carefully sourced, and every custome
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
     </div>
   );
 }
@@ -1435,7 +1437,7 @@ function ReviewCard({ review }: { review: Review }) {
           <div className="flex items-center gap-2 mb-1">
             <h4 className="font-semibold text-gray-900">{review.userName}</h4>
             {review.isVerified && (
-              <CheckCircle className="w-4 h-4 text-blue-500" title="Verified Customer" />
+              <CheckCircle className="w-4 h-4 text-blue-500" />
             )}
           </div>
           <div className="flex items-center gap-2 text-sm text-gray-500">

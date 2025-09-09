@@ -2,6 +2,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'wouter';
 import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
+import MotivationalQuote from '@/components/dashboard/MotivationalQuote';
+import DashboardHeader from '@/components/dashboard/DashboardHeader';
+import { getQuoteByCategory } from '@/data/motivationalQuotes';
 import { 
   AlertTriangle, 
   Brain, 
@@ -145,29 +148,25 @@ const VendorWatchlistPage = () => {
 
   return (
     <VendorDashboardLayout>
-      <div className="container-responsive py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-4">
-            <Link href="/dashboard/vendor">
-              <button className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
-                <ArrowLeft className="h-5 w-5" />
-                Back to Dashboard
-              </button>
-            </Link>
-          </div>
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-yellow-100 rounded-lg">
-              <Eye className="h-8 w-8 text-yellow-600" />
-            </div>
-            <div>
-              <h1 className="responsive-heading text-gray-900">Product Watchlist</h1>
-              <p className="text-gray-600">
-                Monitoring {products?.length || 0} products for price volatility and margin issues
-              </p>
-            </div>
-          </div>
-        </div>
+      <div className="py-8 bg-white min-h-screen">
+        <div className="container-responsive">
+          {/* Header */}
+          <DashboardHeader
+            title="Product Watchlist"
+            description="Monitoring products for price volatility and margin issues"
+            currentView="Watchlist"
+            icon={Eye}
+            iconColor="text-yellow-600"
+            iconBg="bg-yellow-100"
+          />
+
+          {/* Motivational Quote */}
+          <MotivationalQuote
+            quote={getQuoteByCategory('leadership').quote}
+            author={getQuoteByCategory('leadership').author}
+            icon={getQuoteByCategory('leadership').icon}
+            variant={getQuoteByCategory('leadership').variant}
+          />
 
         {/* Watchlist Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -369,6 +368,7 @@ const VendorWatchlistPage = () => {
             </Link>
           </div>
         )}
+        </div>
       </div>
     </VendorDashboardLayout>
   );

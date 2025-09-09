@@ -24,6 +24,9 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
+import MotivationalQuote from '@/components/dashboard/MotivationalQuote';
+import DashboardHeader from '@/components/dashboard/DashboardHeader';
+import { getQuoteByCategory } from '@/data/motivationalQuotes';
 import CreateEditSalesWindowDrawer from '@/components/sales-windows/CreateEditSalesWindowDrawer';
 import BulkOperationsBar from '@/components/sales-windows/BulkOperationsBar';
 import type { 
@@ -398,7 +401,7 @@ const VendorSalesWindowsPage = () => {
         setMockSalesWindows(updatedWindows);
         toast.error(`Permanently deleted window: ${window.name}`);
       } else {
-        toast.info("Deletion cancelled - confirmation text did not match");
+        toast.success("Deletion cancelled - confirmation text did not match");
       }
     }
   };
@@ -552,19 +555,18 @@ const VendorSalesWindowsPage = () => {
       <div className="p-6 bg-white min-h-screen">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center gap-4 mb-4">
-              <button
-                onClick={() => setLocation('/dashboard')}
-                className="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors"
-              >
-                <ArrowLeft className="h-4 w-4" />
-                Back to Dashboard
-              </button>
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Sales Windows</h1>
-            <p className="text-gray-600">Create and manage your sales windows for different channels and time periods</p>
-          </div>
+          <DashboardHeader 
+            title="Sales Windows"
+            description="Create and manage your sales windows for different channels and time periods"
+          />
+
+          {/* Motivational Quote */}
+          <MotivationalQuote
+            quote={getQuoteByCategory('success').quote}
+            author={getQuoteByCategory('success').author}
+            icon={getQuoteByCategory('success').icon}
+            variant={getQuoteByCategory('success').variant}
+          />
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">

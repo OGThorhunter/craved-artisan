@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
+import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import {
   Users,
   TrendingUp, 
@@ -397,23 +398,10 @@ const VendorCRMPage = () => {
     <VendorDashboardLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="bg-white shadow-sm border border-gray-200 rounded-lg p-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Customer Relationship Management</h1>
-              <p className="text-gray-600 mt-1">Manage your customers, opportunities, and sales pipeline</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                <Plus className="h-4 w-4" />
-                <span>Add Customer</span>
-              </button>
-              <button className="p-2 text-gray-400 hover:text-gray-600">
-                <Settings className="h-5 w-5" />
-              </button>
-            </div>
-          </div>
-        </div>
+        <DashboardHeader 
+          title="Customer Relations"
+          description="Manage customer relationships, opportunities, and sales pipeline"
+        />
 
         {/* Navigation Tabs */}
         <div className="bg-white border border-gray-200 rounded-lg">

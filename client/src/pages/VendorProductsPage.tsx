@@ -27,6 +27,9 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import VendorDashboardLayout from '../layouts/VendorDashboardLayout';
+import MotivationalQuote from '../components/dashboard/MotivationalQuote';
+import DashboardHeader from '../components/dashboard/DashboardHeader';
+import { getQuoteByCategory } from '../data/motivationalQuotes';
 import { MOCK_INGREDIENTS, MOCK_UNITS, MOCK_TRADE_SUPPLIES, MOCK_TRADE_UNITS } from '../types/recipes';
 
 // Enhanced Product Card interface
@@ -888,18 +891,33 @@ const VendorProductsPage: React.FC = () => {
 
   return (
     <VendorDashboardLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 bg-white min-h-screen">
+      <div className="py-8 bg-white min-h-screen">
+        <div className="container-responsive">
           {/* Header */}
           <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Product Management</h1>
-          <p className="mt-2 text-gray-600">Create and manage product cards with ingredient tracking and cost management</p>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">Product Catalog</h1>
+                <p className="text-sm text-gray-600">Currently viewing: <span className="text-green-600 font-medium">Products</span></p>
               </div>
+              <button className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors">
+                Products
+              </button>
+            </div>
+          </div>
 
-        {/* Page Header */}
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-gray-900">Product Cards</h2>
-          <p className="text-gray-600">Manage your product inventory and recipes</p>
-        </div>
+          {/* Motivational Quote */}
+          <MotivationalQuote
+            quote={getQuoteByCategory('perseverance').quote}
+            author={getQuoteByCategory('perseverance').author}
+            icon={getQuoteByCategory('perseverance').icon}
+            variant={getQuoteByCategory('perseverance').variant}
+          />
+
+          {/* Main Content Area */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-8">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-6">Product Cards</h2>
+            <p className="text-gray-600 mb-6">Manage your product inventory and recipes</p>
 
         {/* Action Bar */}
             <div className="bg-offwhite rounded-lg shadow-lg p-6 mb-6">
@@ -2395,6 +2413,23 @@ Honey Jar,Local organic honey,12.50,food,Preserved Foods`}
              </div>
            </div>
          )}
+          </div>
+
+          {/* Financial Data Disclaimer */}
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start gap-3">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div>
+              <p className="font-medium text-yellow-800">Product Data Disclaimer</p>
+              <p className="text-sm text-yellow-700">
+                All product data displayed is for informational purposes only. Users are responsible for verifying the accuracy and security of their product information. This dashboard does not constitute financial advice.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </VendorDashboardLayout>
   );

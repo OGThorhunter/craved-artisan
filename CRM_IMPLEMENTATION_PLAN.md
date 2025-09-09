@@ -407,3 +407,4 @@ This comprehensive CRM system will position Craved Artisan as a leader in the e-
 The system is designed to scale with your business, from small vendors to large enterprises, providing the flexibility and power needed to compete with industry leaders while maintaining the simplicity and ease of use that makes Craved Artisan special.
 
 
+

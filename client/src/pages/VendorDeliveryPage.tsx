@@ -2,6 +2,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useLocation } from 'wouter';
 import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
+import MotivationalQuote from '@/components/dashboard/MotivationalQuote';
+import DashboardHeader from '@/components/dashboard/DashboardHeader';
+import { getQuoteByCategory } from '@/data/motivationalQuotes';
 import { 
   MapPin, 
   Package, 
@@ -259,31 +262,21 @@ const VendorDeliveryPage: React.FC = () => {
   return (
     <VendorDashboardLayout>
       {/* Header */}
+      <DashboardHeader 
+        title="Delivery Route"
+        description={`Batch ${batch.batchId} - ${batch.summary.deliveredOrders}/${batch.summary.totalOrders} completed`}
+      />
+
+      {/* Motivational Quote */}
+      <MotivationalQuote
+        quote={getQuoteByCategory('motivation').quote}
+        author={getQuoteByCategory('motivation').author}
+        icon={getQuoteByCategory('motivation').icon}
+        variant={getQuoteByCategory('motivation').variant}
+      />
+      
+      {/* Progress Bar */}
       <div className="bg-white shadow-sm border-b sticky top-0 z-10">
-        <div className="p-4">
-          <div className="flex items-center gap-3">
-            <button
-                              onClick={() => setLocation('/vendor/delivery-batching')}
-              className="p-2 rounded-lg hover:bg-gray-100"
-              aria-label="Go back to delivery batching"
-              title="Go back to delivery batching"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </button>
-            <div className="flex-1">
-              <h1 className="text-lg font-bold text-gray-900">Delivery Route</h1>
-              <p className="responsive-text text-gray-600">Batch {batch.batchId}</p>
-            </div>
-            <div className="text-right">
-              <div className="responsive-text font-medium text-gray-900">
-                {batch.summary.deliveredOrders}/{batch.summary.totalOrders}
-              </div>
-              <div className="text-xs text-gray-500">Completed</div>
-            </div>
-          </div>
-        </div>
-        
-        {/* Progress Bar */}
         <div className="px-4 pb-4">
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div 

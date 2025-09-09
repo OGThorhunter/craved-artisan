@@ -4,6 +4,8 @@ import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Toolti
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
+import MotivationalQuote from '@/components/dashboard/MotivationalQuote';
+import { getQuoteByCategory } from '@/data/motivationalQuotes';
 
 interface DeliveryMetrics {
   zipStats: Array<{
@@ -51,10 +53,12 @@ const VendorAnalyticsPage: React.FC = () => {
   if (loading) {
     return (
       <VendorDashboardLayout>
-        <div>
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading delivery analytics...</p>
+        <div className="py-8 bg-white min-h-screen">
+          <div className="container-responsive">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-4 text-gray-600">Loading delivery analytics...</p>
+            </div>
           </div>
         </div>
       </VendorDashboardLayout>
@@ -64,16 +68,18 @@ const VendorAnalyticsPage: React.FC = () => {
   if (error) {
     return (
       <VendorDashboardLayout>
-        <div>
-          <div className="text-center">
-            <div className="bg-red-50 border border-red-200 rounded-md p-4">
-              <p className="text-red-800">{error}</p>
-              <button
-                onClick={() => window.location.reload()}
-                className="mt-2 responsive-button bg-red-600 text-white rounded hover:bg-red-700"
-              >
-                Retry
-              </button>
+        <div className="py-8 bg-white min-h-screen">
+          <div className="container-responsive">
+            <div className="text-center">
+              <div className="bg-red-50 border border-red-200 rounded-md p-4">
+                <p className="text-red-800">{error}</p>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                >
+                  Retry
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -84,9 +90,11 @@ const VendorAnalyticsPage: React.FC = () => {
   if (!metrics) {
     return (
       <VendorDashboardLayout>
-        <div>
-          <div className="text-center">
-            <p className="text-gray-600">No delivery data available</p>
+        <div className="py-8 bg-white min-h-screen">
+          <div className="container-responsive">
+            <div className="text-center">
+              <p className="text-gray-600">No delivery data available</p>
+            </div>
           </div>
         </div>
       </VendorDashboardLayout>
@@ -109,183 +117,149 @@ const VendorAnalyticsPage: React.FC = () => {
 
   return (
     <VendorDashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="responsive-heading text-gray-900">Delivery Analytics</h1>
-          <p className="mt-2 text-gray-600">
-            Track your delivery performance across different ZIP codes and time periods
-          </p>
-        </div>
+      <div className="py-8 bg-white min-h-screen">
+        <div className="container-responsive">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">Analytics Dashboard</h1>
+                <p className="text-sm text-gray-600">Currently viewing: <span className="text-green-600 font-medium">Insights</span></p>
+              </div>
+              <button className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors">
+                Insights
+              </button>
+            </div>
+          </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                  <span className="text-blue-600 font-semibold">ðŸ“¦</span>
+          {/* Motivational Quote */}
+          <MotivationalQuote
+            quote={getQuoteByCategory('motivation').quote}
+            author={getQuoteByCategory('motivation').author}
+            icon={getQuoteByCategory('motivation').icon}
+            variant={getQuoteByCategory('motivation').variant}
+          />
+
+          {/* Main Content Area */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-8">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-6">Delivery Analytics</h2>
+            
+            {/* Summary Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <div className="bg-gray-50 rounded-lg p-6">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-blue-600 font-semibold">📊</span>
+                    </div>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-500">Total Orders</p>
+                    <p className="text-2xl font-bold text-gray-900">{metrics.totalOrders}</p>
+                  </div>
                 </div>
               </div>
-              <div className="ml-4">
-                <p className="responsive-text font-medium text-gray-500">Total Orders</p>
-                <p className="responsive-heading text-gray-900">{metrics.totalOrders}</p>
+
+              <div className="bg-gray-50 rounded-lg p-6">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                      <span className="text-green-600 font-semibold">✅</span>
+                    </div>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-500">Delivered</p>
+                    <p className="text-2xl font-bold text-gray-900">{metrics.totalDelivered}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gray-50 rounded-lg p-6">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                      <span className="text-yellow-600 font-semibold">⏰</span>
+                    </div>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-500">On-Time Rate</p>
+                    <p className="text-2xl font-bold text-gray-900">{(metrics.onTimeRate * 100).toFixed(1)}%</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gray-50 rounded-lg p-6">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                      <span className="text-purple-600 font-semibold">🚚</span>
+                    </div>
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-500">Avg Delivery Time</p>
+                    <p className="text-2xl font-bold text-gray-900">{metrics.avgTimeToDeliver}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Pie Chart */}
+              <div className="bg-gray-50 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Delivery Status</h3>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {pieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Bar Chart */}
+              <div className="bg-gray-50 rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Performance by ZIP Code</h3>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={barData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="zip" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="On-Time" fill="#10B981" />
+                    <Bar dataKey="Delayed" fill="#EF4444" />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                  <span className="text-green-600 font-semibold">âœ…</span>
-                </div>
-              </div>
-              <div className="ml-4">
-                <p className="responsive-text font-medium text-gray-500">Delivered</p>
-                <p className="responsive-heading text-gray-900">{metrics.totalDelivered}</p>
-              </div>
+          {/* Financial Data Disclaimer */}
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start gap-3">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
             </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
-                  <span className="text-yellow-600 font-semibold">â°</span>
-                </div>
-              </div>
-              <div className="ml-4">
-                <p className="responsive-text font-medium text-gray-500">On-Time Rate</p>
-                <p className="responsive-heading text-gray-900">{(metrics.onTimeRate * 100).toFixed(1)}%</p>
-              </div>
+            <div>
+              <p className="font-medium text-yellow-800">Financial Data Disclaimer</p>
+              <p className="text-sm text-yellow-700">
+                All financial data displayed is for informational purposes only. Users are responsible for verifying the accuracy and security of their financial information. This dashboard does not constitute financial advice.
+              </p>
             </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                  <span className="text-purple-600 font-semibold">ðŸ•’</span>
-                </div>
-              </div>
-              <div className="ml-4">
-                <p className="responsive-text font-medium text-gray-500">Avg Delivery Time</p>
-                <p className="responsive-heading text-gray-900">{metrics.avgTimeToDeliver}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* On-Time vs Delayed Pie Chart */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Delivery Performance</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={pieData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {pieData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* ZIP Code Performance Bar Chart */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Performance by ZIP Code</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={barData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="zip" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="On-Time" fill="#10B981" />
-                <Bar dataKey="Delayed" fill="#EF4444" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* ZIP Code Details Table */}
-        <div className="mt-8 bg-white rounded-lg shadow">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">ZIP Code Breakdown</h3>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="responsive-button text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    ZIP Code
-                  </th>
-                  <th className="responsive-button text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    On-Time Deliveries
-                  </th>
-                  <th className="responsive-button text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Delayed Deliveries
-                  </th>
-                  <th className="responsive-button text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Total Orders
-                  </th>
-                  <th className="responsive-button text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Success Rate
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {metrics.zipStats.map((stat) => {
-                  const total = stat.delivered + stat.delayed;
-                  const successRate = total > 0 ? (stat.delivered / total * 100).toFixed(1) : '0.0';
-                  
-                  return (
-                    <tr key={stat.zip}>
-                      <td className="px-6 py-4 whitespace-nowrap responsive-text font-medium text-gray-900">
-                        {stat.zip}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          {stat.delivered}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                          {stat.delayed}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {total}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          parseFloat(successRate) >= 80 
-                            ? 'bg-green-100 text-green-800' 
-                            : parseFloat(successRate) >= 60 
-                            ? 'bg-yellow-100 text-yellow-800' 
-                            : 'bg-red-100 text-red-800'
-                        }`}>
-                          {successRate}%
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
           </div>
         </div>
       </div>
@@ -293,4 +267,4 @@ const VendorAnalyticsPage: React.FC = () => {
   );
 };
 
-export default VendorAnalyticsPage; 
+export default VendorAnalyticsPage;
