@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useAuth } from '../contexts/AuthContext';
-import { LogOut, User, DollarSign, TrendingUp, Package, MessageSquare, MapPin, Calendar, ExternalLink, Copy, Edit } from 'lucide-react';
+import { LogOut, User, DollarSign, TrendingUp, Package, MessageSquare, Calendar, ExternalLink, Copy, Edit } from 'lucide-react';
 import DashboardNav from '@/components/dashboard/DashboardNav';
 import { Link } from 'wouter';
 
@@ -337,43 +337,6 @@ const DashboardPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Dropoff Location Relationships */}
-        <div className="bg-[#F7F2EC] rounded-2xl shadow-lg p-6 mb-8 hover:shadow-xl transition-all duration-300">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold text-[#2C2C2C] flex items-center">
-              <MapPin className="w-6 h-6 text-[#5B6E02] mr-2" />
-              Dropoff Location Relationships
-            </h3>
-            <button
-              onClick={() => setLocation('/dashboard/vendor/relationships')}
-              className="bg-[#8B4513] hover:bg-[#A0522D] text-white px-4 py-2 rounded-lg transition-colors shadow-md hover:shadow-lg text-sm"
-            >
-              View Relationships →
-            </button>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <div className="font-medium text-[#2C2C2C] mb-2">Atlanta Farmers Market</div>
-              <div className="text-sm text-gray-600">Weekly dropoffs on Saturdays</div>
-              <div className="text-xs text-green-600 mt-1">Active partnership</div>
-            </div>
-            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <div className="font-medium text-[#2C2C2C] mb-2">East Atlanta Village</div>
-              <div className="text-sm text-gray-600">Bi-weekly dropoffs on Wednesdays</div>
-              <div className="text-xs text-green-600 mt-1">Active partnership</div>
-            </div>
-            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <div className="font-medium text-[#2C2C2C] mb-2">Buckhead Community Center</div>
-              <div className="text-sm text-gray-600">Monthly dropoffs on first Sunday</div>
-              <div className="text-xs text-blue-600 mt-1">Pending approval</div>
-            </div>
-            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <div className="font-medium text-[#2C2C2C] mb-2">Decatur Square</div>
-              <div className="text-sm text-gray-600">Weekly dropoffs on Fridays</div>
-              <div className="text-xs text-green-600 mt-1">Active partnership</div>
-            </div>
-          </div>
-        </div>
 
         {/* Events I'm Signed Up For */}
         <div className="bg-[#F7F2EC] rounded-2xl shadow-lg p-6 mb-8 hover:shadow-xl transition-all duration-300">

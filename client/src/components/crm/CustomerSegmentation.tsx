@@ -351,7 +351,7 @@ const CustomerSegmentation: React.FC<CustomerSegmentationProps> = ({
 
       {/* Selected Segment Details */}
       {selectedSegment && (
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
+        <div className="border border-gray-200 rounded-lg p-6 shadow-lg" style={{ backgroundColor: '#F7F2EC' }}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">{selectedSegment.name}</h3>
             <button
@@ -418,7 +418,7 @@ const CustomerSegmentation: React.FC<CustomerSegmentationProps> = ({
       {/* Create/Edit Segment Modal */}
       {(isCreatingSegment || editingSegment) && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" style={{ backgroundColor: '#F7F2EC' }}>
             <div className="p-6 border-b">
               <h3 className="text-lg font-semibold text-gray-900">
                 {isCreatingSegment ? 'Create New Segment' : 'Edit Segment'}
@@ -552,6 +552,7 @@ const CustomerSegmentation: React.FC<CustomerSegmentationProps> = ({
 };
 
 export default CustomerSegmentation;
+
 
 
 

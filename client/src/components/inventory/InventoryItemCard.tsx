@@ -1,331 +1,191 @@
 import React from 'react';
-import { 
-  Package, 
-  Edit, 
-  Trash2, 
-  Eye, 
-  AlertTriangle, 
-  Clock,
-  TrendingUp,
-  ShoppingCart,
-  MapPin,
-  Calendar,
-  Hash
-} from 'lucide-react';
-import AIInsightBadge from './AIInsightBadge';
-import type { AIInsight } from '../../types/inventory';
-
-interface InventoryItem {
-  id: string;
-  name: string;
-  description?: string;
-  category: 'food_grade' | 'raw_materials' | 'packaging' | 'used_goods';
-  unit: string;
-  currentStock: number;
-  reorderPoint: number;
-  costPerUnit: number;
-  supplier?: string;
-  isAvailable: boolean;
-  expirationDate?: string;
-  batchNumber?: string;
-  location?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import { Edit, Trash2, Eye, AlertTriangle, Calendar, MapPin, Tag } from 'lucide-react';
+import type { InventoryItem } from '../../hooks/useInventory';
 
 interface InventoryItemCardProps {
   item: InventoryItem;
-  onEdit?: (item: InventoryItem) => void;
-  onDelete?: (item: InventoryItem) => void;
-  onView?: (item: InventoryItem) => void;
-  onReorder?: (item: InventoryItem) => void;
-  onStockAdjustment?: (item: InventoryItem) => void;
-  onInsightAction?: (insight: AIInsight) => void;
-  onDismissInsight?: (insightId: string) => void;
-  showAlerts?: boolean;
-  showAIInsights?: boolean;
-  aiInsights?: AIInsight[];
-  className?: string;
+  onView: (item: InventoryItem) => void;
+  onEdit: (item: InventoryItem) => void;
+  onDelete: (id: string) => void;
+  isDeleting?: boolean;
 }
 
-export default function InventoryItemCard({
+const InventoryItemCard: React.FC<InventoryItemCardProps> = ({
   item,
+  onView,
   onEdit,
   onDelete,
-  onView,
-  onReorder,
-  onStockAdjustment,
-  onInsightAction,
-  onDismissInsight,
-  showAlerts = true,
-  showAIInsights = true,
-  aiInsights = [],
-  className = ''
-}: InventoryItemCardProps) {
-  
-  // Calculate alerts
+  isDeleting = false
+}) => {
   const isLowStock = item.currentStock <= item.reorderPoint;
-  const isExpiringSoon = item.expirationDate && 
-    new Date(item.expirationDate) <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-  const isExpired = item.expirationDate && new Date(item.expirationDate) <= new Date();
-  
-  const daysUntilExpiration = item.expirationDate ? 
-    Math.ceil((new Date(item.expirationDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : null;
+  const isExpired = item.isExpired;
 
   const getCategoryColor = (category: string) => {
     switch (category) {
       case 'food_grade':
-        return 'bg-green-100 text-green-700';
+        return 'bg-green-100 text-green-800';
       case 'raw_materials':
-        return 'bg-blue-100 text-blue-700';
+        return 'bg-blue-100 text-blue-800';
       case 'packaging':
-        return 'bg-purple-100 text-purple-700';
-      case 'used_goods':
-        return 'bg-orange-100 text-orange-700';
+        return 'bg-purple-100 text-purple-800';
+      case 'equipment':
+        return 'bg-orange-100 text-orange-800';
       default:
-        return 'bg-gray-100 text-gray-700';
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case 'food_grade':
-        return <Package className="w-4 h-4" />;
-      case 'raw_materials':
-        return <Package className="w-4 h-4" />;
-      case 'packaging':
-        return <Package className="w-4 h-4" />;
-      case 'used_goods':
-        return <Package className="w-4 h-4" />;
-      default:
-        return <Package className="w-4 h-4" />;
-    }
-  };
-
-  const getAlertBadge = () => {
-    if (isExpired) {
-      return (
-        <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg">
-          EXPIRED
-        </div>
-      );
-    }
-    if (isExpiringSoon && daysUntilExpiration !== null) {
-      return (
-        <div className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg">
-          EXPIRES {daysUntilExpiration}d
-        </div>
-      );
-    }
-    if (isLowStock) {
-      return (
-        <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg">
-          LOW STOCK
-        </div>
-      );
-    }
-    return null;
-  };
-
-  const getCardBorderColor = () => {
-    if (isExpired) return 'border-red-300 bg-red-50';
-    if (isExpiringSoon) return 'border-orange-300 bg-orange-50';
-    if (isLowStock) return 'border-red-300 bg-red-50';
-    return 'border-gray-200 bg-white';
-  };
-
-  const getStockColor = () => {
-    if (isLowStock) return 'text-red-600';
-    if (item.currentStock <= item.reorderPoint * 1.5) return 'text-orange-600';
+  const getStockStatusColor = () => {
+    if (isExpired) return 'text-red-600';
+    if (isLowStock) return 'text-yellow-600';
     return 'text-green-600';
   };
 
   return (
-    <div className={`relative bg-white border rounded-lg shadow-sm hover:shadow-md transition-all duration-200 ${getCardBorderColor()} ${className}`}>
-      {showAlerts && getAlertBadge()}
-      
-      <div className="p-4">
-        {/* Header */}
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex-1">
-            <h3 className="text-lg font-semibold text-gray-900 mb-1">{item.name}</h3>
-            {item.description && (
-              <p className="text-sm text-gray-600 mb-2">{item.description}</p>
-            )}
-            <div className="flex items-center gap-2">
-              <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(item.category)}`}>
-                {getCategoryIcon(item.category)}
-                {item.category.replace('_', ' ')}
-              </span>
-              {item.location && (
-                <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs">
-                  <MapPin className="w-3 h-3" />
-                  {item.location}
-                </span>
-              )}
-            </div>
-          </div>
+    <div className={`border border-gray-200 rounded-lg p-6 flex flex-col transition-all shadow-lg hover:shadow-xl duration-200 ${
+      isDeleting ? 'opacity-50' : ''
+    }`} style={{ backgroundColor: '#F7F2EC' }}>
+      {/* Header */}
+      <div className="flex items-start justify-between mb-4">
+        <div className="flex-1 min-w-0">
+          <h3 className="text-lg font-semibold text-gray-900 truncate">{item.name}</h3>
+          <p className="text-sm text-gray-600 mt-1 line-clamp-2">{item.description}</p>
         </div>
-
-        {/* Stock Information */}
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          <div>
-            <p className="text-sm text-gray-600 mb-1">Current Stock</p>
-            <p className={`text-xl font-bold ${getStockColor()}`}>
-              {item.currentStock} {item.unit}
-            </p>
-            <p className="text-xs text-gray-500">
-              Reorder at: {item.reorderPoint} {item.unit}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-600 mb-1">Total Value</p>
-            <p className="text-xl font-bold text-gray-900">
-              ${(item.currentStock * item.costPerUnit).toFixed(2)}
-            </p>
-            <p className="text-xs text-gray-500">
-              ${item.costPerUnit.toFixed(2)} per {item.unit}
-            </p>
-          </div>
-        </div>
-
-        {/* Additional Information */}
-        <div className="space-y-2 mb-4">
-          {item.supplier && (
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <span className="font-medium">Supplier:</span>
-              <span>{item.supplier}</span>
+        
+        {/* Status Indicators */}
+        <div className="flex flex-col gap-1 ml-2">
+          {isExpired && (
+            <div className="flex items-center gap-1 text-red-600 text-xs">
+              <Calendar className="h-3 w-3" />
+              <span>Expired</span>
             </div>
           )}
-          {item.batchNumber && (
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <Hash className="w-3 h-3" />
-              <span>Batch: {item.batchNumber}</span>
-            </div>
-          )}
-          {item.expirationDate && (
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <Calendar className="w-3 h-3" />
-              <span className={isExpired ? 'text-red-600 font-medium' : isExpiringSoon ? 'text-orange-600 font-medium' : ''}>
-                Expires: {new Date(item.expirationDate).toLocaleDateString()}
-              </span>
+          {isLowStock && !isExpired && (
+            <div className="flex items-center gap-1 text-yellow-600 text-xs">
+              <AlertTriangle className="h-3 w-3" />
+              <span>Low Stock</span>
             </div>
           )}
         </div>
+      </div>
 
-        {/* Alert Messages */}
-        {showAlerts && (
-          <div className="mb-4 space-y-2">
-            {isLowStock && (
-              <div className="flex items-center gap-2 p-2 bg-red-50 border border-red-200 rounded-md">
-                <AlertTriangle className="w-4 h-4 text-red-600" />
-                <span className="text-sm text-red-700">
-                  Stock is below reorder point. Consider reordering soon.
-                </span>
-              </div>
-            )}
-            {isExpiringSoon && !isExpired && (
-              <div className="flex items-center gap-2 p-2 bg-orange-50 border border-orange-200 rounded-md">
-                <Clock className="w-4 h-4 text-orange-600" />
-                <span className="text-sm text-orange-700">
-                  Expires in {daysUntilExpiration} days. Use or dispose soon.
-                </span>
-              </div>
-            )}
-            {isExpired && (
-              <div className="flex items-center gap-2 p-2 bg-red-50 border border-red-200 rounded-md">
-                <AlertTriangle className="w-4 h-4 text-red-600" />
-                <span className="text-sm text-red-700">
-                  This item has expired. Remove from inventory.
-                </span>
-              </div>
-            )}
+      {/* Category Badge */}
+      <div className="mb-4">
+        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(item.category)}`}>
+          {item.category.replace('_', ' ').toUpperCase()}
+        </span>
+      </div>
+
+      {/* Stock Information */}
+      <div className="space-y-2 mb-4">
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-gray-600">Stock:</span>
+          <span className={`font-medium ${getStockStatusColor()}`}>
+            {item.currentStock} {item.unit}
+          </span>
+        </div>
+        
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-gray-600">Reorder Point:</span>
+          <span className="font-medium text-gray-900">
+            {item.reorderPoint} {item.unit}
+          </span>
+        </div>
+        
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-gray-600">Unit Price:</span>
+          <span className="font-medium text-gray-900">
+            ${item.unitPrice.toFixed(2)}/{item.unit}
+          </span>
+        </div>
+        
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-gray-600">Total Value:</span>
+          <span className="font-medium text-gray-900">
+            ${item.totalValue.toFixed(2)}
+          </span>
+        </div>
+      </div>
+
+      {/* Additional Info */}
+      <div className="space-y-1 mb-4 text-xs text-gray-500">
+        {item.supplier && (
+          <div className="flex items-center gap-1">
+            <Tag className="h-3 w-3" />
+            <span>Supplier: {item.supplier}</span>
           </div>
         )}
-
-        {/* AI Insights */}
-        {showAIInsights && aiInsights.length > 0 && (
-          <div className="mb-4">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-medium text-gray-600">AI Insights:</span>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {aiInsights.slice(0, 2).map((insight) => (
-                <AIInsightBadge
-                  key={insight.id}
-                  insight={insight}
-                  onDismiss={onDismissInsight}
-                  onAction={onInsightAction}
-                />
-              ))}
-              {aiInsights.length > 2 && (
-                <div className="text-xs text-gray-500 px-2 py-1 bg-gray-100 rounded-full">
-                  +{aiInsights.length - 2} more
-                </div>
-              )}
-            </div>
+        
+        {item.location && (
+          <div className="flex items-center gap-1">
+            <MapPin className="h-3 w-3" />
+            <span>Location: {item.location}</span>
           </div>
         )}
-
-        {/* Actions */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {onView && (
-              <button
-                onClick={() => onView(item)}
-                className="inline-flex items-center gap-1 px-3 py-1.5 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-md transition-colors text-sm"
-                title="View details"
-              >
-                <Eye className="w-4 h-4" />
-                View
-              </button>
-            )}
-            {onEdit && (
-              <button
-                onClick={() => onEdit(item)}
-                className="inline-flex items-center gap-1 px-3 py-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors text-sm"
-                title="Edit item"
-              >
-                <Edit className="w-4 h-4" />
-                Edit
-              </button>
-            )}
-            {onStockAdjustment && (
-              <button
-                onClick={() => onStockAdjustment(item)}
-                className="inline-flex items-center gap-1 px-3 py-1.5 text-purple-600 hover:text-purple-800 hover:bg-purple-50 rounded-md transition-colors text-sm"
-                title="Adjust stock"
-              >
-                <TrendingUp className="w-4 h-4" />
-                Adjust
-              </button>
-            )}
+        
+        {item.batch && (
+          <div className="flex items-center gap-1">
+            <Tag className="h-3 w-3" />
+            <span>Batch: {item.batch}</span>
           </div>
-          
-          <div className="flex items-center gap-2">
-            {isLowStock && onReorder && (
-              <button
-                onClick={() => onReorder(item)}
-                className="inline-flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white hover:bg-green-700 rounded-md transition-colors text-sm font-medium"
-                title="Reorder item"
+        )}
+      </div>
+
+      {/* Tags */}
+      {item.tags.length > 0 && (
+        <div className="mb-4">
+          <div className="flex flex-wrap gap-1">
+            {item.tags.slice(0, 3).map((tag, index) => (
+              <span
+                key={index}
+                className="inline-flex items-center px-2 py-1 rounded text-xs bg-gray-100 text-gray-700"
               >
-                <ShoppingCart className="w-4 h-4" />
-                Reorder
-              </button>
-            )}
-            {onDelete && (
-              <button
-                onClick={() => onDelete(item)}
-                className="inline-flex items-center gap-1 px-3 py-1.5 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors text-sm"
-                title="Delete item"
-              >
-                <Trash2 className="w-4 h-4" />
-                Delete
-              </button>
+                {tag}
+              </span>
+            ))}
+            {item.tags.length > 3 && (
+              <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-gray-100 text-gray-700">
+                +{item.tags.length - 3} more
+              </span>
             )}
           </div>
         </div>
+      )}
+
+      {/* Actions */}
+      <div className="flex justify-end gap-2 mt-auto pt-4 border-t border-gray-100">
+        <button
+          onClick={() => onView(item)}
+          className="flex items-center gap-1 px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
+          disabled={isDeleting}
+          aria-label={`View details for ${item.name}`}
+        >
+          <Eye className="h-4 w-4" />
+          View
+        </button>
+        
+        <button
+          onClick={() => onEdit(item)}
+          className="flex items-center gap-1 px-3 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+          disabled={isDeleting}
+          aria-label={`Edit ${item.name}`}
+        >
+          <Edit className="h-4 w-4" />
+          Edit
+        </button>
+        
+        <button
+          onClick={() => onDelete(item.id)}
+          className="flex items-center gap-1 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+          disabled={isDeleting}
+          aria-label={`Delete ${item.name}`}
+        >
+          <Trash2 className="h-4 w-4" />
+          Delete
+        </button>
       </div>
     </div>
   );
-}
+};
+
+export default InventoryItemCard;

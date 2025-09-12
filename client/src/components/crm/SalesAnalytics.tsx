@@ -79,8 +79,26 @@ const SalesAnalytics: React.FC<SalesAnalyticsProps> = ({
 
   // Calculate key metrics
   const calculateMetrics = () => {
-    const totalValue = filteredOpportunities.reduce((sum, opp) => sum + opp.value, 0);
-    const weightedValue = filteredOpportunities.reduce((sum, opp) => sum + (opp.value * opp.probability / 100), 0);
+    if (!filteredOpportunities || filteredOpportunities.length === 0) {
+      return {
+        totalValue: 0,
+        weightedValue: 0,
+        wonValue: 0,
+        lostValue: 0,
+        activeValue: 0,
+        activeWeightedValue: 0,
+        totalDeals: 0,
+        wonDeals: 0,
+        lostDeals: 0,
+        activeDeals: 0,
+        winRate: 0,
+        averageDealSize: 0,
+        averageSalesCycle: 0,
+      };
+    }
+
+    const totalValue = filteredOpportunities.reduce((sum, opp) => sum + (opp.value || 0), 0);
+    const weightedValue = filteredOpportunities.reduce((sum, opp) => sum + ((opp.value || 0) * (opp.probability || 0) / 100), 0);
     const wonDeals = filteredOpportunities.filter(opp => opp.stage === 'closed_won');
     const lostDeals = filteredOpportunities.filter(opp => opp.stage === 'closed_lost');
     const activeDeals = filteredOpportunities.filter(opp => opp.stage !== 'closed_won' && opp.stage !== 'closed_lost');
@@ -129,6 +147,10 @@ const SalesAnalytics: React.FC<SalesAnalyticsProps> = ({
 
   // Stage distribution
   const getStageDistribution = () => {
+    if (!filteredOpportunities || filteredOpportunities.length === 0) {
+      return [];
+    }
+
     const distribution = filteredOpportunities.reduce((acc, opp) => {
       acc[opp.stage] = (acc[opp.stage] || 0) + 1;
       return acc;
@@ -143,6 +165,10 @@ const SalesAnalytics: React.FC<SalesAnalyticsProps> = ({
 
   // Source distribution
   const getSourceDistribution = () => {
+    if (!filteredOpportunities || filteredOpportunities.length === 0) {
+      return [];
+    }
+
     const distribution = filteredOpportunities.reduce((acc, opp) => {
       const source = opp.source || 'Unknown';
       acc[source] = (acc[source] || 0) + 1;
@@ -216,6 +242,19 @@ const SalesAnalytics: React.FC<SalesAnalyticsProps> = ({
   const stageDistribution = getStageDistribution();
   const sourceDistribution = getSourceDistribution();
   const monthlyTrends = getMonthlyTrends();
+
+  // Show empty state if no data
+  if (!opportunities || opportunities.length === 0) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center py-12">
+          <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No Sales Data Available</h3>
+          <p className="text-gray-500">Create some opportunities to see analytics and insights.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -481,6 +520,7 @@ const SalesAnalytics: React.FC<SalesAnalyticsProps> = ({
 };
 
 export default SalesAnalytics;
+
 
 
 

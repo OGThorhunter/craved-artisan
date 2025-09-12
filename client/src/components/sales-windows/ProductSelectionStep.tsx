@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, X, Eye, EyeOff, Package, Tag, DollarSign, Users, Hash, Check } from 'lucide-react';
+import { Search, Plus, X, Eye, EyeOff, Package, Tag, DollarSign, Users, Hash, Check, ShoppingCart, ArrowRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import type { WindowProduct } from '../../types/sales-windows';
 import { useQuery } from '@tanstack/react-query';
@@ -28,15 +28,19 @@ interface Product {
 interface ProductSelectionStepProps {
   selectedProducts: WindowProduct[];
   onProductsChange: (products: WindowProduct[]) => void;
+  onCreateBatchOrders?: (products: Array<{product: WindowProduct, quantity: number}>) => void;
 }
 
 const ProductSelectionStep: React.FC<ProductSelectionStepProps> = ({
   selectedProducts,
-  onProductsChange
+  onProductsChange,
+  onCreateBatchOrders
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [showOnlyInStock, setShowOnlyInStock] = useState(true);
+  const [productQuantities, setProductQuantities] = useState<Record<string, number>>({});
+  const [showBatchOrderModal, setShowBatchOrderModal] = useState(false);
 
   // Fetch vendor products
   const { data: vendorProducts = [], isLoading, error } = useQuery({
@@ -103,10 +107,42 @@ const ProductSelectionStep: React.FC<ProductSelectionStepProps> = ({
     };
 
     onProductsChange([...selectedProducts, newWindowProduct]);
+    setProductQuantities(prev => ({ ...prev, [product.id]: 1 }));
+    toast.success(`${product.name} added to sales window`);
   };
 
   const removeProduct = (productId: string) => {
     onProductsChange(selectedProducts.filter(p => p.productId !== productId));
+    setProductQuantities(prev => {
+      const newQuantities = { ...prev };
+      delete newQuantities[productId];
+      return newQuantities;
+    });
+  };
+
+  const updateQuantity = (productId: string, quantity: number) => {
+    setProductQuantities(prev => ({ ...prev, [productId]: Math.max(1, quantity) }));
+  };
+
+  const handleCreateBatchOrders = () => {
+    const productsWithQuantities = selectedProducts
+      .filter(product => productQuantities[product.productId] > 0)
+      .map(product => ({
+        product,
+        quantity: productQuantities[product.productId] || 1
+      }));
+
+    if (productsWithQuantities.length === 0) {
+      toast.error('Please select products and quantities for batch orders');
+      return;
+    }
+
+    if (onCreateBatchOrders) {
+      onCreateBatchOrders(productsWithQuantities);
+      toast.success(`Created ${productsWithQuantities.length} batch orders`);
+    } else {
+      toast.success(`Would create ${productsWithQuantities.length} batch orders`);
+    }
   };
 
   const updateProduct = (productId: string, field: keyof WindowProduct, value: any) => {
@@ -369,8 +405,55 @@ const ProductSelectionStep: React.FC<ProductSelectionStepProps> = ({
                     </button>
                   </div>
                 </div>
+
+                {/* Quantity Selection for Batch Orders */}
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <label htmlFor={`quantity-${product.productId}`} className="text-sm font-medium text-gray-700">
+                        Batch Order Quantity:
+                      </label>
+                      <input
+                        id={`quantity-${product.productId}`}
+                        type="number"
+                        min="1"
+                        max={product.currentStock}
+                        value={productQuantities[product.productId] || 1}
+                        onChange={(e) => updateQuantity(product.productId, Number(e.target.value))}
+                        className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="1"
+                      />
+                      <span className="text-sm text-gray-500">
+                        (Max: {product.currentStock})
+                      </span>
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      Total: ${((productQuantities[product.productId] || 1) * (product.priceOverride || product.price)).toFixed(2)}
+                    </div>
+                  </div>
+                </div>
               </div>
             ))}
+          </div>
+
+          {/* Batch Order Creation */}
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="font-medium text-gray-900">Create Batch Orders</h4>
+                <p className="text-sm text-gray-600">
+                  Generate individual orders for each product with selected quantities
+                </p>
+              </div>
+              <button
+                onClick={handleCreateBatchOrders}
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <ShoppingCart className="h-4 w-4" />
+                <span>Create Batch Orders</span>
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </div>
       )}

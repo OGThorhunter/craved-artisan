@@ -693,7 +693,7 @@ export default function VendorRecipeCreatePage() {
             {/* Form Actions */}
             <div className="flex items-center justify-between pt-6 border-t border-gray-200">
               <Link
-                href="/dashboard/vendor/inventory"
+                href="/dashboard/vendor/products"
                 className="inline-flex items-center responsive-button border border-gray-300 responsive-text font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />

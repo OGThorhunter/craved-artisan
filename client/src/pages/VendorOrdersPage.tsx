@@ -1,819 +1,1057 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useLocation } from 'wouter';
 import {
+  Plus, 
+  Search, 
+  Filter, 
+  Download, 
+  Printer, 
+  Eye, 
+  Edit, 
+  Trash2, 
+  Calendar,
+  Clock,
+  User,
   Package,
   Truck,
   CheckCircle,
-  Clock,
   AlertCircle,
-  Eye,
-  Edit,
-  Calendar,
-  User,
-  MapPin,
-  DollarSign,
-  TrendingUp,
-  ShoppingBag,
-  RefreshCw,
-  Filter,
-  Search,
-  ArrowLeft,
-  Phone,
-  Mail,
-  FileText
+  XCircle,
+  MoreHorizontal,
+  BarChart3,
+  FileText,
+  Tag,
+  CreditCard
 } from 'lucide-react';
-import toast from 'react-hot-toast';
-import axios from 'axios';
+import { Link } from 'wouter';
 import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
-import MotivationalQuote from '@/components/dashboard/MotivationalQuote';
-import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import { getQuoteByCategory } from '@/data/motivationalQuotes';
+import OrderTracker from '../components/orders/OrderTracker';
+import OrderKanbanBoard from '../components/orders/OrderKanbanBoard';
+import OrderAnalytics from '../components/orders/OrderAnalytics';
+import SimpleLabelPrintModal from '../components/labels/SimpleLabelPrintModal';
+import OrderListPrintModal from '../components/orders/OrderListPrintModal';
+import OrderDetailModal from '../components/orders/OrderDetailModal';
 
-interface OrderItem {
-  id: string;
-  quantity: number;
-  price: number;
-  total: number;
-  product: {
-    id: string;
-    name: string;
-    imageUrl?: string;
-  };
-}
-
-interface Fulfillment {
-  id: string;
-  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'FAILED';
-  type: 'SHIPPING' | 'PICKUP' | 'DELIVERY';
-  trackingNumber?: string;
-  carrier?: string;
-  estimatedDelivery?: string;
-  actualDelivery?: string;
-  notes?: string;
-  etaLabel?: string; // AI-generated label (e.g., "âš¡ Fast Fulfillment", "ðŸ“¦ Standard")
-  predictedHours?: number; // AI prediction raw hours
-}
-
-interface Customer {
-  id: string;
-  name: string;
-  email: string;
-  phone?: string;
-}
-
-interface ShippingAddress {
-  id: string;
-  firstName: string;
-  lastName: string;
-  address1: string;
-  city: string;
-  state: string;
-  postalCode: string;
-  country?: string;
-  phone?: string;
-}
-
+// Types
 interface Order {
   id: string;
   orderNumber: string;
-  status: string;
-  subtotal: number;
-  total: number;
+  customerId: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone?: string;
+  status: 'pending' | 'confirmed' | 'in_production' | 'ready_for_pickup' | 'shipped' | 'delivered' | 'cancelled';
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  totalAmount: number;
+  items: OrderItem[];
+  shippingAddress: Address;
+  billingAddress: Address;
+  notes?: string;
   createdAt: string;
   updatedAt: string;
-  customer: Customer;
-  shippingAddress: ShippingAddress;
-  items: OrderItem[];
-  fulfillment: Fulfillment;
+  expectedDeliveryDate: string;
+  actualDeliveryDate?: string;
+  productionStartDate?: string;
+  productionEndDate?: string;
+  assignedTo?: string;
+  tags: string[];
 }
 
-interface OrderStats {
-  totalOrders: number;
-  pendingOrders: number;
-  inProgressOrders: number;
-  completedOrders: number;
-  totalRevenue: number;
+interface OrderItem {
+  id: string;
+  productId: string;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+  specifications?: string;
+  status: 'pending' | 'in_production' | 'completed' | 'cancelled';
 }
 
-interface UpdateFulfillmentData {
-  status: 'PENDING' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'FAILED';
-  trackingNumber?: string;
-  carrier?: string;
-  estimatedDelivery?: string;
-  notes?: string;
+interface Address {
+  street: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
 }
 
-const VendorOrdersPage = () => {
-  const [, setLocation] = useLocation();
-  const queryClient = useQueryClient();
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
-  const [updateData, setUpdateData] = useState<UpdateFulfillmentData>({
-    status: 'PENDING'
-  });
-  const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [filterLabel, setFilterLabel] = useState<string>('all');
+// Dummy data
+const dummyOrders: Order[] = [
+  {
+    id: 'order-1',
+    orderNumber: 'ORD-2025-001',
+    customerId: 'cust-1',
+    customerName: 'Sarah Johnson',
+    customerEmail: 'sarah.johnson@restaurantgroup.com',
+    customerPhone: '(555) 123-4567',
+    status: 'in_production',
+    priority: 'high',
+    totalAmount: 1250.00,
+    items: [
+      {
+        id: 'item-1',
+        productId: 'prod-1',
+        productName: 'Custom Logo Aprons',
+        quantity: 50,
+        unitPrice: 15.00,
+        totalPrice: 750.00,
+        specifications: 'Red aprons with white logo, size M-L',
+        status: 'in_production'
+      },
+      {
+        id: 'item-2',
+        productId: 'prod-2',
+        productName: 'Chef Hats',
+        quantity: 25,
+        unitPrice: 20.00,
+        totalPrice: 500.00,
+        specifications: 'White chef hats with embroidered logo',
+        status: 'pending'
+      }
+    ],
+    shippingAddress: {
+      street: '123 Main St',
+      city: 'New York',
+      state: 'NY',
+      zipCode: '10001',
+      country: 'USA'
+    },
+    billingAddress: {
+      street: '123 Main St',
+      city: 'New York',
+      state: 'NY',
+      zipCode: '10001',
+      country: 'USA'
+    },
+    notes: 'Rush order for grand opening event',
+    createdAt: '2025-01-15T10:00:00Z',
+    updatedAt: '2025-01-20T14:30:00Z',
+    expectedDeliveryDate: '2025-02-01',
+    productionStartDate: '2025-01-18T09:00:00Z',
+    assignedTo: 'Production Team A',
+    tags: ['rush', 'restaurant', 'grand-opening']
+  },
+  {
+    id: 'order-2',
+    orderNumber: 'ORD-2025-002',
+    customerId: 'cust-2',
+    customerName: 'Michael Chen',
+    customerEmail: 'michael.chen@deliveryapp.com',
+    customerPhone: '(555) 987-6543',
+    status: 'confirmed',
+    priority: 'medium',
+    totalAmount: 850.00,
+    items: [
+      {
+        id: 'item-3',
+        productId: 'prod-3',
+        productName: 'Delivery Bags',
+        quantity: 100,
+        unitPrice: 8.50,
+        totalPrice: 850.00,
+        specifications: 'Insulated delivery bags with company logo',
+        status: 'pending'
+      }
+    ],
+    shippingAddress: {
+      street: '456 Oak Ave',
+      city: 'San Francisco',
+      state: 'CA',
+      zipCode: '94102',
+      country: 'USA'
+    },
+    billingAddress: {
+      street: '456 Oak Ave',
+      city: 'San Francisco',
+      state: 'CA',
+      zipCode: '94102',
+      country: 'USA'
+    },
+    notes: 'Standard delivery timeline',
+    createdAt: '2025-01-18T14:20:00Z',
+    updatedAt: '2025-01-18T14:20:00Z',
+    expectedDeliveryDate: '2025-02-15',
+    assignedTo: 'Production Team B',
+    tags: ['delivery', 'bags', 'standard']
+  },
+  {
+    id: 'order-3',
+    orderNumber: 'ORD-2025-003',
+    customerId: 'cust-3',
+    customerName: 'Emma Rodriguez',
+    customerEmail: 'emma@boutiquestyle.com',
+    customerPhone: '(555) 456-7890',
+    status: 'ready_for_pickup',
+    priority: 'low',
+    totalAmount: 320.00,
+    items: [
+      {
+        id: 'item-4',
+        productId: 'prod-4',
+        productName: 'Custom T-Shirts',
+        quantity: 20,
+        unitPrice: 16.00,
+        totalPrice: 320.00,
+        specifications: 'Black t-shirts with pink logo, sizes S-XL',
+        status: 'completed'
+      }
+    ],
+    shippingAddress: {
+      street: '789 Pine St',
+      city: 'Miami',
+      state: 'FL',
+      zipCode: '33101',
+      country: 'USA'
+    },
+    billingAddress: {
+      street: '789 Pine St',
+      city: 'Miami',
+      state: 'FL',
+      zipCode: '33101',
+      country: 'USA'
+    },
+    notes: 'Customer prefers pickup over shipping',
+    createdAt: '2025-01-10T09:15:00Z',
+    updatedAt: '2025-01-22T16:45:00Z',
+    expectedDeliveryDate: '2025-01-25',
+    actualDeliveryDate: '2025-01-22T16:45:00Z',
+    productionStartDate: '2025-01-12T08:00:00Z',
+    productionEndDate: '2025-01-20T17:00:00Z',
+    assignedTo: 'Production Team A',
+    tags: ['t-shirts', 'pickup', 'completed']
+  }
+];
+
+const VendorOrdersPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [priorityFilter, setPriorityFilter] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<'createdAt' | 'expectedDeliveryDate' | 'totalAmount' | 'status'>('createdAt');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
+  const [viewMode, setViewMode] = useState<'list' | 'tracker' | 'kanban' | 'analytics'>('tracker');
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [showLabelPrinting, setShowLabelPrinting] = useState(false);
+  const [showLabelTemplateManager, setShowLabelTemplateManager] = useState(false);
+  const [showOrderListPrinting, setShowOrderListPrinting] = useState(false);
+  const [selectedOrdersForLabels, setSelectedOrdersForLabels] = useState<string[]>([]);
+  const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | '1y' | 'all'>('30d');
+  const [showCreditsModal, setShowCreditsModal] = useState(false);
 
-  // Fetch orders
-  const { data: ordersData, isLoading: ordersLoading } = useQuery({
-    queryKey: ['vendorOrders'],
-    queryFn: async () => {
-      const response = await axios.get('/api/vendor/orders');
-      return response.data;
-    }
+  // Mock data - in real app, this would come from API
+  const { data: orders = dummyOrders, isLoading } = useQuery({
+    queryKey: ['orders'],
+    queryFn: () => Promise.resolve(dummyOrders),
   });
 
-  // Fetch order statistics
-  const { data: statsData } = useQuery({
-    queryKey: ['vendorOrderStats'],
-    queryFn: async () => {
-      const response = await axios.get('/api/vendor/orders/stats');
-      return response.data;
-    }
-  });
+  const queryClient = useQueryClient();
 
-  // Update fulfillment mutation
-  const updateFulfillmentMutation = useMutation({
-    mutationFn: async ({ orderId, data }: { orderId: string; data: UpdateFulfillmentData }) => {
-      const response = await axios.patch(`/api/vendor/orders/${orderId}/fulfillment`, data);
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['vendorOrders'] });
-      queryClient.invalidateQueries({ queryKey: ['vendorOrderStats'] });
-      toast.success('Fulfillment status updated successfully');
-      setIsUpdateModalOpen(false);
-      setSelectedOrder(null);
-    },
-    onError: (error) => {
-      console.error('Error updating fulfillment:', error);
-      toast.error('Failed to update fulfillment status');
-    }
-  });
+  // Filter and sort orders
+  const filteredOrders = orders
+    .filter(order => {
+      const matchesSearch = order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           order.customerEmail.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
+      const matchesPriority = priorityFilter === 'all' || order.priority === priorityFilter;
+      return matchesSearch && matchesStatus && matchesPriority;
+    })
+    .sort((a, b) => {
+      let aValue: any = a[sortBy];
+      let bValue: any = b[sortBy];
+      
+      if (sortBy === 'createdAt' || sortBy === 'expectedDeliveryDate') {
+        aValue = new Date(aValue).getTime();
+        bValue = new Date(bValue).getTime();
+      }
+      
+      if (sortOrder === 'asc') {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
 
-  const orders: Order[] = ordersData?.orders || [];
-  const stats: OrderStats = statsData?.stats || {
-    totalOrders: 0,
-    pendingOrders: 0,
-    inProgressOrders: 0,
-    completedOrders: 0,
-    totalRevenue: 0
+  // Status configuration
+  const statusConfig = {
+    pending: { label: 'Pending', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
+    confirmed: { label: 'Confirmed', color: 'bg-blue-100 text-blue-800', icon: CheckCircle },
+    in_production: { label: 'In Production', color: 'bg-orange-100 text-orange-800', icon: Package },
+    ready_for_pickup: { label: 'Ready for Pickup', color: 'bg-purple-100 text-purple-800', icon: Truck },
+    shipped: { label: 'Shipped', color: 'bg-indigo-100 text-indigo-800', icon: Truck },
+    delivered: { label: 'Delivered', color: 'bg-green-100 text-green-800', icon: CheckCircle },
+    cancelled: { label: 'Cancelled', color: 'bg-red-100 text-red-800', icon: XCircle },
   };
 
-  // Filter orders
-  const filteredOrders = orders.filter(order => {
-    const matchesStatus = filterStatus === 'all' || order.fulfillment.status === filterStatus;
-    const matchesLabel = filterLabel === 'all' || order.fulfillment.etaLabel === filterLabel;
-    const matchesSearch = 
-      order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      order.customer.email.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    return matchesStatus && matchesLabel && matchesSearch;
-  });
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'PENDING':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'IN_PROGRESS':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'COMPLETED':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'CANCELLED':
-        return 'bg-red-100 text-red-800 border-red-200';
-      case 'FAILED':
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
+  const priorityConfig = {
+    low: { label: 'Low', color: 'bg-gray-100 text-gray-800' },
+    medium: { label: 'Medium', color: 'bg-blue-100 text-blue-800' },
+    high: { label: 'High', color: 'bg-orange-100 text-orange-800' },
+    urgent: { label: 'Urgent', color: 'bg-red-100 text-red-800' },
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'PENDING':
-        return <Clock className="h-4 w-4" />;
-      case 'IN_PROGRESS':
-        return <Truck className="h-4 w-4" />;
-      case 'COMPLETED':
-        return <CheckCircle className="h-4 w-4" />;
-      case 'CANCELLED':
-      case 'FAILED':
-        return <AlertCircle className="h-4 w-4" />;
-      default:
-        return <Package className="h-4 w-4" />;
+  const handleSelectOrder = (orderId: string) => {
+    setSelectedOrders(prev => 
+      prev.includes(orderId) 
+        ? prev.filter(id => id !== orderId)
+        : [...prev, orderId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedOrders.length === filteredOrders.length) {
+      setSelectedOrders([]);
+    } else {
+      setSelectedOrders(filteredOrders.map(order => order.id));
     }
   };
 
-  const handleUpdateFulfillment = (order: Order) => {
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(amount);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
+
+  const handleOrderClick = (order: Order) => {
     setSelectedOrder(order);
-    setUpdateData({
-      status: order.fulfillment.status,
-      trackingNumber: order.fulfillment.trackingNumber || '',
-      carrier: order.fulfillment.carrier || '',
-      estimatedDelivery: order.fulfillment.estimatedDelivery || '',
-      notes: order.fulfillment.notes || ''
-    });
-    setIsUpdateModalOpen(true);
   };
 
-  const handleSubmitUpdate = () => {
-    if (!selectedOrder) return;
+  const handlePrintLabels = () => {
+    if (selectedOrders.length > 0) {
+      setSelectedOrdersForLabels(selectedOrders);
+    setShowLabelPrinting(true);
+    } else {
+      // If no orders selected, show all orders
+      setSelectedOrdersForLabels(filteredOrders.map(order => order.id));
+      setShowLabelPrinting(true);
+    }
+  };
+
+  const handleManageTemplates = () => {
+    alert('Label template management will be available in a future update. For now, you can use the basic label printing feature.');
+  };
+
+  const handlePrintSelectedLabels = (orderIds: string[]) => {
+    setSelectedOrdersForLabels(orderIds);
+    setShowLabelPrinting(true);
+  };
+
+  const handlePrintOrderList = () => {
+    setShowOrderListPrinting(true);
+  };
+
+  const handleStatusUpdate = (orderId: string, status: string) => {
+    // In a real app, this would update the backend
+    console.log(`Updating order ${orderId} status to ${status}`);
     
-    updateFulfillmentMutation.mutate({
-      orderId: selectedOrder.id,
-      data: updateData
+    // Update the order status in the local state
+    setOrders(prevOrders => {
+      const updatedOrders = prevOrders.map(order => 
+        order.id === orderId 
+          ? { ...order, status: status as any, updatedAt: new Date().toISOString() }
+          : order
+      );
+      console.log('Updated orders:', updatedOrders.find(o => o.id === orderId));
+      return updatedOrders;
     });
   };
 
-  if (ordersLoading) {
+  const handleAssign = (orderId: string, assignedTo: string) => {
+    // In a real app, this would update the backend
+    console.log(`Assigning order ${orderId} to ${assignedTo}`);
+  };
+
+  const handleOrderEdit = (order: Order) => {
+    setSelectedOrder(order);
+  };
+
+  const handleNewOrder = () => {
+    // Create a new empty order object for editing
+    const newOrder: Order = {
+      id: 'new',
+      orderNumber: '',
+      customerId: '',
+      customerName: '',
+      customerEmail: '',
+      customerPhone: '',
+      status: 'pending',
+      priority: 'medium',
+      totalAmount: 0,
+      items: [],
+      shippingAddress: {
+        street: '',
+        city: '',
+        state: '',
+        zipCode: '',
+        country: ''
+      },
+      billingAddress: {
+        street: '',
+        city: '',
+        state: '',
+        zipCode: '',
+        country: ''
+      },
+      notes: '',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      expectedDeliveryDate: '',
+      productionStartDate: '',
+      assignedTo: '',
+      tags: []
+    };
+    setSelectedOrder(newOrder);
+  };
+
+  const handleOrderSave = (order: Order) => {
+    // In a real app, this would save to the backend
+    console.log('Saving new order:', order);
+    // For now, just close the modal
+    setSelectedOrder(null);
+  };
+
+  const handleOrderDuplicate = (order: Order) => {
+    // Create a duplicate order with a new ID and order number
+    const duplicatedOrder: Order = {
+      ...order,
+      id: `order-${Date.now()}`,
+      orderNumber: `ORD-${String(Date.now()).slice(-6)}`,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      // Clear delivery dates for the duplicate
+      expectedDeliveryDate: '',
+      actualDeliveryDate: undefined,
+      productionStartDate: undefined,
+      productionEndDate: undefined,
+    };
+    
+    // Open the modal with the duplicated order for editing
+    setSelectedOrder(duplicatedOrder);
+    console.log('Duplicating order:', duplicatedOrder);
+  };
+
+  const handleOrderDelete = (orderId: string) => {
+    // In a real app, this would delete from the backend
+    console.log(`Deleting order ${orderId}`);
+  };
+
+  if (isLoading) {
     return (
       <VendorDashboardLayout>
-        <div className="p-6 flex items-center justify-center">
-          <div className="text-center">
-            <RefreshCw className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-4" />
-            <p className="text-gray-600">Loading orders...</p>
-          </div>
+      <div className="min-h-screen bg-white">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
+      </div>
       </VendorDashboardLayout>
     );
   }
 
   return (
     <VendorDashboardLayout>
-      <div className="p-6">
+    <div className="min-h-screen bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <DashboardHeader 
-          title="Order Fulfillment"
-          description="Manage and track your product orders, fulfillment status, and delivery progress"
-        />
-
-        {/* Motivational Quote */}
-        <MotivationalQuote
-          quote={getQuoteByCategory('success').quote}
-          author={getQuoteByCategory('success').author}
-          icon={getQuoteByCategory('success').icon}
-          variant={getQuoteByCategory('success').variant}
-        />
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+              <div>
+              <h1 className="text-3xl font-bold text-gray-900">Order Management</h1>
+              <p className="text-gray-600 mt-2">
+                {viewMode === 'gantt' 
+                  ? 'Visual timeline showing order progress from creation to delivery' 
+                  : 'Track and manage customer orders from production to delivery'
+                }
+              </p>
+            </div>
+            <div className="flex items-center space-x-3">
+              <button 
+                onClick={handleNewOrder}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Plus className="h-4 w-4" />
+                New Order
+              </button>
+              <button 
+                onClick={handlePrintLabels}
+                className="inline-flex items-center gap-2 px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
+                title="Print Labels"
+              >
+                <Printer className="h-4 w-4" />
+                Print Labels
+              </button>
+              <button 
+                onClick={handlePrintOrderList}
+                className="inline-flex items-center gap-2 px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
+                title="Print Order List"
+              >
+                <Download className="h-4 w-4" />
+                Print List
+              </button>
+              <button 
+                onClick={handleManageTemplates}
+                className="inline-flex items-center gap-2 px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
+                title="Manage Templates"
+              >
+                <FileText className="h-4 w-4" />
+                Templates
+              </button>
+              <button className="inline-flex items-center gap-2 px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors">
+                <Download className="h-4 w-4" />
+                Export
+              </button>
+              <button 
+                onClick={() => setShowCreditsModal(true)}
+                className="inline-flex items-center gap-2 px-3 py-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+              >
+                <CreditCard className="h-4 w-4" />
+                Credits & Discounts
+              </button>
+              </div>
+            </div>
+          </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-[#F7F2EC] rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200 p-6 border border-gray-200">
+            <div className="flex items-center">
               <div className="p-2 bg-blue-100 rounded-lg">
-                <ShoppingBag className="h-6 w-6 text-blue-600" />
+                <Package className="h-6 w-6 text-blue-600" />
               </div>
-              <div>
-                <p className="responsive-text font-medium text-gray-600">Total Orders</p>
-                <p className="responsive-heading text-gray-900">{stats.totalOrders}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <Clock className="h-6 w-6 text-yellow-600" />
-              </div>
-              <div>
-                <p className="responsive-text font-medium text-gray-600">Pending</p>
-                <p className="responsive-heading text-gray-900">{stats.pendingOrders}</p>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Orders</p>
+                <p className="text-2xl font-bold text-gray-900">{orders.length}</p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Truck className="h-6 w-6 text-blue-600" />
+          <div className="bg-[#F7F2EC] rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200 p-6 border border-gray-200">
+            <div className="flex items-center">
+              <div className="p-2 bg-orange-100 rounded-lg">
+                <Clock className="h-6 w-6 text-orange-600" />
               </div>
-              <div>
-                <p className="responsive-text font-medium text-gray-600">In Progress</p>
-                <p className="responsive-heading text-gray-900">{stats.inProgressOrders}</p>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">In Production</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {orders.filter(o => o.status === 'in_production').length}
+                </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center gap-3">
+          <div className="bg-[#F7F2EC] rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200 p-6 border border-gray-200">
+            <div className="flex items-center">
               <div className="p-2 bg-green-100 rounded-lg">
                 <CheckCircle className="h-6 w-6 text-green-600" />
               </div>
-              <div>
-                <p className="responsive-text font-medium text-gray-600">Completed</p>
-                <p className="responsive-heading text-gray-900">{stats.completedOrders}</p>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Completed</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {orders.filter(o => o.status === 'delivered').length}
+                </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <DollarSign className="h-6 w-6 text-green-600" />
+          <div className="bg-[#F7F2EC] rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200 p-6 border border-gray-200">
+            <div className="flex items-center">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <Truck className="h-6 w-6 text-purple-600" />
               </div>
-              <div>
-                <p className="responsive-text font-medium text-gray-600">Total Revenue</p>
-                <p className="responsive-heading text-gray-900">${stats.totalRevenue.toFixed(2)}</p>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Ready for Pickup</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {orders.filter(o => o.status === 'ready_for_pickup').length}
+                </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Filters and Search */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
+        {/* Filters and Controls */}
+        <div className="bg-[#F7F2EC] rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200 p-6 mb-6 border border-gray-200">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
+            <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+              {/* Search */}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search by order number, customer name, or email..."
+                  placeholder="Search orders..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:w-64"
                 />
               </div>
-            </div>
-            <div className="flex gap-2">
+
+              {/* Status Filter */}
               <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="responsive-button border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                title="Filter by fulfillment status"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                title="Filter by status"
               >
                 <option value="all">All Status</option>
-                <option value="PENDING">Pending</option>
-                <option value="IN_PROGRESS">In Progress</option>
-                <option value="COMPLETED">Completed</option>
-                <option value="CANCELLED">Cancelled</option>
-                <option value="FAILED">Failed</option>
+                <option value="pending">Pending</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="in_production">In Production</option>
+                <option value="ready_for_pickup">Ready for Pickup</option>
+                <option value="shipped">Shipped</option>
+                <option value="delivered">Delivered</option>
+                <option value="cancelled">Cancelled</option>
               </select>
-              <select
-                value={filterLabel}
-                onChange={(e) => setFilterLabel(e.target.value)}
-                className="responsive-button border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                title="Filter by fulfillment label"
-              >
-                <option value="all">All Labels</option>
-                <option value="âš¡ Fast Fulfillment">âš¡ Fast Fulfillment</option>
-                <option value="ðŸ“¦ Standard">ðŸ“¦ Standard</option>
-                <option value="â³ Delayed">â³ Delayed</option>
-              </select>
-            </div>
-          </div>
-        </div>
 
-        {/* Orders List */}
-        <div className="space-y-4">
-          {filteredOrders.length === 0 ? (
-            <div className="bg-white rounded-lg shadow-sm p-12 text-center">
-              <Package className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="responsive-subheading text-gray-900 mb-2">No orders found</h3>
-              <p className="text-gray-600">
-                {orders.length === 0 
-                  ? "You don't have any orders yet. Orders will appear here when customers purchase your products."
-                  : "No orders match your current filters."
-                }
-              </p>
-            </div>
-          ) : (
-            filteredOrders.map((order) => (
-              <div key={order.id} className="bg-white rounded-lg shadow-sm border border-gray-200">
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          {order.orderNumber}
-                        </h3>
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(order.fulfillment.status)}`}>
-                          <div className="flex items-center gap-1">
-                            {getStatusIcon(order.fulfillment.status)}
-                            {order.fulfillment.status.replace('_', ' ')}
-                          </div>
-                        </span>
-                        {order.fulfillment.etaLabel && (
-                          <span className="px-2 py-1 text-xs font-medium rounded-full border border-blue-200 bg-blue-50 text-blue-700">
-                            {order.fulfillment.etaLabel}
-                          </span>
-                        )}
+              {/* Priority Filter */}
+              <select
+                value={priorityFilter}
+                onChange={(e) => setPriorityFilter(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                title="Filter by priority"
+              >
+                <option value="all">All Priority</option>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="urgent">Urgent</option>
+              </select>
                       </div>
                       
-                      <div className="flex items-center gap-6 responsive-text text-gray-600">
-                        <div className="flex items-center gap-1">
-                          <User className="h-4 w-4" />
-                          {order.customer.name}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Calendar className="h-4 w-4" />
-                          {new Date(order.createdAt).toLocaleDateString()}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <DollarSign className="h-4 w-4" />
-                          ${order.subtotal.toFixed(2)}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
+            <div className="flex items-center space-x-4">
+              {/* View Mode Toggle */}
+              <div className="flex items-center space-x-2">
+                <span className="text-sm font-medium text-gray-700 mr-2">View:</span>
                       <button
-                        onClick={() => setSelectedOrder(order)}
-                        className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
-                        title="View order details"
-                      >
-                        <Eye className="h-4 w-4" />
+                  onClick={() => setViewMode('list')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${viewMode === 'list' ? 'bg-[#5B6E02] text-white shadow-md' : 'text-gray-600 hover:text-[#5B6E02] hover:bg-gray-100'}`}
+                  title="List view"
+                >
+                  <FileText className="h-4 w-4 inline mr-1" />
+                  List
                       </button>
                       <button
-                        onClick={() => handleUpdateFulfillment(order)}
-                        className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors"
-                        title="Update fulfillment status"
-                      >
-                        <Edit className="h-4 w-4" />
+                  onClick={() => setViewMode('tracker')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${viewMode === 'tracker' ? 'bg-[#5B6E02] text-white shadow-md' : 'text-gray-600 hover:text-[#5B6E02] hover:bg-gray-100'}`}
+                  title="Customizable order tracker - Drag and drop workflow management"
+                >
+                  <BarChart3 className="h-4 w-4 inline mr-1" />
+                  Tracker
                       </button>
-                    </div>
-                  </div>
-
-                  {/* Order Items Preview */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <h4 className="font-medium text-gray-900 mb-2">Items ({order.items.length})</h4>
-                      <div className="space-y-2">
-                        {order.items.slice(0, 2).map((item) => (
-                          <div key={item.id} className="flex items-center gap-3 text-sm">
-                            <div className="w-8 h-8 bg-gray-200 rounded flex items-center justify-center">
-                              {item.product.imageUrl ? (
-                                <img 
-                                  src={item.product.imageUrl} 
-                                  alt={item.product.name}
-                                  className="w-full h-full object-cover rounded"
-                                />
-                              ) : (
-                                <Package className="h-4 w-4 text-gray-500" />
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-gray-900 truncate">{item.product.name}</p>
-                              <p className="text-gray-600">Qty: {item.quantity} Ã— ${item.price}</p>
-                            </div>
-                          </div>
-                        ))}
-                        {order.items.length > 2 && (
-                          <p className="responsive-text text-gray-500">+{order.items.length - 2} more items</p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div>
-                      <h4 className="font-medium text-gray-900 mb-2">Shipping Address</h4>
-                      <div className="responsive-text text-gray-600">
-                        <div className="flex items-start gap-1 mb-1">
-                          <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                          <div>
-                            <p>{order.shippingAddress.firstName} {order.shippingAddress.lastName}</p>
-                            <p>{order.shippingAddress.address1}</p>
-                            <p>{order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.postalCode}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Fulfillment Info */}
-                  {order.fulfillment.trackingNumber && (
-                    <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                      <div className="flex items-center gap-2 text-sm">
-                        <Truck className="h-4 w-4 text-blue-600" />
-                        <span className="font-medium text-blue-900">Tracking:</span>
-                        <span className="text-blue-700">{order.fulfillment.trackingNumber}</span>
-                        {order.fulfillment.carrier && (
-                          <>
-                            <span className="text-blue-600">â€¢</span>
-                            <span className="text-blue-700">{order.fulfillment.carrier}</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-
-      {/* Order Details Modal */}
-      {selectedOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h2 className="responsive-subheading text-gray-900">Order Details</h2>
                 <button
-                  onClick={() => setSelectedOrder(null)}
-                  className="text-gray-400 hover:text-gray-600"
+                  onClick={() => setViewMode('kanban')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${viewMode === 'kanban' ? 'bg-[#5B6E02] text-white shadow-md' : 'text-gray-600 hover:text-[#5B6E02] hover:bg-gray-100'}`}
+                  title="Kanban board view"
                 >
-                  <span className="sr-only">Close</span>
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            <div className="p-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Order Info */}
-                <div>
-                  <h3 className="responsive-subheading text-gray-900 mb-4">Order Information</h3>
-                  <div className="space-y-3">
-                    <div>
-                      <span className="responsive-text font-medium text-gray-600">Order Number:</span>
-                      <p className="text-gray-900">{selectedOrder.orderNumber}</p>
-                    </div>
-                    <div>
-                      <span className="responsive-text font-medium text-gray-600">Status:</span>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(selectedOrder.fulfillment.status)}`}>
-                          <div className="flex items-center gap-1">
-                            {getStatusIcon(selectedOrder.fulfillment.status)}
-                            {selectedOrder.fulfillment.status.replace('_', ' ')}
-                          </div>
-                        </span>
-                      </div>
-                    </div>
-                    <div>
-                      <span className="responsive-text font-medium text-gray-600">Order Date:</span>
-                      <p className="text-gray-900">{new Date(selectedOrder.createdAt).toLocaleString()}</p>
-                    </div>
-                    <div>
-                      <span className="responsive-text font-medium text-gray-600">Subtotal:</span>
-                      <p className="text-gray-900">${selectedOrder.subtotal.toFixed(2)}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Customer Info */}
-                <div>
-                  <h3 className="responsive-subheading text-gray-900 mb-4">Customer Information</h3>
-                  <div className="space-y-3">
-                    <div>
-                      <span className="responsive-text font-medium text-gray-600">Name:</span>
-                      <p className="text-gray-900">{selectedOrder.customer.name}</p>
-                    </div>
-                    <div>
-                      <span className="responsive-text font-medium text-gray-600">Email:</span>
-                      <div className="flex items-center gap-2">
-                        <Mail className="h-4 w-4 text-gray-400" />
-                        <p className="text-gray-900">{selectedOrder.customer.email}</p>
-                      </div>
-                    </div>
-                    {selectedOrder.customer.phone && (
-                      <div>
-                        <span className="responsive-text font-medium text-gray-600">Phone:</span>
-                        <div className="flex items-center gap-2">
-                          <Phone className="h-4 w-4 text-gray-400" />
-                          <p className="text-gray-900">{selectedOrder.customer.phone}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Order Items */}
-              <div className="mt-8">
-                <h3 className="responsive-subheading text-gray-900 mb-4">Order Items</h3>
-                <div className="space-y-3">
-                  {selectedOrder.items.map((item) => (
-                    <div key={item.id} className="flex items-center gap-4 p-3 border border-gray-200 rounded-lg">
-                      <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center flex-shrink-0">
-                        {item.product.imageUrl ? (
-                          <img 
-                            src={item.product.imageUrl} 
-                            alt={item.product.name}
-                            className="w-full h-full object-cover rounded"
-                          />
-                        ) : (
-                          <Package className="h-6 w-6 text-gray-500" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-gray-900">{item.product.name}</h4>
-                        <p className="responsive-text text-gray-600">Quantity: {item.quantity}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium text-gray-900">${item.price.toFixed(2)} each</p>
-                        <p className="responsive-text text-gray-600">Total: ${item.total.toFixed(2)}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Shipping Address */}
-              <div className="mt-8">
-                <h3 className="responsive-subheading text-gray-900 mb-4">Shipping Address</h3>
-                <div className="p-4 border border-gray-200 rounded-lg">
-                  <div className="flex items-start gap-2">
-                    <MapPin className="h-5 w-5 text-gray-400 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p className="font-medium text-gray-900">
-                        {selectedOrder.shippingAddress.firstName} {selectedOrder.shippingAddress.lastName}
-                      </p>
-                      <p className="text-gray-600">{selectedOrder.shippingAddress.address1}</p>
-                      <p className="text-gray-600">
-                        {selectedOrder.shippingAddress.city}, {selectedOrder.shippingAddress.state} {selectedOrder.shippingAddress.postalCode}
-                      </p>
-                      {selectedOrder.shippingAddress.country && (
-                        <p className="text-gray-600">{selectedOrder.shippingAddress.country}</p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Fulfillment Details */}
-              <div className="mt-8">
-                <h3 className="responsive-subheading text-gray-900 mb-4">Fulfillment Details</h3>
-                <div className="p-4 border border-gray-200 rounded-lg">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <span className="responsive-text font-medium text-gray-600">Status:</span>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(selectedOrder.fulfillment.status)}`}>
-                          <div className="flex items-center gap-1">
-                            {getStatusIcon(selectedOrder.fulfillment.status)}
-                            {selectedOrder.fulfillment.status.replace('_', ' ')}
-                          </div>
-                        </span>
-                      </div>
-                    </div>
-                    <div>
-                      <span className="responsive-text font-medium text-gray-600">Type:</span>
-                      <p className="text-gray-900">{selectedOrder.fulfillment.type}</p>
-                    </div>
-                    {selectedOrder.fulfillment.trackingNumber && (
-                      <div>
-                        <span className="responsive-text font-medium text-gray-600">Tracking Number:</span>
-                        <p className="text-gray-900">{selectedOrder.fulfillment.trackingNumber}</p>
-                      </div>
-                    )}
-                    {selectedOrder.fulfillment.carrier && (
-                      <div>
-                        <span className="responsive-text font-medium text-gray-600">Carrier:</span>
-                        <p className="text-gray-900">{selectedOrder.fulfillment.carrier}</p>
-                      </div>
-                    )}
-                    {selectedOrder.fulfillment.estimatedDelivery && (
-                      <div>
-                        <span className="responsive-text font-medium text-gray-600">Estimated Delivery:</span>
-                        <p className="text-gray-900">
-                          {new Date(selectedOrder.fulfillment.estimatedDelivery).toLocaleDateString()}
-                        </p>
-                      </div>
-                    )}
-                    {selectedOrder.fulfillment.actualDelivery && (
-                      <div>
-                        <span className="responsive-text font-medium text-gray-600">Actual Delivery:</span>
-                        <p className="text-gray-900">
-                          {new Date(selectedOrder.fulfillment.actualDelivery).toLocaleDateString()}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                  {selectedOrder.fulfillment.notes && (
-                    <div className="mt-4">
-                      <span className="responsive-text font-medium text-gray-600">Notes:</span>
-                      <p className="text-gray-900 mt-1">{selectedOrder.fulfillment.notes}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="p-6 border-t border-gray-200 bg-gray-50">
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => setSelectedOrder(null)}
-                  className="responsive-button text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
-                >
-                  Close
+                  <BarChart3 className="h-4 w-4 inline mr-1" />
+                  Board
                 </button>
                 <button
-                  onClick={() => handleUpdateFulfillment(selectedOrder)}
-                  className="responsive-button bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  onClick={() => setViewMode('analytics')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${viewMode === 'analytics' ? 'bg-[#5B6E02] text-white shadow-md' : 'text-gray-600 hover:text-[#5B6E02] hover:bg-gray-100'}`}
+                  title="Analytics view"
                 >
-                  Update Status
+                  <Package className="h-4 w-4 inline mr-1" />
+                  Analytics
+                </button>
+              </div>
+
+              {/* Sort Controls */}
+              <div className="flex items-center space-x-2">
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as any)}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  title="Sort by field"
+                >
+                  <option value="createdAt">Created Date</option>
+                  <option value="expectedDeliveryDate">Delivery Date</option>
+                  <option value="totalAmount">Total Amount</option>
+                  <option value="status">Status</option>
+                </select>
+                <button
+                  onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                  className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  {sortOrder === 'asc' ? '↑' : '↓'}
                 </button>
               </div>
             </div>
           </div>
+        </div>
+
+        {/* View Mode Content */}
+        {viewMode === 'tracker' ? (
+          <OrderTracker
+            orders={filteredOrders}
+            onOrderClick={handleOrderClick}
+            onOrderEdit={handleOrderEdit}
+            onOrderDuplicate={handleOrderDuplicate}
+            onOrderPrint={(order) => handlePrintSelectedLabels([order.id])}
+            onStatusUpdate={handleStatusUpdate}
+          />
+        ) : viewMode === 'kanban' ? (
+          <OrderKanbanBoard
+            orders={filteredOrders}
+            onOrderClick={handleOrderClick}
+            onStatusUpdate={handleStatusUpdate}
+            onOrderEdit={handleOrderEdit}
+            onOrderDelete={handleOrderDelete}
+          />
+        ) : viewMode === 'analytics' ? (
+          <OrderAnalytics
+            orders={orders}
+            timeRange={timeRange}
+            onTimeRangeChange={setTimeRange}
+          />
+        ) : (
+          /* Orders List */
+          <div className="bg-[#F7F2EC] rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200 border border-gray-200 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-medium text-gray-900">
+                Orders ({filteredOrders.length})
+              </h3>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={selectedOrders.length === filteredOrders.length && filteredOrders.length > 0}
+                  onChange={handleSelectAll}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  title="Select all orders"
+                />
+                <span className="text-sm text-gray-600">Select All</span>
+              </div>
+            </div>
+              </div>
+
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <input type="checkbox" className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" title="Select all orders" />
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Order #
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Customer
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Priority
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Total
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Expected Delivery
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Assigned To
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredOrders.map((order) => {
+                  const StatusIcon = statusConfig[order.status].icon;
+                  return (
+                    <tr key={order.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                                 <input
+                          type="checkbox"
+                          checked={selectedOrders.includes(order.id)}
+                          onChange={() => handleSelectOrder(order.id)}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          title={`Select order ${order.orderNumber}`}
+                        />
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{order.orderNumber}</div>
+                        <div className="text-sm text-gray-500">{formatDate(order.createdAt)}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-medium text-gray-900">{order.customerName}</div>
+                        <div className="text-sm text-gray-500">{order.customerEmail}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusConfig[order.status].color}`}>
+                          <StatusIcon className="h-3 w-3 mr-1" />
+                          {statusConfig[order.status].label}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${priorityConfig[order.priority].color}`}>
+                          {priorityConfig[order.priority].label}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {formatCurrency(order.totalAmount)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {formatDate(order.expectedDeliveryDate)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {order.assignedTo || 'Unassigned'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex items-center space-x-2">
+                          <button 
+                            onClick={() => handleOrderClick(order)}
+                            className="text-blue-600 hover:text-blue-900"
+                            title="View Details"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                          <button 
+                            onClick={() => handleOrderEdit(order)}
+                            className="text-gray-600 hover:text-gray-900"
+                            title="Edit Order"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </button>
+                          <button 
+                            onClick={() => handlePrintLabels()}
+                            className="text-gray-600 hover:text-gray-900"
+                            title="Print Labels"
+                          >
+                            <Printer className="h-4 w-4" />
+                          </button>
+                          <button className="text-gray-600 hover:text-gray-900" title="More options">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </button>
+              </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+            </div>
+
+          {/* Bulk Actions */}
+          {selectedOrders.length > 0 && (
+            <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-[#F7F2EC] rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200 border border-gray-200 p-4">
+              <div className="flex items-center space-x-4">
+                <span className="text-sm text-gray-600">
+                  {selectedOrders.length} order{selectedOrders.length > 1 ? 's' : ''} selected
+                </span>
+                <div className="flex items-center space-x-2">
+                <button
+                    onClick={handlePrintOrderList}
+                    className="px-3 py-1 bg-indigo-600 text-white text-sm rounded hover:bg-indigo-700"
+                >
+                    Print Order List
+                  </button>
+                  <button className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700">
+                    Update Status
+                </button>
+                  <button className="px-3 py-1 bg-gray-600 text-white text-sm rounded hover:bg-gray-700">
+                    Export
+                </button>
+                </div>
+              </div>
+            </div>
+          )}
+
         </div>
       )}
 
-      {/* Update Fulfillment Modal */}
-      {isUpdateModalOpen && selectedOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-md w-full">
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="responsive-subheading text-gray-900">Update Fulfillment Status</h2>
-              <p className="text-gray-600 mt-1">Order: {selectedOrder.orderNumber}</p>
-            </div>
 
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block responsive-text font-medium text-gray-700 mb-2">
-                  Status
-                </label>
-                                 <select
-                   value={updateData.status}
-                   onChange={(e) => setUpdateData({ ...updateData, status: e.target.value as any })}
-                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                   title="Select fulfillment status"
-                 >
-                  <option value="PENDING">Pending</option>
-                  <option value="IN_PROGRESS">In Progress</option>
-                  <option value="COMPLETED">Completed</option>
-                  <option value="CANCELLED">Cancelled</option>
-                  <option value="FAILED">Failed</option>
-                </select>
+        {/* Modals */}
+        {selectedOrder && (
+          <OrderDetailModal
+            order={selectedOrder}
+            onClose={() => setSelectedOrder(null)}
+            onSave={handleOrderSave}
+            onStatusUpdate={handleStatusUpdate}
+            onAssign={handleAssign}
+          />
+        )}
+
+        {/* {showLabelPrinting && (
+          <LabelPrinting
+            orders={orders.filter(order => selectedOrders.includes(order.id))}
+            onClose={() => setShowLabelPrinting(false)}
+          />
+        )} */}
+
+        {/* Credits & Discounts Modal */}
+        {showCreditsModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-medium text-gray-900">Customer Credits & Discounts</h3>
+                  <button
+                    onClick={() => setShowCreditsModal(false)}
+                    className="p-2 text-gray-400 hover:text-gray-600"
+                    title="Close credits modal"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
               </div>
+              <div className="p-6 overflow-y-auto max-h-[70vh]">
+                <div className="space-y-6">
+                  {/* Customer Selection */}
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 mb-2">Select Customer</label>
+                    <select className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" title="Select customer">
+                      <option value="">Choose a customer...</option>
+                      <option value="cust-1">John Smith (john.smith@email.com)</option>
+                      <option value="cust-2">Sarah Johnson (sarah.j@email.com)</option>
+                      <option value="cust-3">Mike Wilson (mike.wilson@email.com)</option>
+                      <option value="cust-4">Emily Davis (emily.davis@email.com)</option>
+                      <option value="cust-5">David Brown (david.brown@email.com)</option>
+                    </select>
+                  </div>
 
-              <div>
-                <label className="block responsive-text font-medium text-gray-700 mb-2">
-                  Tracking Number
-                </label>
-                <input
-                  type="text"
-                  value={updateData.trackingNumber || ''}
-                  onChange={(e) => setUpdateData({ ...updateData, trackingNumber: e.target.value })}
-                  placeholder="Enter tracking number"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                  {/* Current Credit Balance */}
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="text-md font-medium text-gray-900 mb-2">Current Credit Balance</h4>
+                    <p className="text-2xl font-bold text-green-600">$0.00</p>
+                    <p className="text-sm text-gray-600">Available for this customer</p>
+                  </div>
+
+                  {/* Add Credits */}
+                  <div>
+                    <h4 className="text-md font-medium text-gray-900 mb-4">Add Credits</h4>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Amount</label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="0.00"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Reason</label>
+                        <select className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" title="Select credit reason">
+                          <option value="">Select reason...</option>
+                          <option value="refund">Refund</option>
+                          <option value="compensation">Compensation</option>
+                          <option value="promotion">Promotion</option>
+                          <option value="loyalty">Loyalty Reward</option>
+                          <option value="other">Other</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Notes</label>
+                        <textarea
+                          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                          rows={3}
+                          placeholder="Optional notes about this credit..."
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Discount Codes */}
+                  <div>
+                    <h4 className="text-md font-medium text-gray-900 mb-4">Create Discount Code</h4>
+                    <div className="space-y-3">
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Code</label>
+                        <input
+                          type="text"
+                          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Enter discount code"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">Type</label>
+                          <select className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" title="Select discount type">
+                            <option value="percentage">Percentage</option>
+                            <option value="fixed">Fixed Amount</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">Value</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="0.00"
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Expiration Date</label>
+                        <input
+                          type="date"
+                          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                          title="Select expiration date"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-
-              <div>
-                <label className="block responsive-text font-medium text-gray-700 mb-2">
-                  Carrier
-                </label>
-                <input
-                  type="text"
-                  value={updateData.carrier || ''}
-                  onChange={(e) => setUpdateData({ ...updateData, carrier: e.target.value })}
-                  placeholder="e.g., UPS, FedEx, USPS"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label className="block responsive-text font-medium text-gray-700 mb-2">
-                  Estimated Delivery
-                </label>
-                                 <input
-                   type="datetime-local"
-                   value={updateData.estimatedDelivery || ''}
-                   onChange={(e) => setUpdateData({ ...updateData, estimatedDelivery: e.target.value })}
-                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                   title="Select estimated delivery date and time"
-                 />
-              </div>
-
-              <div>
-                <label className="block responsive-text font-medium text-gray-700 mb-2">
-                  Notes
-                </label>
-                <textarea
-                  value={updateData.notes || ''}
-                  onChange={(e) => setUpdateData({ ...updateData, notes: e.target.value })}
-                  placeholder="Add any additional notes..."
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-            </div>
-
-            <div className="p-6 border-t border-gray-200 bg-gray-50">
-              <div className="flex justify-end gap-3">
+              <div className="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
                 <button
-                  onClick={() => setIsUpdateModalOpen(false)}
-                  className="responsive-button text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                  onClick={() => setShowCreditsModal(false)}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
                 >
                   Cancel
                 </button>
                 <button
-                  onClick={handleSubmitUpdate}
-                  disabled={updateFulfillmentMutation.isPending}
-                  className="responsive-button bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={() => {
+                    setShowCreditsModal(false);
+                    // In a real app, this would apply credits/discounts
+                  }}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
                 >
-                  {updateFulfillmentMutation.isPending ? 'Updating...' : 'Update Status'}
+                  Apply Credits/Discounts
                 </button>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Label Print Modal */}
+        <SimpleLabelPrintModal
+          isOpen={showLabelPrinting}
+          onClose={() => setShowLabelPrinting(false)}
+          orders={orders.filter(order => selectedOrdersForLabels.includes(order.id))}
+        />
+
+        {/* Label Template Manager Modal */}
+        {/* <LabelTemplateManager
+          isOpen={showLabelTemplateManager}
+          onClose={() => setShowLabelTemplateManager(false)}
+          onSelectTemplate={(template) => {
+            setShowLabelTemplateManager(false);
+            // Could open print modal with selected template
+          }}
+        /> */}
+
+        {/* Order List Print Modal */}
+        <OrderListPrintModal
+          isOpen={showOrderListPrinting}
+          onClose={() => setShowOrderListPrinting(false)}
+          orders={orders}
+          selectedOrderIds={selectedOrders}
+        />
+      </div>
+    </div>
     </VendorDashboardLayout>
   );
 };

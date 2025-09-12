@@ -137,11 +137,198 @@ const fetchCustomers = async (params: any = {}) => {
   return response.json();
 };
 
-const fetchOpportunities = async (params: any = {}) => {
-  const queryParams = new URLSearchParams(params);
-  const response = await fetch(`/api/crm/opportunities?${queryParams}`);
-  if (!response.ok) throw new Error('Failed to fetch opportunities');
-  return response.json();
+// Dummy opportunities data
+const dummyOpportunities = [
+  {
+    id: 'opp-1',
+    customerId: 'cust-1',
+    title: 'Website Redesign Project',
+    description: 'Complete website redesign for local restaurant chain',
+    stage: 'proposal' as const,
+    value: 25000,
+    probability: 75,
+    expectedCloseDate: '2025-02-15',
+    actualCloseDate: undefined,
+    source: 'website',
+    assignedTo: 'user1',
+    tags: ['web-design', 'restaurant', 'high-value'],
+    customFields: {},
+    status: 'active' as const,
+    createdAt: '2025-01-15T10:00:00Z',
+    updatedAt: '2025-01-20T14:30:00Z',
+    lastActivityAt: '2025-01-20T14:30:00Z',
+    customer: {
+      id: 'cust-1',
+      firstName: 'Sarah',
+      lastName: 'Johnson',
+      email: 'sarah.johnson@restaurantgroup.com',
+      company: 'Johnson Restaurant Group'
+    }
+  },
+  {
+    id: 'opp-2',
+    customerId: 'cust-2',
+    title: 'Mobile App Development',
+    description: 'Custom mobile app for food delivery service',
+    stage: 'qualification' as const,
+    value: 45000,
+    probability: 60,
+    expectedCloseDate: '2025-03-01',
+    actualCloseDate: undefined,
+    source: 'referral',
+    assignedTo: 'user2',
+    tags: ['mobile-app', 'food-delivery', 'enterprise'],
+    customFields: {},
+    status: 'active' as const,
+    createdAt: '2025-01-10T09:15:00Z',
+    updatedAt: '2025-01-18T11:45:00Z',
+    lastActivityAt: '2025-01-18T11:45:00Z',
+    customer: {
+      id: 'cust-2',
+      firstName: 'Michael',
+      lastName: 'Chen',
+      email: 'michael.chen@deliveryapp.com',
+      company: 'QuickBite Delivery'
+    }
+  },
+  {
+    id: 'opp-3',
+    customerId: 'cust-3',
+    title: 'E-commerce Platform',
+    description: 'Full e-commerce solution for boutique clothing store',
+    stage: 'lead' as const,
+    value: 18000,
+    probability: 40,
+    expectedCloseDate: '2025-02-28',
+    actualCloseDate: undefined,
+    source: 'cold_call',
+    assignedTo: 'user1',
+    tags: ['e-commerce', 'retail', 'boutique'],
+    customFields: {},
+    status: 'active' as const,
+    createdAt: '2025-01-22T16:20:00Z',
+    updatedAt: '2025-01-22T16:20:00Z',
+    lastActivityAt: '2025-01-22T16:20:00Z',
+    customer: {
+      id: 'cust-3',
+      firstName: 'Emma',
+      lastName: 'Rodriguez',
+      email: 'emma@boutiquestyle.com',
+      company: 'Boutique Style Co.'
+    }
+  },
+  {
+    id: 'opp-4',
+    customerId: 'cust-4',
+    title: 'CRM System Integration',
+    description: 'Integration of existing CRM with new marketing automation tools',
+    stage: 'negotiation' as const,
+    value: 32000,
+    probability: 85,
+    expectedCloseDate: '2025-02-10',
+    actualCloseDate: undefined,
+    source: 'website',
+    assignedTo: 'user2',
+    tags: ['crm', 'integration', 'marketing'],
+    customFields: {},
+    status: 'active' as const,
+    createdAt: '2025-01-05T13:30:00Z',
+    updatedAt: '2025-01-19T09:15:00Z',
+    lastActivityAt: '2025-01-19T09:15:00Z',
+    customer: {
+      id: 'cust-4',
+      firstName: 'David',
+      lastName: 'Thompson',
+      email: 'david.thompson@techcorp.com',
+      company: 'TechCorp Solutions'
+    }
+  },
+  {
+    id: 'opp-5',
+    customerId: 'cust-5',
+    title: 'Data Analytics Dashboard',
+    description: 'Custom analytics dashboard for business intelligence',
+    stage: 'closed_won' as const,
+    value: 22000,
+    probability: 100,
+    expectedCloseDate: '2025-01-15',
+    actualCloseDate: '2025-01-15',
+    source: 'referral',
+    assignedTo: 'user1',
+    tags: ['analytics', 'dashboard', 'bi'],
+    customFields: {},
+    status: 'active' as const,
+    createdAt: '2024-12-20T10:00:00Z',
+    updatedAt: '2025-01-15T16:00:00Z',
+    lastActivityAt: '2025-01-15T16:00:00Z',
+    customer: {
+      id: 'cust-5',
+      firstName: 'Lisa',
+      lastName: 'Wang',
+      email: 'lisa.wang@datainsights.com',
+      company: 'Data Insights Inc.'
+    }
+  },
+  {
+    id: 'opp-6',
+    customerId: 'cust-6',
+    title: 'Cloud Migration Project',
+    description: 'Migration of legacy systems to cloud infrastructure',
+    stage: 'closed_lost' as const,
+    value: 55000,
+    probability: 0,
+    expectedCloseDate: '2025-01-30',
+    actualCloseDate: '2025-01-25',
+    source: 'cold_call',
+    assignedTo: 'user2',
+    tags: ['cloud', 'migration', 'enterprise'],
+    customFields: {},
+    status: 'cancelled' as const,
+    createdAt: '2024-12-10T14:00:00Z',
+    updatedAt: '2025-01-25T10:30:00Z',
+    lastActivityAt: '2025-01-25T10:30:00Z',
+    customer: {
+      id: 'cust-6',
+      firstName: 'Robert',
+      lastName: 'Anderson',
+      email: 'robert.anderson@bigcorp.com',
+      company: 'BigCorp Industries'
+    }
+  }
+];
+
+const fetchOpportunities = async (params: any = {}, localOpps: any[] = []) => {
+  // Simulate API delay
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  // Combine dummy data with local opportunities
+  const allOpportunities = [...dummyOpportunities, ...localOpps];
+  
+  // Filter opportunities based on params
+  let filteredOpportunities = [...allOpportunities];
+  
+  if (params.assignedTo) {
+    filteredOpportunities = filteredOpportunities.filter(opp => opp.assignedTo === params.assignedTo);
+  }
+  
+  if (params.source) {
+    filteredOpportunities = filteredOpportunities.filter(opp => opp.source === params.source);
+  }
+  
+  if (params.status) {
+    filteredOpportunities = filteredOpportunities.filter(opp => opp.status === params.status);
+  }
+  
+  return {
+    opportunities: filteredOpportunities,
+    total: filteredOpportunities.length,
+    summary: {
+      totalValue: filteredOpportunities.reduce((sum, opp) => sum + opp.value, 0),
+      weightedValue: filteredOpportunities.reduce((sum, opp) => sum + (opp.value * opp.probability / 100), 0),
+      winRate: filteredOpportunities.filter(opp => opp.stage === 'closed_won').length / 
+               Math.max(filteredOpportunities.filter(opp => opp.stage === 'closed_won' || opp.stage === 'closed_lost').length, 1) * 100
+    }
+  };
 };
 
 const fetchTasks = async (params: any = {}) => {
@@ -171,7 +358,7 @@ const StatCard = ({ title, value, change, icon: Icon, color = 'blue' }: {
   icon: React.ComponentType<any>;
   color?: string;
 }) => (
-  <div className="bg-white rounded-lg shadow-sm border p-6">
+  <div className="rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow duration-200" style={{ backgroundColor: '#F7F2EC' }}>
     <div className="flex items-center justify-between">
       <div>
         <p className="text-sm font-medium text-gray-600">{title}</p>
@@ -190,7 +377,7 @@ const StatCard = ({ title, value, change, icon: Icon, color = 'blue' }: {
 );
 
 const CustomerCard = ({ customer }: { customer: Customer }) => (
-  <div className="bg-white rounded-lg shadow-sm border p-4 hover:shadow-md transition-shadow">
+  <div className="rounded-lg shadow-lg p-4 hover:shadow-xl transition-shadow duration-200" style={{ backgroundColor: '#F7F2EC' }}>
     <div className="flex items-center justify-between mb-3">
       <div className="flex items-center space-x-3">
         <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
@@ -250,7 +437,7 @@ const CustomerCard = ({ customer }: { customer: Customer }) => (
 );
 
 const OpportunityCard = ({ opportunity }: { opportunity: Opportunity }) => (
-  <div className="bg-white rounded-lg shadow-sm border p-4 hover:shadow-md transition-shadow">
+  <div className="rounded-lg shadow-lg p-4 hover:shadow-xl transition-shadow duration-200" style={{ backgroundColor: '#F7F2EC' }}>
     <div className="flex items-center justify-between mb-3">
       <h3 className="font-semibold text-gray-900">{opportunity.title}</h3>
       <span className={`px-2 py-1 text-xs rounded-full ${
@@ -296,7 +483,7 @@ const OpportunityCard = ({ opportunity }: { opportunity: Opportunity }) => (
 );
 
 const TaskCard = ({ task }: { task: Task }) => (
-  <div className="bg-white rounded-lg shadow-sm border p-4 hover:shadow-md transition-shadow">
+  <div className="rounded-lg shadow-lg p-4 hover:shadow-xl transition-shadow duration-200" style={{ backgroundColor: '#F7F2EC' }}>
     <div className="flex items-center justify-between mb-2">
       <h3 className="font-semibold text-gray-900">{task.title}</h3>
       <div className="flex items-center space-x-2">
@@ -345,6 +532,7 @@ const VendorCRMPage = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [selectedSegment, setSelectedSegment] = useState<any>(null);
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | '1y' | 'all'>('90d');
+  const [localOpportunities, setLocalOpportunities] = useState<any[]>([]);
 
   // Data fetching
   const { data: dashboardData, isLoading: dashboardLoading } = useQuery({
@@ -358,8 +546,8 @@ const VendorCRMPage = () => {
   });
 
   const { data: opportunitiesData, isLoading: opportunitiesLoading } = useQuery({
-    queryKey: ['crm-opportunities', filters],
-    queryFn: () => fetchOpportunities(filters),
+    queryKey: ['crm-opportunities', filters, localOpportunities],
+    queryFn: () => fetchOpportunities(filters, localOpportunities),
   });
 
   const { data: tasksData, isLoading: tasksLoading } = useQuery({
@@ -404,7 +592,7 @@ const VendorCRMPage = () => {
         />
 
         {/* Navigation Tabs */}
-        <div className="bg-white border border-gray-200 rounded-lg">
+        <div className="border border-gray-200 rounded-lg shadow-lg" style={{ backgroundColor: '#F7F2EC' }}>
           <nav className="flex space-x-8 overflow-x-auto px-6">
             {tabs.map((tab) => {
               const Icon = tab.icon;
@@ -460,7 +648,7 @@ const VendorCRMPage = () => {
           </div>
 
             {/* Recent Activities */}
-            <div className="bg-white rounded-lg shadow-sm border">
+            <div className="rounded-lg shadow-lg" style={{ backgroundColor: '#F7F2EC' }}>
               <div className="px-6 py-4 border-b">
                 <h2 className="text-lg font-semibold text-gray-900">Recent Activities</h2>
               </div>
@@ -485,7 +673,7 @@ const VendorCRMPage = () => {
           </div>
 
             {/* Upcoming Tasks */}
-            <div className="bg-white rounded-lg shadow-sm border">
+            <div className="rounded-lg shadow-lg" style={{ backgroundColor: '#F7F2EC' }}>
               <div className="px-6 py-4 border-b">
                 <h2 className="text-lg font-semibold text-gray-900">Upcoming Tasks</h2>
               </div>
@@ -503,7 +691,7 @@ const VendorCRMPage = () => {
         {activeTab === 'customers' && (
           <div className="space-y-6">
             {/* Search and Filters */}
-            <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow duration-200" style={{ backgroundColor: '#F7F2EC' }}>
               <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
               <div className="relative">
@@ -559,15 +747,28 @@ const VendorCRMPage = () => {
             opportunities={opportunitiesData?.opportunities || []}
             onOpportunityCreate={(opportunity) => {
               // Create new opportunity
-              console.log('Creating opportunity:', opportunity);
+              const newOpportunity = {
+                ...opportunity,
+                id: `opp-${Date.now()}`,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                lastActivityAt: new Date().toISOString(),
+              };
+              setLocalOpportunities(prev => [...prev, newOpportunity]);
             }}
             onOpportunityUpdate={(opportunity) => {
               // Update opportunity
-              console.log('Updating opportunity:', opportunity);
+              setLocalOpportunities(prev => 
+                prev.map(opp => 
+                  opp.id === opportunity.id 
+                    ? { ...opportunity, updatedAt: new Date().toISOString(), lastActivityAt: new Date().toISOString() }
+                    : opp
+                )
+              );
             }}
             onOpportunityDelete={(opportunityId) => {
               // Delete opportunity
-              console.log('Deleting opportunity:', opportunityId);
+              setLocalOpportunities(prev => prev.filter(opp => opp.id !== opportunityId));
             }}
           />
         )}
@@ -576,19 +777,19 @@ const VendorCRMPage = () => {
           <div className="space-y-6">
             {/* Task Stats */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="bg-white rounded-lg shadow-sm border p-4 text-center">
+              <div className="rounded-lg shadow-lg p-4 text-center" style={{ backgroundColor: '#F7F2EC' }}>
                 <p className="text-2xl font-bold text-blue-600">{tasksData?.tasks?.filter((t: Task) => t.status === 'pending').length || 0}</p>
                 <p className="text-sm text-gray-600">Pending</p>
               </div>
-              <div className="bg-white rounded-lg shadow-sm border p-4 text-center">
+              <div className="rounded-lg shadow-lg p-4 text-center" style={{ backgroundColor: '#F7F2EC' }}>
                 <p className="text-2xl font-bold text-orange-600">{tasksData?.tasks?.filter((t: Task) => t.status === 'in_progress').length || 0}</p>
                 <p className="text-sm text-gray-600">In Progress</p>
         </div>
-              <div className="bg-white rounded-lg shadow-sm border p-4 text-center">
+              <div className="rounded-lg shadow-lg p-4 text-center" style={{ backgroundColor: '#F7F2EC' }}>
                 <p className="text-2xl font-bold text-green-600">{tasksData?.tasks?.filter((t: Task) => t.status === 'completed').length || 0}</p>
                 <p className="text-sm text-gray-600">Completed</p>
       </div>
-              <div className="bg-white rounded-lg shadow-sm border p-4 text-center">
+              <div className="rounded-lg shadow-lg p-4 text-center" style={{ backgroundColor: '#F7F2EC' }}>
                 <p className="text-2xl font-bold text-red-600">{tasksData?.tasks?.filter((t: Task) => t.priority === 'urgent').length || 0}</p>
                 <p className="text-sm text-gray-600">Urgent</p>
               </div>
@@ -628,13 +829,30 @@ const VendorCRMPage = () => {
               {activeTab === 'pipeline' && (
                 <SalesPipeline
                   opportunities={opportunitiesData?.opportunities || []}
+                  onOpportunityCreate={(opportunity) => {
+                    // Create new opportunity
+                    const newOpportunity = {
+                      ...opportunity,
+                      id: `opp-${Date.now()}`,
+                      createdAt: new Date().toISOString(),
+                      updatedAt: new Date().toISOString(),
+                      lastActivityAt: new Date().toISOString(),
+                    };
+                    setLocalOpportunities(prev => [...prev, newOpportunity]);
+                  }}
                   onOpportunityUpdate={(opportunity) => {
                     // Update opportunity in local state
-                    console.log('Updated opportunity:', opportunity);
+                    setLocalOpportunities(prev => 
+                      prev.map(opp => 
+                        opp.id === opportunity.id 
+                          ? { ...opportunity, updatedAt: new Date().toISOString(), lastActivityAt: new Date().toISOString() }
+                          : opp
+                      )
+                    );
                   }}
                   onOpportunityDelete={(opportunityId) => {
                     // Delete opportunity from local state
-                    console.log('Deleted opportunity:', opportunityId);
+                    setLocalOpportunities(prev => prev.filter(opp => opp.id !== opportunityId));
                   }}
                 />
               )}
@@ -917,14 +1135,14 @@ const VendorCRMPage = () => {
 
             {/* Charts Placeholder */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="bg-white rounded-lg shadow-sm border p-6">
+              <div className="rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow duration-200" style={{ backgroundColor: '#F7F2EC' }}>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Revenue Trend</h3>
                 <div className="h-64 flex items-center justify-center text-gray-500">
                   <LineChart className="h-12 w-12" />
                   <span className="ml-2">Chart will be implemented</span>
                 </div>
               </div>
-              <div className="bg-white rounded-lg shadow-sm border p-6">
+              <div className="rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow duration-200" style={{ backgroundColor: '#F7F2EC' }}>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Customer Distribution</h3>
                 <div className="h-64 flex items-center justify-center text-gray-500">
                   <PieChart className="h-12 w-12" />

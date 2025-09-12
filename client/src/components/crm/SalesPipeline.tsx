@@ -67,12 +67,14 @@ interface PipelineStage {
 
 interface SalesPipelineProps {
   opportunities: Opportunity[];
+  onOpportunityCreate?: (opportunity: Opportunity) => void;
   onOpportunityUpdate: (opportunity: Opportunity) => void;
   onOpportunityDelete: (opportunityId: string) => void;
 }
 
 const SalesPipeline: React.FC<SalesPipelineProps> = ({ 
   opportunities, 
+  onOpportunityCreate,
   onOpportunityUpdate, 
   onOpportunityDelete 
 }) => {
@@ -80,6 +82,7 @@ const SalesPipeline: React.FC<SalesPipelineProps> = ({
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
   const [isCreatingOpportunity, setIsCreatingOpportunity] = useState(false);
   const [editingOpportunity, setEditingOpportunity] = useState<Opportunity | null>(null);
+  const [selectedStage, setSelectedStage] = useState<PipelineStage | null>(null);
   const [filters, setFilters] = useState({
     assignedTo: '',
     source: '',
@@ -186,7 +189,7 @@ const SalesPipeline: React.FC<SalesPipelineProps> = ({
         </div>
         <button
           onClick={() => setIsCreatingOpportunity(true)}
-          className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200"
         >
           <Plus className="h-4 w-4" />
           <span>Add Opportunity</span>
@@ -195,7 +198,7 @@ const SalesPipeline: React.FC<SalesPipelineProps> = ({
 
       {/* Pipeline Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
+        <div className="border border-gray-200 rounded-lg p-4 shadow-lg" style={{ backgroundColor: '#F7F2EC' }}>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Pipeline</p>
@@ -204,7 +207,7 @@ const SalesPipeline: React.FC<SalesPipelineProps> = ({
             <BarChart3 className="h-8 w-8 text-blue-600" />
           </div>
         </div>
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
+        <div className="border border-gray-200 rounded-lg p-4 shadow-lg" style={{ backgroundColor: '#F7F2EC' }}>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Weighted Value</p>
@@ -213,7 +216,7 @@ const SalesPipeline: React.FC<SalesPipelineProps> = ({
             <TrendingUp className="h-8 w-8 text-green-600" />
           </div>
         </div>
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
+        <div className="border border-gray-200 rounded-lg p-4 shadow-lg" style={{ backgroundColor: '#F7F2EC' }}>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Total Opportunities</p>
@@ -222,7 +225,7 @@ const SalesPipeline: React.FC<SalesPipelineProps> = ({
             <Target className="h-8 w-8 text-purple-600" />
           </div>
         </div>
-        <div className="bg-white border border-gray-200 rounded-lg p-4">
+        <div className="border border-gray-200 rounded-lg p-4 shadow-lg" style={{ backgroundColor: '#F7F2EC' }}>
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Win Rate</p>
@@ -234,7 +237,7 @@ const SalesPipeline: React.FC<SalesPipelineProps> = ({
       </div>
 
       {/* Filters */}
-      <div className="bg-white border border-gray-200 rounded-lg p-4">
+      <div className="border border-gray-200 rounded-lg p-4 shadow-lg" style={{ backgroundColor: '#F7F2EC' }}>
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
             <div className="relative">
@@ -284,7 +287,11 @@ const SalesPipeline: React.FC<SalesPipelineProps> = ({
       {/* Pipeline Stages */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         {stages.map((stage) => (
-          <div key={stage.id} className={`border-2 rounded-lg p-4 ${getStageColorClasses(stage.id)}`}>
+          <div 
+            key={stage.id} 
+            className={`border-2 rounded-lg p-4 cursor-pointer hover:shadow-lg transition-all duration-200 ${getStageColorClasses(stage.id)}`}
+            onClick={() => setSelectedStage(stage)}
+          >
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h3 className="font-semibold text-gray-900">{stage.name}</h3>
@@ -311,7 +318,7 @@ const SalesPipeline: React.FC<SalesPipelineProps> = ({
               {stage.opportunities.map((opportunity) => (
                 <div
                   key={opportunity.id}
-                  className="bg-white border border-gray-200 rounded-lg p-3 cursor-pointer hover:shadow-md transition-shadow"
+                  className="border border-gray-200 rounded-lg p-3 cursor-pointer shadow-lg hover:shadow-xl transition-shadow duration-200" style={{ backgroundColor: '#F7F2EC' }}
                   onClick={() => setSelectedOpportunity(opportunity)}
                 >
                   <div className="flex items-center justify-between mb-2">
@@ -323,6 +330,8 @@ const SalesPipeline: React.FC<SalesPipelineProps> = ({
                           setEditingOpportunity(opportunity);
                         }}
                         className="p-1 text-gray-400 hover:text-gray-600"
+                        title="Edit opportunity"
+                        aria-label="Edit opportunity"
                       >
                         <Edit className="h-3 w-3" />
                       </button>
@@ -332,6 +341,8 @@ const SalesPipeline: React.FC<SalesPipelineProps> = ({
                           onOpportunityDelete(opportunity.id);
                         }}
                         className="p-1 text-gray-400 hover:text-red-600"
+                        title="Delete opportunity"
+                        aria-label="Delete opportunity"
                       >
                         <Trash2 className="h-3 w-3" />
                       </button>
@@ -377,6 +388,8 @@ const SalesPipeline: React.FC<SalesPipelineProps> = ({
                             if (prevStage) moveOpportunity(opportunity.id, prevStage.id);
                           }}
                           className="p-1 text-gray-400 hover:text-gray-600"
+                          title="Move to previous stage"
+                          aria-label="Move to previous stage"
                         >
                           <ArrowLeft className="h-3 w-3" />
                         </button>
@@ -389,6 +402,8 @@ const SalesPipeline: React.FC<SalesPipelineProps> = ({
                             if (nextStage) moveOpportunity(opportunity.id, nextStage.id);
                           }}
                           className="p-1 text-gray-400 hover:text-gray-600"
+                          title="Move to next stage"
+                          aria-label="Move to next stage"
                         >
                           <ArrowRight className="h-3 w-3" />
                         </button>
@@ -405,13 +420,15 @@ const SalesPipeline: React.FC<SalesPipelineProps> = ({
       {/* Opportunity Detail Modal */}
       {selectedOpportunity && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" style={{ backgroundColor: '#F7F2EC' }}>
             <div className="p-6 border-b">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900">{selectedOpportunity.title}</h3>
                 <button
                   onClick={() => setSelectedOpportunity(null)}
                   className="p-1 text-gray-400 hover:text-gray-600"
+                  title="Close opportunity details"
+                  aria-label="Close opportunity details"
                 >
                   <XCircle className="h-5 w-5" />
                 </button>
@@ -521,11 +538,406 @@ const SalesPipeline: React.FC<SalesPipelineProps> = ({
           </div>
         </div>
       )}
+
+      {/* Stage Detail Modal */}
+      {selectedStage && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto" style={{ backgroundColor: '#F7F2EC' }}>
+            <div className="p-6 border-b">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-semibold text-gray-900">{selectedStage.name} Stage</h3>
+                  <p className="text-gray-600">{selectedStage.description}</p>
+                </div>
+                <button
+                  onClick={() => setSelectedStage(null)}
+                  className="p-1 text-gray-400 hover:text-gray-600"
+                  title="Close stage details"
+                  aria-label="Close stage details"
+                >
+                  <XCircle className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              {/* Stage Statistics */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="border border-gray-200 rounded-lg p-4 shadow-lg" style={{ backgroundColor: '#F7F2EC' }}>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-gray-900">{selectedStage.count}</p>
+                    <p className="text-sm text-gray-600">Total Opportunities</p>
+                  </div>
+                </div>
+                <div className="border border-gray-200 rounded-lg p-4 shadow-lg" style={{ backgroundColor: '#F7F2EC' }}>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-gray-900">${selectedStage.totalValue.toLocaleString()}</p>
+                    <p className="text-sm text-gray-600">Total Value</p>
+                  </div>
+                </div>
+                <div className="border border-gray-200 rounded-lg p-4 shadow-lg" style={{ backgroundColor: '#F7F2EC' }}>
+                  <div className="text-center">
+                    <p className="text-2xl font-bold text-gray-900">${selectedStage.weightedValue.toLocaleString()}</p>
+                    <p className="text-sm text-gray-600">Weighted Value</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Opportunities List */}
+              <div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-4">Opportunities in this Stage</h4>
+                {selectedStage.opportunities.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-500">No opportunities in this stage</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {selectedStage.opportunities.map((opportunity) => (
+                      <div
+                        key={opportunity.id}
+                        className="border border-gray-200 rounded-lg p-4 shadow-lg hover:shadow-xl transition-shadow duration-200 cursor-pointer"
+                        style={{ backgroundColor: '#F7F2EC' }}
+                        onClick={() => {
+                          setSelectedOpportunity(opportunity);
+                          setSelectedStage(null);
+                        }}
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex-1">
+                            <h5 className="font-semibold text-gray-900">{opportunity.title}</h5>
+                            {opportunity.customer && (
+                              <p className="text-sm text-gray-600">
+                                {opportunity.customer.firstName} {opportunity.customer.lastName}
+                                {opportunity.customer.company && ` • ${opportunity.customer.company}`}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <span className={`px-2 py-1 text-xs rounded-full ${getProbabilityColor(opportunity.probability)}`}>
+                              {opportunity.probability}%
+                            </span>
+                            <span className={`px-2 py-1 text-xs rounded-full ${
+                              opportunity.status === 'active' ? 'bg-green-100 text-green-800' :
+                              opportunity.status === 'on_hold' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-red-100 text-red-800'
+                            }`}>
+                              {opportunity.status}
+                            </span>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                          <div>
+                            <span className="text-gray-600">Value:</span>
+                            <p className="font-semibold">${opportunity.value.toLocaleString()}</p>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Close Date:</span>
+                            <p className="font-semibold">
+                              {new Date(opportunity.expectedCloseDate).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Source:</span>
+                            <p className="font-semibold">{opportunity.source || 'N/A'}</p>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Assigned To:</span>
+                            <p className="font-semibold">{opportunity.assignedTo || 'Unassigned'}</p>
+                          </div>
+                        </div>
+
+                        {opportunity.description && (
+                          <div className="mt-3 pt-3 border-t border-gray-200">
+                            <p className="text-sm text-gray-700 line-clamp-2">{opportunity.description}</p>
+                          </div>
+                        )}
+
+                        <div className="mt-3 flex justify-end space-x-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingOpportunity(opportunity);
+                              setSelectedStage(null);
+                            }}
+                            className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
+                            title="Edit opportunity"
+                            aria-label="Edit opportunity"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onOpportunityDelete(opportunity.id);
+                            }}
+                            className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                            title="Delete opportunity"
+                            aria-label="Delete opportunity"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Opportunity Modal */}
+      {isCreatingOpportunity && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" style={{ backgroundColor: '#F7F2EC' }}>
+            <div className="p-6 border-b">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">Create New Opportunity</h3>
+                <button
+                  onClick={() => setIsCreatingOpportunity(false)}
+                  className="p-1 text-gray-400 hover:text-gray-600"
+                  title="Close create opportunity modal"
+                  aria-label="Close create opportunity modal"
+                >
+                  <XCircle className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.currentTarget);
+                const newOpportunity = {
+                  customerId: 'cust-new',
+                  title: formData.get('title') as string,
+                  description: formData.get('description') as string,
+                  stage: formData.get('stage') as any,
+                  value: parseFloat(formData.get('value') as string) || 0,
+                  probability: parseFloat(formData.get('probability') as string) || 50,
+                  expectedCloseDate: formData.get('expectedCloseDate') as string,
+                  source: formData.get('source') as string,
+                  assignedTo: 'user1',
+                  tags: [],
+                  customFields: {},
+                  status: 'active' as const,
+                  customer: {
+                    id: 'cust-new',
+                    firstName: 'New',
+                    lastName: 'Customer',
+                    email: 'new@customer.com',
+                    company: 'New Company'
+                  }
+                };
+                
+                // Call the parent's create handler
+                if (onOpportunityCreate) {
+                  onOpportunityCreate(newOpportunity as any);
+                }
+                
+                setIsCreatingOpportunity(false);
+              }} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                    <input
+                      type="text"
+                      name="title"
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Enter opportunity title"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Value *</label>
+                    <input
+                      type="number"
+                      name="value"
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Probability (%)</label>
+                    <input
+                      type="number"
+                      name="probability"
+                      min="0"
+                      max="100"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="50"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Stage</label>
+                    <select name="stage" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                      <option value="lead">Lead</option>
+                      <option value="qualification">Qualification</option>
+                      <option value="proposal">Proposal</option>
+                      <option value="negotiation">Negotiation</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Expected Close Date</label>
+                    <input
+                      type="date"
+                      name="expectedCloseDate"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Source</label>
+                    <select name="source" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                      <option value="">Select source</option>
+                      <option value="website">Website</option>
+                      <option value="referral">Referral</option>
+                      <option value="cold_call">Cold Call</option>
+                      <option value="email">Email</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <textarea
+                    name="description"
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter opportunity description"
+                  />
+                </div>
+
+                <div className="flex justify-end space-x-4">
+                  <button
+                    type="button"
+                    onClick={() => setIsCreatingOpportunity(false)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200"
+                  >
+                    Create Opportunity
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Opportunity Modal */}
+      {editingOpportunity && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" style={{ backgroundColor: '#F7F2EC' }}>
+            <div className="p-6 border-b">
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">Edit Opportunity</h3>
+                <button
+                  onClick={() => setEditingOpportunity(null)}
+                  className="p-1 text-gray-400 hover:text-gray-600"
+                  title="Close edit opportunity modal"
+                  aria-label="Close edit opportunity modal"
+                >
+                  <XCircle className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                // Handle form submission
+                console.log('Updating opportunity:', editingOpportunity);
+                onOpportunityUpdate(editingOpportunity);
+                setEditingOpportunity(null);
+              }} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                    <input
+                      type="text"
+                      required
+                      defaultValue={editingOpportunity.title}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Value *</label>
+                    <input
+                      type="number"
+                      required
+                      defaultValue={editingOpportunity.value}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Probability (%)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      defaultValue={editingOpportunity.probability}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Stage</label>
+                    <select 
+                      defaultValue={editingOpportunity.stage}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="lead">Lead</option>
+                      <option value="qualification">Qualification</option>
+                      <option value="proposal">Proposal</option>
+                      <option value="negotiation">Negotiation</option>
+                      <option value="closed_won">Closed Won</option>
+                      <option value="closed_lost">Closed Lost</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <textarea
+                    rows={3}
+                    defaultValue={editingOpportunity.description || ''}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div className="flex justify-end space-x-4">
+                  <button
+                    type="button"
+                    onClick={() => setEditingOpportunity(null)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200"
+                  >
+                    Update Opportunity
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 export default SalesPipeline;
+
 
 
 

@@ -133,3 +133,5 @@ export const getQuoteByCategory = (category: QuoteData['category']): QuoteData =
 export const getQuoteByAuthor = (author: string): QuoteData | undefined => {
   return motivationalQuotes.find(quote => quote.author.toLowerCase().includes(author.toLowerCase()));
 };
+
+

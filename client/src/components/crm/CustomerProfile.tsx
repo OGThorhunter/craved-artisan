@@ -151,7 +151,7 @@ const CustomerProfile: React.FC<CustomerProfileProps> = ({ customerId, onClose }
   if (isLoading) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg p-8">
+        <div className="rounded-lg p-8 shadow-lg" style={{ backgroundColor: '#F7F2EC' }}>
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading customer profile...</p>
         </div>
@@ -162,7 +162,7 @@ const CustomerProfile: React.FC<CustomerProfileProps> = ({ customerId, onClose }
   if (!customer) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg p-8">
+        <div className="rounded-lg p-8 shadow-lg" style={{ backgroundColor: '#F7F2EC' }}>
           <p className="text-red-600">Customer not found</p>
           <button onClick={onClose} className="mt-4 px-4 py-2 bg-gray-600 text-white rounded">
             Close
@@ -174,7 +174,7 @@ const CustomerProfile: React.FC<CustomerProfileProps> = ({ customerId, onClose }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto" style={{ backgroundColor: '#F7F2EC' }}>
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
           <div className="flex items-center space-x-4">
@@ -420,6 +420,7 @@ const CustomerProfile: React.FC<CustomerProfileProps> = ({ customerId, onClose }
 };
 
 export default CustomerProfile;
+
 
 
 

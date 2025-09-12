@@ -24,13 +24,14 @@ import VendorProductsPage from './pages/VendorProductsPage';
 import EnhancedVendorProductsPage from './pages/EnhancedVendorProductsPage';
 import SimpleVendorProductsPage from './pages/SimpleVendorProductsPage';
 import RecipeManagementPage from './pages/RecipeManagementPage';
-import VendorInventoryPage from './pages/VendorInventoryPage';
 import VendorCRMPage from './pages/VendorCRMPage';
+import VendorInventoryPage from './pages/VendorInventoryPage';
+import VendorOrdersPage from './pages/VendorOrdersPage';
+import VendorPromotionsPage from './pages/VendorPromotionsPage';
 import VendorRecipeCreatePage from './pages/VendorRecipeCreatePage';
 import VendorRecipeEditPage from './pages/VendorRecipeEditPage';
 import RecipeVersionHistoryPage from './pages/RecipeVersionHistoryPage';
 import BatchPricingPage from './pages/BatchPricingPage';
-import VendorRelationshipsPage from './pages/vendor/VendorRelationshipsPage';
 import VendorEventsPage from './pages/vendor/VendorEventsPage';
 import VendorFinancialsPage from './pages/vendor/VendorFinancialsPage';
 import PulsePage from './pages/dashboard/vendor/PulsePage';
@@ -50,7 +51,6 @@ import MarketplacePage from './pages/MarketplacePage';
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
 import VendorWatchlistPage from './pages/VendorWatchlistPage';
-import VendorOrdersPage from './pages/VendorOrdersPage';
 import VendorSalesWindowsPage from './pages/VendorSalesWindowsPage';
 import VendorDeliveryBatchingPage from './pages/VendorDeliveryBatchingPage';
 import VendorDeliveryPage from './pages/VendorDeliveryPage';
@@ -193,14 +193,19 @@ function App() {
                 <VendorInventoryPage />
               </ProtectedRoute>
             </Route>
+            <Route path="/dashboard/vendor/orders">
+              <ProtectedRoute role="VENDOR">
+                <VendorOrdersPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/dashboard/vendor/promotions">
+              <ProtectedRoute role="VENDOR">
+                <VendorPromotionsPage />
+              </ProtectedRoute>
+            </Route>
             <Route path="/dashboard/vendor/crm">
               <ProtectedRoute role="VENDOR">
                 <VendorCRMPage />
-              </ProtectedRoute>
-            </Route>
-            <Route path="/dashboard/vendor/relationships">
-              <ProtectedRoute role="VENDOR">
-                <VendorRelationshipsPage />
               </ProtectedRoute>
             </Route>
             <Route path="/dashboard/vendor/events">
@@ -216,11 +221,6 @@ function App() {
 
             <Route path="/store/:storeSlug">
               <DemoStorefrontPage />
-            </Route>
-            <Route path="/dashboard/orders">
-              <ProtectedRoute role="VENDOR">
-                <VendorOrdersPage />
-              </ProtectedRoute>
             </Route>
             <Route path="/dashboard/vendor/recipes/create">
               <ProtectedRoute role="VENDOR">
@@ -245,11 +245,6 @@ function App() {
             <Route path="/dashboard/watchlist">
               <ProtectedRoute role="VENDOR">
                 <VendorWatchlistPage />
-              </ProtectedRoute>
-            </Route>
-            <Route path="/dashboard/orders">
-              <ProtectedRoute role="VENDOR">
-                <VendorOrdersPage />
               </ProtectedRoute>
             </Route>
             <Route path="/dashboard/vendor/delivery-batching">
@@ -286,11 +281,6 @@ function App() {
               </ProtectedRoute>
             </Route>
             
-            <Route path="/dashboard/vendor/relationships">
-              <ProtectedRoute role="VENDOR">
-                <VendorRelationshipsPage />
-              </ProtectedRoute>
-            </Route>
 
             <Route path="/dashboard/vendor/pulse">
               <ProtectedRoute role="VENDOR">

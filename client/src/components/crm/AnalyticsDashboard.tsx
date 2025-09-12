@@ -264,7 +264,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       </div>
 
       {/* Time Range Selector */}
-      <div className="bg-white border border-gray-200 rounded-lg p-4">
+      <div className="border border-gray-200 rounded-lg p-4 shadow-lg" style={{ backgroundColor: '#F7F2EC' }}>
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900">Time Range</h3>
           <div className="flex space-x-2">
@@ -290,7 +290,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
       {/* Overview Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+        <div className="border border-gray-200 rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200" style={{ backgroundColor: '#F7F2EC' }}>
           <div className="flex items-center justify-between mb-4">
             <div className="p-2 bg-blue-100 rounded-lg">
               <Users className="h-6 w-6 text-blue-600" />
@@ -314,7 +314,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+        <div className="border border-gray-200 rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200" style={{ backgroundColor: '#F7F2EC' }}>
           <div className="flex items-center justify-between mb-4">
             <div className="p-2 bg-green-100 rounded-lg">
               <DollarSign className="h-6 w-6 text-green-600" />
@@ -338,7 +338,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+        <div className="border border-gray-200 rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200" style={{ backgroundColor: '#F7F2EC' }}>
           <div className="flex items-center justify-between mb-4">
             <div className="p-2 bg-purple-100 rounded-lg">
               <Target className="h-6 w-6 text-purple-600" />
@@ -359,7 +359,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+        <div className="border border-gray-200 rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200" style={{ backgroundColor: '#F7F2EC' }}>
           <div className="flex items-center justify-between mb-4">
             <div className="p-2 bg-orange-100 rounded-lg">
               <TrendingUp className="h-6 w-6 text-orange-600" />
@@ -385,7 +385,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       {viewMode === 'detailed' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Sales Performance */}
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
+          <div className="border border-gray-200 rounded-lg p-6 shadow-lg" style={{ backgroundColor: '#F7F2EC' }}>
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-gray-900">Sales Performance</h3>
               <div className="flex items-center space-x-2">
@@ -437,7 +437,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           </div>
 
           {/* Customer Analytics */}
-          <div className="bg-white border border-gray-200 rounded-lg p-6">
+          <div className="border border-gray-200 rounded-lg p-6 shadow-lg" style={{ backgroundColor: '#F7F2EC' }}>
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold text-gray-900">Customer Analytics</h3>
               <div className="flex items-center space-x-2">
@@ -489,7 +489,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
       {/* Marketing Performance */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
+        <div className="border border-gray-200 rounded-lg p-6 shadow-lg" style={{ backgroundColor: '#F7F2EC' }}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Email Campaigns</h3>
             <Mail className="h-5 w-5 text-blue-600" />
@@ -514,7 +514,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
+        <div className="border border-gray-200 rounded-lg p-6 shadow-lg" style={{ backgroundColor: '#F7F2EC' }}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Communications</h3>
             <MessageSquare className="h-5 w-5 text-purple-600" />
@@ -539,7 +539,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
+        <div className="border border-gray-200 rounded-lg p-6 shadow-lg" style={{ backgroundColor: '#F7F2EC' }}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Automation</h3>
             <Zap className="h-5 w-5 text-orange-600" />
@@ -566,7 +566,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
       </div>
 
       {/* KPI Dashboard */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
+      <div className="border border-gray-200 rounded-lg p-6 shadow-lg" style={{ backgroundColor: '#F7F2EC' }}>
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-lg font-semibold text-gray-900">Key Performance Indicators</h3>
           <div className="flex items-center space-x-2">
@@ -620,7 +620,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 
       {/* Top Performers */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
+        <div className="border border-gray-200 rounded-lg p-6 shadow-lg" style={{ backgroundColor: '#F7F2EC' }}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Top Customers</h3>
             <Trophy className="h-5 w-5 text-yellow-600" />
@@ -650,7 +650,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
+        <div className="border border-gray-200 rounded-lg p-6 shadow-lg" style={{ backgroundColor: '#F7F2EC' }}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Top Campaigns</h3>
             <Mail className="h-5 w-5 text-blue-600" />
@@ -676,7 +676,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-lg p-6">
+        <div className="border border-gray-200 rounded-lg p-6 shadow-lg" style={{ backgroundColor: '#F7F2EC' }}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Top Opportunities</h3>
             <Target className="h-5 w-5 text-purple-600" />
@@ -707,6 +707,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({
 };
 
 export default AnalyticsDashboard;
+
 
 
 

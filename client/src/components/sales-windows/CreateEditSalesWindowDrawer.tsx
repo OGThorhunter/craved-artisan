@@ -22,13 +22,15 @@ interface CreateEditSalesWindowDrawerProps {
   onClose: () => void;
   window?: SalesWindow; // If provided, we're editing; otherwise creating
   onSave: (window: Partial<SalesWindow>) => void;
+  onCreateBatchOrders?: (products: Array<{product: WindowProduct, quantity: number}>) => void;
 }
 
 const CreateEditSalesWindowDrawer: React.FC<CreateEditSalesWindowDrawerProps> = ({
   isOpen,
   onClose,
   window,
-  onSave
+  onSave,
+  onCreateBatchOrders
 }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<Partial<SalesWindow>>({
@@ -863,6 +865,7 @@ const CreateEditSalesWindowDrawer: React.FC<CreateEditSalesWindowDrawerProps> = 
     <ProductSelectionStep
       selectedProducts={formData.products || []}
       onProductsChange={(products) => handleInputChange('products', products)}
+      onCreateBatchOrders={onCreateBatchOrders}
     />
   );
 

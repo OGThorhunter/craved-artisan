@@ -3,9 +3,11 @@ import { Link, useLocation } from 'wouter';
 const navItems = [
   { label: 'Overview', href: '/dashboard/vendor' },
   { label: 'Analytics', href: '/dashboard/vendor/analytics' },
+  { label: 'Products', href: '/dashboard/vendor/enhanced-products' },
+  { label: 'Inventory', href: '/dashboard/vendor/inventory' },
+  { label: 'Orders', href: '/dashboard/vendor/orders' },
   { label: 'CRM', href: '/dashboard/vendor/crm' },
   { label: 'Customer Service', href: '/dashboard/vendor/support' },
-  { label: 'Inventory', href: '/dashboard/vendor/inventory' },
   { label: 'Site Management', href: '/dashboard/vendor/site' },
   { label: 'Settings', href: '/dashboard/vendor/site-settings' },
 ];

@@ -5,20 +5,20 @@ import {
   ShoppingCart,
   Database,
   Users,
-  Settings,
   Home,
-  Handshake
+  ClipboardList,
+  Percent
 } from 'lucide-react';
 
 const navItems = [
   { label: 'Pulse', href: '/dashboard', icon: Home },
   { label: 'Analytics', href: '/dashboard/vendor/analytics', icon: BarChart3 },
   { label: 'Products', href: '/dashboard/vendor/products', icon: Package },
-          { label: 'Sales Windows', href: '/dashboard/vendor/sales-windows', icon: ShoppingCart },
+  { label: 'Sales Windows', href: '/dashboard/vendor/sales-windows', icon: ShoppingCart },
   { label: 'Inventory', href: '/dashboard/vendor/inventory', icon: Database },
+  { label: 'Orders', href: '/dashboard/vendor/orders', icon: ClipboardList },
+  { label: 'Promotions', href: '/dashboard/vendor/promotions', icon: Percent },
   { label: 'CRM', href: '/dashboard/vendor/crm', icon: Users },
-  { label: 'Relationships', href: '/dashboard/vendor/relationships', icon: Handshake },
-  { label: 'Site Editor', href: '/store/artisan-bakes-atlanta', icon: Settings },
 ];
 
 export default function DashboardNav() {
