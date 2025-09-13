@@ -57,6 +57,81 @@ const mockVendorProducts = [
   }
 ];
 
+// In-memory storage for orders (in a real app, this would be a database)
+let ordersStorage: any[] = [
+  {
+    id: 'order-1',
+    orderNumber: 'ORD-2025-001',
+    customerId: 'cust-1',
+    customerName: 'Sarah Johnson',
+    customerEmail: 'sarah.johnson@restaurantgroup.com',
+    customerPhone: '(555) 123-4567',
+    status: 'in_production',
+    priority: 'high',
+    salesWindowId: null,
+    totalAmount: 1250.00,
+    items: [
+      {
+        id: 'item-1',
+        productId: 'prod-1',
+        productName: 'Custom Aprons',
+        quantity: 50,
+        unitPrice: 15.00,
+        totalPrice: 750.00,
+        specifications: 'Red aprons with white logo, size M-L',
+        status: 'in_production'
+      },
+      {
+        id: 'item-2',
+        productId: 'prod-2',
+        productName: 'Chef Hats',
+        quantity: 25,
+        unitPrice: 20.00,
+        totalPrice: 500.00,
+        specifications: 'White chef hats with embroidered logo',
+        status: 'pending'
+      }
+    ],
+    specialInstructions: 'Rush order for grand opening event',
+    createdAt: '2025-01-15T10:00:00Z',
+    updatedAt: '2025-01-20T14:30:00Z',
+    expectedDeliveryDate: '2025-02-01',
+    productionStartDate: '2025-01-18T09:00:00Z',
+    assignedTo: 'Production Team A',
+    tags: ['rush', 'restaurant', 'grand-opening']
+  },
+  {
+    id: 'order-2',
+    orderNumber: 'ORD-2025-002',
+    customerId: 'cust-2',
+    customerName: 'Michael Chen',
+    customerEmail: 'michael.chen@deliveryapp.com',
+    customerPhone: '(555) 987-6543',
+    status: 'confirmed',
+    priority: 'medium',
+    salesWindowId: null,
+    totalAmount: 850.00,
+    items: [
+      {
+        id: 'item-3',
+        productId: 'prod-3',
+        productName: 'Delivery Bags',
+        quantity: 100,
+        unitPrice: 8.50,
+        totalPrice: 850.00,
+        specifications: 'Insulated delivery bags with company logo',
+        status: 'pending'
+      }
+    ],
+    specialInstructions: 'Standard delivery timeline',
+    createdAt: '2025-01-18T14:20:00Z',
+    updatedAt: '2025-01-18T14:20:00Z',
+    expectedDeliveryDate: '2025-02-15',
+    assignedTo: 'Production Team B',
+    tags: ['delivery', 'bags', 'standard']
+  }
+];
+
 // GET /api/vendor/products
 vendorRouter.get('/vendor/products', async (req, res) => {
   try {
@@ -73,5 +148,135 @@ vendorRouter.get('/vendor/products', async (req, res) => {
   } catch (error: any) {
     console.error('VENDOR_PRODUCTS_ERROR', error);
     res.status(500).json({ error: 'PRODUCTS_FETCH_FAILED', message: error.message });
+  }
+});
+
+// Get vendor orders
+vendorRouter.get('/orders', async (req, res) => {
+  try {
+    // Return orders from storage (includes newly created orders)
+    res.json({ success: true, data: ordersStorage });
+  } catch (error: any) {
+    console.error('FETCH_ORDERS_ERROR', error);
+    res.status(500).json({ error: 'FETCH_ORDERS_FAILED', message: error.message });
+  }
+});
+
+// Get sales windows
+vendorRouter.get('/sales-windows', async (req, res) => {
+  try {
+    // Mock sales windows data - in real app, fetch from database
+    const mockSalesWindows = [
+      {
+        id: 'window-1',
+        name: 'Holiday Market 2024',
+        status: 'active',
+        startDate: '2024-12-01',
+        endDate: '2024-12-24',
+        description: 'Holiday market sales window'
+      },
+      {
+        id: 'window-2',
+        name: 'Spring Festival 2025',
+        status: 'active',
+        startDate: '2025-03-15',
+        endDate: '2025-03-30',
+        description: 'Spring festival sales window'
+      },
+      {
+        id: 'window-3',
+        name: 'Summer Pop-up',
+        status: 'scheduled',
+        startDate: '2025-06-01',
+        endDate: '2025-06-15',
+        description: 'Summer pop-up sales window'
+      }
+    ];
+
+    res.json({ success: true, data: mockSalesWindows });
+  } catch (error: any) {
+    console.error('FETCH_SALES_WINDOWS_ERROR', error);
+    res.status(500).json({ error: 'FETCH_SALES_WINDOWS_FAILED', message: error.message });
+  }
+});
+
+// Create new order
+vendorRouter.post('/orders', async (req, res) => {
+  try {
+    const {
+      customerName,
+      customerEmail,
+      customerPhone,
+      orderDate,
+      expectedDeliveryDate,
+      status = 'pending',
+      priority = 'medium',
+      salesWindowId,
+      items,
+      specialInstructions
+    } = req.body;
+
+    // Validate required fields
+    if (!customerName || !customerEmail || !items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ 
+        error: 'VALIDATION_ERROR', 
+        message: 'Customer name, email, and at least one item are required' 
+      });
+    }
+
+    // Generate order ID and number
+    const orderId = `order-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const orderNumber = `ORD-${Date.now().toString().slice(-6)}`;
+
+    // Calculate total amount
+    const totalAmount = items.reduce((sum: number, item: any) => {
+      return sum + (item.quantity * item.unitPrice);
+    }, 0);
+
+    // Create order object
+    const newOrder = {
+      id: orderId,
+      orderNumber,
+      customerId: `customer-${Date.now()}`,
+      customerName,
+      customerEmail,
+      customerPhone: customerPhone || '',
+      status,
+      priority,
+      salesWindowId: salesWindowId || null,
+      totalAmount,
+      items: items.map((item: any, index: number) => ({
+        id: `item-${Date.now()}-${index}`,
+        productId: item.productId || `product-${index}`,
+        productName: item.productName,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+        totalPrice: item.quantity * item.unitPrice,
+        specifications: item.specifications || '',
+        status: 'pending' as const
+      })),
+      specialInstructions: specialInstructions || '',
+      createdAt: orderDate || new Date().toISOString(),
+      expectedDeliveryDate: expectedDeliveryDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
+      updatedAt: new Date().toISOString(),
+      tags: [] // Add empty tags array to prevent undefined errors
+    };
+
+    // Add to orders storage
+    ordersStorage.push(newOrder);
+    console.log('NEW_ORDER_CREATED', newOrder);
+
+    res.status(201).json({
+      success: true,
+      data: newOrder,
+      message: 'Order created successfully'
+    });
+
+  } catch (error: any) {
+    console.error('ORDER_CREATION_ERROR', error);
+    res.status(500).json({ 
+      error: 'ORDER_CREATION_FAILED', 
+      message: error.message 
+    });
   }
 });

@@ -140,10 +140,10 @@ const OrderTracker: React.FC<OrderTrackerProps> = ({
     // Map order status to column IDs
     const statusMap: Record<string, string> = {
       'pending': 'start',
-      'confirmed': 'start',
-      'in_production': 'middle',
-      'ready_for_pickup': 'end',
-      'shipped': 'end',
+      'confirmed': 'middle',
+      'in_production': 'end',
+      'ready_for_pickup': 'finished',
+      'shipped': 'finished',
       'delivered': 'finished',
       'cancelled': 'finished'
     };
@@ -154,9 +154,9 @@ const OrderTracker: React.FC<OrderTrackerProps> = ({
     // Map column IDs back to order statuses
     const columnMap: Record<string, string> = {
       'start': 'pending',
-      'middle': 'in_production',
-      'end': 'ready_for_pickup',
-      'finished': 'delivered'
+      'middle': 'confirmed',
+      'end': 'in_production',
+      'finished': 'ready_for_pickup'
     };
     return columnMap[columnId] || 'pending';
   };
@@ -533,7 +533,7 @@ const OrderTracker: React.FC<OrderTrackerProps> = ({
                         )}
                         
                         {/* Tags */}
-                        {order.tags.length > 0 && (
+                        {order.tags && order.tags.length > 0 && (
                           <div className="flex flex-wrap gap-1">
                             {order.tags.slice(0, 2).map((tag, index) => (
                               <span key={index} className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">

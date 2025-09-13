@@ -171,7 +171,7 @@ const OrderDetailModal = ({ order, isOpen, onClose }: { order: Order | null; isO
           <div className="flex items-center gap-2">
             <button
               onClick={() => generateInvoicePDF(order)}
-              className="flex items-center gap-2 responsive-button bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               title="Download Invoice"
             >
               <Download className="h-4 w-4" />
@@ -470,7 +470,7 @@ const CustomerOrdersPage = () => {
                      <div className="flex items-center gap-2">
                        <button
                          onClick={() => openOrderModal(order)}
-                         className="flex items-center gap-2 px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                         className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                          title="View order details"
                        >
                          <Eye className="h-4 w-4" />
@@ -478,19 +478,18 @@ const CustomerOrdersPage = () => {
                        </button>
                        <button
                          onClick={() => generateInvoicePDF(order)}
-                         className="text-sm text-blue-600 underline"
+                         className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                          title="Download invoice"
                        >
                          Download Invoice
                        </button>
-                       <a
-                         href={`/api/orders/${order.id}/receipt`}
-                         target="_blank"
-                         className="text-sm text-green-600 underline"
+                       <button
+                         onClick={() => window.open(`/api/orders/${order.id}/receipt`, '_blank')}
+                         className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
                          title="Download receipt"
                        >
-                         ðŸ§¾ Download Receipt
-                       </a>
+                         Download Receipt
+                       </button>
                      </div>
                      <div className="responsive-text text-gray-600">
                        {order.items.length} {order.items.length === 1 ? 'item' : 'items'}

@@ -14,6 +14,7 @@ import { aiReceiptParserRouter } from './routes/ai-receipt-parser.router';
 import { unitConverterRouter } from './routes/unit-converter.router';
 import { advancedInventoryRouter } from './routes/advanced-inventory.router';
 import { crmRouter } from './routes/crm.router';
+import { labelProfilesRouter } from './routes/label-profiles.router';
 
 const app = express();
 const PORT = Number(process.env.PORT || 3001);
@@ -72,6 +73,9 @@ app.use('/api', advancedInventoryRouter);
 
 // CRM routes
 app.use('/api', crmRouter);
+
+// Label system routes
+app.use('/api', labelProfilesRouter);
 
 // Start server
 app.listen(PORT, () => {
