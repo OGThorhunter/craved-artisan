@@ -21,7 +21,50 @@ import {
   ChevronDown,
   ChevronUp
 } from 'lucide-react';
-import { Order, LabelProfile, PrinterProfile, CompileLabelsRequest, CompileLabelsResponse } from '@/types/label';
+import type { LabelProfile, PrinterProfile } from '@/types/label-system';
+
+// Simple order types for this component
+interface Order {
+  id: string;
+  salesWindowId?: string;
+  expectedDeliveryDate?: string;
+  shippingAddress?: {
+    city: string;
+    [key: string]: any;
+  };
+  items?: OrderItem[];
+  [key: string]: any;
+}
+
+interface OrderItem {
+  id: string;
+  productId: string;
+  variantId?: string;
+  quantity: number;
+  [key: string]: any;
+}
+
+// Simple request/response types
+interface CompileLabelsRequest {
+  orderIds: string[];
+  groupBy?: 'salesWindow' | 'pickupTime' | 'route';
+  dryRun?: boolean;
+}
+
+interface CompileLabelsResponse {
+  success: boolean;
+  batchJobId?: string;
+  summary?: {
+    totalLabels: number;
+    printerJobs: Array<{
+      printerProfileId: string;
+      count: number;
+      mediaSize: string;
+    }>;
+    warnings: string[];
+  };
+  error?: string;
+}
 
 interface BulkLabelPrintDrawerProps {
   isOpen: boolean;

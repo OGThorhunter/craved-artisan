@@ -253,7 +253,6 @@ const VendorOrdersPage: React.FC = () => {
   const [showOrderListPrinting, setShowOrderListPrinting] = useState(false);
   const [selectedOrdersForLabels, setSelectedOrdersForLabels] = useState<string[]>([]);
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | '1y' | 'all'>('30d');
-  const [showCreditsModal, setShowCreditsModal] = useState(false);
 
   // Fetch orders from API
   const { data: ordersResponse, isLoading } = useQuery({
@@ -652,15 +651,14 @@ const VendorOrdersPage: React.FC = () => {
                 >
                   New Order
                 </button>
-                <button 
-                  onClick={() => {
-                    setShowLabelPrinting(true);
-                    toast.success('Opening label printing interface...');
-                  }}
-                  className="px-3 py-1.5 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors text-sm font-medium"
-                >
-                  Print Labels
-                </button>
+                <Link href="/dashboard/vendor/labels">
+                  <button 
+                    className="px-3 py-1.5 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors text-sm font-medium"
+                    title="Go to label management page"
+                  >
+                    Print Labels
+                  </button>
+                </Link>
                 <button 
                   onClick={() => {
                     // Print current order list
@@ -670,16 +668,6 @@ const VendorOrdersPage: React.FC = () => {
                   className="px-3 py-1.5 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors text-sm font-medium"
                 >
                   Print List
-                </button>
-                <button 
-                  onClick={() => {
-                    // Show templates modal/interface
-                    setShowLabelTemplateManager(true);
-                    toast.success('Opening template manager...');
-                  }}
-                  className="px-3 py-1.5 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors text-sm font-medium"
-                >
-                  Templates
                 </button>
                 <button 
                   onClick={() => {
@@ -708,16 +696,14 @@ const VendorOrdersPage: React.FC = () => {
                 >
                   Export
                 </button>
-                <button 
-                  onClick={() => {
-                    // Navigate to credits management (not financials)
-                    setShowCreditsModal(true);
-                    toast.success('Opening credits management...');
-                  }}
-                  className="px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm font-medium"
-                >
-                  Credits
-                </button>
+                <Link href="/dashboard/vendor/promotions">
+                  <button 
+                    className="px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm font-medium"
+                    title="Go to promotions and credits management"
+                  >
+                    Credits
+                  </button>
+                </Link>
               </div>
             </div>
           </div>
@@ -1040,141 +1026,6 @@ const VendorOrdersPage: React.FC = () => {
           />
         )} */}
 
-        {/* Credits & Discounts Modal */}
-        {showCreditsModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-medium text-gray-900">Customer Credits & Discounts</h3>
-                  <button
-                    onClick={() => setShowCreditsModal(false)}
-                    className="p-2 text-gray-400 hover:text-gray-600"
-                    title="Close credits modal"
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
-                </div>
-              </div>
-              <div className="p-6 overflow-y-auto max-h-[70vh]">
-                <div className="space-y-6">
-                  {/* Customer Selection */}
-                  <div>
-                    <label className="text-sm font-medium text-gray-700 mb-2">Select Customer</label>
-                    <select className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" title="Select customer">
-                      <option value="">Choose a customer...</option>
-                      <option value="cust-1">John Smith (john.smith@email.com)</option>
-                      <option value="cust-2">Sarah Johnson (sarah.j@email.com)</option>
-                      <option value="cust-3">Mike Wilson (mike.wilson@email.com)</option>
-                      <option value="cust-4">Emily Davis (emily.davis@email.com)</option>
-                      <option value="cust-5">David Brown (david.brown@email.com)</option>
-                    </select>
-                  </div>
-
-                  {/* Current Credit Balance */}
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h4 className="text-md font-medium text-gray-900 mb-2">Current Credit Balance</h4>
-                    <p className="text-2xl font-bold text-green-600">$0.00</p>
-                    <p className="text-sm text-gray-600">Available for this customer</p>
-                  </div>
-
-                  {/* Add Credits */}
-                  <div>
-                    <h4 className="text-md font-medium text-gray-900 mb-4">Add Credits</h4>
-                    <div className="space-y-3">
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Amount</label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="0.00"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Reason</label>
-                        <select className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" title="Select credit reason">
-                          <option value="">Select reason...</option>
-                          <option value="refund">Refund</option>
-                          <option value="compensation">Compensation</option>
-                          <option value="promotion">Promotion</option>
-                          <option value="loyalty">Loyalty Reward</option>
-                          <option value="other">Other</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Notes</label>
-                        <textarea
-                          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                          rows={3}
-                          placeholder="Optional notes about this credit..."
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Discount Codes */}
-                  <div>
-                    <h4 className="text-md font-medium text-gray-900 mb-4">Create Discount Code</h4>
-                    <div className="space-y-3">
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Code</label>
-                        <input
-                          type="text"
-                          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="Enter discount code"
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="text-sm font-medium text-gray-700">Type</label>
-                          <select className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" title="Select discount type">
-                            <option value="percentage">Percentage</option>
-                            <option value="fixed">Fixed Amount</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="text-sm font-medium text-gray-700">Value</label>
-                          <input
-                            type="number"
-                            step="0.01"
-                            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="0.00"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Expiration Date</label>
-                        <input
-                          type="date"
-                          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                          title="Select expiration date"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
-                <button
-                  onClick={() => setShowCreditsModal(false)}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => {
-                    setShowCreditsModal(false);
-                    // In a real app, this would apply credits/discounts
-                  }}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  Apply Credits/Discounts
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Label Print Modal */}
         <SimpleLabelPrintModal
@@ -1449,36 +1300,6 @@ const VendorOrdersPage: React.FC = () => {
       </div>
     )}
 
-    {/* Credits Modal */}
-    {showCreditsModal && (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg p-6 w-full max-w-md">
-          <h3 className="text-lg font-semibold mb-4">Credits Management</h3>
-          <p className="text-gray-600 mb-4">
-            Manage customer credits, refunds, and account adjustments.
-          </p>
-          <div className="space-y-3">
-            <button className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-              View Credit History
-            </button>
-            <button className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-              Issue Refund
-            </button>
-            <button className="w-full px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors">
-              Adjust Account Balance
-            </button>
-          </div>
-          <div className="flex justify-end mt-6">
-            <button
-              onClick={() => setShowCreditsModal(false)}
-              className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      </div>
-    )}
 
     {/* Label Template Manager Modal */}
     {showLabelTemplateManager && (

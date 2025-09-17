@@ -1,23 +1,2 @@
-// Re-export all types from inventory
-export type { 
-  InventoryItem, 
-  CreateInventoryItemData, 
-  StockAdjustment, 
-  InventoryAnalytics, 
-  ShoppingListItem, 
-  ShoppingList,
-  AIInsight 
-} from './inventory';
-
-// Re-export runtime values from inventory
-export { 
-  AIInsightSchema, 
-  isAIInsight 
-} from './inventory';
-
-
-
-
-
-
-
+export * from './label-system'
+// add other type modules here in the future

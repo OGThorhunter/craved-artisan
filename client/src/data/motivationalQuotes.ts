@@ -137,3 +137,6 @@ export const getQuoteByAuthor = (author: string): QuoteData | undefined => {
 
 
 
+
+
+

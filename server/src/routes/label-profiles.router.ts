@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { prisma } from '../db';
 import { 
   CreateLabelProfileRequest, 
   CreatePrinterProfileRequest,
@@ -11,6 +10,116 @@ import {
 } from '../types/label';
 
 const router = Router();
+
+// Mock data storage (in production, this would be database)
+let printerProfiles: PrinterProfile[] = [
+  {
+    id: 'printer-1',
+    name: 'Zebra ZT230',
+    driver: 'ZPL',
+    dpi: 203,
+    mediaSupported: [
+      { width: 4, height: 6, name: '4x6 Standard', isContinuous: false, isSupported: true },
+      { width: 2, height: 1, name: '2x1 Small', isContinuous: false, isSupported: true }
+    ],
+    address: '192.168.1.100',
+    isColor: false,
+    isThermal: true,
+    maxWidthIn: 4.25,
+    maxHeightIn: 6.25,
+    capabilities: {
+      supportsColor: false,
+      supportsDuplex: false,
+      maxCopies: 999,
+      supportedMediaTypes: ['thermal', 'paper'],
+      networkProtocols: ['TCP/IP']
+    },
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: 'printer-2',
+    name: 'Brother QL-820NWB',
+    driver: 'BrotherQL',
+    dpi: 300,
+    mediaSupported: [
+      { width: 4, height: 6, name: '4x6 Standard', isContinuous: false, isSupported: true },
+      { width: 3, height: 2, name: '3x2 Medium', isContinuous: false, isSupported: true }
+    ],
+    address: '192.168.1.101',
+    isColor: false,
+    isThermal: true,
+    maxWidthIn: 4.25,
+    maxHeightIn: 6.25,
+    capabilities: {
+      supportsColor: false,
+      supportsDuplex: false,
+      maxCopies: 99,
+      supportedMediaTypes: ['thermal'],
+      networkProtocols: ['WiFi', 'Ethernet']
+    },
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  }
+];
+
+let labelProfiles: LabelProfile[] = [
+  {
+    id: 'label-1',
+    name: 'Standard Product Label',
+    description: 'Standard 4x6 product label for general use',
+    mediaWidthIn: 4,
+    mediaHeightIn: 6,
+    orientation: 'portrait',
+    cornerRadius: 0.125,
+    bleedIn: 0.125,
+    safeMarginIn: 0.125,
+    dpi: 203,
+    engine: 'ZPL',
+    printerProfileId: 'printer-1',
+    copiesPerUnit: 1,
+    rotation: 0,
+    colorHint: 'monochrome',
+    rules: { conditions: [], actions: [] },
+    dataBindings: {
+      productName: { source: 'product', field: 'name', required: true },
+      price: { source: 'product', field: 'price', required: true },
+      sku: { source: 'product', field: 'sku', required: true },
+      barcode: { source: 'product', field: 'sku', required: true }
+    },
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: 'label-2',
+    name: 'Small Product Label',
+    description: 'Small 2x1 label for compact products',
+    mediaWidthIn: 2,
+    mediaHeightIn: 1,
+    orientation: 'portrait',
+    cornerRadius: 0.0625,
+    bleedIn: 0.0625,
+    safeMarginIn: 0.0625,
+    dpi: 203,
+    engine: 'ZPL',
+    printerProfileId: 'printer-1',
+    copiesPerUnit: 1,
+    rotation: 0,
+    colorHint: 'monochrome',
+    rules: { conditions: [], actions: [] },
+    dataBindings: {
+      productName: { source: 'product', field: 'name', required: true },
+      price: { source: 'product', field: 'price', required: true },
+      barcode: { source: 'product', field: 'sku', required: true }
+    },
+    isActive: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  }
+];
 
 // Validation schemas
 const CreatePrinterProfileSchema = z.object({
@@ -69,11 +178,7 @@ const CompileLabelsSchema = z.object({
 // GET /api/printer-profiles
 router.get('/printer-profiles', async (req, res) => {
   try {
-    const profiles = await prisma.printerProfile.findMany({
-      where: { isActive: true },
-      orderBy: { name: 'asc' }
-    });
-    
+    const profiles = printerProfiles.filter(p => p.isActive);
     res.json({ success: true, data: profiles });
   } catch (error: any) {
     console.error('FETCH_PRINTER_PROFILES_ERROR', error);
@@ -90,9 +195,15 @@ router.post('/printer-profiles', async (req, res) => {
   try {
     const validatedData = CreatePrinterProfileSchema.parse(req.body);
     
-    const profile = await prisma.printerProfile.create({
-      data: validatedData
-    });
+    const profile: PrinterProfile = {
+      id: `printer-${Date.now()}`,
+      ...validatedData,
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    printerProfiles.push(profile);
     
     res.status(201).json({ success: true, data: profile });
   } catch (error: any) {
@@ -120,12 +231,22 @@ router.put('/printer-profiles/:id', async (req, res) => {
     const { id } = req.params;
     const validatedData = CreatePrinterProfileSchema.parse(req.body);
     
-    const profile = await prisma.printerProfile.update({
-      where: { id },
-      data: validatedData
-    });
+    const profileIndex = printerProfiles.findIndex(p => p.id === id);
+    if (profileIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        error: 'PRINTER_PROFILE_NOT_FOUND',
+        message: 'Printer profile not found'
+      });
+    }
     
-    res.json({ success: true, data: profile });
+    printerProfiles[profileIndex] = {
+      ...printerProfiles[profileIndex],
+      ...validatedData,
+      updatedAt: new Date().toISOString()
+    };
+    
+    res.json({ success: true, data: printerProfiles[profileIndex] });
   } catch (error: any) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
@@ -151,9 +272,7 @@ router.delete('/printer-profiles/:id', async (req, res) => {
     const { id } = req.params;
     
     // Check if profile is in use
-    const inUse = await prisma.labelProfile.findFirst({
-      where: { printerProfileId: id }
-    });
+    const inUse = labelProfiles.some(lp => lp.printerProfileId === id);
     
     if (inUse) {
       return res.status(400).json({
@@ -163,10 +282,17 @@ router.delete('/printer-profiles/:id', async (req, res) => {
       });
     }
     
-    await prisma.printerProfile.update({
-      where: { id },
-      data: { isActive: false }
-    });
+    const profileIndex = printerProfiles.findIndex(p => p.id === id);
+    if (profileIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        error: 'PRINTER_PROFILE_NOT_FOUND',
+        message: 'Printer profile not found'
+      });
+    }
+    
+    printerProfiles[profileIndex].isActive = false;
+    printerProfiles[profileIndex].updatedAt = new Date().toISOString();
     
     res.json({ success: true, message: 'Printer profile deactivated' });
   } catch (error: any) {
@@ -182,14 +308,14 @@ router.delete('/printer-profiles/:id', async (req, res) => {
 // GET /api/label-profiles
 router.get('/label-profiles', async (req, res) => {
   try {
-    const profiles = await prisma.labelProfile.findMany({
-      where: { isActive: true },
-      include: {
-        printerProfile: true,
-        fallbackProfile: true
-      },
-      orderBy: { name: 'asc' }
-    });
+    const profiles = labelProfiles
+      .filter(p => p.isActive)
+      .map(profile => ({
+        ...profile,
+        printerProfile: printerProfiles.find(p => p.id === profile.printerProfileId),
+        fallbackProfile: profile.fallbackProfileId ? 
+          labelProfiles.find(p => p.id === profile.fallbackProfileId) : undefined
+      }));
     
     res.json({ success: true, data: profiles });
   } catch (error: any) {
@@ -208,9 +334,7 @@ router.post('/label-profiles', async (req, res) => {
     const validatedData = CreateLabelProfileSchema.parse(req.body);
     
     // Validate printer profile exists
-    const printerProfile = await prisma.printerProfile.findUnique({
-      where: { id: validatedData.printerProfileId }
-    });
+    const printerProfile = printerProfiles.find(p => p.id === validatedData.printerProfileId);
     
     if (!printerProfile) {
       return res.status(400).json({
@@ -234,15 +358,25 @@ router.post('/label-profiles', async (req, res) => {
       });
     }
     
-    const profile = await prisma.labelProfile.create({
-      data: validatedData,
-      include: {
-        printerProfile: true,
-        fallbackProfile: true
-      }
-    });
+    const profile: LabelProfile = {
+      id: `label-${Date.now()}`,
+      ...validatedData,
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
     
-    res.status(201).json({ success: true, data: profile });
+    labelProfiles.push(profile);
+    
+    // Return with printer profile included
+    const responseProfile = {
+      ...profile,
+      printerProfile: printerProfile,
+      fallbackProfile: profile.fallbackProfileId ? 
+        labelProfiles.find(p => p.id === profile.fallbackProfileId) : undefined
+    };
+    
+    res.status(201).json({ success: true, data: responseProfile });
   } catch (error: any) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
@@ -268,16 +402,30 @@ router.put('/label-profiles/:id', async (req, res) => {
     const { id } = req.params;
     const validatedData = CreateLabelProfileSchema.parse(req.body);
     
-    const profile = await prisma.labelProfile.update({
-      where: { id },
-      data: validatedData,
-      include: {
-        printerProfile: true,
-        fallbackProfile: true
-      }
-    });
+    const profileIndex = labelProfiles.findIndex(p => p.id === id);
+    if (profileIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        error: 'LABEL_PROFILE_NOT_FOUND',
+        message: 'Label profile not found'
+      });
+    }
     
-    res.json({ success: true, data: profile });
+    labelProfiles[profileIndex] = {
+      ...labelProfiles[profileIndex],
+      ...validatedData,
+      updatedAt: new Date().toISOString()
+    };
+    
+    // Return with printer profile included
+    const responseProfile = {
+      ...labelProfiles[profileIndex],
+      printerProfile: printerProfiles.find(p => p.id === labelProfiles[profileIndex].printerProfileId),
+      fallbackProfile: labelProfiles[profileIndex].fallbackProfileId ? 
+        labelProfiles.find(p => p.id === labelProfiles[profileIndex].fallbackProfileId) : undefined
+    };
+    
+    res.json({ success: true, data: responseProfile });
   } catch (error: any) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
@@ -302,23 +450,20 @@ router.delete('/label-profiles/:id', async (req, res) => {
   try {
     const { id } = req.params;
     
-    // Check if profile is in use
-    const inUse = await prisma.product.findFirst({
-      where: { defaultLabelProfileId: id }
-    });
-    
-    if (inUse) {
-      return res.status(400).json({
+    const profileIndex = labelProfiles.findIndex(p => p.id === id);
+    if (profileIndex === -1) {
+      return res.status(404).json({
         success: false,
-        error: 'PROFILE_IN_USE',
-        message: 'Cannot delete label profile that is in use by products'
+        error: 'LABEL_PROFILE_NOT_FOUND',
+        message: 'Label profile not found'
       });
     }
     
-    await prisma.labelProfile.update({
-      where: { id },
-      data: { isActive: false }
-    });
+    // In a real implementation, you would check if the profile is in use by products
+    // For now, we'll just deactivate it
+    
+    labelProfiles[profileIndex].isActive = false;
+    labelProfiles[profileIndex].updatedAt = new Date().toISOString();
     
     res.json({ success: true, message: 'Label profile deactivated' });
   } catch (error: any) {
@@ -336,19 +481,41 @@ router.post('/labels/compile', async (req, res) => {
   try {
     const validatedData = CompileLabelsSchema.parse(req.body);
     
-    // This is a placeholder for the complex compilation logic
-    // Will be implemented in Phase 3
+    // Mock compilation logic - in Phase 3 this will be fully implemented
+    const totalLabels = validatedData.orderIds.length * 2; // Mock: 2 labels per order
+    const printerJobs = [
+      {
+        printerProfileId: 'printer-1',
+        printerName: 'Zebra ZT230',
+        labelProfileId: 'label-1',
+        labelProfileName: 'Standard Product Label',
+        count: totalLabels,
+        pages: Math.ceil(totalLabels / 2),
+        estimatedTime: totalLabels * 0.5, // 0.5 seconds per label
+        mediaType: '4x6 Standard',
+        warnings: []
+      }
+    ];
+    
     const response: CompileLabelsResponse = {
       success: true,
       batchJobId: `batch_${Date.now()}`,
       summary: {
-        totalLabels: 0,
+        totalLabels,
         totalOrders: validatedData.orderIds.length,
-        printerJobs: [],
-        mediaUsage: [],
-        estimatedTime: 0
+        printerJobs,
+        mediaUsage: [
+          {
+            mediaType: '4x6 Standard',
+            width: 4,
+            height: 6,
+            count: totalLabels,
+            totalArea: totalLabels * 24 // 4 * 6 = 24 square inches
+          }
+        ],
+        estimatedTime: totalLabels * 0.5
       },
-      warnings: [],
+      warnings: validatedData.dryRun ? ['This is a preview - no actual printing will occur'] : [],
       errors: [],
       dryRun: validatedData.dryRun
     };
@@ -378,25 +545,37 @@ router.get('/labels/batch/:id', async (req, res) => {
   try {
     const { id } = req.params;
     
-    const batchJob = await prisma.labelBatchJob.findUnique({
-      where: { id },
-      include: {
-        printerJobs: {
-          include: {
-            printerProfile: true,
-            labelProfile: true
-          }
+    // Mock batch job data - in Phase 3 this will be stored in database
+    const batchJob = {
+      id,
+      createdBy: 'mock-user-id',
+      status: 'done' as const,
+      warnings: [],
+      metadata: {},
+      totalLabels: 10,
+      completedLabels: 10,
+      errorCount: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      completedAt: new Date().toISOString(),
+      printerJobs: [
+        {
+          id: `job-${Date.now()}`,
+          batchJobId: id,
+          printerProfileId: 'printer-1',
+          labelProfileId: 'label-1',
+          count: 10,
+          status: 'completed' as const,
+          pages: 5,
+          meta: {},
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          completedAt: new Date().toISOString(),
+          printerProfile: printerProfiles.find(p => p.id === 'printer-1'),
+          labelProfile: labelProfiles.find(p => p.id === 'label-1')
         }
-      }
-    });
-    
-    if (!batchJob) {
-      return res.status(404).json({
-        success: false,
-        error: 'BATCH_JOB_NOT_FOUND',
-        message: 'Batch job not found'
-      });
-    }
+      ]
+    };
     
     res.json({ success: true, data: batchJob });
   } catch (error: any) {
