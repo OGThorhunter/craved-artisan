@@ -44,7 +44,6 @@ import EmailCampaign from '../components/promotions/EmailCampaign';
 import SocialMediaCampaign from '../components/promotions/SocialMediaCampaign';
 import CampaignScheduler from '../components/promotions/CampaignScheduler';
 import PromotionAnalytics from '../components/promotions/PromotionAnalytics';
-import ROIAnalysis from '../components/promotions/ROIAnalysis';
 import ConversionOptimization from '../components/promotions/ConversionOptimization';
 import AutomatedRecommendations from '../components/promotions/AutomatedRecommendations';
 import LoyaltyPrograms from '../components/promotions/LoyaltyPrograms';
@@ -226,7 +225,7 @@ const VendorPromotionsPage: React.FC = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [editingPromotion, setEditingPromotion] = useState<Promotion | null>(null);
-  const [activeTab, setActiveTab] = useState<'promotions' | 'ab-tests' | 'segments' | 'campaigns' | 'email' | 'social' | 'scheduler' | 'analytics' | 'roi' | 'conversion' | 'recommendations' | 'loyalty' | 'referrals' | 'pricing' | 'personalization'>('promotions');
+  const [activeTab, setActiveTab] = useState<'promotions' | 'ab-tests' | 'segments' | 'campaigns' | 'email' | 'social' | 'scheduler' | 'analytics' | 'conversion' | 'recommendations' | 'loyalty' | 'referrals' | 'pricing' | 'personalization'>('promotions');
   const [showABTestModal, setShowABTestModal] = useState(false);
   const [showSegmentModal, setShowSegmentModal] = useState(false);
 
@@ -304,7 +303,43 @@ const VendorPromotionsPage: React.FC = () => {
 
   const handlePromotionAction = (action: string, promotionId: string) => {
     console.log(`${action} promotion ${promotionId}`);
-    // Implement promotion actions
+    
+    // Update promotion status in the local state
+    queryClient.setQueryData(['promotions'], (oldData: any) => {
+      if (!oldData) return oldData;
+      
+      return oldData.map((promotion: Promotion) => {
+        if (promotion.id === promotionId) {
+          let newStatus = promotion.status;
+          
+          switch (action) {
+            case 'activate':
+              newStatus = 'active';
+              break;
+            case 'pause':
+              newStatus = 'paused';
+              break;
+            case 'copy':
+              // For copy action, you might want to open a modal with the promotion data
+              console.log('Copy promotion:', promotion);
+              return promotion;
+            case 'view':
+              // For view action, you might want to open a details modal
+              console.log('View promotion:', promotion);
+              return promotion;
+            default:
+              return promotion;
+          }
+          
+          return {
+            ...promotion,
+            status: newStatus,
+            updatedAt: new Date().toISOString()
+          };
+        }
+        return promotion;
+      });
+    });
   };
 
   const handleBulkAction = (action: string) => {
@@ -460,19 +495,6 @@ const VendorPromotionsPage: React.FC = () => {
                 <div className="flex items-center space-x-2">
                   <BarChart3 className="h-4 w-4" />
                   <span>Analytics</span>
-                </div>
-              </button>
-              <button
-                onClick={() => setActiveTab('roi')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
-                  activeTab === 'roi'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <div className="flex items-center space-x-2">
-                  <DollarSign className="h-4 w-4" />
-                  <span>ROI</span>
                 </div>
               </button>
               <button
@@ -720,14 +742,10 @@ const VendorPromotionsPage: React.FC = () => {
                   </div>
 
                   {/* Performance */}
-                  <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="mb-4">
                     <div>
-                      <p className="text-xs text-gray-500">Uses</p>
+                      <p className="text-xs text-gray-500">Total Uses</p>
                       <p className="text-sm font-semibold">{promotion.performance.totalUses}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-500">ROI</p>
-                      <p className="text-sm font-semibold text-green-600">{promotion.performance.roi}%</p>
                     </div>
                   </div>
 
@@ -740,6 +758,36 @@ const VendorPromotionsPage: React.FC = () => {
                   {/* Actions */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
+                      {/* Status Toggle Button */}
+                      {promotion.status === 'active' ? (
+                        <button
+                          onClick={() => handlePromotionAction('pause', promotion.id)}
+                          className="flex items-center space-x-1 px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-xs hover:bg-yellow-200 transition-colors"
+                          title="Pause promotion"
+                        >
+                          <Pause className="h-3 w-3" />
+                          <span>Pause</span>
+                        </button>
+                      ) : promotion.status === 'paused' ? (
+                        <button
+                          onClick={() => handlePromotionAction('activate', promotion.id)}
+                          className="flex items-center space-x-1 px-2 py-1 bg-green-100 text-green-700 rounded text-xs hover:bg-green-200 transition-colors"
+                          title="Activate promotion"
+                        >
+                          <Play className="h-3 w-3" />
+                          <span>Activate</span>
+                        </button>
+                      ) : promotion.status === 'draft' ? (
+                        <button
+                          onClick={() => handlePromotionAction('activate', promotion.id)}
+                          className="flex items-center space-x-1 px-2 py-1 bg-green-100 text-green-700 rounded text-xs hover:bg-green-200 transition-colors"
+                          title="Activate promotion"
+                        >
+                          <Play className="h-3 w-3" />
+                          <span>Activate</span>
+                        </button>
+                      ) : null}
+                      
                       <button
                         onClick={() => setEditingPromotion(promotion)}
                         className="text-gray-600 hover:text-blue-600"
@@ -830,7 +878,6 @@ const VendorPromotionsPage: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">{promotion.performance.totalUses} uses</div>
-                        <div className="text-sm text-green-600">{promotion.performance.roi}% ROI</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900">{formatDate(promotion.startDate)}</div>
@@ -838,6 +885,36 @@ const VendorPromotionsPage: React.FC = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center space-x-2">
+                          {/* Status Toggle Button */}
+                          {promotion.status === 'active' ? (
+                            <button
+                              onClick={() => handlePromotionAction('pause', promotion.id)}
+                              className="flex items-center space-x-1 px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-xs hover:bg-yellow-200 transition-colors"
+                              title="Pause promotion"
+                            >
+                              <Pause className="h-3 w-3" />
+                              <span>Pause</span>
+                            </button>
+                          ) : promotion.status === 'paused' ? (
+                            <button
+                              onClick={() => handlePromotionAction('activate', promotion.id)}
+                              className="flex items-center space-x-1 px-2 py-1 bg-green-100 text-green-700 rounded text-xs hover:bg-green-200 transition-colors"
+                              title="Activate promotion"
+                            >
+                              <Play className="h-3 w-3" />
+                              <span>Activate</span>
+                            </button>
+                          ) : promotion.status === 'draft' ? (
+                            <button
+                              onClick={() => handlePromotionAction('activate', promotion.id)}
+                              className="flex items-center space-x-1 px-2 py-1 bg-green-100 text-green-700 rounded text-xs hover:bg-green-200 transition-colors"
+                              title="Activate promotion"
+                            >
+                              <Play className="h-3 w-3" />
+                              <span>Activate</span>
+                            </button>
+                          ) : null}
+                          
                           <button
                             onClick={() => setEditingPromotion(promotion)}
                             className="text-gray-600 hover:text-blue-600"
@@ -959,11 +1036,6 @@ const VendorPromotionsPage: React.FC = () => {
           <PromotionAnalytics />
         )}
 
-        {/* ROI Analysis Tab */}
-        {activeTab === 'roi' && (
-          <ROIAnalysis />
-        )}
-
         {/* Conversion Optimization Tab */}
         {activeTab === 'conversion' && (
           <ConversionOptimization />
@@ -998,9 +1070,17 @@ const VendorPromotionsPage: React.FC = () => {
         {showCreateModal && (
           <PromotionCreateModal
             isOpen={showCreateModal}
-            onClose={() => setShowCreateModal(false)}
+            onClose={() => {
+              console.log('Closing promotion modal');
+              setShowCreateModal(false);
+            }}
             onSave={(promotion) => {
               console.log('Save promotion:', promotion);
+              // Add the new promotion to the list
+              queryClient.setQueryData(['promotions'], (oldData: any) => {
+                if (!oldData) return [promotion];
+                return [...oldData, promotion];
+              });
               setShowCreateModal(false);
             }}
           />

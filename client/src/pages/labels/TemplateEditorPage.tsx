@@ -27,6 +27,11 @@ export default function TemplateEditorPage() {
   const [activeTab, setActiveTab] = useState<'canvas' | 'elements' | 'sample'>('canvas');
   const [customSampleData, setCustomSampleData] = useState<string>(JSON.stringify(defaultSampleData, null, 2));
 
+  // Debug logging
+  console.log('TemplateEditorPage: Component rendering');
+  console.log('TemplateEditorPage: selectedVariant:', selectedVariant);
+  console.log('TemplateEditorPage: activeTab:', activeTab);
+
   // Create default template variant
   const defaultVariant: LabelTemplateVariant = {
     id: 'default',
@@ -294,10 +299,14 @@ export default function TemplateEditorPage() {
     console.log('Add element:', newElement);
   }, []);
 
-  return (
-    <div className="flex h-screen bg-gray-100">
-      {/* Left Sidebar */}
-      <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
+  // Error handling
+  try {
+    console.log('TemplateEditorPage: About to render main content');
+    
+    return (
+      <div className="flex h-screen bg-gray-100">
+        {/* Left Sidebar */}
+        <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
         {/* Header */}
         <div className="p-4 border-b border-gray-200">
           <h1 className="text-xl font-semibold text-gray-900">Label Template Editor</h1>
@@ -490,4 +499,22 @@ export default function TemplateEditorPage() {
       </div>
     </div>
   );
+  } catch (error) {
+    console.error('TemplateEditorPage: Error rendering component:', error);
+    return (
+      <div className="min-h-screen bg-red-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-900 mb-4">Label Template Editor Error</h1>
+          <p className="text-red-700 mb-4">There was an error loading the label template editor.</p>
+          <p className="text-red-600 text-sm">Check the browser console for details.</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Reload Page
+          </button>
+        </div>
+      </div>
+    );
+  }
 }
