@@ -13,6 +13,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -37,9 +38,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const checkAuth = async () => {
     try {
       setLoading(true);
+      console.log('AuthContext: Checking authentication...');
       const response = await api.get('/auth/session');
+      console.log('AuthContext: Session response:', response.data);
       
       if (response.data.success && response.data.user) {
+        console.log('AuthContext: User authenticated:', response.data.user);
         setUser({
           userId: response.data.user.userId,
           email: response.data.user.email,
@@ -48,10 +52,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           lastActivity: new Date(response.data.user.lastActivity)
         });
       } else {
+        console.log('AuthContext: No valid user in response');
         setUser(null);
       }
     } catch (error) {
-      console.log('No active session found');
+      console.log('AuthContext: Session check failed:', error);
       setUser(null);
     } finally {
       setLoading(false);
@@ -121,11 +126,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const value: AuthContextType = {
     user,
     loading,
+    isLoading: loading,
+    isAuthenticated: !!user,
     login,
     logout,
     register,
-    checkAuth,
-    isAuthenticated: !!user?.isAuthenticated
+    checkAuth
   };
 
   return (

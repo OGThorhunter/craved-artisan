@@ -15,6 +15,7 @@ import { unitConverterRouter } from './routes/unit-converter.router';
 import { advancedInventoryRouter } from './routes/advanced-inventory.router';
 import { crmRouter } from './routes/crm.router';
 import { labelProfilesRouter } from './routes/label-profiles.router';
+import labelsRouter from './routes/labels';
 
 const app = express();
 const PORT = Number(process.env.PORT || 3001);
@@ -76,6 +77,7 @@ app.use('/api', crmRouter);
 
 // Label system routes
 app.use('/api', labelProfilesRouter);
+app.use('/api/labels', labelsRouter);
 
 // Start server
 app.listen(PORT, () => {

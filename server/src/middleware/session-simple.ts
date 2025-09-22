@@ -10,8 +10,8 @@ export const sessionMiddleware = session({
     secure: false, // Always false for development
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
     sameSite: 'lax',
-    path: '/',
-    domain: 'localhost' // Allow cookies across localhost subdomains
+    path: '/'
+    // Removed domain restriction for development to allow cookies across ports
   },
   resave: true, // Changed to true for development
   saveUninitialized: true, // Changed to true for development

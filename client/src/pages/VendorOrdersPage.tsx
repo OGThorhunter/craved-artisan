@@ -31,6 +31,7 @@ import OrderTracker from '../components/orders/OrderTracker';
 import OrderKanbanBoard from '../components/orders/OrderKanbanBoard';
 import OrderAnalytics from '../components/orders/OrderAnalytics';
 import SimpleLabelPrintModal from '../components/labels/SimpleLabelPrintModal';
+import PrintLabelModal from '../components/labels/PrintLabelModal';
 import OrderListPrintModal from '../components/orders/OrderListPrintModal';
 import OrderDetailModal from '../components/orders/OrderDetailModal';
 
@@ -237,6 +238,8 @@ const VendorOrdersPage: React.FC = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showLabelPrinting, setShowLabelPrinting] = useState(false);
   const [showLabelTemplateManager, setShowLabelTemplateManager] = useState(false);
+  const [showPrintLabelModal, setShowPrintLabelModal] = useState(false);
+  const [selectedOrderForLabel, setSelectedOrderForLabel] = useState<Order | null>(null);
   const [showNewOrderModal, setShowNewOrderModal] = useState(false);
   const [newOrderForm, setNewOrderForm] = useState({
     customerName: '',
@@ -509,6 +512,11 @@ const VendorOrdersPage: React.FC = () => {
   const handlePrintSelectedLabels = (orderIds: string[]) => {
     setSelectedOrdersForLabels(orderIds);
     setShowLabelPrinting(true);
+  };
+
+  const handlePrintOrderLabel = (order: Order) => {
+    setSelectedOrderForLabel(order);
+    setShowPrintLabelModal(true);
   };
 
   const handlePrintOrderList = () => {
@@ -880,7 +888,7 @@ const VendorOrdersPage: React.FC = () => {
             onOrderClick={handleOrderClick}
             onOrderEdit={handleOrderEdit}
             onOrderDuplicate={handleOrderDuplicate}
-            onOrderPrint={(order) => handlePrintSelectedLabels([order.id])}
+            onOrderPrint={handlePrintOrderLabel}
             onStatusUpdate={handleStatusUpdate}
           />
         ) : viewMode === 'kanban' ? (
@@ -1033,6 +1041,20 @@ const VendorOrdersPage: React.FC = () => {
           onClose={() => setShowLabelPrinting(false)}
           orders={orders.filter(order => selectedOrdersForLabels.includes(order.id))}
         />
+
+        {/* Individual Order Print Label Modal */}
+        {selectedOrderForLabel && (
+          <PrintLabelModal
+            isOpen={showPrintLabelModal}
+            onClose={() => {
+              setShowPrintLabelModal(false);
+              setSelectedOrderForLabel(null);
+            }}
+            source="order"
+            sourceId={selectedOrderForLabel.id}
+            sourceName={`${selectedOrderForLabel.orderNumber} - ${selectedOrderForLabel.customerName}`}
+          />
+        )}
 
         {/* Label Template Manager Modal */}
         {/* <LabelTemplateManager

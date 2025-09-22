@@ -132,7 +132,7 @@ function App() {
             {/* Protected Dashboard Routes */}
             <Route path="/dashboard">
               <ProtectedRoute>
-                <DashboardPage />
+                <PulsePage />
               </ProtectedRoute>
             </Route>
             <Route path="/dashboard/customer">

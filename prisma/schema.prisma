@@ -21,6 +21,7 @@ model User {
   updated_at      DateTime         @updatedAt
   analyticsEvents AnalyticsEvent[]
   orders          Order[]
+  labelJobs       LabelJob[]
   vendorProfile   VendorProfile?
 
   @@index([zip_code])
@@ -46,6 +47,10 @@ model VendorProfile {
   fulfillmentLocations  FulfillmentLocation[]
   fulfillmentWindows    FulfillmentWindow[]
   products              Product[]
+  printerProfiles       PrinterProfile[]
+  labelProfiles         LabelProfile[]
+  labelTemplates        LabelTemplate[]
+  labelJobs             LabelJob[]
   user                  User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
@@ -578,6 +583,105 @@ model SalesWindow {
   market       Market?      @relation(fields: [marketId], references: [id])
 }
 
+// Label System Models
+model PrinterProfile {
+  id            String        @id @default(cuid())
+  vendorProfileId String
+  name          String
+  driver        PrinterDriver
+  dpi           Int           @default(300)
+  maxWidthIn    Float         @default(4.0)
+  maxHeightIn   Float         @default(6.0)
+  mediaTypes    String        @default("[]") // JSON array of media types
+  networkAddress String?      // IP address or network path
+  status        PrinterStatus @default(ACTIVE)
+  lastSeenAt    DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  labelProfiles LabelProfile[]
+  labelJobs     LabelJob[]
+
+  vendorProfile VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+
+  @@index([vendorProfileId])
+  @@index([status])
+}
+
+model LabelProfile {
+  id              String        @id @default(cuid())
+  vendorProfileId String
+  printerProfileId String
+  templateId      String?
+  name            String
+  description     String?
+  widthIn         Float         @default(4.0)
+  heightIn        Float         @default(6.0)
+  orientation     LabelOrientation @default(PORTRAIT)
+  cornerRadiusIn  Float?        @default(0.0)
+  copies          Int           @default(1)
+  engine          LabelEngine   @default(ZPL)
+  status          LabelStatus   @default(ACTIVE)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  labelJobs       LabelJob[]
+
+  vendorProfile   VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  printerProfile  PrinterProfile @relation(fields: [printerProfileId], references: [id], onDelete: Cascade)
+  template        LabelTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+
+  @@index([vendorProfileId])
+  @@index([status])
+}
+
+model LabelTemplate {
+  id              String        @id @default(cuid())
+  vendorProfileId String
+  title           String
+  description     String?
+  schema          String        // JSON schema for template
+  version         String        @default("1.0.0")
+  isSystem        Boolean       @default(false)
+  lastPublishedAt DateTime?
+  status          TemplateStatus @default(DRAFT)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  labelProfiles   LabelProfile[]
+
+  vendorProfile   VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+
+  @@index([vendorProfileId])
+  @@index([status])
+  @@index([isSystem])
+}
+
+model LabelJob {
+  id               String        @id @default(cuid())
+  vendorProfileId  String
+  printerProfileId String
+  labelProfileId   String
+  requestedByUserId String
+  status           JobStatus     @default(QUEUED)
+  source           JobSource     @default(ORDER)
+  sourceId         String
+  payload          String        // JSON payload with resolved data
+  renderOutputUrl  String?
+  error            String?
+  copies           Int           @default(1)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  completedAt      DateTime?
+
+  vendorProfile    VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  printerProfile   PrinterProfile @relation(fields: [printerProfileId], references: [id], onDelete: Cascade)
+  labelProfile     LabelProfile @relation(fields: [labelProfileId], references: [id], onDelete: Cascade)
+  requestedBy      User @relation(fields: [requestedByUserId], references: [id])
+
+  @@index([vendorProfileId])
+  @@index([status])
+  @@index([source, sourceId])
+  @@index([createdAt])
+}
+
 enum OrderStatus {
   PENDING
   PAID
@@ -629,4 +733,55 @@ enum FulfillmentContextType {
   NONE
   MARKET
   WINDOW
+}
+
+// Label System Enums
+enum PrinterDriver {
+  ZPL
+  BROTHER_QL
+  PDF
+}
+
+enum PrinterStatus {
+  ACTIVE
+  INACTIVE
+  OFFLINE
+}
+
+enum LabelOrientation {
+  PORTRAIT
+  LANDSCAPE
+}
+
+enum LabelEngine {
+  ZPL
+  BROTHER_QL
+  PDF
+}
+
+enum LabelStatus {
+  ACTIVE
+  INACTIVE
+  DRAFT
+}
+
+enum TemplateStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum JobStatus {
+  QUEUED
+  RENDERING
+  PRINTING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum JobSource {
+  ORDER
+  PRODUCT
+  MANUAL
 }
