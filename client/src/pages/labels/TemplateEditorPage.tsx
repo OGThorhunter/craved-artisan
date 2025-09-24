@@ -11,7 +11,9 @@ import {
   Download,
   List,
   AlertTriangle,
-  ArrowLeft
+  ArrowLeft,
+  Layout,
+  Printer
 } from 'lucide-react';
 import QRCode from 'qrcode';
 
@@ -27,6 +29,12 @@ interface LabelElement {
   color?: string;
 }
 
+interface LabelBackground {
+  type: 'none' | 'color' | 'image';
+  value?: string;
+  opacity?: number;
+}
+
 const sampleData = {
   productName: 'Artisan Bread',
   sku: 'AB-001',
@@ -36,6 +44,72 @@ const sampleData = {
   allergens: 'Contains wheat',
   disclaimer: 'Keep refrigerated. Best by date shown.',
   qrLink: 'https://craved-artisan.com/products/AB-001'
+};
+
+// Standard label sizes by printer type
+const LABEL_SIZES = {
+  'Zebra ZT230': [
+    { name: '4x6 inch', width: 400, height: 600, description: 'Standard shipping label' },
+    { name: '4x3 inch', width: 400, height: 300, description: 'Small product label' },
+    { name: '2x1 inch', width: 200, height: 100, description: 'Price tag' },
+    { name: '3x2 inch', width: 300, height: 200, description: 'Product label' },
+    { name: '6x4 inch', width: 600, height: 400, description: 'Large format' }
+  ],
+  'Brother QL-820NWB': [
+    { name: '4x6 inch', width: 400, height: 600, description: 'Standard shipping label' },
+    { name: '3.5x1.125 inch', width: 350, height: 112, description: 'Name badge' },
+    { name: '2.25x1.25 inch', width: 225, height: 125, description: 'Small label' },
+    { name: '1x3 inch', width: 100, height: 300, description: 'Address label' }
+  ],
+  'PDF': [
+    { name: '4x6 inch', width: 400, height: 600, description: 'Standard shipping label' },
+    { name: '3x2 inch', width: 300, height: 200, description: 'Product label' },
+    { name: '2x1 inch', width: 200, height: 100, description: 'Price tag' },
+    { name: 'A4 sheet', width: 800, height: 1100, description: 'Full sheet' }
+  ]
+};
+
+// Default layouts
+const DEFAULT_LAYOUTS = {
+  'Product Label': {
+    name: 'Product Label',
+    description: 'Standard product label with name, price, and QR code',
+    elements: [
+      { type: 'text', x: 10, y: 10, width: 180, height: 20, content: '{{productName}}', fontSize: 14, color: '#000000' },
+      { type: 'text', x: 10, y: 35, width: 80, height: 15, content: 'SKU: {{sku}}', fontSize: 10, color: '#666666' },
+      { type: 'price', x: 130, y: 35, width: 60, height: 20, content: '{{price}}' },
+      { type: 'qr', x: 160, y: 10, width: 30, height: 30, content: '{{qrLink}}' }
+    ]
+  },
+  'Shipping Label': {
+    name: 'Shipping Label',
+    description: 'Shipping label with address and tracking info',
+    elements: [
+      { type: 'text', x: 10, y: 10, width: 380, height: 25, content: '{{vendorName}}', fontSize: 16, color: '#000000' },
+      { type: 'text', x: 10, y: 40, width: 380, height: 15, content: '{{shippingAddress}}', fontSize: 12, color: '#000000' },
+      { type: 'text', x: 10, y: 60, width: 200, height: 15, content: 'Tracking: {{trackingNumber}}', fontSize: 10, color: '#666666' },
+      { type: 'barcode', x: 250, y: 60, width: 140, height: 30, content: '{{trackingNumber}}' }
+    ]
+  },
+  'Inventory Label': {
+    name: 'Inventory Label',
+    description: 'Inventory label with product details and ingredients',
+      elements: [
+      { type: 'text', x: 10, y: 10, width: 180, height: 20, content: '{{productName}}', fontSize: 14, color: '#000000' },
+      { type: 'text', x: 10, y: 35, width: 80, height: 15, content: 'SKU: {{sku}}', fontSize: 10, color: '#666666' },
+      { type: 'ingredients', x: 10, y: 55, width: 180, height: 40, content: '{{ingredients}}' },
+      { type: 'disclaimer', x: 10, y: 100, width: 180, height: 25, content: '{{disclaimer}}' }
+    ]
+  },
+  'Price Tag': {
+    name: 'Price Tag',
+    description: 'Simple price tag for retail display',
+      elements: [
+      { type: 'text', x: 5, y: 5, width: 90, height: 15, content: '{{productName}}', fontSize: 10, color: '#000000' },
+      { type: 'price', x: 70, y: 25, width: 25, height: 15, content: '{{price}}' },
+      { type: 'text', x: 5, y: 45, width: 90, height: 10, content: '{{vendorName}}', fontSize: 8, color: '#666666' }
+    ]
+  }
 };
 
 export default function TemplateEditorPage() {
@@ -55,6 +129,11 @@ export default function TemplateEditorPage() {
   });
   const [showPreview, setShowPreview] = useState(false);
   const [imageUploadRef, setImageUploadRef] = useState<HTMLInputElement | null>(null);
+  const [selectedPrinter, setSelectedPrinter] = useState<string>('Zebra ZT230');
+  const [selectedLabelSize, setSelectedLabelSize] = useState<string>('4x6 inch');
+  const [labelDimensions, setLabelDimensions] = useState({ width: 400, height: 600 });
+  const [labelBackground, setLabelBackground] = useState<LabelBackground>({ type: 'none' });
+  const [backgroundUploadRef, setBackgroundUploadRef] = useState<HTMLInputElement | null>(null);
 
   const generateQRCode = async (text: string): Promise<string> => {
     try {
@@ -64,6 +143,89 @@ export default function TemplateEditorPage() {
       console.error('Error generating QR code:', error);
       return '';
     }
+  };
+
+  const handlePrinterChange = (printer: string) => {
+    setSelectedPrinter(printer);
+    // Reset to first available size for new printer
+    const sizes = LABEL_SIZES[printer as keyof typeof LABEL_SIZES];
+    if (sizes && sizes.length > 0) {
+      setSelectedLabelSize(sizes[0].name);
+      setLabelDimensions({ width: sizes[0].width, height: sizes[0].height });
+    }
+  };
+
+  const handleLabelSizeChange = (sizeName: string) => {
+    setSelectedLabelSize(sizeName);
+    const sizes = LABEL_SIZES[selectedPrinter as keyof typeof LABEL_SIZES];
+    const selectedSize = sizes?.find(size => size.name === sizeName);
+    if (selectedSize) {
+      setLabelDimensions({ width: selectedSize.width, height: selectedSize.height });
+    }
+  };
+
+  const applyDefaultLayout = async (layoutName: string) => {
+    const layout = DEFAULT_LAYOUTS[layoutName as keyof typeof DEFAULT_LAYOUTS];
+    if (!layout) return;
+
+    const newElements: LabelElement[] = [];
+    
+    for (const element of layout.elements) {
+      const id = `${element.type}-${Date.now()}-${Math.random()}`;
+      let content = element.content || '';
+      
+      // Generate QR code if needed
+      if (element.type === 'qr' && element.content) {
+        content = await generateQRCode(element.content);
+      }
+      
+      newElements.push({
+        id,
+        type: element.type as LabelElement['type'],
+        x: element.x,
+        y: element.y,
+        width: element.width,
+        height: element.height,
+        content,
+        fontSize: element.fontSize,
+        color: element.color
+      });
+    }
+    
+    setElements(newElements);
+    setSelectedElement(null);
+  };
+
+  const handleBackgroundUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setLabelBackground({
+          type: 'image',
+          value: result,
+          opacity: 0.8
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const triggerBackgroundUpload = () => {
+    backgroundUploadRef?.click();
+  };
+
+  const handleBackgroundColorChange = (color: string) => {
+    setLabelBackground({
+      type: 'color',
+      value: color,
+      opacity: 0.3
+    });
+  };
+
+  const removeBackground = () => {
+    setLabelBackground({ type: 'none' });
   };
 
   const addElement = async (type: LabelElement['type']) => {
@@ -549,13 +711,102 @@ export default function TemplateEditorPage() {
           style={{ display: 'none' }}
         />
         
+        {/* Hidden file input for background upload */}
+        <input
+          type="file"
+          ref={setBackgroundUploadRef}
+          onChange={handleBackgroundUpload}
+          accept="image/*"
+          title="Upload background image"
+          aria-label="Upload background image"
+          style={{ display: 'none' }}
+        />
+        
       {/* Left Sidebar */}
-      <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
+        <div className="w-80 bg-white border-r border-gray-200 flex flex-col max-h-[calc(100vh-73px)] overflow-hidden">
         {/* Header */}
         <div className="p-4 border-b border-gray-200">
           <h1 className="text-xl font-semibold text-gray-900">Label Template Editor</h1>
             <p className="text-sm text-gray-600 mt-1">Design your product labels</p>
         </div>
+
+        {/* Background Section */}
+        <div className="p-4 border-b border-gray-200">
+          <h3 className="text-sm font-medium text-gray-700 mb-3">Background</h3>
+          <div className="space-y-3">
+            <div className="flex gap-2">
+              <button
+                onClick={triggerBackgroundUpload}
+                className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                title="Upload background image"
+                aria-label="Upload background image"
+              >
+                📷 Image
+              </button>
+              <button
+                onClick={() => handleBackgroundColorChange('#f0f0f0')}
+                className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                title="Set light gray background"
+                aria-label="Set light gray background"
+              >
+                🎨 Light
+              </button>
+              <button
+                onClick={() => handleBackgroundColorChange('#e0e0e0')}
+                className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                title="Set medium gray background"
+                aria-label="Set medium gray background"
+              >
+                🎨 Medium
+              </button>
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="color"
+                onChange={(e) => handleBackgroundColorChange(e.target.value)}
+                className="flex-1 h-8 border border-gray-300 rounded cursor-pointer"
+                title="Choose custom background color"
+                aria-label="Choose custom background color"
+              />
+            <button
+                onClick={removeBackground}
+                className="px-3 py-2 text-sm border border-red-300 text-red-600 rounded-lg hover:border-red-400 hover:bg-red-50 transition-colors"
+                title="Remove background"
+                aria-label="Remove background"
+              >
+                ✕ Clear
+            </button>
+            </div>
+            {labelBackground.type !== 'none' && (
+              <div className="text-xs text-gray-600">
+                Current: {labelBackground.type === 'image' ? 'Image' : 'Color'} 
+                {labelBackground.opacity && ` (${Math.round(labelBackground.opacity * 100)}% opacity)`}
+              </div>
+            )}
+          </div>
+        </div>
+
+          {/* Default Layouts */}
+          <div className="p-4 border-b border-gray-200">
+            <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
+              <Layout className="w-4 h-4 mr-2" />
+              Quick Layouts
+            </h3>
+            <div className="space-y-2">
+              {Object.entries(DEFAULT_LAYOUTS).map(([key, layout]) => (
+                <button
+                  key={key}
+                  onClick={() => applyDefaultLayout(key)}
+                  className="w-full p-3 text-left border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                  title={layout.description}
+                  aria-label={`Apply ${layout.name} layout`}
+                >
+                  <div className="text-sm font-medium text-gray-900">{layout.name}</div>
+                  <div className="text-xs text-gray-600">{layout.description}</div>
+                </button>
+              ))}
+            </div>
+              </div>
 
           {/* Add Elements */}
           <div className="p-4 border-b border-gray-200">
@@ -628,7 +879,7 @@ export default function TemplateEditorPage() {
               </div>
 
           {/* Elements List */}
-          <div className="flex-1 p-4 overflow-y-auto">
+          <div className="flex-1 p-4 overflow-y-auto min-h-0">
             <h3 className="text-sm font-medium text-gray-700 mb-3">Elements</h3>
             <div className="space-y-2">
               {elements.map((element) => (
@@ -790,8 +1041,31 @@ export default function TemplateEditorPage() {
           <div className="bg-white border-b border-gray-200 p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
-                <h2 className="text-lg font-medium text-gray-900">Product Label</h2>
-                <span className="text-sm text-gray-600">4" × 2" (300 DPI)</span>
+                <h2 className="text-lg font-medium text-gray-900">Label Template</h2>
+                <div className="flex items-center space-x-2">
+                  <select
+                    value={selectedPrinter}
+                    onChange={(e) => handlePrinterChange(e.target.value)}
+                    className="px-3 py-1 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    title="Select printer"
+                    aria-label="Select printer"
+                  >
+                    {Object.keys(LABEL_SIZES).map((printer) => (
+                      <option key={printer} value={printer}>{printer}</option>
+                    ))}
+                  </select>
+                  <select
+                    value={selectedLabelSize}
+                    onChange={(e) => handleLabelSizeChange(e.target.value)}
+                    className="px-3 py-1 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    title="Select label size"
+                    aria-label="Select label size"
+                  >
+                    {LABEL_SIZES[selectedPrinter as keyof typeof LABEL_SIZES]?.map((size) => (
+                      <option key={size.name} value={size.name}>{size.name}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
               <div className="flex items-center space-x-2">
                 <button 
@@ -811,7 +1085,15 @@ export default function TemplateEditorPage() {
           <div className="flex-1 bg-gray-100 p-8 flex items-center justify-center">
             <div 
               className="canvas-container bg-white shadow-lg relative"
-              style={{ width: '400px', height: '200px' }}
+              style={{ 
+                width: `${labelDimensions.width}px`, 
+                height: `${labelDimensions.height}px`,
+                background: labelBackground.type === 'color' 
+                  ? labelBackground.value 
+                  : labelBackground.type === 'image' 
+                    ? `url(${labelBackground.value}) center/cover` 
+                    : 'white'
+              }}
               onClick={(e) => {
                 if (!showPreview && e.target === e.currentTarget) {
                   setSelectedElement(null);
@@ -820,6 +1102,16 @@ export default function TemplateEditorPage() {
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
             >
+              {/* Background overlay for opacity control */}
+              {labelBackground.type !== 'none' && labelBackground.opacity && (
+                <div 
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    backgroundColor: labelBackground.type === 'color' ? labelBackground.value : 'transparent',
+                    opacity: labelBackground.opacity
+                  }}
+                />
+              )}
               {/* Grid overlay - only show when not in preview mode */}
               {!showPreview && (
                 <div className="absolute inset-0 opacity-10" style={{

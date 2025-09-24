@@ -1,15 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'wouter';
 import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
-import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import MotivationalQuote from '@/components/dashboard/MotivationalQuote';
-import { getQuoteByCategory } from '@/data/motivationalQuotes';
 import { 
   TrendingUp, 
   DollarSign, 
   Package, 
   Bell, 
   MessageSquare, 
-  Settings, 
   Users, 
   Calendar,
   Activity,
@@ -18,24 +15,14 @@ import {
   ChevronRight,
   TrendingDown,
   Minus,
-  Filter,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  MoreVertical,
+  Edit,
+  Tag,
+  Trash2,
+  Eye
 } from 'lucide-react';
-
-// Mock vendor data
-const vendor = {
-  id: 'mock-user-id',
-  name: 'Sarah Johnson',
-  storeName: 'Artisan Creations',
-  avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=64&h=64&fit=crop&crop=face',
-  verified: true,
-  averageRating: 4.8,
-  totalProducts: 24,
-  totalRevenue: 15420,
-  totalOrders: 342,
-  totalCustomers: 156
-};
 
 // Mock Pulse data
 const pulseData = {
@@ -91,20 +78,157 @@ const pulseData = {
   }
 };
 
-const PulsePage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('pulse');
+export default function PulsePage() {
   const [timeRange, setTimeRange] = useState('weekly');
   const [seasonalFilter, setSeasonalFilter] = useState('current');
+  const [openDropdowns, setOpenDropdowns] = useState<{ [key: number]: boolean }>({});
 
-  const tabs = [
-    { id: 'pulse', label: 'Pulse', icon: Activity },
-    { id: 'analytics', label: 'Analytics', icon: TrendingUp },
-    { id: 'crm', label: 'CRM', icon: Users },
-    { id: 'inventory', label: 'Inventory', icon: Package },
-    { id: 'financials', label: 'Financials', icon: DollarSign },
-    { id: 'messaging', label: 'Messaging', icon: MessageSquare },
-    { id: 'settings', label: 'Settings', icon: Settings }
-  ];
+  // Function to get filtered data based on time range and seasonal filter
+  const getFilteredData = () => {
+    const baseData = { ...pulseData };
+    
+    // Apply seasonal filter first
+    let seasonalData = { ...baseData };
+    
+    switch (seasonalFilter) {
+      case 'summer':
+        seasonalData = {
+          ...baseData,
+          revenue: {
+            ...baseData.revenue,
+            today: baseData.revenue.today * 1.2, // Summer boost
+            thisWeek: baseData.revenue.thisWeek * 1.2,
+            thisMonth: baseData.revenue.thisMonth * 1.2
+          },
+          salesWindows: {
+            ...baseData.salesWindows,
+            upcoming: baseData.salesWindows.upcoming + 2, // More summer events
+            totalTraffic: Math.floor(baseData.salesWindows.totalTraffic * 1.3)
+          },
+          topProducts: baseData.topProducts.map(product => ({
+            ...product,
+            units: Math.floor(product.units * 1.15), // Summer product boost
+            revenue: product.revenue * 1.15
+          }))
+        };
+        break;
+      case 'winter':
+        seasonalData = {
+          ...baseData,
+          revenue: {
+            ...baseData.revenue,
+            today: baseData.revenue.today * 0.8, // Winter slowdown
+            thisWeek: baseData.revenue.thisWeek * 0.8,
+            thisMonth: baseData.revenue.thisMonth * 0.8
+          },
+          salesWindows: {
+            ...baseData.salesWindows,
+            upcoming: Math.max(1, baseData.salesWindows.upcoming - 1), // Fewer winter events
+            totalTraffic: Math.floor(baseData.salesWindows.totalTraffic * 0.7)
+          },
+          topProducts: baseData.topProducts.map(product => ({
+            ...product,
+            units: Math.floor(product.units * 0.85), // Winter product decline
+            revenue: product.revenue * 0.85
+          }))
+        };
+        break;
+      case 'holiday':
+        seasonalData = {
+          ...baseData,
+          revenue: {
+            ...baseData.revenue,
+            today: baseData.revenue.today * 2.5, // Holiday surge
+            thisWeek: baseData.revenue.thisWeek * 2.5,
+            thisMonth: baseData.revenue.thisMonth * 2.5
+          },
+          salesWindows: {
+            ...baseData.salesWindows,
+            upcoming: baseData.salesWindows.upcoming + 5, // More holiday events
+            totalTraffic: Math.floor(baseData.salesWindows.totalTraffic * 2.0)
+          },
+          topProducts: baseData.topProducts.map(product => ({
+            ...product,
+            units: Math.floor(product.units * 2.0), // Holiday product surge
+            revenue: product.revenue * 2.0
+          }))
+        };
+        break;
+      default: // 'current'
+        seasonalData = baseData;
+    }
+    
+    // Apply time range filter to seasonal data
+    switch (timeRange) {
+      case 'daily':
+        return {
+          ...seasonalData,
+          revenue: {
+            today: seasonalData.revenue.today,
+            thisWeek: seasonalData.revenue.today, // Show today's data
+            thisMonth: seasonalData.revenue.today, // Show today's data
+            todayChange: seasonalData.revenue.todayChange,
+            weekChange: seasonalData.revenue.todayChange,
+            monthChange: seasonalData.revenue.todayChange
+          }
+        };
+      case 'weekly':
+        return {
+          ...seasonalData,
+          revenue: {
+            today: seasonalData.revenue.thisWeek / 7, // Average daily
+            thisWeek: seasonalData.revenue.thisWeek,
+            thisMonth: seasonalData.revenue.thisWeek, // Show week's data
+            todayChange: seasonalData.revenue.weekChange,
+            weekChange: seasonalData.revenue.weekChange,
+            monthChange: seasonalData.revenue.weekChange
+          }
+        };
+      case 'monthly':
+        return {
+          ...seasonalData,
+          revenue: {
+            today: seasonalData.revenue.thisMonth / 30, // Average daily
+            thisWeek: seasonalData.revenue.thisMonth / 4, // Average weekly
+            thisMonth: seasonalData.revenue.thisMonth,
+            todayChange: seasonalData.revenue.monthChange,
+            weekChange: seasonalData.revenue.monthChange,
+            monthChange: seasonalData.revenue.monthChange
+          }
+        };
+      default:
+        return seasonalData;
+    }
+  };
+
+  const filteredData = getFilteredData();
+
+  // Helper functions for dropdown management
+  const toggleDropdown = (index: number) => {
+    setOpenDropdowns(prev => ({
+      ...prev,
+      [index]: !prev[index]
+    }));
+  };
+
+  const closeAllDropdowns = () => {
+    setOpenDropdowns({});
+  };
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.dropdown-container')) {
+        closeAllDropdowns();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const seasonalFilters = [
     { id: 'current', label: 'Current Season' },
@@ -133,87 +257,43 @@ const PulsePage: React.FC = () => {
 
   return (
     <VendorDashboardLayout>
-      <div className="py-8 bg-white min-h-screen">
-        <div className="container-responsive">
-          {/* Header */}
-          <DashboardHeader
-            title="Business Dashboard"
-            description="Your business at a glance - updated in real-time"
-            currentView="Dashboard"
-            icon={Activity}
-            iconColor="text-blue-600"
-            iconBg="bg-blue-100"
-          />
-
-          {/* Motivational Quote */}
-          <MotivationalQuote
-            quote={getQuoteByCategory('success').quote}
-            author={getQuoteByCategory('success').author}
-            icon={getQuoteByCategory('success').icon}
-            variant={getQuoteByCategory('success').variant}
-          />
-
-          {/* Navigation Tabs */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-8">
-            <div className="flex space-x-8 px-6">
-              {tabs.map((tab) => {
-                const Icon = tab.icon;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                      activeTab === tab.id
-                        ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                  >
-                    <Icon className="w-5 h-5" />
-                    {tab.label}
-                  </button>
-                );
-              })}
-            </div>
+      <div className="space-y-6">
+        {/* Header with Seasonal Filter */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-3xl font-bold text-gray-900">Business Pulse</h2>
+            <p className="text-gray-600 mt-1">
+              Your business at a glance - updated in real-time
+              {seasonalFilter !== 'current' && (
+                <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
+                  {seasonalFilters.find(f => f.id === seasonalFilter)?.label}
+                </span>
+              )}
+            </p>
           </div>
+          <div className="flex items-center gap-3">
+            <select
+              value={seasonalFilter}
+              onChange={(e) => setSeasonalFilter(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              title="Select seasonal filter"
+              aria-label="Select seasonal filter"
+            >
+              {seasonalFilters.map((filter) => (
+                <option key={filter.id} value={filter.id}>{filter.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
 
-          {/* Main Content */}
-        {activeTab === 'pulse' && (
-          <div className="space-y-6">
-            {/* Header with Seasonal Filter */}
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-3xl font-bold text-gray-900">Business Pulse</h2>
-                <p className="text-gray-600 mt-1">Your business at a glance - updated in real-time</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <select
-                  value={seasonalFilter}
-                  onChange={(e) => setSeasonalFilter(e.target.value)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg bg-white text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  title="Select seasonal filter"
-                  aria-label="Select seasonal filter"
-                >
-                  {seasonalFilters.map((filter) => (
-                    <option key={filter.id} value={filter.id}>{filter.label}</option>
-                  ))}
-                </select>
+        {/* Must-Have Top-Level Metrics */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Pending Orders */}
+          <div className="bg-[#F7F2EC] rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Pending Orders</h3>
+              <Link href="/dashboard/vendor/orders">
                 <button 
-                  className="p-2 text-gray-400 hover:text-gray-600"
-                  title="Filter options"
-                  aria-label="Open filter options"
-                >
-                  <Filter className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-
-            {/* Must-Have Top-Level Metrics */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Pending Orders */}
-              <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Pending Orders</h3>
-                                  <button 
                   className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
                   title="View fulfillment queue"
                   aria-label="View fulfillment queue"
@@ -221,286 +301,338 @@ const PulsePage: React.FC = () => {
                   View Queue
                   <ChevronRight className="w-4 h-4" />
                 </button>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-3xl font-bold text-gray-900">{pulseData.pendingOrders.count}</span>
-                    <div className="flex items-center gap-1">
-                      {getChangeIcon(pulseData.pendingOrders.changeType)}
-                      <span className={`text-sm font-medium ${getChangeColor(pulseData.pendingOrders.changeType)}`}>
-                        {pulseData.pendingOrders.change}
-                      </span>
-                    </div>
-                  </div>
-                  <p className="text-2xl font-bold text-green-600">
-                    ${pulseData.pendingOrders.value.toLocaleString()}
-                  </p>
-                  <p className="text-sm text-gray-600">Total value pending</p>
+              </Link>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-3xl font-bold text-gray-900">{filteredData.pendingOrders.count}</span>
+                <div className="flex items-center gap-1">
+                  {getChangeIcon(filteredData.pendingOrders.changeType)}
+                  <span className={`text-sm font-medium ${getChangeColor(filteredData.pendingOrders.changeType)}`}>
+                    {filteredData.pendingOrders.change}
+                  </span>
                 </div>
               </div>
+              <p className="text-2xl font-bold text-green-600">
+                ${filteredData.pendingOrders.value.toLocaleString()}
+              </p>
+              <p className="text-sm text-gray-600">Total value pending</p>
+            </div>
+          </div>
 
-              {/* Open Sales Windows */}
-              <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900">Sales Windows</h3>
-                  <Calendar className="w-5 h-5 text-blue-600" />
-                </div>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-3xl font-bold text-gray-900">{pulseData.salesWindows.upcoming}</span>
-                    <span className="text-sm text-gray-600">Upcoming</span>
-                  </div>
-                  <p className="text-lg font-medium text-gray-900">{pulseData.salesWindows.totalTraffic}</p>
-                  <p className="text-sm text-gray-600">Orders associated</p>
-                  <div className="text-xs text-blue-600 font-medium">
-                    {pulseData.salesWindows.nextEvent}
-                  </div>
+          {/* Open Sales Windows */}
+          <div className="bg-[#F7F2EC] rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Sales Windows</h3>
+              <Link href="/dashboard/vendor/sales-windows">
+                <button 
+                  className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
+                  title="View sales windows queue"
+                  aria-label="View sales windows queue"
+                >
+                  View Queue
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </Link>
+            </div>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-3xl font-bold text-gray-900">{filteredData.salesWindows.upcoming}</span>
+                <span className="text-sm text-gray-600">Upcoming</span>
+              </div>
+              <p className="text-lg font-medium text-gray-900">{filteredData.salesWindows.totalTraffic}</p>
+              <p className="text-sm text-gray-600">Orders associated</p>
+              <div className="text-xs text-blue-600 font-medium">
+                {filteredData.salesWindows.nextEvent}
+              </div>
+            </div>
+          </div>
+
+          {/* AI Insight Card */}
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg p-6 border border-blue-200 shadow-sm">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Brain className="w-5 h-5 text-blue-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">AI Insight</h3>
+            </div>
+            <p className="text-gray-800 font-medium mb-3">
+              {seasonalFilter === 'summer' && "Summer season is boosting sales! Consider expanding outdoor product lines."}
+              {seasonalFilter === 'winter' && "Winter slowdown expected. Focus on indoor products and holiday preparations."}
+              {seasonalFilter === 'holiday' && "Holiday season surge! Maximize inventory and prepare for peak demand."}
+              {seasonalFilter === 'current' && "Sales are up 12% vs last week, but average basket size is down. Recommend promoting bundles."}
+            </p>
+            <div className="flex items-center gap-2 text-sm text-blue-600">
+              <Sparkles className="w-4 h-4" />
+              <span>Updated 2 hours ago</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Revenue Snapshots */}
+        <div className="bg-[#F7F2EC] rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-semibold text-gray-900">Revenue Pulse</h3>
+            <div className="flex bg-white rounded-lg p-1 shadow-sm">
+              {['daily', 'weekly', 'monthly'].map((range) => (
+                <button
+                  key={range}
+                  onClick={() => setTimeRange(range)}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    timeRange === range
+                      ? 'bg-blue-500 text-white'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  {range.charAt(0).toUpperCase() + range.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="bg-white rounded-lg p-4 shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-gray-600">Today</span>
+                <div className="flex items-center gap-1">
+                  {getChangeIcon('positive')}
+                  <span className="text-sm font-medium text-green-600">
+                    {filteredData.revenue.todayChange}
+                  </span>
                 </div>
               </div>
-
-              {/* AI Insight Card */}
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg p-6 border border-blue-200 shadow-sm">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <Brain className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900">AI Insight</h3>
-                </div>
-                <p className="text-gray-800 font-medium mb-3">
-                  Sales are up 12% vs last week, but average basket size is down. Recommend promoting bundles.
-                </p>
-                <div className="flex items-center gap-2 text-sm text-blue-600">
-                  <Sparkles className="w-4 h-4" />
-                  <span>Updated 2 hours ago</span>
-                </div>
+              <p className="text-2xl font-bold text-gray-900">
+                ${filteredData.revenue.today.toLocaleString()}
+              </p>
+              <div className="w-full bg-gray-200 rounded-full h-1 mt-2">
+                <div className="bg-green-500 h-1 rounded-full" style={{ width: '75%' }}></div>
               </div>
             </div>
 
-            {/* Revenue Snapshots */}
-            <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
-              <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-semibold text-gray-900">Revenue Pulse</h3>
-                <div className="flex bg-white rounded-lg p-1 shadow-sm">
-                  {['daily', 'weekly', 'monthly'].map((range) => (
-                    <button
-                      key={range}
-                      onClick={() => setTimeRange(range)}
-                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                        timeRange === range
-                          ? 'bg-blue-500 text-white'
-                          : 'text-gray-600 hover:text-gray-900'
-                      }`}
-                    >
-                      {range.charAt(0).toUpperCase() + range.slice(1)}
-                    </button>
-                  ))}
+            <div className="bg-white rounded-lg p-4 shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-gray-600">This Week</span>
+                <div className="flex items-center gap-1">
+                  {getChangeIcon('positive')}
+                  <span className="text-sm font-medium text-green-600">
+                    {filteredData.revenue.weekChange}
+                  </span>
                 </div>
               </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-600">Today</span>
-                    <div className="flex items-center gap-1">
-                      {getChangeIcon('positive')}
-                      <span className="text-sm font-medium text-green-600">
-                        {pulseData.revenue.todayChange}
-                      </span>
-                    </div>
-                  </div>
-                  <p className="text-2xl font-bold text-gray-900">
-                    ${pulseData.revenue.today.toLocaleString()}
-                  </p>
-                  <div className="w-full bg-gray-200 rounded-full h-1 mt-2">
-                    <div className="bg-green-500 h-1 rounded-full w-3/4"></div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-600">This Week</span>
-                    <div className="flex items-center gap-1">
-                      {getChangeIcon('positive')}
-                      <span className="text-sm font-medium text-green-600">
-                        {pulseData.revenue.weekChange}
-                      </span>
-                    </div>
-                  </div>
-                  <p className="text-2xl font-bold text-gray-900">
-                    ${pulseData.revenue.thisWeek.toLocaleString()}
-                  </p>
-                  <div className="w-full bg-gray-200 rounded-full h-1 mt-2">
-                    <div className="bg-green-500 h-1 rounded-full w-5/6"></div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-600">This Month</span>
-                    <div className="flex items-center gap-1">
-                      {getChangeIcon('positive')}
-                      <span className="text-sm font-medium text-green-600">
-                        {pulseData.revenue.monthChange}
-                      </span>
-                    </div>
-                  </div>
-                  <p className="text-2xl font-bold text-gray-900">
-                    ${pulseData.revenue.thisMonth.toLocaleString()}
-                  </p>
-                  <div className="w-full bg-gray-200 rounded-full h-1 mt-2">
-                    <div className="bg-green-500 h-1 rounded-full w-2/3"></div>
-                  </div>
-                </div>
+              <p className="text-2xl font-bold text-gray-900">
+                ${filteredData.revenue.thisWeek.toLocaleString()}
+              </p>
+              <div className="w-full bg-gray-200 rounded-full h-1 mt-2">
+                <div className="bg-green-500 h-1 rounded-full" style={{ width: '85%' }}></div>
               </div>
             </div>
 
-            {/* Secondary KPI Panels */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Order Funnel */}
-              <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Funnel</h3>
-                <div className="space-y-4">
-                  {Object.entries(pulseData.orderFunnel).map(([stage, count]) => (
-                    <div key={stage} className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-3 h-3 rounded-full ${
-                          stage === 'new' ? 'bg-blue-500' :
-                          stage === 'inProgress' ? 'bg-yellow-500' :
-                          stage === 'ready' ? 'bg-orange-500' :
-                          'bg-green-500'
-                        }`}></div>
-                        <span className="text-sm font-medium text-gray-700 capitalize">
-                          {stage === 'inProgress' ? 'In Progress' : stage}
-                        </span>
-                      </div>
-                      <span className="text-lg font-bold text-gray-900">{count}</span>
-                    </div>
-                  ))}
+            <div className="bg-white rounded-lg p-4 shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-gray-600">This Month</span>
+                <div className="flex items-center gap-1">
+                  {getChangeIcon('positive')}
+                  <span className="text-sm font-medium text-green-600">
+                    {filteredData.revenue.monthChange}
+                  </span>
                 </div>
               </div>
-
-              {/* Product Performance */}
-              <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Performers</h3>
-                <div className="space-y-3">
-                  {pulseData.topProducts.map((product, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm">
-                      <div className="flex items-center gap-3">
-                        <span className="text-sm font-medium text-gray-500">#{index + 1}</span>
-                        <div>
-                          <p className="font-medium text-gray-900">{product.name}</p>
-                          <p className="text-sm text-gray-600">{product.units} units</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium text-gray-900">${product.revenue.toLocaleString()}</p>
-                        {getTrendIcon(product.trend)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <p className="text-2xl font-bold text-gray-900">
+                ${filteredData.revenue.thisMonth.toLocaleString()}
+              </p>
+              <div className="w-full bg-gray-200 rounded-full h-1 mt-2">
+                <div className="bg-green-500 h-1 rounded-full" style={{ width: '65%' }}></div>
               </div>
             </div>
+          </div>
+        </div>
 
-            {/* Customer Health & Inventory */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Customer Health */}
-              <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Customer Health</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Returning</span>
-                    <span className="text-lg font-bold text-green-600">{pulseData.customerHealth.returning}%</span>
+        {/* Secondary KPI Panels */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Order Funnel */}
+          <div className="bg-[#F7F2EC] rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Funnel</h3>
+            <div className="space-y-4">
+              {Object.entries(filteredData.orderFunnel).map(([stage, count]) => (
+                <div key={stage} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-3 h-3 rounded-full ${
+                      stage === 'new' ? 'bg-blue-500' :
+                      stage === 'inProgress' ? 'bg-yellow-500' :
+                      stage === 'ready' ? 'bg-orange-500' :
+                      'bg-green-500'
+                    }`}></div>
+                    <span className="text-sm font-medium text-gray-700 capitalize">
+                      {stage === 'inProgress' ? 'In Progress' : stage}
+                    </span>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">New</span>
-                    <span className="text-lg font-bold text-blue-600">{pulseData.customerHealth.new}%</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Engagement</span>
-                    <span className="text-lg font-bold text-purple-600">{pulseData.customerHealth.engagement}%</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">At Risk</span>
-                    <span className="text-lg font-bold text-red-600">{pulseData.customerHealth.atRisk}%</span>
-                  </div>
+                  <span className="text-lg font-bold text-gray-900">{count}</span>
                 </div>
-              </div>
-
-              {/* Inventory Status */}
-              <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Inventory Status</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Low Stock Alerts</span>
-                    <span className="text-lg font-bold text-orange-600">{pulseData.inventory.lowStock}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Waste Trend</span>
-                    <span className="text-lg font-bold text-green-600 capitalize">{pulseData.inventory.wasteTrend}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Spoilage Rate</span>
-                    <span className="text-lg font-bold text-blue-600">{pulseData.inventory.spoilageRate}%</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Profitability Pulse */}
-              <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Profitability</h3>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Gross Margin</span>
-                    <span className="text-lg font-bold text-green-600">{pulseData.profitability.grossMargin}%</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">COGS</span>
-                    <span className="text-lg font-bold text-red-600">${pulseData.profitability.cogs.toLocaleString()}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Revenue</span>
-                    <span className="text-lg font-bold text-green-600">${pulseData.profitability.revenue.toLocaleString()}</span>
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
+          </div>
 
-            {/* Underperformers Alert */}
-            <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Underperformers</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {pulseData.underperformers.map((product, index) => (
-                  <div key={index} className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border-l-4 border-orange-400">
+          {/* Product Performance */}
+          <div className="bg-[#F7F2EC] rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Performers</h3>
+            <div className="space-y-3">
+              {filteredData.topProducts.map((product, index) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-medium text-gray-500">#{index + 1}</span>
                     <div>
                       <p className="font-medium text-gray-900">{product.name}</p>
-                      <p className="text-sm text-gray-600">{product.units} units sold</p>
-                      <p className="text-sm text-orange-600">{product.inventory} in inventory</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium text-gray-900">${product.revenue.toLocaleString()}</p>
-                      <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                        Take Action
-                      </button>
+                      <p className="text-sm text-gray-600">{product.units} units</p>
                     </div>
                   </div>
-                ))}
+                  <div className="text-right">
+                    <p className="font-medium text-gray-900">${product.revenue.toLocaleString()}</p>
+                    {getTrendIcon(product.trend)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Customer Health & Inventory */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Customer Health */}
+          <div className="bg-[#F7F2EC] rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Customer Health</h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Returning</span>
+                <span className="text-lg font-bold text-green-600">{filteredData.customerHealth.returning}%</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">New</span>
+                <span className="text-lg font-bold text-blue-600">{filteredData.customerHealth.new}%</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Engagement</span>
+                <span className="text-lg font-bold text-purple-600">{filteredData.customerHealth.engagement}%</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">At Risk</span>
+                <span className="text-lg font-bold text-red-600">{filteredData.customerHealth.atRisk}%</span>
               </div>
             </div>
           </div>
-        )}
 
-        {/* Other tabs content would go here */}
-        {activeTab !== 'pulse' && (
-          <div className="text-center py-12">
-            <h3 className="text-lg font-medium text-gray-900 mb-2">{tabs.find(t => t.id === activeTab)?.label} Coming Soon</h3>
-            <p className="text-gray-600">This section is under development</p>
+          {/* Inventory Status */}
+          <div className="bg-[#F7F2EC] rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Inventory Status</h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Low Stock Alerts</span>
+                <span className="text-lg font-bold text-orange-600">{filteredData.inventory.lowStock}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Waste Trend</span>
+                <span className="text-lg font-bold text-green-600 capitalize">{filteredData.inventory.wasteTrend}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Spoilage Rate</span>
+                <span className="text-lg font-bold text-blue-600">{filteredData.inventory.spoilageRate}%</span>
+              </div>
+            </div>
           </div>
-        )}
+
+          {/* Profitability Pulse */}
+          <div className="bg-[#F7F2EC] rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Profitability</h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Gross Margin</span>
+                <span className="text-lg font-bold text-green-600">{filteredData.profitability.grossMargin}%</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">COGS</span>
+                <span className="text-lg font-bold text-red-600">${filteredData.profitability.cogs.toLocaleString()}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Revenue</span>
+                <span className="text-lg font-bold text-green-600">${filteredData.profitability.revenue.toLocaleString()}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Underperformers Alert */}
+        <div className="bg-[#F7F2EC] rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Underperformers</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {filteredData.underperformers.map((product, index) => (
+              <div key={index} className="flex items-center justify-between p-4 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 border-l-4 border-orange-400">
+                <div>
+                  <p className="font-medium text-gray-900">{product.name}</p>
+                  <p className="text-sm text-gray-600">{product.units} units sold</p>
+                  <p className="text-sm text-orange-600">{product.inventory} in inventory</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-medium text-gray-900">${product.revenue.toLocaleString()}</p>
+                  <div className="relative dropdown-container">
+                    <button 
+                      onClick={() => toggleDropdown(index)}
+                      className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
+                    >
+                      Take Action
+                      <MoreVertical className="w-4 h-4" />
+                    </button>
+                    
+                    {openDropdowns[index] && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                        <div className="py-1">
+                          <Link href="/dashboard/vendor/products">
+                            <button 
+                              onClick={closeAllDropdowns}
+                              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                              <Edit className="w-4 h-4" />
+                              Edit Product
+                            </button>
+                          </Link>
+                          <Link href="/dashboard/vendor/promotions">
+                            <button 
+                              onClick={closeAllDropdowns}
+                              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                              <Tag className="w-4 h-4" />
+                              Create Promotion
+                            </button>
+                          </Link>
+                          <Link href="/dashboard/vendor/analytics">
+                            <button 
+                              onClick={closeAllDropdowns}
+                              className="flex items-center gap-2 w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                              <Eye className="w-4 h-4" />
+                              View Analytics
+                            </button>
+                          </Link>
+                          <div className="border-t border-gray-200 my-1"></div>
+                          <button 
+                            onClick={() => {
+                              // Handle delete action
+                              console.log('Delete product:', product.name);
+                              closeAllDropdowns();
+                            }}
+                            className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Remove Product
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </VendorDashboardLayout>
   );
-};
-
-export default PulsePage;
+}

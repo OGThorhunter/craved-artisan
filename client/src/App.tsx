@@ -63,7 +63,6 @@ import NotFoundPage from './pages/NotFoundPage';
 import MaintenancePage from './pages/MaintenancePage';
 import VendorAnalyticsPage from './pages/VendorAnalyticsPage';
 import VendorAnalyticsKpiPage from './pages/dashboard/vendor/analytics';
-import VendorDashboardPage from './pages/dashboard/vendor';
 import { VendorFinancialPage } from './pages/VendorFinancialPage';
 import VendorOnboardingPage from './pages/VendorOnboardingPage';
 import TestDataPage from './pages/TestDataPage';
@@ -132,17 +131,12 @@ function App() {
             {/* Protected Dashboard Routes */}
             <Route path="/dashboard">
               <ProtectedRoute>
-                <PulsePage />
+                <DashboardPage />
               </ProtectedRoute>
             </Route>
             <Route path="/dashboard/customer">
               <ProtectedRoute role="CUSTOMER">
                 <CustomerDashboardPage />
-              </ProtectedRoute>
-            </Route>
-            <Route path="/dashboard/vendor">
-              <ProtectedRoute role="VENDOR">
-                <VendorDashboardPage />
               </ProtectedRoute>
             </Route>
             <Route path="/dashboard/event-coordinator">

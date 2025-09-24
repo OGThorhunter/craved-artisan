@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 
 const navItems = [
-  { label: 'Pulse', href: '/dashboard', icon: Home },
+  { label: 'Pulse', href: '/dashboard/vendor/pulse', icon: Home },
   { label: 'Analytics', href: '/dashboard/vendor/analytics', icon: BarChart3 },
   { label: 'Products', href: '/dashboard/vendor/products', icon: Package },
   { label: 'Sales Windows', href: '/dashboard/vendor/sales-windows', icon: ShoppingCart },
@@ -26,16 +26,21 @@ const navItems = [
 export default function DashboardNav() {
   const [location] = useLocation();
 
+  // Only show navigation for vendor-specific routes
+  const isVendorRoute = location.startsWith('/dashboard/vendor/');
+
+  if (!isVendorRoute) {
+    return null;
+  }
+
   // Compute active state by comparing current location to each item href
   const isActive = (path: string) => {
     return location === path;
   };
 
-  console.log('DashboardNav rendered, current location:', location);
-
   return (
     <>
-      {/* Secondary Navigation */}
+      {/* Secondary Navigation - Only for vendor routes */}
       <header className="bg-[#F0F8FF] border-b-2 border-[#5B6E02] shadow-md relative z-40 min-h-[64px]">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
