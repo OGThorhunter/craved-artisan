@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Target,
   Plus,
@@ -27,6 +27,7 @@ import {
   HelpCircle,
   List
 } from 'lucide-react';
+import AIInsights from './AIInsights';
 
 interface Opportunity {
   id: string;
@@ -149,6 +150,111 @@ const Pipeline: React.FC<PipelineProps> = ({
     return new Date(dateString).toLocaleDateString();
   };
 
+  // Generate AI insights based on pipeline data
+  const pipelineInsights = useMemo(() => {
+    const insights = [];
+    
+    // Stuck opportunities insight
+    const stuckOpportunities = opportunities.filter(op => {
+      const daysSinceUpdate = Math.floor((Date.now() - new Date(op.lastActivityAt).getTime()) / (1000 * 60 * 60 * 24));
+      return daysSinceUpdate > 14 && op.stage !== 'closed_won' && op.stage !== 'closed_lost';
+    });
+    
+    if (stuckOpportunities.length > 0) {
+      insights.push({
+        id: 'stuck-opportunities',
+        type: 'warning' as const,
+        title: 'Stuck Opportunities',
+        description: `${stuckOpportunities.length} opportunities haven't been updated in 14+ days. These may need immediate attention.`,
+        confidence: 90,
+        priority: 'high' as const,
+        category: 'pipeline-optimization' as const,
+        action: 'Review Stuck Deals'
+      });
+    }
+
+    // High-value opportunities insight
+    const highValueOpportunities = opportunities.filter(op => op.value > 50000 && op.stage !== 'closed_won' && op.stage !== 'closed_lost');
+    if (highValueOpportunities.length > 0) {
+      insights.push({
+        id: 'high-value-deals',
+        type: 'success' as const,
+        title: 'High-Value Opportunities',
+        description: `${highValueOpportunities.length} opportunities worth over $50,000. Focus on closing these high-impact deals.`,
+        confidence: 95,
+        priority: 'high' as const,
+        category: 'sales-opportunity' as const,
+        action: 'Prioritize High-Value Deals'
+      });
+    }
+
+    // Low probability deals insight
+    const lowProbabilityDeals = opportunities.filter(op => op.probability < 30 && op.stage !== 'closed_won' && op.stage !== 'closed_lost');
+    if (lowProbabilityDeals.length > 3) {
+      insights.push({
+        id: 'low-probability-deals',
+        type: 'info' as const,
+        title: 'Low Probability Deals',
+        description: `${lowProbabilityDeals.length} deals have less than 30% probability. Consider re-qualifying or adjusting strategy.`,
+        confidence: 85,
+        priority: 'medium' as const,
+        category: 'pipeline-optimization' as const,
+        action: 'Review Deal Qualification'
+      });
+    }
+
+    // Overdue opportunities insight
+    const overdueOpportunities = opportunities.filter(op => {
+      const expectedClose = new Date(op.expectedCloseDate);
+      const today = new Date();
+      return expectedClose < today && op.stage !== 'closed_won' && op.stage !== 'closed_lost';
+    });
+    
+    if (overdueOpportunities.length > 0) {
+      insights.push({
+        id: 'overdue-opportunities',
+        type: 'warning' as const,
+        title: 'Overdue Opportunities',
+        description: `${overdueOpportunities.length} opportunities are past their expected close date. Update timelines or close out.`,
+        confidence: 92,
+        priority: 'high' as const,
+        category: 'pipeline-optimization' as const,
+        action: 'Update Close Dates'
+      });
+    }
+
+    // Conversion rate insight
+    const closedWon = opportunities.filter(op => op.stage === 'closed_won').length;
+    const closedTotal = opportunities.filter(op => op.stage === 'closed_won' || op.stage === 'closed_lost').length;
+    const conversionRate = closedTotal > 0 ? (closedWon / closedTotal) * 100 : 0;
+    
+    if (conversionRate < 25 && closedTotal > 5) {
+      insights.push({
+        id: 'low-conversion-rate',
+        type: 'warning' as const,
+        title: 'Low Conversion Rate',
+        description: `Current conversion rate is ${conversionRate.toFixed(1)}%. Industry average is 25-30%. Focus on qualification and follow-up.`,
+        confidence: 88,
+        priority: 'high' as const,
+        category: 'pipeline-optimization' as const,
+        action: 'Improve Sales Process'
+      });
+    } else if (conversionRate > 35 && closedTotal > 5) {
+      insights.push({
+        id: 'high-conversion-rate',
+        type: 'success' as const,
+        title: 'Excellent Conversion Rate',
+        description: `Current conversion rate is ${conversionRate.toFixed(1)}%. Above industry average! Keep up the great work.`,
+        confidence: 90,
+        priority: 'low' as const,
+        category: 'sales-opportunity' as const,
+        action: 'Analyze Success Factors'
+      });
+    }
+
+    return insights;
+  }, [opportunities]);
+
   // Check for duplicate opportunities
   const checkForDuplicateOpportunity = (title: string, customerId: string) => {
     return opportunities.find(opportunity => 
@@ -265,6 +371,32 @@ const Pipeline: React.FC<PipelineProps> = ({
           </button>
         </div>
       </div>
+
+      {/* AI Insights */}
+      <AIInsights 
+        insights={pipelineInsights}
+        isLoading={isLoading}
+        maxInsights={4}
+        showCategories={true}
+        onInsightClick={(insight) => {
+          console.log('Pipeline AI Insight clicked:', insight);
+          // Handle insight click actions
+          switch (insight.id) {
+            case 'stuck-opportunities':
+              // Could filter to show stuck opportunities
+              break;
+            case 'high-value-deals':
+              // Could filter to show high-value deals
+              break;
+            case 'overdue-opportunities':
+              // Could filter to show overdue opportunities
+              break;
+            case 'low-conversion-rate':
+              // Could show conversion analytics
+              break;
+          }
+        }}
+      />
 
       {/* Pipeline Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">

@@ -15,7 +15,6 @@ import {
   Search,
   Filter,
   Download,
-  Settings,
   Eye,
   Edit,
   Trash2,
@@ -45,9 +44,8 @@ import {
 // Import consolidated CRM components
 import Customer360 from '../components/crm/Customer360';
 import Pipeline from '../components/crm/Pipeline';
-import AutomationTasks from '../components/crm/AutomationTasks';
-import AnalyticsReports from '../components/crm/AnalyticsReports';
-import SettingsIntegrations from '../components/crm/SettingsIntegrations';
+import TaskManagement from '../components/crm/TaskManagement';
+import CustomerHealthOverview from '../components/crm/CustomerHealthOverview';
 
 // Types
 interface Customer {
@@ -107,6 +105,61 @@ interface Workflow {
   lastRun?: string;
   runCount: number;
 }
+
+interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  role: 'admin' | 'manager' | 'sales_rep' | 'support';
+  isActive: boolean;
+  tasksAssigned: number;
+  tasksCompleted: number;
+}
+
+// Mock team members data
+const mockTeamMembers = [
+  {
+    id: 'tm-1',
+    name: 'John Smith',
+    email: 'john.smith@company.com',
+    phone: '+1 (555) 123-4567',
+    role: 'manager' as const,
+    isActive: true,
+    tasksAssigned: 8,
+    tasksCompleted: 5
+  },
+  {
+    id: 'tm-2',
+    name: 'Sarah Johnson',
+    email: 'sarah.johnson@company.com',
+    phone: '+1 (555) 234-5678',
+    role: 'sales_rep' as const,
+    isActive: true,
+    tasksAssigned: 12,
+    tasksCompleted: 9
+  },
+  {
+    id: 'tm-3',
+    name: 'Mike Davis',
+    email: 'mike.davis@company.com',
+    phone: '+1 (555) 345-6789',
+    role: 'sales_rep' as const,
+    isActive: true,
+    tasksAssigned: 6,
+    tasksCompleted: 4
+  },
+  {
+    id: 'tm-4',
+    name: 'Emily Brown',
+    email: 'emily.brown@company.com',
+    phone: '+1 (555) 456-7890',
+    role: 'support' as const,
+    isActive: true,
+    tasksAssigned: 4,
+    tasksCompleted: 3
+  }
+];
 
 // Mock data functions
 const fetchDashboard = async () => {
@@ -206,21 +259,6 @@ const fetchTasks = async (filters: any) => {
   };
 };
 
-const fetchAnalytics = async (timeRange: string) => {
-  return {
-    customers: { total: 1247, growth: 12.5 },
-    sales: { 
-      pipelineValue: 245000, 
-      conversionRate: 23.5,
-      totalRevenue: 1250000,
-      averageOrderValue: 1250
-    },
-    performance: {
-      customerSatisfaction: 4.8,
-      responseTime: 2.5
-    }
-  };
-};
 
 // StatCard Component
 const StatCard = ({ title, value, change, icon: Icon, color }: {
@@ -260,7 +298,7 @@ const StatCard = ({ title, value, change, icon: Icon, color }: {
 
 // Main Component
 const VendorCRMPage = () => {
-  const [activeTab, setActiveTab] = useState<'customer-360' | 'pipeline' | 'automation-tasks' | 'analytics-reports' | 'settings-integrations'>('customer-360');
+  const [activeTab, setActiveTab] = useState<'customer-360' | 'pipeline' | 'automation-tasks' | 'customer-health'>('customer-360');
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState({
     status: '',
@@ -384,6 +422,7 @@ const VendorCRMPage = () => {
   
   // Workflow management functions
   const [localWorkflows, setLocalWorkflows] = useState<Workflow[]>([]);
+  const [localTeamMembers, setLocalTeamMembers] = useState<TeamMember[]>([]);
 
   const { data: tasksData, isLoading: tasksLoading } = useQuery({
     queryKey: ['crm-tasks', filters],
@@ -399,6 +438,10 @@ const VendorCRMPage = () => {
     // For now, just return local workflows since we don't have a workflow API yet
     return localWorkflows;
   }, [localWorkflows]);
+
+  const allTeamMembers = React.useMemo(() => {
+    return [...mockTeamMembers, ...localTeamMembers];
+  }, [localTeamMembers]);
 
   const handleTaskCreate = (task: Partial<Task>) => {
     const newTask: Task = {
@@ -486,10 +529,35 @@ const VendorCRMPage = () => {
     }
   };
 
-  const { data: analyticsData, isLoading: analyticsLoading } = useQuery({
-    queryKey: ['crm-analytics', '30d'],
-    queryFn: () => fetchAnalytics('30d'),
-  });
+  // Team member management functions
+  const handleTeamMemberCreate = (member: Partial<TeamMember>) => {
+    const newMember: TeamMember = {
+      id: Date.now().toString(),
+      name: member.name || 'New Team Member',
+      email: member.email || '',
+      phone: member.phone || '',
+      role: member.role || 'sales_rep',
+      isActive: member.isActive ?? true,
+      tasksAssigned: 0,
+      tasksCompleted: 0
+    };
+    
+    setLocalTeamMembers(prev => [...prev, newMember]);
+    toast.success('Team member added successfully');
+  };
+
+  const handleTeamMemberUpdate = (member: TeamMember) => {
+    setLocalTeamMembers(prev => 
+      prev.map(m => m.id === member.id ? member : m)
+    );
+    toast.success('Team member updated successfully');
+  };
+
+  const handleTeamMemberDelete = (id: string) => {
+    setLocalTeamMembers(prev => prev.filter(m => m.id !== id));
+    toast.success('Team member deleted successfully');
+  };
+
 
   // New consolidated tabs
   const tabs = [
@@ -507,21 +575,15 @@ const VendorCRMPage = () => {
     },
     { 
       id: 'automation-tasks', 
-      label: 'Automation & Tasks', 
-      icon: Zap,
-      description: 'Workflows, tasks, and email campaigns'
+      label: 'Tasks', 
+      icon: FileText,
+      description: 'Task management and team collaboration'
     },
     { 
-      id: 'analytics-reports', 
-      label: 'Analytics & Reports', 
+      id: 'customer-health', 
+      label: 'Customer Health', 
       icon: BarChart3,
-      description: 'Analytics dashboard, reports, and data export'
-    },
-    { 
-      id: 'settings-integrations', 
-      label: 'Settings & Integrations', 
-      icon: Settings,
-      description: 'Integrations, security, and AI insights'
+      description: 'CRM metrics, trends, and customer health analysis'
     },
   ];
 
@@ -600,69 +662,42 @@ const VendorCRMPage = () => {
           )}
 
           {activeTab === 'automation-tasks' && (
-            <AutomationTasks
+            <TaskManagement
               tasks={allTasks}
-              workflows={allWorkflows}
-              emailCampaigns={[]}
+              teamMembers={allTeamMembers}
               onTaskCreate={handleTaskCreate}
               onTaskUpdate={handleTaskUpdate}
               onTaskComplete={handleTaskComplete}
               onTaskDelete={handleTaskDelete}
-              onWorkflowCreate={handleWorkflowCreate}
-              onWorkflowUpdate={handleWorkflowUpdate}
-              onWorkflowToggle={handleWorkflowToggle}
-              onCampaignCreate={(campaign) => console.log('Create campaign:', campaign)}
-              onCampaignUpdate={(campaign) => console.log('Update campaign:', campaign)}
+              onTaskAssign={(taskId, userId) => {
+                const task = allTasks.find(t => t.id === taskId);
+                if (task) {
+                  handleTaskUpdate({...task, assignedTo: userId});
+                }
+              }}
+              onTaskReassign={(taskId, fromUserId, toUserId) => {
+                const task = allTasks.find(t => t.id === taskId);
+                if (task) {
+                  handleTaskUpdate({...task, assignedTo: toUserId});
+                }
+              }}
+              onSubtaskCreate={(parentTaskId, subtask) => {
+                console.log('Create subtask:', {parentTaskId, subtask});
+              }}
+              onTeamMemberCreate={handleTeamMemberCreate}
+              onTeamMemberUpdate={handleTeamMemberUpdate}
+              onTeamMemberDelete={handleTeamMemberDelete}
               isLoading={tasksLoading}
             />
           )}
 
-          {activeTab === 'analytics-reports' && (
-            <AnalyticsReports
-              analytics={analyticsData}
-              reports={[]}
-              onReportCreate={(report) => console.log('Create report:', report)}
-              onReportUpdate={(report) => console.log('Update report:', report)}
-              onReportDelete={(id) => console.log('Delete report:', id)}
-              onReportRun={(id) => console.log('Run report:', id)}
-              onExportCreate={(exportJob) => console.log('Create export:', exportJob)}
-              onExportRun={(id) => console.log('Run export:', id)}
-              onTimeRangeChange={setTimeRange}
-              timeRange={timeRange}
-              isLoading={analyticsLoading}
-            />
-          )}
 
-          {activeTab === 'settings-integrations' && (
-            <SettingsIntegrations
-              integrations={[]}
-              users={[]}
-              roles={[]}
-              permissions={[]}
-              aiInsights={[]}
-              onIntegrationConnect={(id) => console.log('Connect integration:', id)}
-              onIntegrationDisconnect={(id) => console.log('Disconnect integration:', id)}
-              onIntegrationSync={(id) => console.log('Sync integration:', id)}
-              onUserCreate={(user) => console.log('Create user:', user)}
-              onUserUpdate={(user) => console.log('Update user:', user)}
-              onUserDelete={(id) => console.log('Delete user:', id)}
-              onRoleCreate={(role) => console.log('Create role:', role)}
-              onRoleUpdate={(role) => console.log('Update role:', role)}
-              onRoleDelete={(id) => console.log('Delete role:', id)}
-              onPermissionUpdate={(userId, permissions) => console.log('Update permissions:', userId, permissions)}
-              onInsightDismiss={(id) => console.log('Dismiss insight:', id)}
-              onInsightAction={(id, action) => console.log('Insight action:', id, action)}
-              onAIChatMessage={async (message) => {
-                console.log('AI chat message:', message);
-                return {
-                  id: Date.now().toString(),
-                  type: 'ai' as const,
-                  content: 'This is a mock AI response.',
-                  timestamp: new Date().toISOString()
-                };
-              }}
-              onGenerateReport={(type) => console.log('Generate report:', type)}
-              onGenerateInsights={() => console.log('Generate insights')}
+          {activeTab === 'customer-health' && (
+            <CustomerHealthOverview
+              customers={allCustomers}
+              opportunities={allOpportunities}
+              tasks={allTasks}
+              isLoading={customersLoading || opportunitiesLoading || tasksLoading}
             />
           )}
         </div>

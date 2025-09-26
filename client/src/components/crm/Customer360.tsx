@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Users,
   Search,
@@ -25,6 +25,7 @@ import {
   X,
   Shield
 } from 'lucide-react';
+import AIInsights from './AIInsights';
 
 interface Customer {
   id: string;
@@ -113,6 +114,93 @@ const Customer360: React.FC<Customer360Props> = ({
   const [showBlockModal, setShowBlockModal] = useState(false);
   const [customerToBlock, setCustomerToBlock] = useState<Customer | null>(null);
   const [blockReason, setBlockReason] = useState('');
+
+  // Generate AI insights based on customer data
+  const customerInsights = useMemo(() => {
+    const insights = [];
+    
+    // High-value customer insights
+    const highValueCustomers = customers.filter(c => c.lifetimeValue > 10000);
+    if (highValueCustomers.length > 0) {
+      insights.push({
+        id: 'high-value-customers',
+        type: 'success' as const,
+        title: 'High-Value Customers Detected',
+        description: `${highValueCustomers.length} customers have lifetime value over $10,000. Consider VIP treatment and retention strategies.`,
+        confidence: 95,
+        priority: 'high' as const,
+        category: 'customer-health' as const,
+        action: 'View VIP Program'
+      });
+    }
+
+    // Low engagement customers
+    const lowEngagementCustomers = customers.filter(c => 
+      c.status === 'customer' && c.totalOrders < 3 && c.lastContactAt && 
+      new Date(c.lastContactAt) < new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
+    );
+    if (lowEngagementCustomers.length > 0) {
+      insights.push({
+        id: 'low-engagement',
+        type: 'warning' as const,
+        title: 'Low Engagement Customers',
+        description: `${lowEngagementCustomers.length} customers haven't engaged in 90+ days. Risk of churn is high.`,
+        confidence: 88,
+        priority: 'high' as const,
+        category: 'customer-health' as const,
+        action: 'Create Re-engagement Campaign'
+      });
+    }
+
+    // Blocked customers insight
+    const blockedCustomers = customers.filter(c => c.isBlocked);
+    if (blockedCustomers.length > 0) {
+      insights.push({
+        id: 'blocked-customers',
+        type: 'info' as const,
+        title: 'Blocked Customers',
+        description: `${blockedCustomers.length} customers are currently blocked. Review blocking reasons and consider unblocking.`,
+        confidence: 100,
+        priority: 'medium' as const,
+        category: 'customer-health' as const,
+        action: 'Review Blocked Customers'
+      });
+    }
+
+    // Lead scoring insights
+    const highScoreLeads = customers.filter(c => c.leadScore >= 80 && c.status === 'lead');
+    if (highScoreLeads.length > 0) {
+      insights.push({
+        id: 'high-score-leads',
+        type: 'recommendation' as const,
+        title: 'High-Score Leads Ready for Conversion',
+        description: `${highScoreLeads.length} leads have scores above 80. These are prime candidates for sales outreach.`,
+        confidence: 92,
+        priority: 'high' as const,
+        category: 'sales-opportunity' as const,
+        action: 'Start Sales Process'
+      });
+    }
+
+    // Customer acquisition trend
+    const recentCustomers = customers.filter(c => 
+      new Date(c.createdAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+    );
+    if (recentCustomers.length > 10) {
+      insights.push({
+        id: 'acquisition-trend',
+        type: 'success' as const,
+        title: 'Strong Customer Acquisition',
+        description: `${recentCustomers.length} new customers in the last 30 days. Customer acquisition is trending up.`,
+        confidence: 85,
+        priority: 'medium' as const,
+        category: 'customer-health' as const,
+        action: 'Analyze Acquisition Sources'
+      });
+    }
+
+    return insights;
+  }, [customers]);
 
   // Check for duplicate customer by email
   const checkForDuplicate = (email: string, phone?: string) => {
@@ -243,6 +331,32 @@ const Customer360: React.FC<Customer360Props> = ({
                 </button>
         </div>
       </div>
+
+      {/* AI Insights */}
+      <AIInsights 
+        insights={customerInsights}
+        isLoading={isLoading}
+        maxInsights={3}
+        showCategories={true}
+        onInsightClick={(insight) => {
+          console.log('AI Insight clicked:', insight);
+          // Handle insight click actions
+          switch (insight.id) {
+            case 'high-value-customers':
+              setStatusFilter('vip');
+              break;
+            case 'low-engagement':
+              setStatusFilter('customer');
+              break;
+            case 'blocked-customers':
+              // Could filter to show blocked customers
+              break;
+            case 'high-score-leads':
+              setStatusFilter('lead');
+              break;
+          }
+        }}
+      />
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
