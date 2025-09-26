@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import api from '../lib/api';
 
 // Types
@@ -29,38 +30,67 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Check authentication status on mount
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  // Check if user is authenticated
-  const checkAuth = async () => {
-    try {
-      setLoading(true);
-      console.log('AuthContext: Checking authentication...');
-      const response = await api.get('/auth/session');
-      console.log('AuthContext: Session response:', response.data);
+  // React Query for session check
+  const { data: sessionData, isLoading: queryLoading, error } = useQuery({
+    queryKey: ['session'],
+    queryFn: async ({ signal }) => {
+      const response = await api.get('/auth/session', { signal });
       
-      if (response.data.success && response.data.user) {
-        console.log('AuthContext: User authenticated:', response.data.user);
+      // Handle cancellation
+      if (response.canceled) {
+        return { success: false, user: null };
+      }
+      
+      return response.data;
+    },
+    staleTime: 5 * 60_000, // 5 minutes
+    refetchOnWindowFocus: false,
+    retry: 0,
+  });
+
+  // Handle session data changes
+  useEffect(() => {
+    if (sessionData) {
+      if (sessionData.success && sessionData.user?.isAuthenticated) {
+        console.log('AuthContext: Session resolved', {
+          userId: sessionData.user.userId,
+          role: sessionData.user.role
+        });
         setUser({
-          userId: response.data.user.userId,
-          email: response.data.user.email,
-          role: response.data.user.role,
+          userId: sessionData.user.userId,
+          email: sessionData.user.email,
+          role: sessionData.user.role,
           isAuthenticated: true,
-          lastActivity: new Date(response.data.user.lastActivity)
+          lastActivity: new Date(sessionData.user.lastActivity)
         });
       } else {
-        console.log('AuthContext: No valid user in response');
         setUser(null);
       }
-    } catch (error) {
-      console.log('AuthContext: Session check failed:', error);
-      setUser(null);
-    } finally {
       setLoading(false);
     }
+  }, [sessionData]);
+
+  // Handle query loading state
+  useEffect(() => {
+    if (queryLoading) {
+      setLoading(true);
+    }
+  }, [queryLoading]);
+
+  // Handle query error
+  useEffect(() => {
+    if (error) {
+      console.log('AuthContext: Session check failed:', error);
+      setUser(null);
+      setLoading(false);
+    }
+  }, [error]);
+
+
+  // Check if user is authenticated (legacy method for compatibility)
+  const checkAuth = async () => {
+    // This method is now handled by React Query
+    // Keeping for backward compatibility
   };
 
   // Login function
@@ -123,11 +153,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  // Determine loading state - use React Query loading if available, otherwise fallback to local state
+  const isLoading = queryLoading || loading;
+  const isAuthenticated = !!user && user.isAuthenticated;
+
   const value: AuthContextType = {
     user,
-    loading,
-    isLoading: loading,
-    isAuthenticated: !!user,
+    loading: isLoading,
+    isLoading,
+    isAuthenticated,
     login,
     logout,
     register,

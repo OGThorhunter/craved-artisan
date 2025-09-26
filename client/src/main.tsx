@@ -6,9 +6,13 @@ import { HelmetProvider } from 'react-helmet-async';
 import './index.css';
 import App from './App.tsx';
 import { setupGlobalErrorHandlers, ErrorFallback } from './utils/errorHandlers.tsx';
+import { muteExtensionNoise } from './utils/devConsole';
 
 // Setup global error handlers
 setupGlobalErrorHandlers();
+
+// Mute extension noise in development
+muteExtensionNoise();
 
 
 

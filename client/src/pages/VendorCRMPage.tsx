@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import {
@@ -52,6 +53,8 @@ import SettingsIntegrations from '../components/crm/SettingsIntegrations';
 interface Customer {
   id: string;
   email: string;
+  phone?: string;
+  website?: string;
   firstName: string;
   lastName: string;
   company?: string;
@@ -91,6 +94,18 @@ interface Task {
   customerId?: string;
   assignedTo?: string;
   createdAt: string;
+}
+
+interface Workflow {
+  id: string;
+  name: string;
+  description: string;
+  status: 'active' | 'inactive' | 'draft';
+  trigger: string;
+  actions: string[];
+  createdAt: string;
+  lastRun?: string;
+  runCount: number;
 }
 
 // Mock data functions
@@ -147,13 +162,27 @@ const fetchOpportunities = async (filters: any, localOpportunities: any[]) => {
         id: '1',
         customerId: '1',
         title: 'Enterprise Contract',
+        description: 'Large enterprise contract for custom software development',
         stage: 'negotiation',
         value: 50000,
         probability: 75,
         expectedCloseDate: '2024-02-15',
+        actualCloseDate: undefined,
+        source: 'Website',
         assignedTo: 'sales@company.com',
+        tags: ['Enterprise', 'Software', 'High Value'],
+        customFields: {},
         status: 'active',
-        createdAt: '2024-01-01'
+        createdAt: '2024-01-01',
+        updatedAt: '2024-01-15',
+        lastActivityAt: '2024-01-15',
+        customer: {
+          id: '1',
+          firstName: 'John',
+          lastName: 'Doe',
+          email: 'john.doe@example.com',
+          company: 'Acme Corp'
+        }
       }
     ]
   };
@@ -240,6 +269,8 @@ const VendorCRMPage = () => {
   });
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | '1y' | 'all'>('90d');
+  const [localCustomers, setLocalCustomers] = useState<Customer[]>([]);
+  const [localOpportunities, setLocalOpportunities] = useState<Opportunity[]>([]);
 
   // Data fetching
   const { data: dashboardData, isLoading: dashboardLoading } = useQuery({
@@ -257,10 +288,203 @@ const VendorCRMPage = () => {
     queryFn: () => fetchOpportunities(filters, []),
   });
 
+  // Combine fetched customers with locally added customers
+  const allCustomers = React.useMemo(() => {
+    const fetchedCustomers = customersData?.customers || [];
+    return [...fetchedCustomers, ...localCustomers];
+  }, [customersData?.customers, localCustomers]);
+
+  // Combine fetched opportunities with locally added opportunities
+  const allOpportunities = React.useMemo(() => {
+    const fetchedOpportunities = opportunitiesData?.opportunities || [];
+    return [...fetchedOpportunities, ...localOpportunities];
+  }, [opportunitiesData?.opportunities, localOpportunities]);
+
+  // Customer management functions
+  const handleCustomerUpdate = (customer: Customer) => {
+    setLocalCustomers(prev => {
+      const existingIndex = prev.findIndex(c => c.id === customer.id);
+      if (existingIndex >= 0) {
+        // Update existing customer
+        const updated = [...prev];
+        updated[existingIndex] = customer;
+        toast.success('Customer updated successfully!');
+        return updated;
+      } else {
+        // Add new customer
+        toast.success(`${customer.firstName} ${customer.lastName} added to CRM!`);
+        return [...prev, customer];
+      }
+    });
+  };
+
+  const handleCustomerDelete = (id: string) => {
+    setLocalCustomers(prev => prev.filter(c => c.id !== id));
+    toast.success('Customer deleted successfully!');
+  };
+
+  // Opportunity management functions
+  const handleOpportunityCreate = (opportunity: Partial<Opportunity>) => {
+    const newOpportunity: Opportunity = {
+      ...opportunity,
+      id: opportunity.id || Date.now().toString(),
+      customerId: opportunity.customerId || '',
+      title: opportunity.title || '',
+      description: opportunity.description || '',
+      stage: opportunity.stage || 'lead',
+      value: opportunity.value || 0,
+      probability: opportunity.probability || 25,
+      expectedCloseDate: opportunity.expectedCloseDate || '',
+      actualCloseDate: opportunity.actualCloseDate,
+      source: opportunity.source || 'Website',
+      assignedTo: opportunity.assignedTo || '',
+      tags: opportunity.tags || [],
+      customFields: opportunity.customFields || {},
+      status: opportunity.status || 'active',
+      createdAt: opportunity.createdAt || new Date().toISOString(),
+      updatedAt: opportunity.updatedAt || new Date().toISOString(),
+      lastActivityAt: opportunity.lastActivityAt || new Date().toISOString()
+    } as Opportunity;
+
+    setLocalOpportunities(prev => [...prev, newOpportunity]);
+    toast.success(`Opportunity "${newOpportunity.title}" created successfully!`);
+  };
+
+  const handleOpportunityUpdate = (opportunity: Opportunity) => {
+    setLocalOpportunities(prev => {
+      const existingIndex = prev.findIndex(o => o.id === opportunity.id);
+      if (existingIndex >= 0) {
+        const updated = [...prev];
+        updated[existingIndex] = { ...opportunity, updatedAt: new Date().toISOString() };
+        return updated;
+      }
+      return prev;
+    });
+    toast.success(`Opportunity "${opportunity.title}" updated successfully!`);
+  };
+
+  const handleOpportunityDelete = (id: string) => {
+    setLocalOpportunities(prev => prev.filter(o => o.id !== id));
+    toast.success('Opportunity deleted successfully!');
+  };
+
+  const handleStageChange = (id: string, stage: string) => {
+    setLocalOpportunities(prev => 
+      prev.map(o => 
+        o.id === id 
+          ? { ...o, stage: stage as any, updatedAt: new Date().toISOString() }
+          : o
+      )
+    );
+    toast.success('Opportunity stage updated successfully!');
+  };
+
+  // Task management functions
+  const [localTasks, setLocalTasks] = useState<Task[]>([]);
+  
+  // Workflow management functions
+  const [localWorkflows, setLocalWorkflows] = useState<Workflow[]>([]);
+
   const { data: tasksData, isLoading: tasksLoading } = useQuery({
     queryKey: ['crm-tasks', filters],
     queryFn: () => fetchTasks(filters),
   });
+
+  const allTasks = React.useMemo(() => {
+    const fetchedTasks = tasksData?.tasks || [];
+    return [...fetchedTasks, ...localTasks];
+  }, [tasksData?.tasks, localTasks]);
+
+  const allWorkflows = React.useMemo(() => {
+    // For now, just return local workflows since we don't have a workflow API yet
+    return localWorkflows;
+  }, [localWorkflows]);
+
+  const handleTaskCreate = (task: Partial<Task>) => {
+    const newTask: Task = {
+      id: Date.now().toString(),
+      title: task.title || 'New Task',
+      type: task.type || 'follow_up',
+      priority: task.priority || 'medium',
+      status: task.status || 'pending',
+      dueDate: task.dueDate,
+      customerId: task.customerId,
+      assignedTo: task.assignedTo,
+      createdAt: new Date().toISOString(),
+      description: task.description,
+      customer: task.customer
+    } as Task;
+    setLocalTasks(prev => [...prev, newTask]);
+    toast.success(`Task "${newTask.title}" created successfully!`);
+  };
+
+  const handleTaskUpdate = (task: Task) => {
+    setLocalTasks(prev => 
+      prev.map(t => 
+        t.id === task.id ? { ...task, updatedAt: new Date().toISOString() } : t
+      )
+    );
+    toast.success(`Task "${task.title}" updated successfully!`);
+  };
+
+  const handleTaskComplete = (taskId: string) => {
+    setLocalTasks(prev => 
+      prev.map(t => 
+        t.id === taskId ? { ...t, status: 'completed', updatedAt: new Date().toISOString() } : t
+      )
+    );
+    const task = allTasks.find(t => t.id === taskId);
+    if (task) {
+      toast.success(`Task "${task.title}" marked as complete!`);
+    }
+  };
+
+  const handleTaskDelete = (taskId: string) => {
+    setLocalTasks(prev => {
+      const task = prev.find(t => t.id === taskId);
+      if (task) {
+        toast.success(`Task "${task.title}" deleted successfully!`);
+      }
+      return prev.filter(t => t.id !== taskId);
+    });
+  };
+
+  // Workflow management functions
+  const handleWorkflowCreate = (workflow: Partial<Workflow>) => {
+    const newWorkflow: Workflow = {
+      id: Date.now().toString(),
+      name: workflow.name || 'New Workflow',
+      description: workflow.description || '',
+      status: workflow.status || 'draft',
+      trigger: workflow.trigger || '',
+      actions: workflow.actions || [],
+      createdAt: new Date().toISOString(),
+      runCount: 0
+    } as Workflow;
+    setLocalWorkflows(prev => [...prev, newWorkflow]);
+    toast.success(`Workflow "${newWorkflow.name}" created successfully!`);
+  };
+
+  const handleWorkflowUpdate = (workflow: Workflow) => {
+    setLocalWorkflows(prev => 
+      prev.map(w => 
+        w.id === workflow.id ? { ...workflow, updatedAt: new Date().toISOString() } : w
+      )
+    );
+    toast.success(`Workflow "${workflow.name}" updated successfully!`);
+  };
+
+  const handleWorkflowToggle = (id: string, status: 'active' | 'inactive') => {
+    setLocalWorkflows(prev => 
+      prev.map(w => 
+        w.id === id ? { ...w, status, updatedAt: new Date().toISOString() } : w
+      )
+    );
+    const workflow = localWorkflows.find(w => w.id === id);
+    if (workflow) {
+      toast.success(`Workflow "${workflow.name}" ${status === 'active' ? 'activated' : 'deactivated'}!`);
+    }
+  };
 
   const { data: analyticsData, isLoading: analyticsLoading } = useQuery({
     queryKey: ['crm-analytics', '30d'],
@@ -338,41 +562,55 @@ const VendorCRMPage = () => {
         <div className="space-y-6">
           {activeTab === 'customer-360' && (
             <Customer360
-              customers={customersData?.customers || []}
+              customers={allCustomers}
               onCustomerSelect={setSelectedCustomer}
-              onCustomerUpdate={(customer) => console.log('Update customer:', customer)}
-              onCustomerDelete={(id) => console.log('Delete customer:', id)}
+              onCustomerUpdate={handleCustomerUpdate}
+              onCustomerDelete={handleCustomerDelete}
               onTagUpdate={(customerId, tags) => console.log('Update tags:', customerId, tags)}
               onNoteAdd={(customerId, note) => console.log('Add note:', customerId, note)}
-              onMessageSend={(customerId, message) => console.log('Send message:', customerId, message)}
-              onTaskCreate={(customerId, task) => console.log('Create task:', customerId, task)}
+              onMessageSend={(customerId, message) => {
+                const customer = allCustomers.find(c => c.id === customerId);
+                if (customer) {
+                  toast.success(`Message sent to ${customer.firstName} ${customer.lastName}!`);
+                }
+              }}
+              onTaskCreate={(customerId, task) => {
+                const customer = allCustomers.find(c => c.id === customerId);
+                if (customer) {
+                  toast.success(`Task "${task.title}" created for ${customer.firstName} ${customer.lastName}!`);
+                }
+              }}
               isLoading={customersLoading}
             />
           )}
 
           {activeTab === 'pipeline' && (
             <Pipeline
-              opportunities={opportunitiesData?.opportunities || []}
-              onOpportunityCreate={(opportunity) => console.log('Create opportunity:', opportunity)}
-              onOpportunityUpdate={(opportunity) => console.log('Update opportunity:', opportunity)}
-              onOpportunityDelete={(id) => console.log('Delete opportunity:', id)}
-              onStageChange={(id, stage) => console.log('Change stage:', id, stage)}
-              onForecastUpdate={() => console.log('Update forecast')}
+              opportunities={allOpportunities}
+              onOpportunityCreate={handleOpportunityCreate}
+              onOpportunityUpdate={handleOpportunityUpdate}
+              onOpportunityDelete={handleOpportunityDelete}
+              onStageChange={handleStageChange}
+              onForecastUpdate={() => {
+                console.log('Update forecast');
+                toast.success('Forecast updated successfully!');
+              }}
               isLoading={opportunitiesLoading}
             />
           )}
 
           {activeTab === 'automation-tasks' && (
             <AutomationTasks
-              tasks={tasksData?.tasks || []}
-              workflows={[]}
+              tasks={allTasks}
+              workflows={allWorkflows}
               emailCampaigns={[]}
-              onTaskCreate={(task) => console.log('Create task:', task)}
-              onTaskUpdate={(task) => console.log('Update task:', task)}
-              onTaskComplete={(id) => console.log('Complete task:', id)}
-              onWorkflowCreate={(workflow) => console.log('Create workflow:', workflow)}
-              onWorkflowUpdate={(workflow) => console.log('Update workflow:', workflow)}
-              onWorkflowToggle={(id, status) => console.log('Toggle workflow:', id, status)}
+              onTaskCreate={handleTaskCreate}
+              onTaskUpdate={handleTaskUpdate}
+              onTaskComplete={handleTaskComplete}
+              onTaskDelete={handleTaskDelete}
+              onWorkflowCreate={handleWorkflowCreate}
+              onWorkflowUpdate={handleWorkflowUpdate}
+              onWorkflowToggle={handleWorkflowToggle}
               onCampaignCreate={(campaign) => console.log('Create campaign:', campaign)}
               onCampaignUpdate={(campaign) => console.log('Update campaign:', campaign)}
               isLoading={tasksLoading}

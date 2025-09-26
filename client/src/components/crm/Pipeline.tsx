@@ -23,7 +23,9 @@ import {
   Mail,
   MessageSquare,
   MoreVertical,
-  X
+  X,
+  HelpCircle,
+  List
 } from 'lucide-react';
 
 interface Opportunity {
@@ -77,6 +79,21 @@ const Pipeline: React.FC<PipelineProps> = ({
   const [valueRange, setValueRange] = useState('');
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
   const [showDetails, setShowDetails] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [viewMode, setViewMode] = useState<'card' | 'list'>('list');
+  const [newOpportunity, setNewOpportunity] = useState({
+    title: '',
+    description: '',
+    customerId: '',
+    stage: 'lead' as const,
+    value: 0,
+    probability: 25,
+    expectedCloseDate: '',
+    source: 'Website',
+    assignedTo: '',
+    tags: [] as string[],
+    status: 'active' as const
+  });
 
   const stages = [
     { id: 'lead', name: 'Lead', color: 'bg-blue-100 text-blue-800' },
@@ -132,6 +149,14 @@ const Pipeline: React.FC<PipelineProps> = ({
     return new Date(dateString).toLocaleDateString();
   };
 
+  // Check for duplicate opportunities
+  const checkForDuplicateOpportunity = (title: string, customerId: string) => {
+    return opportunities.find(opportunity => 
+      opportunity.title.toLowerCase() === title.toLowerCase() && 
+      opportunity.customerId === customerId
+    );
+  };
+
   const getDaysUntilClose = (expectedCloseDate: string) => {
     const today = new Date();
     const closeDate = new Date(expectedCloseDate);
@@ -150,6 +175,34 @@ const Pipeline: React.FC<PipelineProps> = ({
         </div>
         
         <div className="flex items-center gap-3">
+          {/* View Toggle */}
+          <div className="flex items-center bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`flex items-center gap-1 px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                viewMode === 'list' 
+                  ? 'bg-white text-gray-900 shadow-sm' 
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+              title="List view"
+            >
+              <List className="h-4 w-4" />
+              List
+            </button>
+            <button
+              onClick={() => setViewMode('card')}
+              className={`flex items-center gap-1 px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                viewMode === 'card' 
+                  ? 'bg-white text-gray-900 shadow-sm' 
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+              title="Card view"
+            >
+              <BarChart3 className="h-4 w-4" />
+              Card
+            </button>
+          </div>
+          
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <input
@@ -187,8 +240,25 @@ const Pipeline: React.FC<PipelineProps> = ({
           </select>
           
           <button
-            onClick={() => onOpportunityCreate({})}
+            onClick={() => {
+              setNewOpportunity({
+                title: '',
+                description: '',
+                customerId: '',
+                stage: 'lead',
+                value: 0,
+                probability: 25,
+                expectedCloseDate: '',
+                source: 'Website',
+                assignedTo: '',
+                tags: [],
+                status: 'active'
+              });
+              setShowAddModal(true);
+            }}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            title="Add new opportunity"
+            aria-label="Add new opportunity to pipeline"
           >
             <Plus className="h-4 w-4" />
             Add Opportunity
@@ -197,44 +267,52 @@ const Pipeline: React.FC<PipelineProps> = ({
       </div>
 
       {/* Pipeline Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="rounded-lg shadow-lg p-4 hover:shadow-xl transition-shadow duration-200" style={{ backgroundColor: '#F7F2EC' }}>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="rounded-xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-all duration-200" style={{ backgroundColor: '#F7F2EC' }}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Pipeline</p>
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(totalValue)}</p>
+              <p className="text-sm font-medium text-gray-600 mb-1">Total Pipeline</p>
+              <p className="text-3xl font-bold text-gray-900">{formatCurrency(totalValue)}</p>
             </div>
-            <BarChart3 className="h-8 w-8 text-blue-600" />
+            <div className="p-3 bg-blue-100 rounded-xl">
+              <BarChart3 className="h-6 w-6 text-blue-600" />
+            </div>
           </div>
         </div>
         
-        <div className="rounded-lg shadow-lg p-4 hover:shadow-xl transition-shadow duration-200" style={{ backgroundColor: '#F7F2EC' }}>
+        <div className="rounded-xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-all duration-200" style={{ backgroundColor: '#F7F2EC' }}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Weighted Value</p>
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(weightedValue)}</p>
+              <p className="text-sm font-medium text-gray-600 mb-1">Weighted Value</p>
+              <p className="text-3xl font-bold text-gray-900">{formatCurrency(weightedValue)}</p>
             </div>
-            <TrendingUp className="h-8 w-8 text-green-600" />
+            <div className="p-3 bg-green-100 rounded-xl">
+              <TrendingUp className="h-6 w-6 text-green-600" />
+            </div>
           </div>
         </div>
         
-        <div className="rounded-lg shadow-lg p-4 hover:shadow-xl transition-shadow duration-200" style={{ backgroundColor: '#F7F2EC' }}>
+        <div className="rounded-xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-all duration-200" style={{ backgroundColor: '#F7F2EC' }}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Won Value</p>
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(wonValue)}</p>
+              <p className="text-sm font-medium text-gray-600 mb-1">Won Value</p>
+              <p className="text-3xl font-bold text-gray-900">{formatCurrency(wonValue)}</p>
             </div>
-            <CheckCircle className="h-8 w-8 text-green-600" />
+            <div className="p-3 bg-green-100 rounded-xl">
+              <CheckCircle className="h-6 w-6 text-green-600" />
+            </div>
           </div>
         </div>
         
-        <div className="rounded-lg shadow-lg p-4 hover:shadow-xl transition-shadow duration-200" style={{ backgroundColor: '#F7F2EC' }}>
+        <div className="rounded-xl shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-all duration-200" style={{ backgroundColor: '#F7F2EC' }}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Conversion Rate</p>
-              <p className="text-2xl font-bold text-gray-900">{conversionRate.toFixed(1)}%</p>
+              <p className="text-sm font-medium text-gray-600 mb-1">Conversion Rate</p>
+              <p className="text-3xl font-bold text-gray-900">{conversionRate.toFixed(1)}%</p>
             </div>
-            <Target className="h-8 w-8 text-purple-600" />
+            <div className="p-3 bg-purple-100 rounded-xl">
+              <Target className="h-6 w-6 text-purple-600" />
+            </div>
           </div>
         </div>
       </div>
@@ -245,141 +323,220 @@ const Pipeline: React.FC<PipelineProps> = ({
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
           {stages.map((stage) => (
-            <div key={stage.id} className="space-y-4">
+            <div key={stage.id} className="rounded-xl shadow-lg border border-gray-200 p-3 min-h-[200px]" style={{ backgroundColor: '#F7F2EC' }}>
               {/* Stage Header */}
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-gray-900">{stage.name}</h3>
-                <span className="px-2 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
+              <div className="flex items-center justify-between mb-4 pb-3 border-b border-gray-100">
+                <h3 className="font-bold text-gray-900 text-lg">{stage.name}</h3>
+                <span className="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-semibold rounded-full">
                   {opportunitiesByStage[stage.id]?.length || 0}
                 </span>
               </div>
               
               {/* Stage Value */}
-              <div className="text-sm text-gray-600">
-                {formatCurrency(
-                  opportunitiesByStage[stage.id]?.reduce((sum, opp) => sum + opp.value, 0) || 0
-                )}
+              <div className="mb-4">
+                <div className="text-2xl font-bold text-gray-900">
+                  {formatCurrency(
+                    opportunitiesByStage[stage.id]?.reduce((sum, opp) => sum + opp.value, 0) || 0
+                  )}
+                </div>
+                <div className="text-xs text-gray-500 uppercase tracking-wide">Total Value</div>
               </div>
               
               {/* Opportunities in Stage */}
-              <div className="space-y-3">
-                {opportunitiesByStage[stage.id]?.map((opportunity) => (
-                  <div
-                    key={opportunity.id}
-                    className="rounded-lg shadow-lg p-4 hover:shadow-xl transition-shadow duration-200 cursor-pointer"
-                    style={{ backgroundColor: '#F7F2EC' }}
-                    onClick={() => {
-                      setSelectedOpportunity(opportunity);
-                      setShowDetails(true);
-                    }}
-                  >
-                    <div className="space-y-3">
-                      {/* Opportunity Header */}
-                      <div className="flex items-start justify-between">
-                        <h4 className="font-semibold text-gray-900 text-sm">{opportunity.title}</h4>
-                        <div className="flex items-center gap-1">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStageColor(opportunity.stage)}`}>
-                            {opportunity.probability}%
-                          </span>
-                        </div>
-                      </div>
-                      
-                      {/* Customer Info */}
-                      {opportunity.customer && (
-                        <div className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-gray-500" />
-                          <span className="text-sm text-gray-600">
-                            {opportunity.customer.firstName} {opportunity.customer.lastName}
-                          </span>
-                        </div>
-                      )}
-                      
-                      {/* Value */}
-                      <div className="flex items-center gap-2">
-                        <DollarSign className="h-4 w-4 text-green-600" />
-                        <span className="font-semibold text-gray-900">{formatCurrency(opportunity.value)}</span>
-                      </div>
-                      
-                      {/* Expected Close Date */}
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-gray-500" />
-                        <span className="text-sm text-gray-600">
-                          {formatDate(opportunity.expectedCloseDate)}
-                        </span>
-                        {getDaysUntilClose(opportunity.expectedCloseDate) < 7 && (
-                          <AlertCircle className="h-4 w-4 text-red-500" />
-                        )}
-                      </div>
-                      
-                      {/* Tags */}
-                      {opportunity.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
-                          {opportunity.tags.slice(0, 2).map((tag, index) => (
-                            <span key={index} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
-                              {tag}
-                            </span>
-                          ))}
-                          {opportunity.tags.length > 2 && (
-                            <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
-                              +{opportunity.tags.length - 2}
-                            </span>
-                          )}
-                        </div>
-                      )}
-                      
-                      {/* Quick Actions */}
-                      <div className="flex items-center justify-between pt-2 border-t border-gray-200">
-                        <div className="flex items-center gap-1">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onStageChange(opportunity.id, 'closed_won');
-                            }}
-                            className="p-1 text-green-600 hover:text-green-700 transition-colors"
-                            title="Mark as Won"
-                          >
-                            <CheckCircle className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onStageChange(opportunity.id, 'closed_lost');
-                            }}
-                            className="p-1 text-red-600 hover:text-red-700 transition-colors"
-                            title="Mark as Lost"
-                          >
-                            <XCircle className="h-4 w-4" />
-                          </button>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onOpportunityUpdate(opportunity);
-                            }}
-                            className="p-1 text-gray-500 hover:text-blue-600 transition-colors"
-                            title="Edit"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedOpportunity(opportunity);
-                              setShowDetails(true);
-                            }}
-                            className="p-1 text-gray-500 hover:text-purple-600 transition-colors"
-                            title="View Details"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+              <div className="space-y-2 max-h-96 overflow-y-auto">
+                {opportunitiesByStage[stage.id]?.length === 0 ? (
+                  <div className="text-center py-6">
+                    <div className="text-gray-400 text-sm">No opportunities</div>
                   </div>
-                ))}
+                ) : (
+                  opportunitiesByStage[stage.id]?.map((opportunity) => (
+                    <div
+                      key={opportunity.id}
+                      className={`bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-200 cursor-pointer shadow-sm ${
+                        viewMode === 'list' ? 'p-2' : 'p-3'
+                      }`}
+                      onClick={() => {
+                        setSelectedOpportunity(opportunity);
+                        setShowDetails(true);
+                      }}
+                    >
+                      {viewMode === 'list' ? (
+                        /* List View - Compact horizontal layout */
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="font-semibold text-gray-900 text-sm truncate">{opportunity.title}</h4>
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStageColor(opportunity.stage)}`}>
+                                {opportunity.probability}%
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-3 text-xs text-gray-600">
+                              <span className="flex items-center gap-1">
+                                <DollarSign className="h-3 w-3" />
+                                {formatCurrency(opportunity.value)}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                {formatDate(opportunity.expectedCloseDate)}
+                                {getDaysUntilClose(opportunity.expectedCloseDate) < 7 && (
+                                  <AlertCircle className="h-3 w-3 text-red-500" />
+                                )}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          {/* Actions */}
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onStageChange(opportunity.id, 'closed_won');
+                              }}
+                              className="p-1 text-green-600 hover:text-green-700 transition-colors"
+                              title="Mark as Won"
+                            >
+                              <CheckCircle className="h-3 w-3" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onStageChange(opportunity.id, 'closed_lost');
+                              }}
+                              className="p-1 text-red-600 hover:text-red-700 transition-colors"
+                              title="Mark as Lost"
+                            >
+                              <XCircle className="h-3 w-3" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onOpportunityUpdate(opportunity);
+                              }}
+                              className="p-1 text-gray-500 hover:text-blue-600 transition-colors"
+                              title="Edit"
+                            >
+                              <Edit className="h-3 w-3" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedOpportunity(opportunity);
+                                setShowDetails(true);
+                              }}
+                              className="p-1 text-gray-500 hover:text-purple-600 transition-colors"
+                              title="View Details"
+                            >
+                              <Eye className="h-3 w-3" />
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        /* Card View - Compact vertical layout */
+                        <div className="space-y-2">
+                          {/* Opportunity Header */}
+                          <div className="flex items-start justify-between">
+                            <h4 className="font-semibold text-gray-900 text-sm truncate flex-1 mr-2">{opportunity.title}</h4>
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium flex-shrink-0 ${getStageColor(opportunity.stage)}`}>
+                              {opportunity.probability}%
+                            </span>
+                          </div>
+                          
+                          {/* Key Info Row */}
+                          <div className="flex items-center justify-between text-xs text-gray-600">
+                            <span className="flex items-center gap-1">
+                              <DollarSign className="h-3 w-3 text-green-600" />
+                              {formatCurrency(opportunity.value)}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Calendar className="h-3 w-3" />
+                              {formatDate(opportunity.expectedCloseDate)}
+                              {getDaysUntilClose(opportunity.expectedCloseDate) < 7 && (
+                                <AlertCircle className="h-3 w-3 text-red-500" />
+                              )}
+                            </span>
+                          </div>
+                          
+                          {/* Customer Info - Only if available */}
+                          {opportunity.customer && (
+                            <div className="flex items-center gap-1 text-xs text-gray-600">
+                              <User className="h-3 w-3 text-gray-500" />
+                              <span className="truncate">
+                                {opportunity.customer.firstName} {opportunity.customer.lastName}
+                              </span>
+                            </div>
+                          )}
+                          
+                          {/* Tags - Compact display */}
+                          {opportunity.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              {opportunity.tags.slice(0, 2).map((tag, index) => (
+                                <span key={index} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
+                                  {tag}
+                                </span>
+                              ))}
+                              {opportunity.tags.length > 2 && (
+                                <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
+                                  +{opportunity.tags.length - 2}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                          
+                          {/* Quick Actions */}
+                          <div className="flex items-center justify-between pt-1 border-t border-gray-200">
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onStageChange(opportunity.id, 'closed_won');
+                                }}
+                                className="p-1 text-green-600 hover:text-green-700 transition-colors"
+                                title="Mark as Won"
+                              >
+                                <CheckCircle className="h-3 w-3" />
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onStageChange(opportunity.id, 'closed_lost');
+                                }}
+                                className="p-1 text-red-600 hover:text-red-700 transition-colors"
+                                title="Mark as Lost"
+                              >
+                                <XCircle className="h-3 w-3" />
+                              </button>
+                            </div>
+                            <div className="flex items-center gap-1">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onOpportunityUpdate(opportunity);
+                                }}
+                                className="p-1 text-gray-500 hover:text-blue-600 transition-colors"
+                                title="Edit"
+                              >
+                                <Edit className="h-3 w-3" />
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedOpportunity(opportunity);
+                                  setShowDetails(true);
+                                }}
+                                className="p-1 text-gray-500 hover:text-purple-600 transition-colors"
+                                title="View Details"
+                              >
+                                <Eye className="h-3 w-3" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           ))}
@@ -396,6 +553,8 @@ const Pipeline: React.FC<PipelineProps> = ({
                 <button
                   onClick={() => setShowDetails(false)}
                   className="text-gray-500 hover:text-gray-700"
+                  title="Close modal"
+                  aria-label="Close opportunity details modal"
                 >
                   <X className="h-6 w-6" />
                 </button>
@@ -483,6 +642,277 @@ const Pipeline: React.FC<PipelineProps> = ({
                     Edit Opportunity
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Opportunity Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900">Add New Opportunity</h2>
+                <button
+                  onClick={() => setShowAddModal(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                  title="Close modal"
+                  aria-label="Close add opportunity modal"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Basic Information */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Opportunity Title *
+                    </label>
+                    <input
+                      type="text"
+                      value={newOpportunity.title}
+                      onChange={(e) => setNewOpportunity({...newOpportunity, title: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter opportunity title"
+                      title="Enter opportunity title"
+                      aria-label="Enter opportunity title"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Customer ID
+                    </label>
+                    <input
+                      type="text"
+                      value={newOpportunity.customerId}
+                      onChange={(e) => setNewOpportunity({...newOpportunity, customerId: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter customer ID"
+                      title="Enter customer ID"
+                      aria-label="Enter customer ID"
+                    />
+                  </div>
+                  
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Deal Value *
+                      </label>
+                      <div className="group relative">
+                        <div className="w-4 h-4 bg-blue-100 rounded-full flex items-center justify-center cursor-help">
+                          <span className="text-blue-600 text-xs font-bold">?</span>
+                        </div>
+                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                          <div className="max-w-xs">
+                            <div className="font-semibold mb-1">Deal Value Guide:</div>
+                            <div className="text-xs space-y-1">
+                              <div>• <span className="text-green-300">Under $10K:</span> Small deals</div>
+                              <div>• <span className="text-yellow-300">$10K - $50K:</span> Medium deals</div>
+                              <div>• <span className="text-orange-300">$50K - $100K:</span> Large deals</div>
+                              <div>• <span className="text-red-300">Over $100K:</span> Enterprise deals</div>
+                            </div>
+                          </div>
+                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                        </div>
+                      </div>
+                    </div>
+                    <input
+                      type="number"
+                      min="0"
+                      value={newOpportunity.value}
+                      onChange={(e) => setNewOpportunity({...newOpportunity, value: parseInt(e.target.value) || 0})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter deal value"
+                      title="Enter deal value in dollars"
+                      aria-label="Enter deal value in dollars"
+                    />
+                  </div>
+                  
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Probability (%)
+                      </label>
+                      <div className="group relative">
+                        <div className="w-4 h-4 bg-blue-100 rounded-full flex items-center justify-center cursor-help">
+                          <span className="text-blue-600 text-xs font-bold">?</span>
+                        </div>
+                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                          <div className="max-w-xs">
+                            <div className="font-semibold mb-1">Probability Guide:</div>
+                            <div className="text-xs space-y-1">
+                              <div>• <span className="text-green-300">76-100%:</span> Very likely to close</div>
+                              <div>• <span className="text-yellow-300">51-75%:</span> Likely to close</div>
+                              <div>• <span className="text-orange-300">26-50%:</span> Moderate chance</div>
+                              <div>• <span className="text-red-300">0-25%:</span> Low probability</div>
+                            </div>
+                          </div>
+                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                        </div>
+                      </div>
+                    </div>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={newOpportunity.probability}
+                      onChange={(e) => setNewOpportunity({...newOpportunity, probability: parseInt(e.target.value) || 0})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      title="Enter probability percentage"
+                      aria-label="Enter probability percentage"
+                    />
+                  </div>
+                </div>
+                
+                {/* Additional Information */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Stage *
+                    </label>
+                    <select
+                      value={newOpportunity.stage}
+                      onChange={(e) => setNewOpportunity({...newOpportunity, stage: e.target.value as any})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      title="Select opportunity stage"
+                      aria-label="Select opportunity stage"
+                    >
+                      <option value="lead">Lead</option>
+                      <option value="qualification">Qualification</option>
+                      <option value="proposal">Proposal</option>
+                      <option value="negotiation">Negotiation</option>
+                      <option value="closed_won">Closed Won</option>
+                      <option value="closed_lost">Closed Lost</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Expected Close Date *
+                    </label>
+                    <input
+                      type="date"
+                      value={newOpportunity.expectedCloseDate}
+                      onChange={(e) => setNewOpportunity({...newOpportunity, expectedCloseDate: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      title="Select expected close date"
+                      aria-label="Select expected close date"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Source
+                    </label>
+                    <select
+                      value={newOpportunity.source}
+                      onChange={(e) => setNewOpportunity({...newOpportunity, source: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      title="Select opportunity source"
+                      aria-label="Select opportunity source"
+                    >
+                      <option value="Website">Website</option>
+                      <option value="Referral">Referral</option>
+                      <option value="Cold Call">Cold Call</option>
+                      <option value="Email">Email</option>
+                      <option value="Social Media">Social Media</option>
+                      <option value="Trade Show">Trade Show</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Assigned To
+                    </label>
+                    <select
+                      value={newOpportunity.assignedTo}
+                      onChange={(e) => setNewOpportunity({...newOpportunity, assignedTo: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      title="Select assignee"
+                      aria-label="Select assignee"
+                    >
+                      <option value="">Select Assignee</option>
+                      <option value="sales@company.com">Sales Team</option>
+                      <option value="manager@company.com">Manager</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Description */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Description
+                </label>
+                <textarea
+                  value={newOpportunity.description}
+                  onChange={(e) => setNewOpportunity({...newOpportunity, description: e.target.value})}
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter opportunity description..."
+                  title="Enter opportunity description"
+                  aria-label="Enter opportunity description"
+                />
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+                <button
+                  onClick={() => setShowAddModal(false)}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    // Check for duplicate opportunity
+                    const duplicate = checkForDuplicateOpportunity(newOpportunity.title, newOpportunity.customerId);
+                    if (duplicate) {
+                      alert(`An opportunity with the title "${newOpportunity.title}" already exists for this customer. Please choose a different title.`);
+                      return;
+                    }
+
+                    // Create new opportunity object
+                    const opportunity: Partial<Opportunity> = {
+                      ...newOpportunity,
+                      id: Date.now().toString(),
+                      actualCloseDate: undefined,
+                      customFields: {},
+                      createdAt: new Date().toISOString(),
+                      updatedAt: new Date().toISOString(),
+                      lastActivityAt: new Date().toISOString()
+                    };
+                    
+                    onOpportunityCreate(opportunity);
+                    
+                    // Reset form and close modal
+                    setShowAddModal(false);
+                    setNewOpportunity({
+                      title: '',
+                      description: '',
+                      customerId: '',
+                      stage: 'lead',
+                      value: 0,
+                      probability: 25,
+                      expectedCloseDate: '',
+                      source: 'Website',
+                      assignedTo: '',
+                      tags: [],
+                      status: 'active'
+                    });
+                  }}
+                  disabled={!newOpportunity.title || !newOpportunity.expectedCloseDate}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Create Opportunity
+                </button>
               </div>
             </div>
           </div>

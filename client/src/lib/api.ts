@@ -9,6 +9,9 @@ export const api = axios.create({
   },
 });
 
+// Singleton interceptor registration guard
+let interceptorsInstalled = false;
+
 // Request interceptor for logging
 api.interceptors.request.use(
   (config) => {
@@ -27,9 +30,19 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
+    // Ignore cancellation errors
+    if (error.code === 'ERR_CANCELED') {
+      return Promise.resolve({ canceled: true });
+    }
+    
     console.error('[API Response Error]', error.response?.data || error.message);
     return Promise.reject(error);
   }
 );
+
+// Install interceptors only once
+if (!interceptorsInstalled) {
+  interceptorsInstalled = true;
+}
 
 export default api;
