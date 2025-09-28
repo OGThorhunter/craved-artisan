@@ -326,9 +326,9 @@ export default function EventCoordinatorDashboardPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'draft': return 'text-gray-600 bg-gray-100';
-      case 'published': return 'text-blue-600 bg-blue-100';
-      case 'active': return 'text-green-600 bg-green-100';
-      case 'completed': return 'text-purple-600 bg-purple-100';
+      case 'published': return 'text-brand-green bg-brand-green/10';
+      case 'active': return 'text-brand-green bg-brand-green/20';
+      case 'completed': return 'text-gray-600 bg-gray-200';
       case 'cancelled': return 'text-red-600 bg-red-100';
       default: return 'text-gray-600 bg-gray-100';
     }
@@ -337,10 +337,10 @@ export default function EventCoordinatorDashboardPage() {
   const getVendorStatusColor = (status: string) => {
     switch (status) {
       case 'invited': return 'text-yellow-600 bg-yellow-100';
-      case 'applied': return 'text-blue-600 bg-blue-100';
-      case 'approved': return 'text-green-600 bg-green-100';
-      case 'paid': return 'text-purple-600 bg-purple-100';
-      case 'confirmed': return 'text-green-600 bg-green-100';
+      case 'applied': return 'text-brand-green bg-brand-green/10';
+      case 'approved': return 'text-brand-green bg-brand-green/20';
+      case 'paid': return 'text-brand-green bg-brand-green/30';
+      case 'confirmed': return 'text-brand-green bg-brand-green/20';
       case 'declined': return 'text-red-600 bg-red-100';
       default: return 'text-gray-600 bg-gray-100';
     }
@@ -348,10 +348,10 @@ export default function EventCoordinatorDashboardPage() {
 
   const getBoothStatusColor = (status: string) => {
     switch (status) {
-      case 'available': return 'text-green-600 bg-green-100';
+      case 'available': return 'text-brand-green bg-brand-green/10';
       case 'reserved': return 'text-yellow-600 bg-yellow-100';
-      case 'paid': return 'text-blue-600 bg-blue-100';
-      case 'assigned': return 'text-purple-600 bg-purple-100';
+      case 'paid': return 'text-brand-green bg-brand-green/20';
+      case 'assigned': return 'text-brand-green bg-brand-green/30';
       default: return 'text-gray-600 bg-gray-100';
     }
   };
@@ -370,7 +370,7 @@ export default function EventCoordinatorDashboardPage() {
   if (loading) return <div>Loading...</div>;
 
   return (
-    <div className="page-container bg-gray-50">
+    <div className="min-h-screen bg-white">
       {/* Header */}
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 py-6">
@@ -447,15 +447,15 @@ export default function EventCoordinatorDashboardPage() {
               className="space-y-8"
             >
               {/* Hero Banner */}
-              <div className="bg-gradient-to-r from-brand-green to-brand-maroon rounded-lg p-6 text-white">
+              <div className="bg-brand-cream rounded-lg p-6 shadow-md border">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h2 className="text-2xl font-bold mb-2">Event Management Overview</h2>
-                    <p className="text-green-100">Track your events, coordinate vendors, and maximize success</p>
+                    <h2 className="text-2xl font-bold mb-2 text-gray-900">Event Management Overview</h2>
+                    <p className="text-gray-600">Track your events, coordinate vendors, and maximize success</p>
                   </div>
                   <button
                     onClick={() => setShowCreateEventModal(true)}
-                    className="bg-white text-brand-green px-6 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors"
+                    className="bg-brand-green text-white px-6 py-3 rounded-lg font-medium hover:bg-brand-green/90 transition-colors"
                   >
                     <Plus className="w-4 h-4 inline mr-2" />
                     Create Event
@@ -465,10 +465,10 @@ export default function EventCoordinatorDashboardPage() {
 
               {/* Quick Stats */}
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="bg-white rounded-lg p-6 border">
+                <div className="bg-brand-cream rounded-lg p-6 shadow-md border">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="p-2 bg-green-100 rounded-lg">
-                      <Calendar className="w-6 h-6 text-green-600" />
+                    <div className="p-2 bg-brand-green/10 rounded-lg">
+                      <Calendar className="w-6 h-6 text-brand-green" />
                     </div>
                   </div>
                   <div className="text-2xl font-bold text-gray-900">
@@ -477,10 +477,10 @@ export default function EventCoordinatorDashboardPage() {
                   <div className="text-sm text-gray-600">Active Events</div>
                 </div>
 
-                <div className="bg-white rounded-lg p-6 border">
+                <div className="bg-brand-cream rounded-lg p-6 shadow-md border">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <Users className="w-6 h-6 text-blue-600" />
+                    <div className="p-2 bg-brand-green/10 rounded-lg">
+                      <Users className="w-6 h-6 text-brand-green" />
                     </div>
                   </div>
                   <div className="text-2xl font-bold text-gray-900">
@@ -489,10 +489,10 @@ export default function EventCoordinatorDashboardPage() {
                   <div className="text-sm text-gray-600">Confirmed Vendors</div>
                 </div>
 
-                <div className="bg-white rounded-lg p-6 border">
+                <div className="bg-brand-cream rounded-lg p-6 shadow-md border">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="p-2 bg-purple-100 rounded-lg">
-                      <DollarSign className="w-6 h-6 text-purple-600" />
+                    <div className="p-2 bg-brand-green/10 rounded-lg">
+                      <DollarSign className="w-6 h-6 text-brand-green" />
                     </div>
                   </div>
                   <div className="text-2xl font-bold text-gray-900">
@@ -501,10 +501,10 @@ export default function EventCoordinatorDashboardPage() {
                   <div className="text-sm text-gray-600">Total Revenue</div>
                 </div>
 
-                <div className="bg-white rounded-lg p-6 border">
+                <div className="bg-brand-cream rounded-lg p-6 shadow-md border">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="p-2 bg-orange-100 rounded-lg">
-                      <MessageSquare className="w-6 h-6 text-orange-600" />
+                    <div className="p-2 bg-brand-green/10 rounded-lg">
+                      <MessageSquare className="w-6 h-6 text-brand-green" />
                     </div>
                   </div>
                   <div className="text-2xl font-bold text-gray-900">
@@ -515,7 +515,7 @@ export default function EventCoordinatorDashboardPage() {
               </div>
 
               {/* AI Insights */}
-              <div className="bg-white rounded-lg p-6 border">
+              <div className="bg-brand-cream rounded-lg p-6 shadow-md border">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-semibold">AI Insights</h3>
                   <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -525,13 +525,13 @@ export default function EventCoordinatorDashboardPage() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {aiInsights.map((insight) => (
-                    <div key={insight.id} className="p-4 border border-gray-200 rounded-lg">
+                    <div key={insight.id} className="p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
                       <div className="flex items-start gap-3">
                         <div className={`p-2 rounded-lg ${
-                          insight.type === 'layout' ? 'bg-blue-100 text-blue-600' :
-                          insight.type === 'traffic' ? 'bg-green-100 text-green-600' :
+                          insight.type === 'layout' ? 'bg-brand-green/10 text-brand-green' :
+                          insight.type === 'traffic' ? 'bg-brand-green/20 text-brand-green' :
                           insight.type === 'weather' ? 'bg-yellow-100 text-yellow-600' :
-                          insight.type === 'revenue' ? 'bg-purple-100 text-purple-600' :
+                          insight.type === 'revenue' ? 'bg-brand-green/10 text-brand-green' :
                           'bg-gray-100 text-gray-600'
                         }`}>
                           {getInsightIcon(insight.type)}
@@ -555,7 +555,7 @@ export default function EventCoordinatorDashboardPage() {
               </div>
 
               {/* Recent Events */}
-              <div className="bg-white rounded-lg p-6 border">
+              <div className="bg-brand-cream rounded-lg p-6 shadow-md border">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-semibold">Recent Events</h3>
                   <Link href="/dashboard/event-coordinator/events" className="text-brand-green hover:text-brand-green/80 text-sm">
@@ -564,7 +564,7 @@ export default function EventCoordinatorDashboardPage() {
                 </div>
                 <div className="space-y-4">
                   {events.slice(0, 3).map((event) => (
-                    <div key={event.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                    <div key={event.id} className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
                       <div className="flex items-center gap-4">
                         <img src={event.image} alt={event.title} className="w-16 h-16 rounded object-cover" />
                         <div>
@@ -601,12 +601,12 @@ export default function EventCoordinatorDashboardPage() {
 
               {/* Vendor Status */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white rounded-lg p-6 border">
+                <div className="bg-brand-cream rounded-lg p-6 shadow-md border">
                   <h3 className="text-lg font-semibold mb-4">Vendor Status</h3>
                   <div className="space-y-3">
                     {[
-                      { status: 'confirmed', count: vendors.filter(v => v.status === 'confirmed').length, color: 'bg-green-100 text-green-800' },
-                      { status: 'approved', count: vendors.filter(v => v.status === 'approved').length, color: 'bg-blue-100 text-blue-800' },
+                      { status: 'confirmed', count: vendors.filter(v => v.status === 'confirmed').length, color: 'bg-brand-green/20 text-brand-green' },
+                      { status: 'approved', count: vendors.filter(v => v.status === 'approved').length, color: 'bg-brand-green/10 text-brand-green' },
                       { status: 'applied', count: vendors.filter(v => v.status === 'applied').length, color: 'bg-yellow-100 text-yellow-800' },
                       { status: 'invited', count: vendors.filter(v => v.status === 'invited').length, color: 'bg-gray-100 text-gray-800' }
                     ].map((item) => (
@@ -620,7 +620,7 @@ export default function EventCoordinatorDashboardPage() {
                   </div>
                 </div>
 
-                <div className="bg-white rounded-lg p-6 border">
+                <div className="bg-brand-cream rounded-lg p-6 shadow-md border">
                   <h3 className="text-lg font-semibold mb-4">Revenue Breakdown</h3>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">

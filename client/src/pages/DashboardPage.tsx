@@ -11,7 +11,7 @@ import {
 
 export default function DashboardPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
         <div className="max-w-7xl mx-auto px-4 py-8">
           {/* Header */}
           <div className="mb-8">
@@ -23,7 +23,7 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Vendor Dashboard */}
             <Link href="/dashboard/vendor/pulse">
-              <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer">
+              <div className="bg-brand-cream rounded-lg p-6 shadow-md hover:shadow-lg transition-shadow cursor-pointer h-48 flex flex-col">
                 <div className="flex items-center gap-4 mb-4">
                   <div className="p-3 bg-green-100 rounded-lg">
                     <Package className="w-6 h-6 text-green-600" />
@@ -33,7 +33,7 @@ export default function DashboardPage() {
                     <p className="text-sm text-gray-600">Manage your products & business</p>
                   </div>
                 </div>
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-gray-500 flex-1">
                   Access your vendor pulse, products, orders, and analytics
                 </div>
               </div>
@@ -41,7 +41,7 @@ export default function DashboardPage() {
 
             {/* Customer Dashboard */}
             <Link href="/dashboard/customer">
-              <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer">
+              <div className="bg-brand-cream rounded-lg p-6 shadow-md hover:shadow-lg transition-shadow cursor-pointer h-48 flex flex-col">
                 <div className="flex items-center gap-4 mb-4">
                   <div className="p-3 bg-blue-100 rounded-lg">
                     <ShoppingCart className="w-6 h-6 text-blue-600" />
@@ -51,7 +51,7 @@ export default function DashboardPage() {
                     <p className="text-sm text-gray-600">Track your orders & favorites</p>
                   </div>
                 </div>
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-gray-500 flex-1">
                   View your orders, watchlist, and shopping history
                 </div>
               </div>
@@ -59,7 +59,7 @@ export default function DashboardPage() {
 
             {/* Event Coordinator Dashboard */}
             <Link href="/dashboard/event-coordinator">
-              <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer">
+              <div className="bg-brand-cream rounded-lg p-6 shadow-md hover:shadow-lg transition-shadow cursor-pointer h-48 flex flex-col">
                 <div className="flex items-center gap-4 mb-4">
                   <div className="p-3 bg-purple-100 rounded-lg">
                     <Activity className="w-6 h-6 text-purple-600" />
@@ -69,7 +69,7 @@ export default function DashboardPage() {
                     <p className="text-sm text-gray-600">Manage events & vendors</p>
                   </div>
                 </div>
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-gray-500 flex-1">
                   Coordinate events, manage vendors, and track attendance
                 </div>
               </div>
@@ -77,7 +77,7 @@ export default function DashboardPage() {
 
             {/* Admin Dashboard */}
             <Link href="/dashboard/admin">
-              <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer">
+              <div className="bg-brand-cream rounded-lg p-6 shadow-md hover:shadow-lg transition-shadow cursor-pointer h-48 flex flex-col">
                 <div className="flex items-center gap-4 mb-4">
                   <div className="p-3 bg-red-100 rounded-lg">
                     <Settings className="w-6 h-6 text-red-600" />
@@ -87,7 +87,7 @@ export default function DashboardPage() {
                     <p className="text-sm text-gray-600">System administration</p>
                   </div>
                 </div>
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-gray-500 flex-1">
                   Manage users, system settings, and platform analytics
                 </div>
               </div>
@@ -95,7 +95,7 @@ export default function DashboardPage() {
 
             {/* Dropoff Dashboard */}
             <Link href="/dashboard/dropoff">
-              <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer">
+              <div className="bg-brand-cream rounded-lg p-6 shadow-md hover:shadow-lg transition-shadow cursor-pointer h-48 flex flex-col">
                 <div className="flex items-center gap-4 mb-4">
                   <div className="p-3 bg-orange-100 rounded-lg">
                     <Users className="w-6 h-6 text-orange-600" />
@@ -105,7 +105,7 @@ export default function DashboardPage() {
                     <p className="text-sm text-gray-600">Manage dropoff operations</p>
                   </div>
                 </div>
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-gray-500 flex-1">
                   Handle customer dropoffs and inventory management
                 </div>
               </div>
@@ -113,7 +113,7 @@ export default function DashboardPage() {
 
             {/* Analytics */}
             <Link href="/dashboard/vendor/analytics">
-              <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-200 hover:shadow-md transition-shadow cursor-pointer">
+              <div className="bg-brand-cream rounded-lg p-6 shadow-md hover:shadow-lg transition-shadow cursor-pointer h-48 flex flex-col">
                 <div className="flex items-center gap-4 mb-4">
                   <div className="p-3 bg-indigo-100 rounded-lg">
                     <BarChart3 className="w-6 h-6 text-indigo-600" />
@@ -123,7 +123,7 @@ export default function DashboardPage() {
                     <p className="text-sm text-gray-600">Business insights & reports</p>
                   </div>
                 </div>
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-gray-500 flex-1">
                   View detailed analytics and performance metrics
                 </div>
               </div>
@@ -135,7 +135,7 @@ export default function DashboardPage() {
             <h2 className="text-xl font-semibold text-gray-900 mb-6">Quick Actions</h2>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <Link href="/dashboard/vendor/products" className="block">
-                <button className="w-full bg-white border border-gray-200 rounded-lg p-4 text-left hover:bg-gray-50 transition-colors">
+                <button className="w-full bg-brand-cream rounded-lg p-4 text-left hover:bg-brand-cream/80 transition-all shadow-md hover:shadow-lg h-24 flex flex-col justify-center">
                   <Package className="w-5 h-5 text-gray-600 mb-2" />
                   <div className="font-medium text-gray-900">Manage Products</div>
                   <div className="text-sm text-gray-600">Add or edit products</div>
@@ -143,7 +143,7 @@ export default function DashboardPage() {
               </Link>
               
               <Link href="/dashboard/vendor/orders" className="block">
-                <button className="w-full bg-white border border-gray-200 rounded-lg p-4 text-left hover:bg-gray-50 transition-colors">
+                <button className="w-full bg-brand-cream rounded-lg p-4 text-left hover:bg-brand-cream/80 transition-all shadow-md hover:shadow-lg h-24 flex flex-col justify-center">
                   <ShoppingCart className="w-5 h-5 text-gray-600 mb-2" />
                   <div className="font-medium text-gray-900">View Orders</div>
                   <div className="text-sm text-gray-600">Track order status</div>
@@ -151,7 +151,7 @@ export default function DashboardPage() {
               </Link>
               
               <Link href="/dashboard/vendor/promotions" className="block">
-                <button className="w-full bg-white border border-gray-200 rounded-lg p-4 text-left hover:bg-gray-50 transition-colors">
+                <button className="w-full bg-brand-cream rounded-lg p-4 text-left hover:bg-brand-cream/80 transition-all shadow-md hover:shadow-lg h-24 flex flex-col justify-center">
                   <Activity className="w-5 h-5 text-gray-600 mb-2" />
                   <div className="font-medium text-gray-900">Promotions</div>
                   <div className="text-sm text-gray-600">Manage sales & offers</div>
@@ -159,7 +159,7 @@ export default function DashboardPage() {
               </Link>
               
               <Link href="/dashboard/vendor/labels" className="block">
-                <button className="w-full bg-white border border-gray-200 rounded-lg p-4 text-left hover:bg-gray-50 transition-colors">
+                <button className="w-full bg-brand-cream rounded-lg p-4 text-left hover:bg-brand-cream/80 transition-all shadow-md hover:shadow-lg h-24 flex flex-col justify-center">
                   <Settings className="w-5 h-5 text-gray-600 mb-2" />
                   <div className="font-medium text-gray-900">Labels</div>
                   <div className="text-sm text-gray-600">Print & manage labels</div>

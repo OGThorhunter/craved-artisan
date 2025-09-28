@@ -200,6 +200,149 @@ vendorRouter.get('/sales-windows', async (req, res) => {
   }
 });
 
+// Get customer order history
+vendorRouter.get('/orders/history', async (req, res) => {
+  try {
+    // TODO: Add authentication check
+    // if (!req.user || req.user.role !== 'CUSTOMER') {
+    //   return res.status(403).json({ error: 'CUSTOMER_ACCESS_REQUIRED' });
+    // }
+
+    // TODO: Filter orders by customer ID from session
+    // const customerId = req.user.id;
+    // For now, return all orders (in a real app, filter by customer)
+    
+    // Mock customer orders data - in a real app, fetch from database
+    const mockCustomerOrders = [
+      {
+        id: 'customer-order-1',
+        orderNumber: 'ORD-CUST-001',
+        status: 'COMPLETED',
+        subtotal: 45.99,
+        tax: 3.68,
+        shipping: 5.99,
+        total: 55.66,
+        createdAt: '2025-01-15T10:00:00Z',
+        updatedAt: '2025-01-18T14:30:00Z',
+        items: [
+          {
+            id: 'item-1',
+            quantity: 2,
+            price: 8.99,
+            total: 17.98,
+            product: {
+              id: 'prod-1',
+              name: 'Artisan Sourdough Bread',
+              imageUrl: '/images/sourdough.jpg',
+              price: 8.99
+            }
+          },
+          {
+            id: 'item-2',
+            quantity: 1,
+            price: 4.50,
+            total: 4.50,
+            product: {
+              id: 'prod-2',
+              name: 'Chocolate Croissant',
+              imageUrl: '/images/croissant.jpg',
+              price: 4.50
+            }
+          }
+        ],
+        fulfillment: {
+          id: 'fulfill-1',
+          status: 'COMPLETED',
+          type: 'PICKUP',
+          trackingNumber: null,
+          carrier: null,
+          estimatedDelivery: '2025-01-18T16:00:00Z',
+          actualDelivery: '2025-01-18T14:30:00Z',
+          notes: 'Order ready for pickup'
+        },
+        shippingAddress: {
+          id: 'addr-1',
+          firstName: 'John',
+          lastName: 'Doe',
+          company: null,
+          address1: '123 Main St',
+          address2: null,
+          city: 'Atlanta',
+          state: 'GA',
+          postalCode: '30309',
+          country: 'USA',
+          phone: '(555) 123-4567'
+        }
+      },
+      {
+        id: 'customer-order-2',
+        orderNumber: 'ORD-CUST-002',
+        status: 'IN_PROGRESS',
+        subtotal: 32.25,
+        tax: 2.58,
+        shipping: 0,
+        total: 34.83,
+        createdAt: '2025-01-20T09:15:00Z',
+        updatedAt: '2025-01-21T11:00:00Z',
+        items: [
+          {
+            id: 'item-3',
+            quantity: 3,
+            price: 5.25,
+            total: 15.75,
+            product: {
+              id: 'prod-3',
+              name: 'Cinnamon Roll',
+              imageUrl: '/images/cinnamon-roll.jpg',
+              price: 5.25
+            }
+          },
+          {
+            id: 'item-4',
+            quantity: 2,
+            price: 8.25,
+            total: 16.50,
+            product: {
+              id: 'prod-4',
+              name: 'Apple Fritter',
+              imageUrl: '/images/apple-fritter.jpg',
+              price: 8.25
+            }
+          }
+        ],
+        fulfillment: {
+          id: 'fulfill-2',
+          status: 'IN_PROGRESS',
+          type: 'SHIPPING',
+          trackingNumber: 'TRK123456789',
+          carrier: 'UPS',
+          estimatedDelivery: '2025-01-25T18:00:00Z',
+          actualDelivery: null,
+          notes: 'In production - estimated ready by tomorrow'
+        },
+        shippingAddress: {
+          id: 'addr-2',
+          firstName: 'Jane',
+          lastName: 'Smith',
+          company: null,
+          address1: '456 Oak Ave',
+          address2: 'Apt 2B',
+          city: 'Atlanta',
+          state: 'GA',
+          postalCode: '30305',
+          country: 'USA',
+          phone: '(555) 987-6543'
+        }
+      }
+    ];
+
+    res.json({ orders: mockCustomerOrders });
+  } catch (error: any) {
+    console.error('CUSTOMER_ORDERS_HISTORY_ERROR', error);
+    res.status(500).json({ error: 'ORDERS_FETCH_FAILED', message: error.message });
+  }
+});
+
 // Create new order
 vendorRouter.post('/orders', async (req, res) => {
   try {

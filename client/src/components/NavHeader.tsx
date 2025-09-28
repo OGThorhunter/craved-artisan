@@ -5,11 +5,14 @@ import { Link, useLocation } from 'wouter';
 import { Menu, X, ShoppingCart, Search, Bell, MapPin, MessageCircle, Send, X as CloseIcon } from 'lucide-react';
 import logonobg from '/images/logonobg.png';
 import { useAuth } from '../contexts/AuthContext';
+import { useCart } from '../contexts/CartContext';
+import { CartDropdown } from './CartDropdown';
 import { useZip } from '../contexts/ZipContext';
 
 export default function NavHeader() {
   const { user, isAuthenticated, logout } = useAuth();
   const { zip, updateZip, isValidZip, isUsingLocation, setUsingLocation } = useZip();
+  const { getTotalItems, setIsOpen: setCartOpen } = useCart();
   const [location] = useLocation();
   const [zipInput, setZipInput] = useState(zip);
   const [isMobileOpen, setMobileOpen] = useState(false);
@@ -49,7 +52,7 @@ export default function NavHeader() {
 
   const roleLinks: Record<string, React.ReactElement | null> = {
     coordinator: <Link href="/events/manage">My Events</Link>,
-    customer: <Link href="/dashboard/customer/orders">My Orders</Link>,
+    customer: <Link href="/dashboard/customer">My Orders</Link>,
     admin: <Link href="/admin">The Bridge</Link>,
     guest: null,
   };
@@ -346,7 +349,7 @@ export default function NavHeader() {
 
           <div className="relative cart-container">
             <button
-              onClick={handleCartClick}
+              onClick={() => setCartOpen(!isCartOpen)}
               onMouseEnter={() => {
                 // Close other dropdowns first
                 setIsNotificationsOpen(false);
@@ -368,105 +371,20 @@ export default function NavHeader() {
                   clearTimeout(cartTimeout);
                   setCartTimeout(null);
                 }
-                setIsCartOpen(true);
-              }}
-              onMouseLeave={() => {
-                const timeout = setTimeout(() => {
-                  setIsCartOpen(false);
-                }, 300);
-                setCartTimeout(timeout);
+                setCartOpen(true);
               }}
               className="p-1 hover:bg-[#F7F2EC] rounded transition-colors relative"
               title="Shopping Cart"
             >
               <ShoppingCart className="h-5 w-5 text-[#2C2C2C] cursor-pointer" />
-              {/* Cart badge - you can add cart item count here */}
-              <span className="absolute -top-1 -right-1 bg-[#5B6E02] text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                3
-              </span>
+              {/* Cart badge with actual item count */}
+              {getTotalItems() > 0 && (
+                <span className="absolute -top-1 -right-1 bg-[#5B6E02] text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                  {getTotalItems()}
+                </span>
+              )}
             </button>
-            {isCartOpen && (
-              <div 
-                className="absolute right-0 mt-2 w-80 bg-[#F7F2EC] text-[#2C2C2C] rounded shadow-md p-4 z-[1000]"
-                onMouseEnter={() => {
-                  if (cartTimeout) {
-                    clearTimeout(cartTimeout);
-                    setCartTimeout(null);
-                  }
-                }}
-                onMouseLeave={() => {
-                  const timeout = setTimeout(() => {
-                    setIsCartOpen(false);
-                  }, 300);
-                  setCartTimeout(timeout);
-                }}
-              >
-                <h3 className="font-semibold mb-3 flex items-center justify-between">
-                  Shopping Cart
-                  <span className="text-sm text-gray-500">3 items</span>
-                </h3>
-                
-                {/* Cart Items Preview */}
-                <div className="space-y-3 max-h-48 overflow-y-auto">
-                  <div className="flex items-center gap-3 p-2 bg-white rounded">
-                    <div className="w-10 h-10 bg-[#F7F2EC] rounded flex items-center justify-center">
-                      <span className="text-xs">🥖</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">Fresh Sourdough Bread</p>
-                      <p className="text-xs text-gray-500">Rustic Bakes</p>
-                      <p className="text-xs text-[#5B6E02]">$6.50</p>
-                    </div>
-                    <div className="text-xs text-gray-500">Qty: 1</div>
-                  </div>
-                  
-                  <div className="flex items-center gap-3 p-2 bg-white rounded">
-                    <div className="w-10 h-10 bg-[#F7F2EC] rounded flex items-center justify-center">
-                      <span className="text-xs">🍯</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">Local Honey</p>
-                      <p className="text-xs text-gray-500">Sweet Georgia</p>
-                      <p className="text-xs text-[#5B6E02]">$8.00</p>
-                    </div>
-                    <div className="text-xs text-gray-500">Qty: 1</div>
-                  </div>
-                  
-                  <div className="flex items-center gap-3 p-2 bg-white rounded">
-                    <div className="w-10 h-10 bg-[#F7F2EC] rounded flex items-center justify-center">
-                      <span className="text-xs">🧀</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">Artisan Cheese</p>
-                      <p className="text-xs text-gray-500">Dairy Delights</p>
-                      <p className="text-xs text-[#5B6E02]">$12.00</p>
-                    </div>
-                    <div className="text-xs text-gray-500">Qty: 1</div>
-                  </div>
-                </div>
-                
-                <div className="mt-3 pt-3 border-t border-[#5B6E02]/30">
-                  <div className="flex justify-between items-center mb-3">
-                    <span className="font-medium">Total:</span>
-                    <span className="font-bold text-[#5B6E02]">$26.50</span>
-                  </div>
-                  <div className="flex gap-2">
-                    <Link 
-                      href="/cart" 
-                      className="flex-1 bg-[#5B6E02] text-white py-2 px-3 rounded text-sm text-center hover:bg-[#4A5A01] transition-colors"
-                    >
-                      View Cart
-                    </Link>
-                    <Link 
-                      href="/checkout" 
-                      className="flex-1 bg-[#5B6E02] text-white py-2 px-3 rounded text-sm text-center hover:bg-[#4A5A01] transition-colors"
-                    >
-                      Checkout
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            )}
+            <CartDropdown />
           </div>
 
           <div className="relative notifications-container">
@@ -687,8 +605,8 @@ export default function NavHeader() {
                       <div className="bg-white text-[#2C2C2C] p-3 rounded-lg">
                         <div className="flex items-center gap-1">
                           <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.1s]"></div>
+                          <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
                         </div>
                       </div>
                     </div>
@@ -745,7 +663,7 @@ export default function NavHeader() {
                </button>
                {isUserMenuOpen && (
                  <div 
-                   className="absolute right-0 mt-2 w-40 bg-[#F7F2EC] text-[#2C2C2C] rounded shadow-md p-2 z-[1000]"
+                   className="absolute right-0 mt-3 w-56 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-[1000]"
                    onMouseEnter={() => {
                      if (userMenuTimeout) {
                        clearTimeout(userMenuTimeout);
@@ -759,10 +677,37 @@ export default function NavHeader() {
                      setUserMenuTimeout(timeout);
                    }}
                  >
-                   <p className="text-sm mb-1">Hello, {user.profile?.firstName || user.email}</p>
-                   <Link href="/dashboard" className="block text-sm hover:underline">Dashboard</Link>
-                   <Link href="/settings" className="block text-sm hover:underline">Settings</Link>
-                   <button onClick={logout} className="mt-2 text-sm text-[#5B6E02] hover:underline">Logout</button>
+                   {/* User Info Section */}
+                   <div className="pb-3 border-b border-gray-100 mb-3">
+                     <p className="text-sm text-gray-500 mb-1">Hello,</p>
+                     <p className="text-sm font-medium text-gray-900">{user.profile?.firstName || user.email}</p>
+                   </div>
+                   
+                   {/* Navigation Links */}
+                   <div className="space-y-2">
+                     <Link 
+                       href="/dashboard" 
+                       className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-md transition-colors"
+                     >
+                       Dashboard
+                     </Link>
+                     <Link 
+                       href="/settings" 
+                       className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-md transition-colors"
+                     >
+                       Settings
+                     </Link>
+                   </div>
+                   
+                   {/* Logout Button */}
+                   <div className="pt-3 border-t border-gray-100 mt-3">
+                     <button 
+                       onClick={logout} 
+                       className="block w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 rounded-md transition-colors"
+                     >
+                       Logout
+                     </button>
+                   </div>
                  </div>
                )}
              </div>

@@ -116,7 +116,7 @@ export default function NotFoundPage() {
             type: 'page',
             title: 'Order management',
             description: 'View your orders and checkout',
-            url: '/dashboard/customer/orders',
+            url: '/dashboard/customer',
             confidence: 0.78,
             icon: '📦'
           });

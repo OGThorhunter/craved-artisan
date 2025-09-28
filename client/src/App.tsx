@@ -19,6 +19,7 @@ import VendorStorefrontPage from './pages/VendorStorefrontPage';
 import ProductDetailPage from './pages/ProductDetailPage';
 import DashboardPage from './pages/DashboardPage';
 import CustomerDashboardPage from './pages/CustomerDashboardPage';
+import CartPage from './pages/CartPage';
 import { VendorSettingsPage } from './pages/VendorSettingsPage';
 import VendorProductsPage from './pages/VendorProductsPage';
 import EnhancedVendorProductsPage from './pages/EnhancedVendorProductsPage';
@@ -45,7 +46,6 @@ import DropoffDashboardPage from './pages/DropoffDashboardPage';
 import AdvancedSearchPage from './pages/AdvancedSearchPage';
 import KnowledgeBasePage from './pages/KnowledgeBasePage';
 import RecipeToolPage from './pages/RecipeToolPage';
-import CartPage from './pages/CartPage';
 import EventsPage from './pages/EventsPage';
 import EventDetailPage from './pages/EventDetailPage';
 import CommunityPage from './pages/CommunityPage';
@@ -56,7 +56,6 @@ import VendorWatchlistPage from './pages/VendorWatchlistPage';
 import VendorSalesWindowsPage from './pages/VendorSalesWindowsPage';
 import VendorDeliveryBatchingPage from './pages/VendorDeliveryBatchingPage';
 import VendorDeliveryPage from './pages/VendorDeliveryPage';
-import CustomerOrdersPage from './pages/CustomerOrdersPage';
 import CheckoutPage from './pages/CheckoutPage';
 import CheckoutSuccessPage from './pages/CheckoutSuccessPage';
 import NotFoundPage from './pages/NotFoundPage';
@@ -139,6 +138,11 @@ function App() {
                 <CustomerDashboardPage />
               </ProtectedRoute>
             </Route>
+            <Route path="/cart">
+              <ProtectedRoute role="CUSTOMER">
+                <CartPage />
+              </ProtectedRoute>
+            </Route>
             <Route path="/dashboard/event-coordinator">
               <ProtectedRoute role="EVENT_COORDINATOR">
                 <EventCoordinatorDashboardPage />
@@ -152,16 +156,6 @@ function App() {
             <Route path="/dashboard/admin">
               <ProtectedRoute role="ADMIN">
                 <AdminDashboardPage />
-              </ProtectedRoute>
-            </Route>
-            <Route path="/dashboard/customer/orders">
-              <ProtectedRoute role="CUSTOMER">
-                <CustomerOrdersPage />
-              </ProtectedRoute>
-            </Route>
-            <Route path="/account/orders">
-              <ProtectedRoute role="CUSTOMER">
-                <CustomerOrdersPage />
               </ProtectedRoute>
             </Route>
             <Route path="/dashboard/vendor/site-settings">

@@ -6,7 +6,7 @@ import api from '../lib/api';
 interface User {
   userId: string;
   email: string;
-  role: 'VENDOR' | 'ADMIN' | 'CUSTOMER';
+  role: 'VENDOR' | 'ADMIN' | 'CUSTOMER' | 'COORDINATOR' | 'EVENT_COORDINATOR';
   isAuthenticated: boolean;
   lastActivity: Date;
 }
