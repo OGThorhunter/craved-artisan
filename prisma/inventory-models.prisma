@@ -1,0 +1,345 @@
+// Phase 4: Inventory Operations Models
+// Add these to the main schema.prisma file
+
+// Hold Management
+model Hold {
+  id              String        @id @default(cuid())
+  eventId         String
+  stallId         String
+  userId          String        // Who placed the hold
+  
+  // Hold Details
+  holdType        HoldType      @default(TEMPORARY)
+  reason          String?       // Reason for hold
+  notes           String?       // Additional notes
+  
+  // Timing
+  placedAt        DateTime      @default(now())
+  expiresAt       DateTime      // When hold expires
+  releasedAt      DateTime?     // When hold was released
+  
+  // Status
+  status          HoldStatus    @default(ACTIVE)
+  
+  // Metadata
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  event           Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  stall           Stall         @relation(fields: [stallId], references: [id], onDelete: Cascade)
+  user            User          @relation(fields: [userId], references: [id])
+  
+  @@index([eventId])
+  @@index([stallId])
+  @@index([userId])
+  @@index([status])
+  @@index([expiresAt])
+}
+
+// Document Management
+model Document {
+  id              String        @id @default(cuid())
+  eventId         String
+  uploadedBy      String        // User ID who uploaded
+  
+  // Document Details
+  fileName        String
+  originalName    String
+  fileType        String        // MIME type
+  fileSize        Int           // Size in bytes
+  filePath        String        // Storage path
+  
+  // Document Classification
+  documentType    DocumentType
+  category        String?       // e.g., "COI", "Permits", "Contracts"
+  description     String?
+  
+  // Access Control
+  isPublic        Boolean       @default(false)
+  accessLevel     AccessLevel   @default(COORDINATOR)
+  
+  // Metadata
+  uploadedAt      DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  event           Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user            User          @relation(fields: [uploadedBy], references: [id])
+  vendorDocuments VendorDocument[]
+  
+  @@index([eventId])
+  @@index([documentType])
+  @@index([uploadedBy])
+}
+
+// Vendor Document Requirements
+model VendorDocument {
+  id              String        @id @default(cuid())
+  eventId         String
+  vendorId        String        // Vendor user ID
+  documentId      String?       // If document uploaded
+  
+  // Requirement Details
+  documentType    DocumentType
+  requirementName String        // e.g., "Certificate of Insurance"
+  description     String?
+  isRequired      Boolean       @default(true)
+  
+  // Status
+  status          DocumentStatus @default(PENDING)
+  submittedAt     DateTime?
+  reviewedAt      DateTime?
+  reviewedBy      String?       // Coordinator ID
+  reviewNotes     String?
+  
+  // Expiration
+  expiresAt       DateTime?
+  renewalRequired Boolean       @default(false)
+  
+  // Metadata
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  event           Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  vendor          User          @relation(fields: [vendorId], references: [id])
+  document        Document?     @relation(fields: [documentId], references: [id])
+  
+  @@index([eventId])
+  @@index([vendorId])
+  @@index([documentType])
+  @@index([status])
+}
+
+// Bulk Operations
+model BulkOperation {
+  id              String        @id @default(cuid())
+  eventId         String
+  operatorId      String        // User ID who performed operation
+  
+  // Operation Details
+  operationType   BulkOperationType
+  description     String
+  targetType      String        // "stalls", "zones", "applications"
+  targetIds       String[]      // Array of IDs affected
+  
+  // Operation Data
+  operationData   String        // JSON data of changes made
+  
+  // Status
+  status          OperationStatus @default(PENDING)
+  startedAt       DateTime      @default(now())
+  completedAt     DateTime?
+  errorMessage    String?
+  
+  // Results
+  successCount    Int           @default(0)
+  failureCount    Int           @default(0)
+  totalCount      Int           @default(0)
+  
+  // Metadata
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  event           Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  operator        User          @relation(fields: [operatorId], references: [id])
+  
+  @@index([eventId])
+  @@index([operatorId])
+  @@index([operationType])
+  @@index([status])
+}
+
+// Assignment Management
+model Assignment {
+  id              String        @id @default(cuid())
+  eventId         String
+  stallId         String
+  vendorId        String        // Vendor user ID
+  
+  // Assignment Details
+  assignmentType  AssignmentType @default(MANUAL)
+  assignedBy      String        // Coordinator ID
+  assignedAt      DateTime      @default(now())
+  
+  // Status
+  status          AssignmentStatus @default(ACTIVE)
+  
+  // Override Settings
+  priceOverride   Float?        // Override stall price for this vendor
+  specialNotes    String?       // Special instructions
+  
+  // Notification
+  notifiedAt      DateTime?
+  acknowledgedAt  DateTime?
+  
+  // Metadata
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  event           Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  stall           Stall         @relation(fields: [stallId], references: [id])
+  vendor          User          @relation(fields: [vendorId], references: [id])
+  assigner        User          @relation(fields: [assignedBy], references: [id])
+  
+  @@index([eventId])
+  @@index([stallId])
+  @@index([vendorId])
+  @@index([status])
+}
+
+// Inventory Reports
+model InventoryReport {
+  id              String        @id @default(cuid())
+  eventId         String
+  generatedBy     String        // User ID who generated report
+  
+  // Report Details
+  reportType      ReportType
+  title           String
+  description     String?
+  
+  // Report Data
+  reportData      String        // JSON data of report
+  filePath        String?       // If exported to file
+  
+  // Status
+  status          ReportStatus  @default(GENERATING)
+  generatedAt     DateTime      @default(now())
+  completedAt     DateTime?
+  
+  // Metadata
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  event           Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  generator       User          @relation(fields: [generatedBy], references: [id])
+  
+  @@index([eventId])
+  @@index([reportType])
+  @@index([status])
+}
+
+// Audit Trail
+model AuditLog {
+  id              String        @id @default(cuid())
+  eventId         String
+  userId          String        // User who performed action
+  
+  // Action Details
+  action          String        // Action performed
+  entityType      String        // Type of entity affected
+  entityId        String        // ID of entity affected
+  
+  // Change Data
+  oldValues       String?       // JSON of old values
+  newValues       String?       // JSON of new values
+  
+  // Context
+  ipAddress       String?
+  userAgent       String?
+  
+  // Metadata
+  timestamp       DateTime      @default(now())
+  
+  // Relations
+  event           Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user            User          @relation(fields: [userId], references: [id])
+  
+  @@index([eventId])
+  @@index([userId])
+  @@index([entityType])
+  @@index([timestamp])
+}
+
+// Enums
+enum HoldType {
+  TEMPORARY       // Temporary hold (expires automatically)
+  MANUAL          // Manual hold (requires manual release)
+  PAYMENT         // Hold pending payment
+  REVIEW          // Hold for review/approval
+}
+
+enum HoldStatus {
+  ACTIVE          // Hold is active
+  EXPIRED         // Hold has expired
+  RELEASED        // Hold was manually released
+  CONVERTED       // Hold converted to sale
+}
+
+enum DocumentType {
+  COI             // Certificate of Insurance
+  PERMIT          // Business/Event Permit
+  LICENSE         // Business License
+  CONTRACT        // Vendor Contract
+  AGREEMENT       // Terms of Agreement
+  OTHER           // Other document type
+}
+
+enum AccessLevel {
+  PUBLIC          // Public access
+  VENDOR          // Vendor access only
+  COORDINATOR     // Coordinator access only
+  ADMIN           // Admin access only
+}
+
+enum DocumentStatus {
+  PENDING         // Not submitted
+  SUBMITTED       // Submitted, awaiting review
+  APPROVED        // Approved
+  REJECTED        // Rejected
+  EXPIRED         // Document expired
+}
+
+enum BulkOperationType {
+  PRICE_UPDATE    // Bulk price updates
+  STATUS_CHANGE   // Bulk status changes
+  ZONE_ASSIGNMENT // Bulk zone assignments
+  HOLD_PLACEMENT  // Bulk hold placement
+  HOLD_RELEASE    // Bulk hold release
+  DOCUMENT_REQUEST // Bulk document requests
+  NOTIFICATION    // Bulk notifications
+}
+
+enum OperationStatus {
+  PENDING         // Operation pending
+  RUNNING         // Operation in progress
+  COMPLETED       // Operation completed successfully
+  FAILED          // Operation failed
+  CANCELLED       // Operation cancelled
+}
+
+enum AssignmentType {
+  MANUAL          // Manual assignment
+  AUTO            // Automatic assignment
+  WAITLIST        // Assignment from waitlist
+  REASSIGNMENT    // Reassignment from another vendor
+}
+
+enum AssignmentStatus {
+  ACTIVE          // Assignment is active
+  PENDING         // Assignment pending confirmation
+  CONFIRMED       // Assignment confirmed by vendor
+  CANCELLED       // Assignment cancelled
+  TRANSFERRED     // Assignment transferred
+}
+
+enum ReportType {
+  INVENTORY_SUMMARY    // Overall inventory summary
+  OCCUPANCY_REPORT     // Occupancy by zone/status
+  REVENUE_REPORT       // Revenue by zone/status
+  DOCUMENT_STATUS      // Document compliance report
+  HOLD_REPORT          // Active holds report
+  ASSIGNMENT_REPORT    // Assignment report
+  CUSTOM               // Custom report
+}
+
+enum ReportStatus {
+  GENERATING      // Report being generated
+  COMPLETED       // Report completed
+  FAILED          // Report generation failed
+}

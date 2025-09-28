@@ -1,0 +1,227 @@
+// Phase 2: Layout Manager Models
+// Add these to the main schema.prisma file
+
+// Event Layout (overall layout configuration)
+model EventLayout {
+  id              String        @id @default(cuid())
+  eventId         String        @unique
+  name            String        // "Main Layout", "Spring Setup", etc.
+  description     String?
+  
+  // Layout Type
+  layoutType      LayoutType    @default(GRID) // GRID or IMAGE_OVERLAY
+  
+  // Grid Configuration (for GRID layout)
+  gridRows        Int?          // Number of rows
+  gridColumns     Int?          // Number of columns
+  cellWidth       Float?        // Cell width in feet/meters
+  cellHeight      Float?        // Cell height in feet/meters
+  aisleWidth      Float?        // Aisle width
+  totalWidth      Float?        // Total layout width
+  totalHeight     Float?        // Total layout height
+  
+  // Image Configuration (for IMAGE_OVERLAY layout)
+  backgroundImage String?       // URL to floor plan image
+  imageWidth      Int?          // Original image width in pixels
+  imageHeight     Int?          // Original image height in pixels
+  scaleFactor     Float?        // Pixels per foot/meter
+  
+  // Settings
+  units           String        @default("feet") // "feet" or "meters"
+  showNumbers     Boolean       @default(true)
+  showAisles      Boolean       @default(true)
+  showGrid        Boolean       @default(true)
+  
+  // Metadata
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  event           Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  zones           Zone[]
+  stalls          Stall[]
+  
+  @@index([eventId])
+}
+
+// Zones (A, B, C, etc.)
+model Zone {
+  id              String        @id @default(cuid())
+  layoutId        String
+  name            String        // "Zone A", "Food Court", etc.
+  description     String?
+  color           String        @default("#3B82F6") // Hex color for visualization
+  
+  // Grid Position (for GRID layout)
+  startRow        Int?          // Starting row (1-based)
+  endRow          Int?          // Ending row (1-based)
+  startColumn     Int?          // Starting column (1-based)
+  endColumn       Int?          // Ending column (1-based)
+  
+  // Pricing
+  basePrice       Float         @default(0) // Base price for this zone
+  priceUnit       String        @default("stall") // "stall", "sqft", "per_day"
+  
+  // Features
+  features        String[]      // ["power", "water", "vehicle_access", "ada"]
+  
+  // Settings
+  isActive        Boolean       @default(true)
+  autoNumbering   Boolean       @default(true) // Auto-number stalls in this zone
+  numberingPrefix String?       // "A", "F", "VIP" etc.
+  
+  // Metadata
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  layout          EventLayout   @relation(fields: [layoutId], references: [id], onDelete: Cascade)
+  stalls          Stall[]
+  
+  @@index([layoutId])
+}
+
+// Individual Stalls/Seats
+model Stall {
+  id              String        @id @default(cuid())
+  layoutId        String
+  zoneId          String?
+  
+  // Identification
+  number          String        // "A12", "VIP-1", etc.
+  customLabel     String?       // Custom display name
+  
+  // Position (for GRID layout)
+  row             Int?          // Grid row (1-based)
+  column          Int?          // Grid column (1-based)
+  
+  // Position (for IMAGE_OVERLAY layout)
+  x               Float?        // X coordinate in pixels
+  y               Float?        // Y coordinate in pixels
+  width           Float?        // Width in pixels
+  height          Float?        // Height in pixels
+  
+  // Physical Properties
+  stallType       StallType     @default(STALL) // STALL, CORNER_STALL, FOOD_TRUCK, TABLE_SEAT, VIP_SEAT
+  size            String?       // "10x10", "8x8", "Single"
+  
+  // Pricing
+  basePrice       Float         @default(0)
+  priceOverride   Float?        // Override zone price
+  surcharges      Float[]       @default([]) // Additional charges
+  totalPrice      Float         // Calculated total price
+  
+  // Features
+  features        String[]      // ["power", "water", "vehicle_access", "ada", "corner", "endcap"]
+  
+  // Status
+  status          StallStatus   @default(AVAILABLE)
+  isBlocked       Boolean       @default(false) // Blocked from assignment
+  blockReason     String?       // Why it's blocked
+  
+  // Assignment
+  assignedTo      String?       // VendorApplication ID
+  assignedAt      DateTime?
+  assignedBy      String?       // Coordinator ID
+  
+  // Hold Information
+  heldBy          String?       // User ID
+  heldUntil       DateTime?
+  holdReason      String?
+  
+  // Metadata
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  layout          EventLayout   @relation(fields: [layoutId], references: [id], onDelete: Cascade)
+  zone            Zone?         @relation(fields: [zoneId], references: [id], onDelete: SetNull)
+  assignment      VendorApplication? @relation(fields: [assignedTo], references: [id])
+  
+  @@index([layoutId])
+  @@index([zoneId])
+  @@index([status])
+  @@index([assignedTo])
+}
+
+// Layout Templates (pre-configured layouts)
+model LayoutTemplate {
+  id              String        @id @default(cuid())
+  name            String        // "Standard Market", "Craft Fair", "Food Truck Rally"
+  description     String?
+  category        String        // "market", "fair", "festival", "conference"
+  
+  // Template Configuration
+  layoutType      LayoutType    @default(GRID)
+  gridRows        Int?
+  gridColumns     Int?
+  cellWidth       Float?
+  cellHeight      Float?
+  aisleWidth      Float?
+  
+  // Default Zones
+  defaultZones    String        // JSON array of zone configurations
+  
+  // Usage Stats
+  usageCount      Int           @default(0)
+  
+  // Metadata
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  @@index([category])
+}
+
+// Layout Analytics
+model LayoutAnalytics {
+  id              String        @id @default(cuid())
+  layoutId        String
+  
+  // Metrics
+  totalStalls     Int
+  availableStalls Int
+  reservedStalls  Int
+  soldStalls      Int
+  blockedStalls   Int
+  
+  // Revenue Metrics
+  totalRevenue    Float
+  averagePrice    Float
+  revenueByZone   String        // JSON object
+  
+  // Occupancy Metrics
+  occupancyRate   Float         // Percentage
+  sellThroughTime Float?        // Average days to sell
+  
+  // Date
+  date            DateTime      @default(now())
+  
+  // Relations
+  layout          EventLayout   @relation(fields: [layoutId], references: [id], onDelete: Cascade)
+  
+  @@index([layoutId])
+  @@index([date])
+}
+
+// Enums
+enum LayoutType {
+  GRID           // Grid-based layout
+  IMAGE_OVERLAY  // Image overlay with positioned stalls
+}
+
+enum StallType {
+  STALL          // Standard vendor stall
+  CORNER_STALL   // Corner stall (premium)
+  FOOD_TRUCK     // Food truck pad
+  TABLE_SEAT     // Individual table seat
+  VIP_SEAT       // VIP/premium seat
+}
+
+enum StallStatus {
+  AVAILABLE      // Available for assignment
+  HELD          // Temporarily held
+  RESERVED      // Reserved by vendor
+  SOLD          // Sold/assigned
+  CHECKED_IN    // Vendor checked in
+  BLOCKED       // Blocked from use
+}

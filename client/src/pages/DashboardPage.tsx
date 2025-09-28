@@ -61,8 +61,8 @@ export default function DashboardPage() {
             <Link href="/dashboard/event-coordinator">
               <div className="bg-brand-cream rounded-lg p-6 shadow-md hover:shadow-lg transition-shadow cursor-pointer h-48 flex flex-col">
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="p-3 bg-purple-100 rounded-lg">
-                    <Activity className="w-6 h-6 text-purple-600" />
+                  <div className="p-3 bg-brand-green/10 rounded-lg">
+                    <Activity className="w-6 h-6 text-brand-green" />
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900">Event Coordinator</h3>

@@ -1,0 +1,429 @@
+// Phase 7: Analytics & Communications Models
+// Add these to the main schema.prisma file
+
+// Event Analytics
+model EventAnalytics {
+  id              String        @id @default(cuid())
+  eventId         String
+  
+  // Funnel Metrics
+  totalViews      Int           @default(0)
+  uniqueVisitors  Int           @default(0)
+  holdsCreated    Int           @default(0)
+  cartsCreated    Int           @default(0)
+  ordersCompleted Int           @default(0)
+  totalRevenue    Float         @default(0)
+  
+  // Conversion Rates
+  viewToHoldRate  Float         @default(0)
+  holdToCartRate  Float         @default(0)
+  cartToOrderRate Float         @default(0)
+  overallConversionRate Float   @default(0)
+  
+  // Drop-off Points
+  dropoffViews    Int           @default(0)
+  dropoffHolds    Int           @default(0)
+  dropoffCarts    Int           @default(0)
+  
+  // Time-based Metrics
+  avgSessionDuration Float      @default(0)
+  avgTimeToPurchase  Float      @default(0)
+  peakTrafficHour    Int?       // 0-23
+  
+  // Device & Browser Data
+  mobileTraffic   Int           @default(0)
+  desktopTraffic  Int           @default(0)
+  tabletTraffic   Int           @default(0)
+  
+  // Geographic Data
+  topCountries    String[]      // Array of country codes
+  topCities       String[]      // Array of city names
+  
+  // UTM Attribution
+  utmSources      String[]      // Array of UTM sources
+  utmMediums      String[]      // Array of UTM mediums
+  utmCampaigns    String[]      // Array of UTM campaigns
+  
+  // Metadata
+  calculatedAt    DateTime      @default(now())
+  periodStart     DateTime      // Analytics period start
+  periodEnd       DateTime      // Analytics period end
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  event           Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  zoneAnalytics   ZoneAnalytics[]
+  funnelSteps     FunnelStep[]
+  
+  @@index([eventId])
+  @@index([calculatedAt])
+  @@index([periodStart])
+  @@index([periodEnd])
+}
+
+// Zone Performance Analytics
+model ZoneAnalytics {
+  id              String        @id @default(cuid())
+  eventAnalyticsId String
+  zoneId          String
+  
+  // Zone Metrics
+  totalViews      Int           @default(0)
+  uniqueVisitors  Int           @default(0)
+  holdsCreated    Int           @default(0)
+  ordersCompleted Int           @default(0)
+  revenue         Float         @default(0)
+  
+  // Performance Metrics
+  conversionRate  Float         @default(0)
+  avgOrderValue   Float         @default(0)
+  sellThroughRate Float         @default(0)
+  timeToSell      Float         @default(0) // Hours
+  
+  // Pricing Analysis
+  avgPrice        Float         @default(0)
+  priceRange      String?       // e.g., "$50-$200"
+  dynamicPricingChanges Int     @default(0)
+  
+  // Occupancy Metrics
+  totalStalls     Int           @default(0)
+  occupiedStalls  Int           @default(0)
+  occupancyRate   Float         @default(0)
+  
+  // Heatmap Data
+  heatmapData     String?       // JSON data for heatmap visualization
+  
+  // Metadata
+  calculatedAt    DateTime      @default(now())
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  eventAnalytics  EventAnalytics @relation(fields: [eventAnalyticsId], references: [id], onDelete: Cascade)
+  zone            Zone          @relation(fields: [zoneId], references: [id])
+  
+  @@index([eventAnalyticsId])
+  @@index([zoneId])
+  @@index([calculatedAt])
+}
+
+// Funnel Step Analysis
+model FunnelStep {
+  id              String        @id @default(cuid())
+  eventAnalyticsId String
+  stepName        String        // e.g., "View Event", "Add to Cart"
+  stepOrder       Int           // Order in funnel
+  
+  // Step Metrics
+  totalVisitors   Int           @default(0)
+  completedStep   Int           @default(0)
+  droppedOff      Int           @default(0)
+  conversionRate  Float         @default(0)
+  
+  // Time Analysis
+  avgTimeOnStep   Float         @default(0) // Seconds
+  medianTimeOnStep Float        @default(0)
+  
+  // Device Breakdown
+  mobileCompletions Int         @default(0)
+  desktopCompletions Int        @default(0)
+  tabletCompletions Int         @default(0)
+  
+  // Metadata
+  calculatedAt    DateTime      @default(now())
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  eventAnalytics  EventAnalytics @relation(fields: [eventAnalyticsId], references: [id], onDelete: Cascade)
+  
+  @@index([eventAnalyticsId])
+  @@index([stepOrder])
+  @@index([calculatedAt])
+}
+
+// Pace vs Goal Tracking
+model PaceTracking {
+  id              String        @id @default(cuid())
+  eventId         String
+  
+  // Goal Setting
+  salesGoal       Float         // Revenue goal
+  ordersGoal      Int           // Orders goal
+  stallsGoal      Int           // Stalls sold goal
+  
+  // Current Progress
+  currentRevenue  Float         @default(0)
+  currentOrders   Int           @default(0)
+  currentStalls   Int           @default(0)
+  
+  // Progress Percentages
+  revenueProgress Float         @default(0)
+  ordersProgress  Float         @default(0)
+  stallsProgress  Float         @default(0)
+  
+  // Pace Analysis
+  daysRemaining   Int           @default(0)
+  avgDailyRevenue Float         @default(0)
+  requiredDailyRevenue Float    @default(0)
+  paceStatus      PaceStatus    @default(ON_TRACK)
+  
+  // Forecast
+  projectedRevenue Float        @default(0)
+  projectedOrders  Int          @default(0)
+  projectedStalls  Int          @default(0)
+  confidenceLevel  Float        @default(0) // 0-1
+  
+  // Metadata
+  calculatedAt    DateTime      @default(now())
+  goalSetAt       DateTime      @default(now())
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  event           Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  @@index([eventId])
+  @@index([calculatedAt])
+  @@index([paceStatus])
+}
+
+// UTM Attribution Tracking
+model UTMAttribution {
+  id              String        @id @default(cuid())
+  eventId         String
+  
+  // UTM Parameters
+  utmSource       String        // e.g., "google", "facebook"
+  utmMedium       String        // e.g., "cpc", "social"
+  utmCampaign     String        // e.g., "summer_sale"
+  utmTerm         String?       // e.g., "food_truck_event"
+  utmContent      String?       // e.g., "banner_ad"
+  
+  // Attribution Metrics
+  totalClicks     Int           @default(0)
+  totalViews      Int           @default(0)
+  totalOrders     Int           @default(0)
+  totalRevenue    Float         @default(0)
+  
+  // Performance Metrics
+  clickThroughRate Float        @default(0)
+  conversionRate  Float         @default(0)
+  costPerClick    Float?        @default(0)
+  returnOnAdSpend Float?        @default(0)
+  
+  // Cost Tracking
+  adSpend         Float?        @default(0)
+  costPerOrder    Float?        @default(0)
+  
+  // Metadata
+  firstSeen       DateTime      @default(now())
+  lastSeen        DateTime      @default(now())
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  event           Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  @@index([eventId])
+  @@index([utmSource])
+  @@index([utmCampaign])
+  @@index([firstSeen])
+}
+
+// Broadcast Messages
+model BroadcastMessage {
+  id              String        @id @default(cuid())
+  eventId         String
+  senderId        String        // User who sent the message
+  
+  // Message Details
+  messageType     MessageType   @default(EMAIL)
+  subject         String?       // For emails
+  content         String        // Message content
+  template        String?       // Template used
+  
+  // Targeting
+  targetAudience  TargetAudience @default(ALL_ATTENDEES)
+  targetCriteria  String?       // JSON criteria for targeting
+  recipientCount  Int           @default(0)
+  
+  // Scheduling
+  scheduledFor    DateTime?     // When to send
+  sentAt          DateTime?     // When actually sent
+  status          MessageStatus @default(DRAFT)
+  
+  // Delivery Tracking
+  deliveredCount  Int           @default(0)
+  openedCount     Int           @default(0)
+  clickedCount    Int           @default(0)
+  bouncedCount    Int           @default(0)
+  unsubscribedCount Int         @default(0)
+  
+  // Metadata
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  event           Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  sender          User          @relation(fields: [senderId], references: [id])
+  messageRecipients MessageRecipient[]
+  
+  @@index([eventId])
+  @@index([senderId])
+  @@index([status])
+  @@index([scheduledFor])
+  @@index([sentAt])
+}
+
+// Message Recipients
+model MessageRecipient {
+  id              String        @id @default(cuid())
+  messageId       String
+  recipientId     String        // User who received the message
+  
+  // Delivery Status
+  status          DeliveryStatus @default(PENDING)
+  deliveredAt     DateTime?
+  openedAt        DateTime?
+  clickedAt       DateTime?
+  bouncedAt       DateTime?
+  unsubscribedAt  DateTime?
+  
+  // Error Tracking
+  errorMessage    String?
+  retryCount      Int           @default(0)
+  
+  // Metadata
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  message         BroadcastMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  recipient       User          @relation(fields: [recipientId], references: [id])
+  
+  @@index([messageId])
+  @@index([recipientId])
+  @@index([status])
+}
+
+// Message Templates
+model MessageTemplate {
+  id              String        @id @default(cuid())
+  eventId         String
+  
+  // Template Details
+  templateName    String        // e.g., "Welcome Email", "Reminder"
+  templateType    MessageType   @default(EMAIL)
+  subject         String?       // For emails
+  content         String        // Template content with variables
+  
+  // Template Variables
+  variables       String[]      // Available variables like {{customerName}}
+  
+  // Usage Tracking
+  usageCount      Int           @default(0)
+  lastUsedAt      DateTime?
+  
+  // Metadata
+  isActive        Boolean       @default(true)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  event           Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  @@index([eventId])
+  @@index([templateType])
+  @@index([isActive])
+}
+
+// Scheduled Communications
+model ScheduledCommunication {
+  id              String        @id @default(cuid())
+  eventId         String
+  
+  // Schedule Details
+  triggerType     TriggerType   @default(TIME_BASED)
+  triggerValue    String        // Time, event, or condition
+  messageTemplate String        // Template to use
+  
+  // Timing
+  scheduledFor    DateTime      // When to send
+  lastTriggered   DateTime?
+  nextTrigger     DateTime?
+  
+  // Status
+  status          ScheduleStatus @default(ACTIVE)
+  triggerCount    Int           @default(0)
+  
+  // Metadata
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  event           Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  @@index([eventId])
+  @@index([triggerType])
+  @@index([scheduledFor])
+  @@index([status])
+}
+
+// Enums
+enum PaceStatus {
+  ON_TRACK        // Meeting goals
+  AHEAD           // Exceeding goals
+  BEHIND          // Behind goals
+  AT_RISK         // At risk of not meeting goals
+}
+
+enum MessageType {
+  EMAIL           // Email message
+  SMS             // SMS message
+  PUSH            // Push notification
+  IN_APP          // In-app message
+}
+
+enum TargetAudience {
+  ALL_ATTENDEES   // All event attendees
+  VENDORS_ONLY    // Only vendors
+  CUSTOMERS_ONLY  // Only customers
+  SPECIFIC_GROUP  // Specific group
+  CUSTOM_CRITERIA // Custom criteria
+}
+
+enum MessageStatus {
+  DRAFT           // Message is draft
+  SCHEDULED       // Scheduled for sending
+  SENDING         // Currently sending
+  SENT            // Successfully sent
+  FAILED          // Failed to send
+  CANCELLED       // Cancelled
+}
+
+enum DeliveryStatus {
+  PENDING         // Pending delivery
+  SENT            // Successfully sent
+  DELIVERED       // Delivered to recipient
+  OPENED          // Opened by recipient
+  CLICKED         // Clicked by recipient
+  BOUNCED         // Bounced
+  UNSUBSCRIBED    // Unsubscribed
+  FAILED          // Failed to deliver
+}
+
+enum TriggerType {
+  TIME_BASED      // Based on time
+  EVENT_BASED     // Based on event
+  CONDITION_BASED // Based on condition
+  MANUAL          // Manual trigger
+}
+
+enum ScheduleStatus {
+  ACTIVE          // Schedule is active
+  PAUSED          // Schedule is paused
+  COMPLETED       // Schedule completed
+  CANCELLED       // Schedule cancelled
+}

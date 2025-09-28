@@ -1,0 +1,217 @@
+// Event Coordinator System - Phase 1 Models
+// Add these to the main schema.prisma file
+
+// Core Event Model
+model Event {
+  id              String        @id @default(cuid())
+  title           String
+  description     String
+  venue           String
+  slug            String        @unique
+  status          EventStatus   @default(DRAFT)
+  visibility      EventVisibility @default(DRAFT)
+  
+  // Dates and Times
+  startDate       DateTime
+  endDate         DateTime
+  sessions        EventSession[]
+  
+  // Capacity and Settings
+  maxCapacity     Int?
+  categories      String[]      // Tags/categories
+  rules           String?       // Rules and policies
+  
+  // Assets
+  coverImage      String?
+  gallery         String[]      // Array of image URLs
+  vendorPacket    String?       // PDF URL
+  
+  // Recurrence
+  isRecurring     Boolean       @default(false)
+  recurrenceType  RecurrenceType?
+  recurrenceData  String?       // JSON for recurrence rules
+  
+  // SEO and Public
+  seoTitle        String?
+  seoDescription  String?
+  structuredData  String?       // JSON-LD
+  
+  // Metadata
+  createdBy       String        // User ID of coordinator
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  sessions        EventSession[]
+  applications    VendorApplication[]
+  salesWindows    SalesWindow[]
+  analytics       EventAnalytics[]
+  
+  @@index([status])
+  @@index([visibility])
+  @@index([createdBy])
+  @@index([startDate])
+}
+
+// Event Sessions (for multi-day or time-slot events)
+model EventSession {
+  id              String        @id @default(cuid())
+  eventId         String
+  title           String
+  description     String?
+  startTime       DateTime
+  endTime         DateTime
+  maxCapacity     Int?
+  
+  // Override settings from parent event
+  overridePrice   Float?
+  overrideRules   String?
+  
+  // Status
+  status          SessionStatus @default(ACTIVE)
+  
+  // Relations
+  event           Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  salesWindows    SalesWindow[]
+  analytics       SessionAnalytics[]
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  @@index([eventId])
+  @@index([startTime])
+}
+
+// Vendor Applications
+model VendorApplication {
+  id              String        @id @default(cuid())
+  eventId         String
+  vendorId        String        // User ID
+  businessName    String
+  contactName     String
+  email           String
+  phone           String?
+  
+  // Application Details
+  category        String
+  description     String?
+  products        String[]      // Product categories
+  
+  // Status
+  status          ApplicationStatus @default(PENDING)
+  reviewedAt      DateTime?
+  reviewedBy      String?       // Coordinator ID
+  notes           String?
+  
+  // Documents
+  documents       String[]      // URLs to uploaded docs (COI, permits, etc.)
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  event           Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  @@index([eventId])
+  @@index([status])
+  @@index([vendorId])
+}
+
+// Sales Windows (when sales are open/closed)
+model SalesWindow {
+  id              String        @id @default(cuid())
+  eventId         String?
+  sessionId       String?
+  name            String
+  description     String?
+  
+  // Timing
+  opensAt         DateTime
+  closesAt        DateTime
+  
+  // Status
+  isActive        Boolean       @default(true)
+  
+  // Relations
+  event           Event?        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  session         EventSession? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  @@index([opensAt])
+  @@index([closesAt])
+}
+
+// Event Analytics (Phase 1 - Basic)
+model EventAnalytics {
+  id              String        @id @default(cuid())
+  eventId         String
+  
+  // Basic Metrics
+  views           Int           @default(0)
+  applications    Int           @default(0)
+  approved        Int           @default(0)
+  
+  // Timestamps
+  date            DateTime      @default(now())
+  
+  // Relations
+  event           Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  @@index([eventId])
+  @@index([date])
+}
+
+// Session Analytics
+model SessionAnalytics {
+  id              String        @id @default(cuid())
+  sessionId       String
+  
+  // Basic Metrics
+  views           Int           @default(0)
+  bookings        Int           @default(0)
+  
+  // Timestamps
+  date            DateTime      @default(now())
+  
+  // Relations
+  session         EventSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  @@index([sessionId])
+  @@index([date])
+}
+
+// Enums
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum EventVisibility {
+  DRAFT
+  PREVIEW
+  PUBLIC
+}
+
+enum RecurrenceType {
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+enum SessionStatus {
+  ACTIVE
+  INACTIVE
+  CANCELLED
+}
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  DENIED
+  WITHDRAWN
+}

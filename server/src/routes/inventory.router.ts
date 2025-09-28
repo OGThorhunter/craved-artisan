@@ -1,382 +1,124 @@
-import { Router } from 'express';
+import express from 'express';
+import { z } from 'zod';
+import { logger } from '../logger';
 
-export const inventoryRouter = Router();
+const router = express.Router();
 
-// Mock data for inventory items
-const mockInventoryItems = [
-  {
-    id: 'inv-1',
-    name: 'All-Purpose Flour',
-    description: 'High-quality all-purpose flour for baking',
-    category: 'food_grade',
-    unit: 'kg',
-    currentStock: 50,
-    reorderPoint: 10,
-    costPerUnit: 2.50,
-    supplier: 'Local Mill Co.',
-    isAvailable: true,
-    expirationDate: '2025-12-31',
-    batchNumber: 'FLR-2025-001',
-    location: 'A-1-2',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 'inv-2',
-    name: 'Active Dry Yeast',
-    description: 'Premium active dry yeast for bread making',
-    category: 'food_grade',
-    unit: 'g',
-    currentStock: 500,
-    reorderPoint: 100,
-    costPerUnit: 0.15,
-    supplier: 'Yeast Masters',
-    isAvailable: true,
-    expirationDate: '2025-06-30',
-    batchNumber: 'YST-2025-002',
-    location: 'B-2-1',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 'inv-3',
-    name: 'Sea Salt',
-    description: 'Fine sea salt for seasoning',
-    category: 'food_grade',
-    unit: 'kg',
-    currentStock: 25,
-    reorderPoint: 5,
-    costPerUnit: 3.00,
-    supplier: 'Salt Works',
-    isAvailable: true,
-    expirationDate: '2026-12-31',
-    batchNumber: 'SALT-2025-003',
-    location: 'A-1-3',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 'inv-4',
-    name: 'Oak Wood Planks',
-    description: 'Premium oak wood for furniture making',
-    category: 'raw_materials',
-    unit: 'pieces',
-    currentStock: 15,
-    reorderPoint: 5,
-    costPerUnit: 25.00,
-    supplier: 'Timber Supply Co.',
-    isAvailable: true,
-    location: 'C-3-1',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 'inv-5',
-    name: 'Steel Ingots',
-    description: 'High-grade steel ingots for metalworking',
-    category: 'raw_materials',
-    unit: 'kg',
-    currentStock: 200,
-    reorderPoint: 50,
-    costPerUnit: 8.50,
-    supplier: 'Metal Works Inc.',
-    isAvailable: true,
-    location: 'C-3-2',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 'inv-6',
-    name: 'Gift Boxes',
-    description: 'Elegant gift boxes for product packaging',
-    category: 'packaging',
-    unit: 'pieces',
-    currentStock: 100,
-    reorderPoint: 25,
-    costPerUnit: 2.00,
-    supplier: 'Packaging Solutions',
-    isAvailable: true,
-    location: 'D-4-1',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 'inv-7',
-    name: 'Ribbon Rolls',
-    description: 'Decorative ribbon for gift wrapping',
-    category: 'packaging',
-    unit: 'meters',
-    currentStock: 500,
-    reorderPoint: 100,
-    costPerUnit: 0.50,
-    supplier: 'Craft Supplies Ltd.',
-    isAvailable: true,
-    location: 'D-4-2',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 'inv-8',
-    name: 'Vintage Tools',
-    description: 'Antique tools for restoration projects',
-    category: 'used_goods',
-    unit: 'pieces',
-    currentStock: 8,
-    reorderPoint: 3,
-    costPerUnit: 45.00,
-    supplier: 'Antique Tools Co.',
-    isAvailable: true,
-    location: 'E-5-1',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 'inv-9',
-    name: 'Reclaimed Wood',
-    description: 'Reclaimed wood planks for eco-friendly projects',
-    category: 'used_goods',
-    unit: 'pieces',
-    currentStock: 12,
-    reorderPoint: 4,
-    costPerUnit: 15.00,
-    supplier: 'Green Materials',
-    isAvailable: true,
-    location: 'E-5-2',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    id: 'inv-10',
-    name: 'Olive Oil',
-    description: 'Extra virgin olive oil for cooking',
-    category: 'food_grade',
-    unit: 'liters',
-    currentStock: 30,
-    reorderPoint: 8,
-    costPerUnit: 12.00,
-    supplier: 'Mediterranean Imports',
-    isAvailable: true,
-    expirationDate: '2025-08-15',
-    batchNumber: 'OIL-2025-004',
-    location: 'A-1-4',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-];
+// Validation schemas
+const CreateHoldSchema = z.object({
+  eventId: z.string(),
+  stallId: z.string(),
+  userId: z.string(),
+  holdType: z.enum(['TEMPORARY', 'MANUAL', 'PAYMENT', 'REVIEW']).default('TEMPORARY'),
+  reason: z.string().optional(),
+  notes: z.string().optional(),
+  expiresAt: z.string().datetime(),
+});
 
-// GET /api/inventory - Get all inventory items
-inventoryRouter.get('/inventory', (req, res) => {
+const BulkOperationSchema = z.object({
+  eventId: z.string(),
+  operationType: z.enum(['PRICE_UPDATE', 'STATUS_CHANGE', 'ZONE_ASSIGNMENT', 'HOLD_PLACEMENT', 'HOLD_RELEASE']),
+  description: z.string(),
+  targetType: z.string(),
+  targetIds: z.array(z.string()),
+  operationData: z.record(z.any()),
+});
+
+// GET /api/inventory/holds/:eventId - Get holds for event
+router.get('/holds/:eventId', async (req, res) => {
   try {
-    const { category, search, lowStock } = req.query;
+    const { eventId } = req.params;
     
-    let filteredItems = [...mockInventoryItems];
+    // Mock data - replace with Prisma
+    const mockHolds = [
+      {
+        id: 'hold_1',
+        eventId,
+        stallId: 'stall_a1',
+        userId: 'user_1',
+        holdType: 'TEMPORARY',
+        reason: 'Customer considering purchase',
+        notes: 'Follow up in 24 hours',
+        placedAt: '2024-02-15T10:00:00Z',
+        expiresAt: '2024-02-16T10:00:00Z',
+        status: 'ACTIVE',
+        stall: {
+          id: 'stall_a1',
+          number: 'A1',
+          zone: { name: 'Zone A - Food Court', color: '#10B981' }
+        },
+        user: {
+          name: 'Sarah Johnson',
+          email: 'sarah@example.com'
+        }
+      }
+    ];
     
-    // Filter by category
-    if (category && category !== 'all') {
-      filteredItems = filteredItems.filter(item => item.category === category);
-    }
-    
-    // Filter by search term
-    if (search) {
-      const searchTerm = (search as string).toLowerCase();
-      filteredItems = filteredItems.filter(item => 
-        item.name.toLowerCase().includes(searchTerm) ||
-        item.description?.toLowerCase().includes(searchTerm) ||
-        item.supplier?.toLowerCase().includes(searchTerm)
-      );
-    }
-    
-    // Filter for low stock items
-    if (lowStock === 'true') {
-      filteredItems = filteredItems.filter(item => item.currentStock <= item.reorderPoint);
-    }
-    
-    res.json({
-      items: filteredItems,
-      total: filteredItems.length,
-      categories: {
-        food_grade: mockInventoryItems.filter(item => item.category === 'food_grade').length,
-        raw_materials: mockInventoryItems.filter(item => item.category === 'raw_materials').length,
-        packaging: mockInventoryItems.filter(item => item.category === 'packaging').length,
-        used_goods: mockInventoryItems.filter(item => item.category === 'used_goods').length,
-      },
-      lowStockCount: mockInventoryItems.filter(item => item.currentStock <= item.reorderPoint).length,
-      totalValue: mockInventoryItems.reduce((sum, item) => sum + (item.currentStock * item.costPerUnit), 0),
-    });
+    res.json({ success: true, data: mockHolds });
   } catch (error) {
-    console.error('Error fetching inventory:', error);
-    res.status(500).json({ error: 'Failed to fetch inventory items' });
+    logger.error('Error fetching holds:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch holds' });
   }
 });
 
-// GET /api/inventory/:id - Get specific inventory item
-inventoryRouter.get('/inventory/:id', (req, res) => {
+// POST /api/inventory/holds - Create hold
+router.post('/holds', async (req, res) => {
   try {
-    const { id } = req.params;
-    const item = mockInventoryItems.find(item => item.id === id);
+    const validatedData = CreateHoldSchema.parse(req.body);
     
-    if (!item) {
-      return res.status(404).json({ error: 'Inventory item not found' });
-    }
-    
-    res.json(item);
-    return;
-  } catch (error) {
-    console.error('Error fetching inventory item:', error);
-    res.status(500).json({ error: 'Failed to fetch inventory item' });
-    return;
-  }
-});
-
-// POST /api/inventory - Create new inventory item
-inventoryRouter.post('/inventory', (req, res) => {
-  try {
-    const newItem = {
-      id: `inv-${Date.now()}`,
-      ...req.body,
+    const mockHold = {
+      id: 'hold_new',
+      ...validatedData,
+      placedAt: new Date().toISOString(),
+      status: 'ACTIVE',
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     };
     
-    mockInventoryItems.push(newItem);
-    
-    res.status(201).json(newItem);
+    res.status(201).json({ success: true, data: mockHold });
   } catch (error) {
-    console.error('Error creating inventory item:', error);
-    res.status(500).json({ error: 'Failed to create inventory item' });
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Validation error', 
+        errors: error.errors 
+      });
+    }
+    
+    logger.error('Error creating hold:', error);
+    res.status(500).json({ success: false, message: 'Failed to create hold' });
   }
 });
 
-// PUT /api/inventory/:id - Update inventory item
-inventoryRouter.put('/inventory/:id', (req, res) => {
+// POST /api/inventory/bulk-operations - Perform bulk operation
+router.post('/bulk-operations', async (req, res) => {
   try {
-    const { id } = req.params;
-    const itemIndex = mockInventoryItems.findIndex(item => item.id === id);
+    const validatedData = BulkOperationSchema.parse(req.body);
     
-    if (itemIndex === -1) {
-      return res.status(404).json({ error: 'Inventory item not found' });
-    }
-    
-    mockInventoryItems[itemIndex] = {
-      ...mockInventoryItems[itemIndex],
-      ...req.body,
-      updatedAt: new Date().toISOString(),
+    const mockOperation = {
+      id: 'op_new',
+      ...validatedData,
+      operatorId: 'user_1',
+      status: 'PENDING',
+      startedAt: new Date().toISOString(),
+      successCount: 0,
+      failureCount: 0,
+      totalCount: validatedData.targetIds.length
     };
     
-    res.json(mockInventoryItems[itemIndex]);
-    return;
+    res.status(201).json({ success: true, data: mockOperation });
   } catch (error) {
-    console.error('Error updating inventory item:', error);
-    res.status(500).json({ error: 'Failed to update inventory item' });
-    return;
-  }
-});
-
-// DELETE /api/inventory/:id - Delete inventory item
-inventoryRouter.delete('/inventory/:id', (req, res) => {
-  try {
-    const { id } = req.params;
-    const itemIndex = mockInventoryItems.findIndex(item => item.id === id);
-    
-    if (itemIndex === -1) {
-      return res.status(404).json({ error: 'Inventory item not found' });
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Validation error', 
+        errors: error.errors 
+      });
     }
     
-    const deletedItem = mockInventoryItems.splice(itemIndex, 1)[0];
-    
-    res.json({ message: 'Inventory item deleted successfully', item: deletedItem });
-    return;
-  } catch (error) {
-    console.error('Error deleting inventory item:', error);
-    res.status(500).json({ error: 'Failed to delete inventory item' });
-    return;
+    logger.error('Error performing bulk operation:', error);
+    res.status(500).json({ success: false, message: 'Failed to perform bulk operation' });
   }
 });
 
-// POST /api/inventory/:id/adjust - Adjust stock levels
-inventoryRouter.post('/inventory/:id/adjust', (req, res) => {
-  try {
-    const { id } = req.params;
-    const { adjustment, reason, notes } = req.body;
-    
-    const itemIndex = mockInventoryItems.findIndex(item => item.id === id);
-    
-    if (itemIndex === -1) {
-      return res.status(404).json({ error: 'Inventory item not found' });
-    }
-    
-    const currentStock = mockInventoryItems[itemIndex].currentStock;
-    const newStock = Math.max(0, currentStock + adjustment);
-    
-    mockInventoryItems[itemIndex] = {
-      ...mockInventoryItems[itemIndex],
-      currentStock: newStock,
-      updatedAt: new Date().toISOString(),
-    };
-    
-    res.json({
-      item: mockInventoryItems[itemIndex],
-      adjustment: {
-        previousStock: currentStock,
-        adjustment,
-        newStock,
-        reason,
-        notes,
-        timestamp: new Date().toISOString(),
-      },
-    });
-    return;
-  } catch (error) {
-    console.error('Error adjusting inventory:', error);
-    res.status(500).json({ error: 'Failed to adjust inventory' });
-    return;
-  }
-});
-
-// GET /api/inventory/analytics/summary - Get inventory analytics
-inventoryRouter.get('/inventory/analytics/summary', (req, res) => {
-  try {
-    const totalItems = mockInventoryItems.length;
-    const totalValue = mockInventoryItems.reduce((sum, item) => sum + (item.currentStock * item.costPerUnit), 0);
-    const lowStockItems = mockInventoryItems.filter(item => item.currentStock <= item.reorderPoint);
-    const expiredItems = mockInventoryItems.filter(item => 
-      item.expirationDate && new Date(item.expirationDate) < new Date()
-    );
-    
-    const categoryBreakdown = mockInventoryItems.reduce((acc, item) => {
-      acc[item.category] = (acc[item.category] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-    
-    const valueByCategory = mockInventoryItems.reduce((acc, item) => {
-      const value = item.currentStock * item.costPerUnit;
-      acc[item.category] = (acc[item.category] || 0) + value;
-      return acc;
-    }, {} as Record<string, number>);
-    
-    res.json({
-      totalItems,
-      totalValue,
-      lowStockCount: lowStockItems.length,
-      expiredCount: expiredItems.length,
-      categoryBreakdown,
-      valueByCategory,
-      lowStockItems: lowStockItems.map(item => ({
-        id: item.id,
-        name: item.name,
-        currentStock: item.currentStock,
-        reorderPoint: item.reorderPoint,
-        category: item.category,
-      })),
-      expiredItems: expiredItems.map(item => ({
-        id: item.id,
-        name: item.name,
-        expirationDate: item.expirationDate,
-        category: item.category,
-      })),
-    });
-  } catch (error) {
-    console.error('Error fetching inventory analytics:', error);
-    res.status(500).json({ error: 'Failed to fetch inventory analytics' });
-  }
-});
+export default router;

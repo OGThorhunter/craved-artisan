@@ -27,6 +27,9 @@ import {
   Share2 as Share2Icon, ExternalLink as ExternalLinkIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { EventList } from '@/components/events/EventList';
+import { EventForm } from '@/components/events/EventForm';
+import type { Event as EventType } from '@/lib/api/events';
 
 interface Event {
   id: string;
@@ -125,11 +128,19 @@ export default function EventCoordinatorDashboardPage() {
   const [aiInsights, setAiInsights] = useState<EventInsight[]>([]);
   const [salesData, setSalesData] = useState<SalesData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'events' | 'vendors' | 'map' | 'messaging' | 'sales' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'events' | 'layout' | 'sales' | 'inventory' | 'checkin' | 'refunds' | 'analytics'>('overview');
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [showCreateEventModal, setShowCreateEventModal] = useState(false);
   const [showMapEditor, setShowMapEditor] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  
+  // Events management state
+  const [eventsList, setEventsList] = useState<EventType[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<EventType | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [eventsViewMode, setEventsViewMode] = useState<'grid' | 'list'>('grid');
 
   // Mock data - replace with actual API calls
   useEffect(() => {
@@ -321,6 +332,57 @@ export default function EventCoordinatorDashboardPage() {
     setAiInsights(mockAIInsights);
     setSalesData(mockSalesData);
     setLoading(false);
+    
+    // Mock events data for events management
+    const mockEventsList: EventType[] = [
+      {
+        id: 'evt_1',
+        title: 'Locust Grove Artisan Market',
+        description: 'A vibrant marketplace featuring local artisans, farmers, and food vendors.',
+        venue: 'Locust Grove Farmers Market',
+        address: '123 Main St, Locust Grove, GA',
+        startDate: '2024-03-15T09:00:00Z',
+        endDate: '2024-03-15T17:00:00Z',
+        capacity: 60,
+        categories: ['artisan', 'farmers-market', 'local'],
+        tags: ['artisan', 'farmers-market', 'local'],
+        status: 'published',
+        visibility: 'public',
+        imageUrl: '/images/events/market-1.jpg',
+        coverImage: '/images/events/market-1.jpg',
+        gallery: ['/images/events/market-1.jpg'],
+        documents: [],
+        isRecurring: false,
+        recurrencePattern: null,
+        recurrenceEndDate: null,
+        createdAt: '2024-01-15T00:00:00Z',
+        updatedAt: '2024-02-10T00:00:00Z',
+      },
+      {
+        id: 'evt_2',
+        title: 'Spring Craft Fair',
+        description: 'Handmade crafts, jewelry, and home decor from talented local artisans.',
+        venue: 'Macon Convention Center',
+        address: '456 Convention Blvd, Macon, GA',
+        startDate: '2024-04-20T10:00:00Z',
+        endDate: '2024-04-20T18:00:00Z',
+        capacity: 50,
+        categories: ['crafts', 'jewelry', 'home-decor'],
+        tags: ['crafts', 'jewelry', 'home-decor'],
+        status: 'draft',
+        visibility: 'private',
+        imageUrl: '/images/events/craft-fair.jpg',
+        coverImage: '/images/events/craft-fair.jpg',
+        gallery: ['/images/events/craft-fair.jpg'],
+        documents: [],
+        isRecurring: false,
+        recurrencePattern: null,
+        recurrenceEndDate: null,
+        createdAt: '2024-02-01T00:00:00Z',
+        updatedAt: '2024-02-15T00:00:00Z',
+      }
+    ];
+    setEventsList(mockEventsList);
   }, []);
 
   const getStatusColor = (status: string) => {
@@ -367,6 +429,124 @@ export default function EventCoordinatorDashboardPage() {
     }
   };
 
+  // Event management functions
+  const handleCreateEvent = (eventData: any) => {
+    const newEvent: EventType = {
+      id: `evt_${Date.now()}`,
+      title: eventData.title || '',
+      description: eventData.description || '',
+      venue: eventData.venue?.name || eventData.venue || '',
+      address: eventData.venue?.address || eventData.address || '',
+      startDate: eventData.startDate || new Date().toISOString(),
+      endDate: eventData.endDate || new Date().toISOString(),
+      capacity: 50, // Default capacity since we removed the field
+      categories: [], // Default empty since we removed the field
+      tags: [],
+      status: 'draft',
+      visibility: 'private',
+      imageUrl: eventData.coverImage || eventData.imageUrl || '',
+      coverImage: eventData.coverImage || '',
+      gallery: eventData.gallery || [],
+      documents: eventData.documents || [],
+      isRecurring: eventData.isRecurring || false,
+      recurrencePattern: eventData.recurrenceType || eventData.recurrencePattern || null,
+      recurrenceEndDate: eventData.recurrenceEndDate || null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      // Enhanced fields
+      eventType: eventData.eventType || '',
+      vendorSignupDeadline: eventData.vendorSignupDeadline || '',
+      siteMap: eventData.siteMap || null,
+      venueInfo: eventData.venue || null,
+      setupInstructions: eventData.setupInstructions || '',
+      takedownInstructions: eventData.takedownInstructions || '',
+      setupStartTime: eventData.setupStartTime || '',
+      takedownEndTime: eventData.takedownEndTime || '',
+      venueType: eventData.venueType || '',
+      weatherForecast: eventData.weatherForecast || '',
+      evacuationRoute: eventData.evacuationRoute || '',
+      fireMarshalCapacity: eventData.fireMarshalCapacity || '',
+      fireMarshalSafetyItems: eventData.fireMarshalSafetyItems || '',
+      vendorContract: eventData.vendorContract || '',
+      safetyRequirements: eventData.safetyRequirements || '',
+    };
+    setEventsList(prev => [newEvent, ...prev]);
+    setShowCreateEventModal(false);
+  };
+
+  const handleEditEvent = (event: EventType) => {
+    setEditingEvent(event);
+    setShowCreateEventModal(true);
+  };
+
+  const handleUpdateEvent = (eventData: any) => {
+    if (!editingEvent) return;
+    
+    const updatedEvent: EventType = {
+      ...editingEvent,
+      title: eventData.title || editingEvent.title,
+      description: eventData.description || editingEvent.description,
+      venue: eventData.venue?.name || eventData.venue || editingEvent.venue,
+      address: eventData.venue?.address || eventData.address || editingEvent.address,
+      startDate: eventData.startDate || editingEvent.startDate,
+      endDate: eventData.endDate || editingEvent.endDate,
+      capacity: editingEvent.capacity, // Keep existing capacity since we removed the field
+      categories: editingEvent.categories, // Keep existing categories since we removed the field
+      isRecurring: eventData.isRecurring || editingEvent.isRecurring,
+      recurrencePattern: eventData.recurrenceType || eventData.recurrencePattern || editingEvent.recurrencePattern,
+      coverImage: eventData.coverImage || editingEvent.coverImage,
+      imageUrl: eventData.coverImage || eventData.imageUrl || editingEvent.imageUrl,
+      updatedAt: new Date().toISOString(),
+      // Enhanced fields
+      eventType: eventData.eventType || editingEvent.eventType,
+      vendorSignupDeadline: eventData.vendorSignupDeadline || editingEvent.vendorSignupDeadline,
+      siteMap: eventData.siteMap || editingEvent.siteMap,
+      venueInfo: eventData.venue || editingEvent.venueInfo,
+      setupInstructions: eventData.setupInstructions || editingEvent.setupInstructions,
+      takedownInstructions: eventData.takedownInstructions || editingEvent.takedownInstructions,
+      setupStartTime: eventData.setupStartTime || editingEvent.setupStartTime,
+      takedownEndTime: eventData.takedownEndTime || editingEvent.takedownEndTime,
+      venueType: eventData.venueType || editingEvent.venueType,
+      weatherForecast: eventData.weatherForecast || editingEvent.weatherForecast,
+      evacuationRoute: eventData.evacuationRoute || editingEvent.evacuationRoute,
+      fireMarshalCapacity: eventData.fireMarshalCapacity || editingEvent.fireMarshalCapacity,
+      fireMarshalSafetyItems: eventData.fireMarshalSafetyItems || editingEvent.fireMarshalSafetyItems,
+      vendorContract: eventData.vendorContract || editingEvent.vendorContract,
+      safetyRequirements: eventData.safetyRequirements || editingEvent.safetyRequirements,
+    };
+    
+    setEventsList(prev => prev.map(e => e.id === editingEvent.id ? updatedEvent : e));
+    setEditingEvent(null);
+    setShowCreateEventModal(false);
+  };
+
+  const handleDeleteEvent = (eventId: string) => {
+    if (confirm('Are you sure you want to delete this event?')) {
+      setEventsList(prev => prev.filter(e => e.id !== eventId));
+    }
+  };
+
+  const handleDuplicateEvent = (event: EventType) => {
+    const duplicatedEvent: EventType = {
+      ...event,
+      id: `evt_${Date.now()}`,
+      title: `${event.title} (Copy)`,
+      status: 'draft',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    setEventsList(prev => [duplicatedEvent, ...prev]);
+  };
+
+  // Filter events based on search and status
+  const filteredEvents = eventsList.filter(event => {
+    const matchesSearch = event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         event.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         event.venue.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || event.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
   if (loading) return <div>Loading...</div>;
 
   return (
@@ -409,11 +589,12 @@ export default function EventCoordinatorDashboardPage() {
             {[
               { id: 'overview', label: 'Overview', icon: Eye },
               { id: 'events', label: 'Events', icon: CalendarIcon },
-              { id: 'vendors', label: 'Vendors', icon: UsersIcon },
-              { id: 'map', label: 'Map Editor', icon: Map },
-              { id: 'messaging', label: 'Messaging', icon: MessageSquare },
+              { id: 'layout', label: 'Layout', icon: Map },
               { id: 'sales', label: 'Sales', icon: BarChart3Icon },
-              { id: 'settings', label: 'Settings', icon: SettingsIcon }
+              { id: 'inventory', label: 'Inventory', icon: PackageIcon },
+              { id: 'checkin', label: 'Check-in', icon: UsersIcon },
+              { id: 'refunds', label: 'Refunds', icon: CreditCardIcon },
+              { id: 'analytics', label: 'Analytics', icon: ActivityIcon }
             ].map((tab) => {
               const Icon = tab.icon;
               return (
@@ -453,13 +634,24 @@ export default function EventCoordinatorDashboardPage() {
                     <h2 className="text-2xl font-bold mb-2 text-gray-900">Event Management Overview</h2>
                     <p className="text-gray-600">Track your events, coordinate vendors, and maximize success</p>
                   </div>
-                  <button
-                    onClick={() => setShowCreateEventModal(true)}
-                    className="bg-brand-green text-white px-6 py-3 rounded-lg font-medium hover:bg-brand-green/90 transition-colors"
-                  >
-                    <Plus className="w-4 h-4 inline mr-2" />
-                    Create Event
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setActiveTab('events')}
+                      className="bg-white text-brand-green px-6 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors"
+                    >
+                      Manage Events
+                    </button>
+                    <button
+                      onClick={() => {
+                        setEditingEvent(null);
+                        setShowCreateEventModal(true);
+                      }}
+                      className="bg-brand-green text-white px-6 py-3 rounded-lg font-medium hover:bg-brand-green/90 transition-colors"
+                    >
+                      <Plus className="w-4 h-4 inline mr-2" />
+                      Create Event
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -558,9 +750,12 @@ export default function EventCoordinatorDashboardPage() {
               <div className="bg-brand-cream rounded-lg p-6 shadow-md border">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-semibold">Recent Events</h3>
-                  <Link href="/dashboard/event-coordinator/events" className="text-brand-green hover:text-brand-green/80 text-sm">
+                  <button 
+                    onClick={() => setActiveTab('events')} 
+                    className="text-brand-green hover:text-brand-green/80 text-sm"
+                  >
                     View all →
-                  </Link>
+                  </button>
                 </div>
                 <div className="space-y-4">
                   {events.slice(0, 3).map((event) => (
@@ -647,23 +842,287 @@ export default function EventCoordinatorDashboardPage() {
             </motion.div>
           )}
 
-          {/* Placeholder for other tabs */}
-          {activeTab !== 'overview' && (
+          {/* Events Tab */}
+          {activeTab === 'events' && (
             <motion.div
-              key={activeTab}
+              key="events"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="text-center py-12"
+              className="space-y-6"
             >
-              <div className="text-4xl font-bold text-gray-300 mb-4">
-                {activeTab.charAt(0).toUpperCase() + activeTab.slice(1).replace('-', ' ')}
+              {/* Events Header */}
+              <div className="bg-brand-cream rounded-lg p-6 shadow-md border">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">Event Management</h2>
+                    <p className="text-gray-600">Create, edit, and manage your events</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setEditingEvent(null);
+                      setShowCreateEventModal(true);
+                    }}
+                    className="bg-brand-green text-white px-6 py-3 rounded-lg font-medium hover:bg-brand-green/90 transition-colors"
+                  >
+                    <Plus className="w-4 h-4 inline mr-2" />
+                    Create Event
+                  </button>
+                </div>
+
+                {/* Search and Filters */}
+                <div className="flex flex-col md:flex-row gap-4 mb-6">
+                  <div className="flex-1">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                      <input
+                        type="text"
+                        placeholder="Search events..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-brand-green"
+                        aria-label="Search events"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="flex gap-4">
+                    <select
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value)}
+                      className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-brand-green"
+                      aria-label="Filter by status"
+                    >
+                      <option value="all">All Status</option>
+                      <option value="draft">Draft</option>
+                      <option value="published">Published</option>
+                      <option value="active">Active</option>
+                      <option value="completed">Completed</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                    
+                    <div className="flex border border-gray-300 rounded-lg">
+                      <button
+                        onClick={() => setEventsViewMode('grid')}
+                        className={`p-2 ${eventsViewMode === 'grid' ? 'bg-brand-green text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                        title="Grid view"
+                      >
+                        <Grid className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => setEventsViewMode('list')}
+                        className={`p-2 ${eventsViewMode === 'list' ? 'bg-brand-green text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+                        title="List view"
+                      >
+                        <List className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Events List */}
+                <EventList
+                  events={filteredEvents}
+                  loading={eventsLoading}
+                  onEdit={handleEditEvent}
+                  onDuplicate={handleDuplicateEvent}
+                  onDelete={handleDeleteEvent}
+                  onManageLayout={(event) => {
+                    window.location.href = `/dashboard/event-coordinator/events/${event.id}/layout`;
+                  }}
+                  onManageSales={(event) => {
+                    window.location.href = `/dashboard/event-coordinator/events/${event.id}/sales`;
+                  }}
+                />
               </div>
-              <p className="text-gray-500">This module is coming soon...</p>
+            </motion.div>
+          )}
+
+          {/* Layout Tab */}
+          {activeTab === 'layout' && (
+            <motion.div
+              key="layout"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              <div className="bg-brand-cream rounded-lg p-6 shadow-md border">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">Layout Manager</h2>
+                    <p className="text-gray-600">Design venue layouts with zones, stalls, and pricing</p>
+                  </div>
+                  <Link href="/dashboard/event-coordinator/events/evt_1/layout">
+                    <button className="bg-brand-green text-white px-6 py-3 rounded-lg font-medium hover:bg-brand-green/90 transition-colors">
+                      Open Layout Editor
+                    </button>
+                  </Link>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Sales Tab */}
+          {activeTab === 'sales' && (
+            <motion.div
+              key="sales"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              <div className="bg-brand-cream rounded-lg p-6 shadow-md border">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">Sales Management</h2>
+                    <p className="text-gray-600">Manage sales windows, checkout, and orders</p>
+                  </div>
+                  <Link href="/dashboard/event-coordinator/events/evt_1/sales">
+                    <button className="bg-brand-green text-white px-6 py-3 rounded-lg font-medium hover:bg-brand-green/90 transition-colors">
+                      Open Sales Manager
+                    </button>
+                  </Link>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Inventory Tab */}
+          {activeTab === 'inventory' && (
+            <motion.div
+              key="inventory"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              <div className="bg-brand-cream rounded-lg p-6 shadow-md border">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">Inventory Operations</h2>
+                    <p className="text-gray-600">Manage holds, bulk operations, and assignments</p>
+                  </div>
+                  <Link href="/dashboard/event-coordinator/events/evt_1/inventory">
+                    <button className="bg-brand-green text-white px-6 py-3 rounded-lg font-medium hover:bg-brand-green/90 transition-colors">
+                      Open Inventory Manager
+                    </button>
+                  </Link>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Check-in Tab */}
+          {activeTab === 'checkin' && (
+            <motion.div
+              key="checkin"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              <div className="bg-brand-cream rounded-lg p-6 shadow-md border">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">Check-in & Operations</h2>
+                    <p className="text-gray-600">QR scanning, incident management, and offline operations</p>
+                  </div>
+                  <Link href="/dashboard/event-coordinator/events/evt_1/checkin">
+                    <button className="bg-brand-green text-white px-6 py-3 rounded-lg font-medium hover:bg-brand-green/90 transition-colors">
+                      Open Check-in Manager
+                    </button>
+                  </Link>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Refunds Tab */}
+          {activeTab === 'refunds' && (
+            <motion.div
+              key="refunds"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              <div className="bg-brand-cream rounded-lg p-6 shadow-md border">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">Refunds & Payouts</h2>
+                    <p className="text-gray-600">Process refunds, manage credits, and handle vendor payouts</p>
+                  </div>
+                  <Link href="/dashboard/event-coordinator/events/evt_1/refunds-payouts">
+                    <button className="bg-brand-green text-white px-6 py-3 rounded-lg font-medium hover:bg-brand-green/90 transition-colors">
+                      Open Refunds Manager
+                    </button>
+                  </Link>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Analytics Tab */}
+          {activeTab === 'analytics' && (
+            <motion.div
+              key="analytics"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              <div className="bg-brand-cream rounded-lg p-6 shadow-md border">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">Analytics & Communications</h2>
+                    <p className="text-gray-600">Event analytics, funnel analysis, and communication management</p>
+                  </div>
+                  <Link href="/dashboard/event-coordinator/events/evt_1/analytics-communications">
+                    <button className="bg-brand-green text-white px-6 py-3 rounded-lg font-medium hover:bg-brand-green/90 transition-colors">
+                      Open Analytics Dashboard
+                    </button>
+                  </Link>
+                </div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
+
+      {/* Create/Edit Event Modal */}
+      {showCreateEventModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-semibold">
+                  {editingEvent ? 'Edit Event' : 'Create New Event'}
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowCreateEventModal(false);
+                    setEditingEvent(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                  title="Close modal"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              
+              <EventForm
+                event={editingEvent}
+                onSubmit={editingEvent ? handleUpdateEvent : handleCreateEvent}
+                onCancel={() => {
+                  setShowCreateEventModal(false);
+                  setEditingEvent(null);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 } 

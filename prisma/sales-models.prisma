@@ -1,0 +1,369 @@
+// Phase 3: Sales Windows + Checkout Models
+// Add these to the main schema.prisma file
+
+// Sales Windows (when sales are open/closed)
+model SalesWindow {
+  id              String        @id @default(cuid())
+  eventId         String?
+  sessionId       String?
+  name            String
+  description     String?
+  
+  // Timing
+  opensAt         DateTime
+  closesAt        DateTime
+  
+  // Configuration
+  maxCapacity     Int?          // Max total capacity for this window
+  perCustomerLimit Int?         // Max stalls per customer
+  
+  // Pricing Rules
+  earlyBirdPrice  Float?        // Early bird pricing
+  earlyBirdEnds   DateTime?     // When early bird pricing ends
+  lastMinutePrice Float?        // Last minute pricing
+  lastMinuteStarts DateTime?    // When last minute pricing starts
+  
+  // Status
+  isActive        Boolean       @default(true)
+  autoClose       Boolean       @default(false) // Auto-close when capacity reached
+  
+  // Metadata
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  event           Event?        @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  session         EventSession? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  orders          Order[]
+  waitlist        WaitlistEntry[]
+  
+  @@index([opensAt])
+  @@index([closesAt])
+  @@index([isActive])
+}
+
+// Orders (stall purchases)
+model Order {
+  id              String        @id @default(cuid())
+  orderNumber     String        @unique
+  userId          String        // Customer ID
+  salesWindowId   String
+  
+  // Order Details
+  status          OrderStatus   @default(PENDING)
+  subtotal        Float         @default(0)
+  tax             Float         @default(0)
+  fees            Float         @default(0)
+  total           Float         @default(0)
+  
+  // Payment
+  paymentIntentId String?       // Stripe payment intent ID
+  paymentStatus   PaymentStatus @default(PENDING)
+  paymentMethod   String?       // card, wallet, etc.
+  
+  // Timing
+  expiresAt       DateTime?     // When order expires if not paid
+  paidAt          DateTime?
+  
+  // Customer Info
+  customerName    String
+  customerEmail   String
+  customerPhone   String?
+  
+  // Metadata
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  salesWindow     SalesWindow   @relation(fields: [salesWindowId], references: [id], onDelete: Cascade)
+  orderItems      OrderItem[]
+  tickets         Ticket[]
+  refunds         Refund[]
+  
+  @@index([userId])
+  @@index([salesWindowId])
+  @@index([status])
+  @@index([paymentStatus])
+}
+
+// Order Items (individual stall purchases)
+model OrderItem {
+  id              String        @id @default(cuid())
+  orderId         String
+  stallId         String
+  
+  // Pricing
+  basePrice       Float
+  surcharges      Float         @default(0)
+  discounts       Float         @default(0)
+  finalPrice      Float
+  
+  // Status
+  status          OrderItemStatus @default(PENDING)
+  
+  // Metadata
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  order           Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  stall           Stall         @relation(fields: [stallId], references: [id])
+  
+  @@index([orderId])
+  @@index([stallId])
+}
+
+// Tickets (QR codes for each stall/seat)
+model Ticket {
+  id              String        @id @default(cuid())
+  orderId         String
+  stallId         String
+  
+  // Ticket Details
+  ticketNumber    String        @unique
+  qrCode          String        @unique // QR code data
+  qrCodeImage     String?       // QR code image URL
+  
+  // Status
+  status          TicketStatus  @default(ISSUED)
+  checkedInAt     DateTime?
+  checkedInBy     String?       // Staff member ID
+  
+  // Customer Info (denormalized for performance)
+  customerName    String
+  customerEmail   String
+  stallNumber     String
+  
+  // Metadata
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  order           Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  stall           Stall         @relation(fields: [stallId], references: [id])
+  
+  @@index([orderId])
+  @@index([stallId])
+  @@index([ticketNumber])
+  @@index([qrCode])
+  @@index([status])
+}
+
+// Waitlist (customers waiting for stalls)
+model WaitlistEntry {
+  id              String        @id @default(cuid())
+  salesWindowId   String
+  userId          String
+  
+  // Waitlist Details
+  position        Int           // Position in queue
+  requestedStalls String[]      // Array of stall IDs requested
+  
+  // Customer Info
+  customerName    String
+  customerEmail   String
+  customerPhone   String?
+  
+  // Notification
+  notifiedAt      DateTime?     // When they were notified of availability
+  expiresAt       DateTime?     // When their waitlist entry expires
+  
+  // Status
+  status          WaitlistStatus @default(WAITING)
+  
+  // Metadata
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  salesWindow     SalesWindow   @relation(fields: [salesWindowId], references: [id], onDelete: Cascade)
+  
+  @@index([salesWindowId])
+  @@index([userId])
+  @@index([position])
+  @@index([status])
+}
+
+// Discounts and Promotions
+model Discount {
+  id              String        @id @default(cuid())
+  code            String        @unique
+  name            String
+  description     String?
+  
+  // Discount Configuration
+  type            DiscountType  // PERCENTAGE, FIXED_AMOUNT
+  value           Float         // Percentage (0-100) or fixed amount
+  maxUses         Int?          // Max number of uses
+  usedCount       Int           @default(0)
+  
+  // Applicability
+  applicableTo    DiscountApplicability @default(ALL)
+  minOrderAmount  Float?        // Minimum order amount
+  maxDiscountAmount Float?      // Maximum discount amount
+  
+  // Timing
+  validFrom       DateTime
+  validUntil      DateTime
+  isActive        Boolean       @default(true)
+  
+  // Metadata
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  @@index([code])
+  @@index([isActive])
+  @@index([validFrom])
+  @@index([validUntil])
+}
+
+// Payment Processing
+model PaymentTransaction {
+  id              String        @id @default(cuid())
+  orderId         String
+  paymentIntentId String        @unique // Stripe payment intent ID
+  
+  // Transaction Details
+  amount          Float
+  currency        String        @default("usd")
+  status          PaymentStatus
+  
+  // Stripe Data
+  stripeChargeId  String?
+  stripeCustomerId String?
+  paymentMethodId String?
+  
+  // Fees
+  platformFee     Float         @default(0)
+  processingFee   Float         @default(0)
+  
+  // Metadata
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  order           Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  @@index([orderId])
+  @@index([paymentIntentId])
+  @@index([status])
+}
+
+// Refunds
+model Refund {
+  id              String        @id @default(cuid())
+  orderId         String
+  amount          Float
+  reason          String?
+  status          RefundStatus  @default(PENDING)
+  
+  // Stripe Data
+  stripeRefundId  String?
+  
+  // Processing
+  processedAt     DateTime?
+  processedBy     String?       // Staff member ID
+  
+  // Metadata
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  order           Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  @@index([orderId])
+  @@index([status])
+}
+
+// Email Notifications
+model EmailNotification {
+  id              String        @id @default(cuid())
+  orderId         String?
+  ticketId        String?
+  
+  // Email Details
+  to              String
+  subject         String
+  template        String        // Template name
+  data            String        // JSON data for template
+  
+  // Status
+  status          EmailStatus   @default(PENDING)
+  sentAt          DateTime?
+  error           String?
+  
+  // Metadata
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  @@index([orderId])
+  @@index([ticketId])
+  @@index([status])
+}
+
+// Enums
+enum OrderStatus {
+  PENDING         // Order created, awaiting payment
+  CONFIRMED       // Payment successful, order confirmed
+  CANCELLED       // Order cancelled
+  EXPIRED         // Order expired without payment
+  REFUNDED        // Order refunded
+}
+
+enum OrderItemStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  REFUNDED
+}
+
+enum TicketStatus {
+  ISSUED          // Ticket issued
+  CHECKED_IN      // Customer checked in
+  TRANSFERRED     // Ticket transferred to another customer
+  CANCELLED       // Ticket cancelled
+}
+
+enum WaitlistStatus {
+  WAITING         // Waiting for availability
+  NOTIFIED        // Notified of availability
+  CONVERTED       // Converted to order
+  EXPIRED         // Waitlist entry expired
+  CANCELLED       // Cancelled by customer
+}
+
+enum DiscountType {
+  PERCENTAGE      // Percentage discount
+  FIXED_AMOUNT    // Fixed dollar amount
+}
+
+enum DiscountApplicability {
+  ALL             // All events
+  EVENT           // Specific event
+  ZONE            // Specific zone
+  STALL           // Specific stall type
+}
+
+enum PaymentStatus {
+  PENDING         // Payment pending
+  PROCESSING      // Payment being processed
+  SUCCEEDED       // Payment successful
+  FAILED          // Payment failed
+  CANCELLED       // Payment cancelled
+  REFUNDED        // Payment refunded
+}
+
+enum RefundStatus {
+  PENDING         // Refund requested
+  PROCESSING      // Refund being processed
+  SUCCEEDED       // Refund successful
+  FAILED          // Refund failed
+  CANCELLED       // Refund cancelled
+}
+
+enum EmailStatus {
+  PENDING         // Email queued
+  SENT            // Email sent successfully
+  FAILED          // Email failed to send
+  BOUNCED         // Email bounced
+}

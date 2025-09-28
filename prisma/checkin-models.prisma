@@ -1,0 +1,400 @@
+// Phase 5: Check-in & Offline Operations Models
+// Add these to the main schema.prisma file
+
+// Check-in Sessions
+model CheckinSession {
+  id              String        @id @default(cuid())
+  eventId         String
+  staffId         String        // Staff member performing check-ins
+  
+  // Session Details
+  sessionName     String        // e.g., "Morning Shift", "VIP Check-in"
+  location        String?       // Physical location/station
+  deviceInfo      String?       // Device fingerprint/ID
+  
+  // Timing
+  startedAt       DateTime      @default(now())
+  endedAt         DateTime?
+  
+  // Status
+  status          SessionStatus @default(ACTIVE)
+  isOffline       Boolean       @default(false)
+  
+  // Sync Status
+  lastSyncAt      DateTime?
+  pendingCheckins Int           @default(0)
+  
+  // Metadata
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  event           Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  staff           User          @relation(fields: [staffId], references: [id])
+  checkins        Checkin[]
+  incidents       Incident[]
+  
+  @@index([eventId])
+  @@index([staffId])
+  @@index([status])
+  @@index([startedAt])
+}
+
+// Check-ins
+model Checkin {
+  id              String        @id @default(cuid())
+  sessionId       String
+  ticketId        String
+  customerId      String        // Customer being checked in
+  
+  // Check-in Details
+  checkinTime     DateTime      @default(now())
+  method          CheckinMethod @default(QR_SCAN)
+  deviceType      String?       // mobile, tablet, scanner
+  
+  // Location & Context
+  location        String?       // Physical check-in location
+  coordinates     String?       // GPS coordinates if available
+  
+  // Status
+  status          CheckinStatus @default(COMPLETED)
+  notes           String?       // Staff notes about check-in
+  
+  // Offline Handling
+  isOffline       Boolean       @default(false)
+  syncedAt        DateTime?
+  
+  // Verification
+  verifiedAt      DateTime?
+  verifiedBy      String?       // Staff member who verified
+  
+  // Metadata
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  session         CheckinSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  ticket          Ticket        @relation(fields: [ticketId], references: [id])
+  customer        User          @relation(fields: [customerId], references: [id])
+  verifier        User?         @relation(fields: [verifiedBy], references: [id])
+  
+  @@index([sessionId])
+  @@index([ticketId])
+  @@index([customerId])
+  @@index([checkinTime])
+  @@index([status])
+}
+
+// Incidents & Issues
+model Incident {
+  id              String        @id @default(cuid())
+  eventId         String
+  sessionId       String?       // If reported during check-in session
+  
+  // Incident Details
+  incidentType    IncidentType
+  severity        IncidentSeverity @default(MEDIUM)
+  title           String
+  description     String
+  
+  // Location & Context
+  location        String?       // Where incident occurred
+  coordinates     String?       // GPS coordinates
+  stallId         String?       // If related to specific stall
+  
+  // Reporting
+  reportedBy      String        // Staff member who reported
+  reportedAt      DateTime      @default(now())
+  
+  // Resolution
+  status          IncidentStatus @default(OPEN)
+  assignedTo      String?       // Staff member assigned to resolve
+  resolvedAt      DateTime?
+  resolvedBy      String?       // Staff member who resolved
+  resolution      String?       // How incident was resolved
+  
+  // Follow-up
+  followUpRequired Boolean      @default(false)
+  followUpDate    DateTime?
+  followUpNotes   String?
+  
+  // Offline Handling
+  isOffline       Boolean       @default(false)
+  syncedAt        DateTime?
+  
+  // Metadata
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  event           Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  session         CheckinSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  stall           Stall?        @relation(fields: [stallId], references: [id])
+  reporter        User          @relation(fields: [reportedBy], references: [id])
+  assignee        User?         @relation(fields: [assignedTo], references: [id])
+  resolver        User?         @relation(fields: [resolvedBy], references: [id])
+  
+  @@index([eventId])
+  @@index([sessionId])
+  @@index([incidentType])
+  @@index([severity])
+  @@index([status])
+  @@index([reportedAt])
+}
+
+// Lost & Found Items
+model LostFoundItem {
+  id              String        @id @default(cuid())
+  eventId         String
+  
+  // Item Details
+  itemType        LostFoundType
+  description     String
+  location        String?       // Where item was found/lost
+  
+  // Status
+  status          LostFoundStatus @default(FOUND)
+  
+  // Found Details
+  foundBy         String?       // Staff member who found item
+  foundAt         DateTime?     // When item was found
+  foundLocation   String?       // Where item was found
+  
+  // Claim Details
+  claimedBy       String?       // Person who claimed item
+  claimedAt       DateTime?     // When item was claimed
+  claimerContact  String?       // Contact info of claimer
+  
+  // Storage
+  storageLocation String?       // Where item is stored
+  storageNotes    String?       // Storage instructions
+  
+  // Offline Handling
+  isOffline       Boolean       @default(false)
+  syncedAt        DateTime?
+  
+  // Metadata
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  event           Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  finder          User?         @relation(fields: [foundBy], references: [id])
+  claimer         User?         @relation(fields: [claimedBy], references: [id])
+  
+  @@index([eventId])
+  @@index([status])
+  @@index([itemType])
+  @@index([foundAt])
+}
+
+// Offline Data Cache
+model OfflineCache {
+  id              String        @id @default(cuid())
+  eventId         String
+  deviceId        String        // Device identifier
+  
+  // Cache Details
+  cacheType       CacheType
+  dataKey         String        // Unique key for cached data
+  dataValue       String        // JSON data
+  
+  // Sync Status
+  lastModified    DateTime      @default(now())
+  syncedAt        DateTime?
+  syncStatus      SyncStatus    @default(PENDING)
+  
+  // Metadata
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  event           Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  @@index([eventId])
+  @@index([deviceId])
+  @@index([cacheType])
+  @@index([syncStatus])
+  @@unique([eventId, deviceId, dataKey])
+}
+
+// QR Code Scanning Logs
+model ScanLog {
+  id              String        @id @default(cuid())
+  eventId         String
+  sessionId       String?       // Check-in session if applicable
+  
+  // Scan Details
+  qrCode          String        // QR code data scanned
+  scanTime        DateTime      @default(now())
+  scanResult      ScanResult    // Result of scan
+  
+  // Device & Location
+  deviceInfo      String?       // Device that performed scan
+  location        String?       // Where scan occurred
+  coordinates     String?       // GPS coordinates
+  
+  // Processing
+  processedAt     DateTime?
+  processingNotes String?       // Notes about scan processing
+  
+  // Offline Handling
+  isOffline       Boolean       @default(false)
+  syncedAt        DateTime?
+  
+  // Metadata
+  createdAt       DateTime      @default(now())
+  
+  // Relations
+  event           Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  session         CheckinSession? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  
+  @@index([eventId])
+  @@index([sessionId])
+  @@index([qrCode])
+  @@index([scanTime])
+  @@index([scanResult])
+}
+
+// Staff Assignments for Check-in
+model CheckinStaff {
+  id              String        @id @default(cuid())
+  eventId         String
+  userId          String        // Staff member
+  
+  // Assignment Details
+  role            StaffRole     // CHECK_IN, SUPERVISOR, MANAGER
+  station         String?       // Assigned station/location
+  shiftStart      DateTime
+  shiftEnd        DateTime
+  
+  // Permissions
+  canCheckIn      Boolean       @default(true)
+  canManageIncidents Boolean    @default(false)
+  canAccessReports Boolean      @default(false)
+  
+  // Status
+  status          StaffStatus   @default(ACTIVE)
+  isOnline        Boolean       @default(false)
+  lastActiveAt    DateTime?
+  
+  // Metadata
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  event           Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user            User          @relation(fields: [userId], references: [id])
+  
+  @@index([eventId])
+  @@index([userId])
+  @@index([role])
+  @@index([status])
+}
+
+// Enums
+enum SessionStatus {
+  ACTIVE          // Session is active
+  PAUSED          // Session is paused
+  ENDED           // Session has ended
+  OFFLINE         // Session is offline
+}
+
+enum CheckinMethod {
+  QR_SCAN         // QR code scan
+  MANUAL          // Manual entry
+  PHONE           // Phone number lookup
+  EMAIL           // Email lookup
+  ID_SCAN         // ID card scan
+}
+
+enum CheckinStatus {
+  COMPLETED       // Check-in completed successfully
+  FAILED          // Check-in failed
+  VERIFIED        // Check-in verified by supervisor
+  DISPUTED        // Check-in disputed
+  CANCELLED       // Check-in cancelled
+}
+
+enum IncidentType {
+  TECHNICAL       // Technical issues
+  SECURITY        // Security concerns
+  CUSTOMER        // Customer service issues
+  VENDOR          // Vendor-related issues
+  FACILITY        // Facility/maintenance issues
+  MEDICAL         // Medical emergencies
+  SAFETY          // Safety concerns
+  OTHER           // Other incidents
+}
+
+enum IncidentSeverity {
+  LOW             // Minor issue
+  MEDIUM          // Moderate issue
+  HIGH            // Serious issue
+  CRITICAL        // Emergency/critical issue
+}
+
+enum IncidentStatus {
+  OPEN            // Incident is open
+  IN_PROGRESS     // Incident is being handled
+  RESOLVED        // Incident has been resolved
+  CLOSED          // Incident is closed
+  CANCELLED       // Incident was cancelled
+}
+
+enum LostFoundType {
+  ELECTRONICS     // Electronic devices
+  CLOTHING        // Clothing items
+  ACCESSORIES     // Jewelry, bags, etc.
+  DOCUMENTS       // IDs, tickets, papers
+  FOOD            // Food items
+  PERSONAL        // Personal belongings
+  OTHER           // Other items
+}
+
+enum LostFoundStatus {
+  FOUND           // Item was found
+  CLAIMED         // Item was claimed
+  DISPOSED        // Item was disposed of
+  TRANSFERRED     // Item transferred to authorities
+}
+
+enum CacheType {
+  TICKETS         // Ticket data cache
+  STALLS          // Stall data cache
+  CUSTOMERS       // Customer data cache
+  STAFF           // Staff data cache
+  INCIDENTS       // Incident data cache
+  SETTINGS        // Event settings cache
+}
+
+enum SyncStatus {
+  PENDING         // Pending sync
+  SYNCING         // Currently syncing
+  SYNCED          // Successfully synced
+  FAILED          // Sync failed
+  CONFLICT        // Sync conflict detected
+}
+
+enum ScanResult {
+  SUCCESS         // Scan successful
+  INVALID         // Invalid QR code
+  ALREADY_USED    // QR code already used
+  EXPIRED         // QR code expired
+  NOT_FOUND       // QR code not found
+  ERROR           // Scan error
+}
+
+enum StaffRole {
+  CHECK_IN        // Check-in staff
+  SUPERVISOR      // Supervisor
+  MANAGER         // Manager
+  SECURITY        // Security staff
+}
+
+enum StaffStatus {
+  ACTIVE          // Staff is active
+  INACTIVE        // Staff is inactive
+  BREAK           // Staff is on break
+  OFFLINE         // Staff is offline
+}

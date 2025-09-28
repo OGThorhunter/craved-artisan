@@ -1,5 +1,6 @@
 import express from 'express';
 import cors from 'cors';
+import analyticsCommunicationsRouter from './routes/analytics-communications.router';
 
 const app = express();
 const PORT = 3001;
@@ -13,6 +14,9 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+// Mount routers
+app.use('/api/analytics-communications', analyticsCommunicationsRouter);
 
 // Mock users data
 const mockUsers = [

@@ -1,0 +1,441 @@
+// Phase 6: Refunds, Credits & Payouts Models
+// Add these to the main schema.prisma file
+
+// Refund Requests
+model RefundRequest {
+  id              String        @id @default(cuid())
+  eventId         String
+  orderId         String
+  customerId      String        // Customer requesting refund
+  
+  // Refund Details
+  refundType      RefundType    @default(FULL)
+  requestedAmount Float         // Amount requested by customer
+  approvedAmount  Float?        // Amount approved by coordinator
+  processedAmount Float?        // Amount actually processed
+  
+  // Refund Reason
+  reason          String        // Customer's reason for refund
+  category        RefundCategory // Categorization of refund reason
+  description     String?       // Additional details
+  
+  // Status & Processing
+  status          RefundStatus  @default(PENDING)
+  requestedAt     DateTime      @default(now())
+  reviewedAt      DateTime?
+  reviewedBy      String?       // Coordinator who reviewed
+  processedAt     DateTime?
+  processedBy     String?       // Staff who processed
+  
+  // Refund Method
+  refundMethod    RefundMethod  @default(ORIGINAL_PAYMENT)
+  refundTo        String?       // Account/email for refund
+  
+  // Policy & Terms
+  policyApplied   String?       // Which refund policy was applied
+  termsAccepted   Boolean       @default(false)
+  termsAcceptedAt DateTime?
+  
+  // Documentation
+  supportingDocs  String[]      // Array of document URLs
+  notes           String?       // Internal notes
+  
+  // Stripe Integration
+  stripeRefundId  String?       // Stripe refund ID
+  stripeChargeId  String?       // Original Stripe charge ID
+  
+  // Metadata
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  event           Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  order           Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  customer        User          @relation(fields: [customerId], references: [id])
+  reviewer        User?         @relation(fields: [reviewedBy], references: [id])
+  processor       User?         @relation(fields: [processedBy], references: [id])
+  
+  @@index([eventId])
+  @@index([orderId])
+  @@index([customerId])
+  @@index([status])
+  @@index([requestedAt])
+}
+
+// Credit System
+model Credit {
+  id              String        @id @default(cuid())
+  eventId         String
+  customerId      String        // Customer who owns credit
+  
+  // Credit Details
+  creditType      CreditType    @default(REFUND)
+  amount          Float         // Credit amount
+  balance         Float         // Remaining balance
+  currency        String        @default("USD")
+  
+  // Source Information
+  sourceRefundId  String?       // If from refund
+  sourceOrderId   String?       // If from order adjustment
+  sourcePayoutId  String?       // If from payout adjustment
+  
+  // Expiration
+  expiresAt       DateTime?     // When credit expires
+  isExpired       Boolean       @default(false)
+  
+  // Status
+  status          CreditStatus  @default(ACTIVE)
+  
+  // Metadata
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  event           Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  customer        User          @relation(fields: [customerId], references: [id])
+  sourceRefund    RefundRequest? @relation(fields: [sourceRefundId], references: [id])
+  sourceOrder     Order?        @relation(fields: [sourceOrderId], references: [id])
+  creditTransactions CreditTransaction[]
+  
+  @@index([eventId])
+  @@index([customerId])
+  @@index([status])
+  @@index([expiresAt])
+}
+
+// Credit Transactions
+model CreditTransaction {
+  id              String        @id @default(cuid())
+  creditId        String
+  orderId         String?       // If used for purchase
+  
+  // Transaction Details
+  transactionType TransactionType
+  amount          Float         // Amount of transaction
+  description     String        // Description of transaction
+  
+  // Reference Information
+  referenceId     String?       // External reference ID
+  referenceType   String?       // Type of reference
+  
+  // Metadata
+  processedAt     DateTime      @default(now())
+  createdAt       DateTime      @default(now())
+  
+  // Relations
+  credit          Credit        @relation(fields: [creditId], references: [id], onDelete: Cascade)
+  order           Order?        @relation(fields: [orderId], references: [id])
+  
+  @@index([creditId])
+  @@index([orderId])
+  @@index([transactionType])
+  @@index([processedAt])
+}
+
+// Vendor Payouts
+model Payout {
+  id              String        @id @default(cuid())
+  eventId         String
+  vendorId        String        // Vendor receiving payout
+  
+  // Payout Details
+  payoutType      PayoutType    @default(REVENUE_SHARE)
+  grossAmount     Float         // Gross revenue amount
+  platformFee     Float         // Platform fee deducted
+  processingFee   Float         // Processing fee deducted
+  taxWithheld     Float         // Tax amount withheld
+  netAmount       Float         // Final payout amount
+  
+  // Calculation Period
+  periodStart     DateTime      // Start of calculation period
+  periodEnd       DateTime      // End of calculation period
+  
+  // Payout Status
+  status          PayoutStatus  @default(PENDING)
+  requestedAt     DateTime      @default(now())
+  approvedAt      DateTime?
+  approvedBy      String?       // Who approved payout
+  processedAt     DateTime?
+  completedAt     DateTime?
+  
+  // Payment Details
+  paymentMethod   PaymentMethod @default(BANK_TRANSFER)
+  bankAccount     String?       // Bank account details
+  paymentReference String?      // Payment reference number
+  
+  // Stripe Connect
+  stripeTransferId String?      // Stripe Connect transfer ID
+  stripeAccountId  String?      // Vendor's Stripe Connect account
+  
+  // Documentation
+  invoiceNumber   String?       // Invoice number
+  receiptUrl      String?       // Receipt URL
+  
+  // Notes
+  notes           String?       // Internal notes
+  vendorNotes     String?       // Notes visible to vendor
+  
+  // Metadata
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  event           Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  vendor          User          @relation(fields: [vendorId], references: [id])
+  approver        User?         @relation(fields: [approvedBy], references: [id])
+  payoutItems     PayoutItem[]
+  
+  @@index([eventId])
+  @@index([vendorId])
+  @@index([status])
+  @@index([requestedAt])
+}
+
+// Payout Items (Individual sales contributing to payout)
+model PayoutItem {
+  id              String        @id @default(cuid())
+  payoutId        String
+  orderId         String
+  
+  // Item Details
+  itemType        String        // Type of item (stall, add-on, etc.)
+  itemName        String        // Name/description of item
+  quantity        Int           @default(1)
+  unitPrice       Float         // Price per unit
+  totalPrice      Float         // Total price
+  
+  // Commission & Fees
+  vendorShare     Float         // Vendor's share percentage
+  vendorAmount    Float         // Amount vendor receives
+  platformAmount  Float         // Amount platform receives
+  
+  // Metadata
+  createdAt       DateTime      @default(now())
+  
+  // Relations
+  payout          Payout        @relation(fields: [payoutId], references: [id], onDelete: Cascade)
+  order           Order         @relation(fields: [orderId], references: [id])
+  
+  @@index([payoutId])
+  @@index([orderId])
+}
+
+// Refund Policies
+model RefundPolicy {
+  id              String        @id @default(cuid())
+  eventId         String
+  
+  // Policy Details
+  policyName      String        // Name of policy
+  policyType      PolicyType    @default(STANDARD)
+  description     String        // Policy description
+  
+  // Time-based Rules
+  daysBeforeEvent Int           // Days before event when policy applies
+  daysAfterEvent  Int?          // Days after event when policy applies
+  
+  // Amount Rules
+  refundPercentage Float        // Percentage of refund allowed
+  minimumRefund    Float?       // Minimum refund amount
+  maximumRefund    Float?       // Maximum refund amount
+  
+  // Conditions
+  conditions      String[]      // Array of conditions
+  restrictions    String[]      // Array of restrictions
+  
+  // Status
+  isActive        Boolean       @default(true)
+  
+  // Metadata
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  event           Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  @@index([eventId])
+  @@index([isActive])
+}
+
+// Financial Reconciliation
+model Reconciliation {
+  id              String        @id @default(cuid())
+  eventId         String
+  
+  // Reconciliation Period
+  periodStart     DateTime      // Start of reconciliation period
+  periodEnd       DateTime      // End of reconciliation period
+  
+  // Financial Summary
+  totalRevenue    Float         // Total event revenue
+  totalRefunds    Float         // Total refunds issued
+  totalPayouts    Float         // Total vendor payouts
+  platformRevenue Float        // Platform revenue
+  processingFees  Float         // Total processing fees
+  taxesCollected  Float         // Total taxes collected
+  
+  // Discrepancies
+  discrepancies   String[]      // Array of discrepancy descriptions
+  isReconciled    Boolean       @default(false)
+  
+  // Audit Information
+  reconciledBy    String?       // Staff member who reconciled
+  reconciledAt    DateTime?
+  auditNotes      String?       // Audit notes
+  
+  // Metadata
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  event           Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  reconciler      User?         @relation(fields: [reconciledBy], references: [id])
+  
+  @@index([eventId])
+  @@index([periodStart])
+  @@index([periodEnd])
+}
+
+// Tax Reports
+model TaxReport {
+  id              String        @id @default(cuid())
+  eventId         String
+  
+  // Report Period
+  reportPeriod    String        // e.g., "Q1 2024"
+  periodStart     DateTime      // Start of tax period
+  periodEnd       DateTime      // End of tax period
+  
+  // Tax Summary
+  grossRevenue    Float         // Gross revenue
+  taxableRevenue  Float         // Taxable revenue
+  taxCollected    Float         // Tax collected
+  taxRate         Float         // Applied tax rate
+  
+  // Breakdown by Type
+  salesTax        Float         // Sales tax
+  incomeTax       Float         // Income tax withholding
+  otherTaxes      Float         // Other taxes
+  
+  // Reporting
+  reportStatus    ReportStatus  @default(DRAFT)
+  generatedAt     DateTime      @default(now())
+  submittedAt     DateTime?
+  
+  // File Information
+  reportFile      String?       // Path to generated report file
+  reportFormat    String        @default("PDF") // PDF, CSV, etc.
+  
+  // Metadata
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  event           Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  @@index([eventId])
+  @@index([reportPeriod])
+  @@index([reportStatus])
+}
+
+// Enums
+enum RefundType {
+  FULL            // Full refund
+  PARTIAL         // Partial refund
+  CREDIT          // Credit to account
+  EXCHANGE        // Exchange for different item
+}
+
+enum RefundCategory {
+  CUSTOMER_REQUEST    // Customer requested
+  EVENT_CANCELLATION  // Event cancelled
+  VENDOR_ISSUE        // Vendor-related issue
+  TECHNICAL_PROBLEM   // Technical problem
+  POLICY_APPLICATION  // Policy application
+  DISPUTE_RESOLUTION  // Dispute resolution
+  OTHER               // Other reason
+}
+
+enum RefundStatus {
+  PENDING         // Awaiting review
+  APPROVED        // Approved for processing
+  PROCESSING      // Being processed
+  COMPLETED       // Successfully completed
+  REJECTED        // Rejected
+  CANCELLED       // Cancelled by customer
+  FAILED          // Processing failed
+}
+
+enum RefundMethod {
+  ORIGINAL_PAYMENT    // Refund to original payment method
+  BANK_TRANSFER       // Bank transfer
+  CHECK               // Paper check
+  CREDIT_ACCOUNT      // Credit to account
+  PAYPAL              // PayPal transfer
+  OTHER               // Other method
+}
+
+enum CreditType {
+  REFUND             // From refund
+  BONUS              // Bonus credit
+  ADJUSTMENT         // Manual adjustment
+  PROMOTIONAL        // Promotional credit
+  COMPENSATION       // Compensation credit
+}
+
+enum CreditStatus {
+  ACTIVE             // Credit is active
+  USED               // Credit has been used
+  EXPIRED            // Credit has expired
+  CANCELLED          // Credit was cancelled
+  PENDING            // Credit is pending
+}
+
+enum TransactionType {
+  DEBIT              // Money going out
+  CREDIT             // Money coming in
+  PURCHASE           // Used for purchase
+  REFUND             // Refunded amount
+  EXPIRATION         // Expired amount
+}
+
+enum PayoutType {
+  REVENUE_SHARE      // Revenue sharing
+  COMMISSION         // Commission-based
+  FIXED_FEE          // Fixed fee
+  BONUS              // Bonus payout
+  ADJUSTMENT         // Manual adjustment
+}
+
+enum PayoutStatus {
+  PENDING            // Awaiting approval
+  APPROVED           // Approved for processing
+  PROCESSING         // Being processed
+  COMPLETED          // Successfully completed
+  FAILED             // Processing failed
+  CANCELLED          // Cancelled
+  REJECTED           // Rejected
+}
+
+enum PaymentMethod {
+  BANK_TRANSFER      // Bank transfer
+  STRIPE_CONNECT     // Stripe Connect
+  PAYPAL             // PayPal
+  CHECK              // Paper check
+  WIRE_TRANSFER      // Wire transfer
+  OTHER              // Other method
+}
+
+enum PolicyType {
+  STANDARD           // Standard policy
+  FLEXIBLE           // Flexible policy
+  STRICT             // Strict policy
+  CUSTOM             // Custom policy
+}
+
+enum ReportStatus {
+  DRAFT              // Draft report
+  FINAL              // Final report
+  SUBMITTED          // Submitted to authorities
+  APPROVED           // Approved
+}
