@@ -25,6 +25,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
+import { useMockVendorBestSellers, useMockVendorOverview } from '@/hooks/analytics';
 
 interface BestSeller {
   productId: string;
@@ -69,41 +70,29 @@ const EnhancedBestSellers = () => {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const [showTrendChart, setShowTrendChart] = useState<string | null>(null);
 
-  // Safe defaults
-  const DEFAULT_SUMMARY = {
-    totalRevenue: 0,
-    totalOrders: 0,
-    avgOrderValue: 0,
-    series: []
-  };
-  const DEFAULT_BEST = { items: [] };
+  // Use mock data instead of API calls
+  const vendorId = user?.id || 'dev-user-id';
+  const { data: bestSellersData, isLoading: bestSellersLoading } = useMockVendorBestSellers(vendorId, { limit });
+  const { data: overviewData, isLoading: overviewLoading } = useMockVendorOverview(vendorId, { interval: 'day' });
 
-  const { data: response, isLoading, error } = useQuery({
-    queryKey: ['bestsellers', user?.id, range, limit, selectedCategory, dateRange],
-    queryFn: () => fetchBestSellers(user?.id || '', range, limit),
-    enabled: !!user?.id,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-
-  // wherever you consume the data:
-  const summaryLike = response?.summary ?? response?.overview ?? DEFAULT_SUMMARY; // accept either shape
-  const totalRevenue = summaryLike?.totals?.totalRevenue ?? summaryLike?.totalRevenue ?? 0;
-  const totalOrders  = summaryLike?.totals?.totalOrders  ?? summaryLike?.totalOrders  ?? 0;
-  const aov          = summaryLike?.totals?.avgOrderValue ?? summaryLike?.avgOrderValue ?? 0;
-
-  const best = response?.bestSellers ?? DEFAULT_BEST;
-  const items = Array.isArray(best?.items) ? best.items : [];
+  const isLoading = bestSellersLoading || overviewLoading;
   
-  const data: BestSellersResponse | null = response ?? {
+  // Transform mock data to expected format
+  const items = bestSellersData?.items || [];
+  const totalRevenue = overviewData?.totals?.totalRevenue || 0;
+  const totalOrders = overviewData?.totals?.totalOrders || 0;
+  const avgOrderValue = overviewData?.totals?.avgOrderValue || 0;
+  
+  const data: BestSellersResponse | null = {
     data: items,
     meta: {
-      vendorId: user?.id || '',
-      vendorName: '',
+      vendorId: vendorId,
+      vendorName: user?.name || 'Demo Vendor',
       range: 'monthly',
       limit: 10,
       totalRevenue,
       totalUnits: totalOrders,
-      avgReorderRate: 0,
+      avgReorderRate: 62, // Mock average reorder rate
     }
   };
 

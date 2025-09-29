@@ -80,25 +80,30 @@ export function useMockVendorOverview(vendorId: string, options: AnalyticsOption
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      const now = new Date();
-      const days = interval === 'day' ? 14 : interval === 'week' ? 12 : 12;
-      const series = [];
+      // Import mock data
+      const { mockAnalyticsData } = await import('@/mock/analyticsData');
       
-      for (let i = days - 1; i >= 0; i--) {
-        const date = new Date();
-        if (interval === 'day') {
-          date.setDate(date.getDate() - i);
-        } else if (interval === 'week') {
-          date.setDate(date.getDate() - (i * 7));
-        } else {
-          date.setMonth(date.getMonth() - i);
-        }
-        
-        series.push({
-          date: date.toISOString().slice(0, 10),
-          revenue: Math.floor(Math.random() * 1000) + 100,
-          orders: Math.floor(Math.random() * 20) + 1
-        });
+      // Use appropriate data based on interval
+      let series;
+      if (interval === 'day') {
+        series = mockAnalyticsData.salesData.daily.map(item => ({
+          date: item.date,
+          revenue: item.revenue,
+          orders: item.orders
+        }));
+      } else if (interval === 'week') {
+        // Generate weekly data from daily data
+        series = mockAnalyticsData.salesData.daily.slice(0, 7).map((item, index) => ({
+          date: `Week ${index + 1}`,
+          revenue: item.revenue * 5, // Scale up for weekly view
+          orders: item.orders * 5
+        }));
+      } else {
+        series = mockAnalyticsData.salesData.monthly.map(item => ({
+          date: item.month,
+          revenue: item.revenue,
+          orders: item.orders
+        }));
       }
       
       const totalRevenue = series.reduce((sum, item) => sum + item.revenue, 0);
@@ -127,19 +132,54 @@ export function useMockVendorBestSellers(vendorId: string, options: AnalyticsOpt
       // Simulate API delay
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      const items = [];
-      const categories = ['Bread', 'Pastries', 'Coffee', 'Tea', 'Honey', 'Cheese'];
+      // Import mock data
+      const { mockBestSellers, mockAnalyticsData } = await import('@/mock/analyticsData');
       
-      for (let i = 0; i < limit; i++) {
-        items.push({
-          productId: `product_${i + 1}`,
-          name: `${categories[i % categories.length]} Product ${i + 1}`,
-          qtySold: Math.floor(Math.random() * 100) + 10,
-          totalRevenue: Math.floor(Math.random() * 5000) + 500
-        });
-      }
+      // Combine best sellers from both sources and limit results
+      const allBestSellers = [
+        ...mockBestSellers.map(item => ({
+          productId: `product_${item.name.replace(/\s+/g, '_').toLowerCase()}`,
+          name: item.name,
+          qtySold: item.unitsSold,
+          totalRevenue: item.revenue,
+          category: item.category,
+          rating: item.rating,
+          stockLevel: item.stockLevel,
+          // Additional fields for EnhancedBestSellers component
+          units: item.unitsSold,
+          reorderRate: item.reorderRate,
+          stock: item.stockLevel,
+          trend: (Math.random() - 0.5) * 40, // Random trend between -20% and +20%
+          trendData: item.trend.map((value, index) => ({
+            date: new Date(Date.now() - (item.trend.length - index) * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+            value: value
+          }))
+        })),
+        ...mockAnalyticsData.topProducts.map((item, index) => ({
+          productId: `product_${item.name.replace(/\s+/g, '_').toLowerCase()}`,
+          name: item.name,
+          qtySold: item.sales,
+          totalRevenue: item.revenue,
+          category: 'General',
+          rating: 4.5 + Math.random() * 0.5,
+          stockLevel: 80 + Math.random() * 20,
+          // Additional fields for EnhancedBestSellers component
+          units: item.sales,
+          reorderRate: 40 + Math.random() * 30, // Random reorder rate between 40-70%
+          stock: 80 + Math.random() * 20,
+          trend: (Math.random() - 0.5) * 40, // Random trend between -20% and +20%
+          trendData: Array.from({ length: 15 }, (_, i) => ({
+            date: new Date(Date.now() - (14 - i) * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+            value: item.sales * (0.8 + Math.random() * 0.4) // Random variation around sales number
+          }))
+        }))
+      ];
       
-      return { items: items.sort((a, b) => b.totalRevenue - a.totalRevenue) };
+      return { 
+        items: allBestSellers
+          .sort((a, b) => b.totalRevenue - a.totalRevenue)
+          .slice(0, limit)
+      };
     },
     enabled: !!vendorId,
     staleTime: 5 * 60 * 1000,

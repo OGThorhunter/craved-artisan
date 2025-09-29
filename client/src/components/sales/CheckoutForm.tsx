@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { CreditCard, QrCode, AlertCircle, CheckCircle, X } from 'lucide-react';
-import type { SalesWindow, Stall, PricingBreakdown } from '@/lib/api/sales';
+import type { Stall, PricingBreakdown } from '@/lib/api/sales';
 import { formatCurrency, calculatePricing } from '@/lib/api/sales';
 
 interface CheckoutFormProps {
-  salesWindow: SalesWindow;
   selectedStalls: Stall[];
   onCheckout: (orderData: any) => void;
   onCancel: () => void;
@@ -12,7 +11,6 @@ interface CheckoutFormProps {
 }
 
 export function CheckoutForm({
-  salesWindow,
   selectedStalls,
   onCheckout,
   onCancel,
@@ -32,8 +30,9 @@ export function CheckoutForm({
   // Calculate pricing
   const calculateTotals = (): PricingBreakdown => {
     const subtotal = selectedStalls.reduce((sum, stall) => {
-      const pricing = calculatePricing(stall.basePrice, salesWindow, stall.surcharges?.reduce((s, charge) => s + charge, 0) || 0);
-      return sum + pricing.total;
+      // Use default pricing since we removed sales windows
+      const basePrice = stall.basePrice || 100; // Default price if not set
+      return sum + basePrice;
     }, 0);
 
     const discountAmount = discountApplied?.discountAmount || 0;
@@ -103,7 +102,6 @@ export function CheckoutForm({
 
     // Create order
     const orderData = {
-      salesWindowId: salesWindow.id,
       customerName: customerInfo.name,
       customerEmail: customerInfo.email,
       customerPhone: customerInfo.phone,
@@ -137,7 +135,14 @@ export function CheckoutForm({
           <h3 className="text-lg font-semibold text-gray-900 mb-3">Selected Stalls</h3>
           <div className="space-y-2">
             {selectedStalls.map((stall) => {
-              const pricing = calculatePricing(stall.basePrice, salesWindow, stall.surcharges?.reduce((s, charge) => s + charge, 0) || 0);
+              // Use default pricing since we removed sales windows
+              const basePrice = stall.basePrice || 100;
+              const pricing = {
+                subtotal: basePrice,
+                tax: basePrice * 0.08,
+                fees: basePrice * 0.03,
+                total: basePrice * 1.11
+              };
               return (
                 <div key={stall.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-3">

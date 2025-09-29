@@ -652,10 +652,10 @@ export default function NavHeader() {
                  onMouseLeave={() => {
                    const timeout = setTimeout(() => {
                      setIsUserMenuOpen(false);
-                   }, 300);
+                   }, 1000);
                    setUserMenuTimeout(timeout);
                  }}
-                 className="w-8 h-8 rounded-full bg-[#5B6E02] text-white flex items-center justify-center cursor-pointer hover:bg-[#4A5A01] transition-colors"
+                 className="w-8 h-8 rounded-full bg-brand-green text-white flex items-center justify-center cursor-pointer hover:bg-brand-green/90 transition-colors"
                >
                  <span className="text-sm font-medium">
                    {user.profile?.firstName?.charAt(0) || user.email?.charAt(0) || 'U'}
@@ -663,7 +663,7 @@ export default function NavHeader() {
                </button>
                {isUserMenuOpen && (
                  <div 
-                   className="absolute right-0 mt-3 w-56 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-[1000]"
+                   className="absolute right-0 mt-3 w-56 bg-white border border-brand-green/20 rounded-lg shadow-lg p-4 z-[1000]"
                    onMouseEnter={() => {
                      if (userMenuTimeout) {
                        clearTimeout(userMenuTimeout);
@@ -673,37 +673,37 @@ export default function NavHeader() {
                    onMouseLeave={() => {
                      const timeout = setTimeout(() => {
                        setIsUserMenuOpen(false);
-                     }, 300);
+                     }, 1000);
                      setUserMenuTimeout(timeout);
                    }}
                  >
                    {/* User Info Section */}
-                   <div className="pb-3 border-b border-gray-100 mb-3">
+                   <div className="pb-3 border-b border-brand-cream/50 mb-3">
                      <p className="text-sm text-gray-500 mb-1">Hello,</p>
-                     <p className="text-sm font-medium text-gray-900">{user.profile?.firstName || user.email}</p>
+                     <p className="text-sm font-medium text-brand-charcoal">{user.profile?.firstName || user.email}</p>
                    </div>
                    
                    {/* Navigation Links */}
                    <div className="space-y-2">
                      <Link 
                        href="/dashboard" 
-                       className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-md transition-colors"
+                       className="block w-full text-left px-3 py-2 text-sm text-brand-charcoal hover:bg-brand-cream hover:text-brand-green rounded-md transition-colors"
                      >
                        Dashboard
                      </Link>
                      <Link 
                        href="/settings" 
-                       className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 hover:text-gray-900 rounded-md transition-colors"
+                       className="block w-full text-left px-3 py-2 text-sm text-brand-charcoal hover:bg-brand-cream hover:text-brand-green rounded-md transition-colors"
                      >
                        Settings
                      </Link>
                    </div>
                    
                    {/* Logout Button */}
-                   <div className="pt-3 border-t border-gray-100 mt-3">
+                   <div className="pt-3 border-t border-brand-cream/50 mt-3">
                      <button 
                        onClick={logout} 
-                       className="block w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 rounded-md transition-colors"
+                       className="block w-full text-left px-3 py-2 text-sm text-brand-charcoal hover:bg-brand-cream hover:text-brand-green rounded-md transition-colors"
                      >
                        Logout
                      </button>

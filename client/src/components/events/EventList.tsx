@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'wouter';
-import { Calendar, MapPin, Users, Eye, Edit, Copy, Trash2, Grid, DollarSign } from 'lucide-react';
+import { Calendar, MapPin, Users, Eye, Edit, Copy, Trash2, Share2, Facebook, Twitter, Instagram, Linkedin } from 'lucide-react';
 import type { Event } from '@/lib/api/events';
 
 interface EventListProps {
@@ -9,10 +9,11 @@ interface EventListProps {
   onEdit?: (event: Event) => void;
   onDuplicate?: (event: Event) => void;
   onDelete?: (event: Event) => void;
-  onManageLayout?: (event: Event) => void;
+  onViewDetails?: (event: Event) => void;
+  onSocialShare?: (event: Event, platform: string) => void;
 }
 
-export function EventList({ events, loading, onEdit, onDuplicate, onDelete, onManageLayout }: EventListProps) {
+export function EventList({ events, loading, onEdit, onDuplicate, onDelete, onViewDetails, onSocialShare }: EventListProps) {
   if (loading) {
     return (
       <div className="space-y-4">
@@ -45,7 +46,7 @@ export function EventList({ events, loading, onEdit, onDuplicate, onDelete, onMa
   return (
     <div className="space-y-4">
       {events.map((event) => (
-        <div key={event.id} className="bg-white rounded-lg p-6 shadow-md border">
+        <div key={event.id} className="bg-white rounded-lg p-6 shadow-md border hover:shadow-lg transition-shadow cursor-pointer" onClick={() => onViewDetails?.(event)}>
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
@@ -78,15 +79,15 @@ export function EventList({ events, loading, onEdit, onDuplicate, onDelete, onMa
                   <MapPin className="w-4 h-4" />
                   {event.venue}
                 </div>
-                {event.maxCapacity && (
+                {event.capacity && (
                   <div className="flex items-center gap-1">
                     <Users className="w-4 h-4" />
-                    {event.applicationCount || 0}/{event.maxCapacity} vendors
+                    {event.applicationCount || 0}/{event.capacity} vendors
                   </div>
                 )}
               </div>
               
-              {event.categories.length > 0 && (
+              {event.categories && event.categories.length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-3">
                   {event.categories.map((category) => (
                     <span key={category} className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
@@ -98,23 +99,7 @@ export function EventList({ events, loading, onEdit, onDuplicate, onDelete, onMa
             </div>
             
             <div className="flex items-center gap-2 ml-4">
-              <Link href={`/dashboard/event-coordinator/events/${event.id}/layout`}>
-                <button 
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                  title="Manage layout"
-                >
-                  <Grid className="w-4 h-4 text-gray-600" />
-                </button>
-              </Link>
-              <Link href={`/dashboard/event-coordinator/events/${event.id}/sales`}>
-                <button 
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                  title="Manage sales"
-                >
-                  <DollarSign className="w-4 h-4 text-gray-600" />
-                </button>
-              </Link>
-              <Link href={`/events/${event.slug}`} target="_blank">
+              <Link href={event.slug ? `/events/${event.slug}` : `/events/${event.id}`} target="_blank">
                 <button 
                   className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                   title="View public page"
@@ -142,6 +127,61 @@ export function EventList({ events, loading, onEdit, onDuplicate, onDelete, onMa
                 title="Delete event"
               >
                 <Trash2 className="w-4 h-4 text-red-600" />
+              </button>
+            </div>
+            
+            {/* Social Sharing Buttons */}
+            <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200">
+              <span className="text-sm text-gray-500 mr-2">Share:</span>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSocialShare?.(event, 'facebook');
+                }}
+                className="p-2 hover:bg-blue-100 rounded-lg transition-colors"
+                title="Share on Facebook"
+              >
+                <Facebook className="w-4 h-4 text-blue-600" />
+              </button>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSocialShare?.(event, 'twitter');
+                }}
+                className="p-2 hover:bg-blue-100 rounded-lg transition-colors"
+                title="Share on Twitter"
+              >
+                <Twitter className="w-4 h-4 text-blue-400" />
+              </button>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSocialShare?.(event, 'linkedin');
+                }}
+                className="p-2 hover:bg-blue-100 rounded-lg transition-colors"
+                title="Share on LinkedIn"
+              >
+                <Linkedin className="w-4 h-4 text-blue-700" />
+              </button>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSocialShare?.(event, 'instagram');
+                }}
+                className="p-2 hover:bg-pink-100 rounded-lg transition-colors"
+                title="Share on Instagram"
+              >
+                <Instagram className="w-4 h-4 text-pink-600" />
+              </button>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSocialShare?.(event, 'copy');
+                }}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Copy link"
+              >
+                <Share2 className="w-4 h-4 text-gray-600" />
               </button>
             </div>
           </div>

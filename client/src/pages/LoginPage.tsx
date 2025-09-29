@@ -22,7 +22,17 @@ const LoginPage: React.FC = () => {
       setLoading(true);
       await login(email, password);
       toast.success('Login successful!');
-      setLocation('/dashboard'); // Redirect to dashboard after login
+      
+      // Redirect based on user role
+      if (email === 'vendor@cravedartisan.com') {
+        setLocation('/dashboard/vendor/pulse');
+      } else if (email === 'coordinator@cravedartisan.com') {
+        setLocation('/dashboard/event-coordinator');
+      } else if (email === 'admin@cravedartisan.com') {
+        setLocation('/dashboard/admin');
+      } else {
+        setLocation('/dashboard'); // Default dashboard selection
+      }
     } catch (error: any) {
       toast.error(error.message || 'Login failed');
     } finally {

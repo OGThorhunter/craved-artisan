@@ -33,6 +33,13 @@ const mockUsers = [
     password: 'admin123',
     role: 'admin',
     name: 'System Admin'
+  },
+  {
+    id: 3,
+    email: 'vendor@cravedartisan.com',
+    password: 'vendor123',
+    role: 'VENDOR',
+    name: 'Demo Vendor'
   }
 ];
 
@@ -127,6 +134,7 @@ app.listen(PORT, () => {
   console.log(`📍 Health check: http://localhost:${PORT}/api/health`);
   console.log(`🔐 Auth endpoints: http://localhost:${PORT}/api/auth`);
   console.log(`👤 Coordinator user: coordinator@cravedartisan.com / coordinator123`);
+  console.log(`🏪 Vendor user: vendor@cravedartisan.com / vendor123`);
 });
 
 export default app;

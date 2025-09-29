@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Users, MapPin, DollarSign, Crown, RefreshCw, TrendingUp, BarChart3 } from "lucide-react";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from "recharts";
+import { mockAnalyticsData } from "@/mock/analyticsData";
 
 interface CustomerData {
   zipCode: string;
@@ -37,7 +38,8 @@ const cohortData: CohortData[] = [
   { cohort: "Jun 2024", day1: 100, day7: 91, day30: 68, day90: 38 },
 ];
 
-const customerMetrics = {
+// This will be updated with mock data in useEffect
+const defaultCustomerMetrics = {
   totalCustomers: 1247,
   avgSpendPerCustomer: 42.30,
   loyaltyProgramMembers: 892,
@@ -51,6 +53,22 @@ const customerMetrics = {
 export function CustomerInsights() {
   const [selectedZipCode, setSelectedZipCode] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"zipcodes" | "cohorts">("zipcodes");
+  const [customerMetrics, setCustomerMetrics] = useState(defaultCustomerMetrics);
+
+  useEffect(() => {
+    // Update with mock data
+    const insights = mockAnalyticsData.customerInsights;
+    setCustomerMetrics({
+      totalCustomers: insights.totalCustomers,
+      avgSpendPerCustomer: 42.30, // Keep existing calculation
+      loyaltyProgramMembers: Math.floor(insights.totalCustomers * 0.7), // Estimate 70% loyalty membership
+      loyaltyImpact: 23.5, // Keep existing
+      returnRate: 2.8, // Keep existing
+      repeatPurchaseRate: insights.averageOrderFrequency * 30, // Convert to percentage
+      newCustomerAcquisition: insights.newCustomers,
+      customerLifetimeValue: insights.customerSatisfaction * 30, // Estimate based on satisfaction
+    });
+  }, []);
 
   const getLoyaltyImpactColor = (impact: number) => {
     if (impact > 20) return "text-green-600";

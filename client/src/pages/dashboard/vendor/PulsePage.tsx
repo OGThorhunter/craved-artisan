@@ -496,67 +496,90 @@ export default function PulsePage() {
         </div>
 
         {/* Customer Health & Inventory */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
           {/* Customer Health */}
-          <div className="bg-[#F7F2EC] rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Customer Health</h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Returning</span>
-                <span className="text-lg font-bold text-green-600">{filteredData.customerHealth.returning}%</span>
+          <Link href="/dashboard/vendor/analytics?tab=insights">
+            <div className="bg-[#F7F2EC] rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200 cursor-pointer group">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">Customer Health</h3>
+                <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors" />
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">New</span>
-                <span className="text-lg font-bold text-blue-600">{filteredData.customerHealth.new}%</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Engagement</span>
-                <span className="text-lg font-bold text-purple-600">{filteredData.customerHealth.engagement}%</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">At Risk</span>
-                <span className="text-lg font-bold text-red-600">{filteredData.customerHealth.atRisk}%</span>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Returning</span>
+                  <span className="text-lg font-bold text-green-600">{filteredData.customerHealth.returning}%</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">New</span>
+                  <span className="text-lg font-bold text-blue-600">{filteredData.customerHealth.new}%</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Engagement</span>
+                  <span className="text-lg font-bold text-purple-600">{filteredData.customerHealth.engagement}%</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">At Risk</span>
+                  <span className="text-lg font-bold text-red-600">{filteredData.customerHealth.atRisk}%</span>
+                </div>
               </div>
             </div>
-          </div>
+          </Link>
 
           {/* Inventory Status */}
-          <div className="bg-[#F7F2EC] rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Inventory Status</h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Low Stock Alerts</span>
-                <span className="text-lg font-bold text-orange-600">{filteredData.inventory.lowStock}</span>
+          <Link href="/dashboard/vendor/inventory">
+            <div className="bg-[#F7F2EC] rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200 cursor-pointer group">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">Inventory Status</h3>
+                <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors" />
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Waste Trend</span>
-                <span className="text-lg font-bold text-green-600 capitalize">{filteredData.inventory.wasteTrend}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Spoilage Rate</span>
-                <span className="text-lg font-bold text-blue-600">{filteredData.inventory.spoilageRate}%</span>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Low Stock Alerts</span>
+                  <span className="text-lg font-bold text-orange-600">{filteredData.inventory.lowStock}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Waste Trend</span>
+                  <span className="text-lg font-bold text-green-600 capitalize">{filteredData.inventory.wasteTrend}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Spoilage Rate</span>
+                  <span className="text-lg font-bold text-blue-600">{filteredData.inventory.spoilageRate}%</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Turnover Rate</span>
+                  <span className="text-lg font-bold text-purple-600">8.2x</span>
+                </div>
               </div>
             </div>
-          </div>
+          </Link>
 
           {/* Profitability Pulse */}
-          <div className="bg-[#F7F2EC] rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Profitability</h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Gross Margin</span>
-                <span className="text-lg font-bold text-green-600">{filteredData.profitability.grossMargin}%</span>
+          <Link href="/dashboard/vendor/analytics?tab=financial-statements">
+            <div className="bg-[#F7F2EC] rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200 cursor-pointer group">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">Profitability</h3>
+                <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors" />
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">COGS</span>
-                <span className="text-lg font-bold text-red-600">${filteredData.profitability.cogs.toLocaleString()}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Revenue</span>
-                <span className="text-lg font-bold text-green-600">${filteredData.profitability.revenue.toLocaleString()}</span>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Gross Margin</span>
+                  <span className="text-lg font-bold text-green-600">{filteredData.profitability.grossMargin}%</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">COGS</span>
+                  <span className="text-lg font-bold text-red-600">${filteredData.profitability.cogs.toLocaleString()}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Revenue</span>
+                  <span className="text-lg font-bold text-green-600">${filteredData.profitability.revenue.toLocaleString()}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Net Profit</span>
+                  <span className="text-lg font-bold text-blue-600">${(filteredData.profitability.revenue - filteredData.profitability.cogs).toLocaleString()}</span>
+                </div>
               </div>
             </div>
-          </div>
+          </Link>
         </div>
 
         {/* Underperformers Alert */}

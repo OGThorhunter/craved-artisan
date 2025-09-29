@@ -163,7 +163,7 @@ export const Header = () => {
                     
                     <button
                       onClick={logout}
-                      className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      className="flex items-center w-full px-4 py-2 text-sm text-brand-charcoal hover:bg-brand-cream hover:text-brand-green transition-colors"
                     >
                       <LogOut className="w-4 h-4 mr-2" />
                       Sign Out

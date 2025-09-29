@@ -43,12 +43,7 @@ import DemoStorefrontPage from './pages/vendor/DemoStorefrontPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import EventCoordinatorDashboardPage from './pages/EventCoordinatorDashboardPage';
 import DropoffDashboardPage from './pages/DropoffDashboardPage';
-import LayoutPage from './pages/layout/LayoutPage';
-import SalesPage from './pages/sales/SalesPage';
 import InventoryPage from './pages/inventory/InventoryPage';
-import CheckinPage from './pages/checkin/CheckinPage';
-import RefundsPayoutsPage from './pages/refunds-payouts/RefundsPayoutsPage';
-import AnalyticsCommunicationsPage from './pages/analytics-communications/AnalyticsCommunicationsPage';
 import AdvancedSearchPage from './pages/AdvancedSearchPage';
 import KnowledgeBasePage from './pages/KnowledgeBasePage';
 import RecipeToolPage from './pages/RecipeToolPage';
@@ -153,34 +148,9 @@ function App() {
                 <EventCoordinatorDashboardPage />
               </ProtectedRoute>
             </Route>
-            <Route path="/dashboard/event-coordinator/events/:eventId/layout">
-              <ProtectedRoute role="EVENT_COORDINATOR">
-                <LayoutPage eventId="evt_1" />
-              </ProtectedRoute>
-            </Route>
-            <Route path="/dashboard/event-coordinator/events/:eventId/sales">
-              <ProtectedRoute role="EVENT_COORDINATOR">
-                <SalesPage eventId="evt_1" />
-              </ProtectedRoute>
-            </Route>
             <Route path="/dashboard/event-coordinator/events/:eventId/inventory">
               <ProtectedRoute role="EVENT_COORDINATOR">
                 <InventoryPage eventId="evt_1" />
-              </ProtectedRoute>
-            </Route>
-            <Route path="/dashboard/event-coordinator/events/:eventId/checkin">
-              <ProtectedRoute role="EVENT_COORDINATOR">
-                <CheckinPage eventId="evt_1" />
-              </ProtectedRoute>
-            </Route>
-            <Route path="/dashboard/event-coordinator/events/:eventId/refunds-payouts">
-              <ProtectedRoute role="EVENT_COORDINATOR">
-                <RefundsPayoutsPage eventId="evt_1" />
-              </ProtectedRoute>
-            </Route>
-            <Route path="/dashboard/event-coordinator/events/:eventId/analytics-communications">
-              <ProtectedRoute role="EVENT_COORDINATOR">
-                <AnalyticsCommunicationsPage eventId="evt_1" />
               </ProtectedRoute>
             </Route>
             <Route path="/dashboard/dropoff">
