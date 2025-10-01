@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'wouter';
 import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
+import { Tooltip } from '@/components/ui/Tooltip';
 import { 
   TrendingUp, 
   DollarSign, 
@@ -291,7 +292,9 @@ export default function PulsePage() {
           {/* Pending Orders */}
           <div className="bg-[#F7F2EC] rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Pending Orders</h3>
+              <Tooltip content="Orders waiting to be fulfilled - these need your attention to process and complete">
+                <h3 className="text-lg font-semibold text-gray-900 cursor-help">Pending Orders</h3>
+              </Tooltip>
               <Link href="/dashboard/vendor/orders">
                 <button 
                   className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
@@ -314,7 +317,7 @@ export default function PulsePage() {
                 </div>
               </div>
               <p className="text-2xl font-bold text-green-600">
-                ${filteredData.pendingOrders.value.toLocaleString()}
+                ${filteredData.pendingOrders.value.toFixed(2)}
               </p>
               <p className="text-sm text-gray-600">Total value pending</p>
             </div>
@@ -323,7 +326,9 @@ export default function PulsePage() {
           {/* Open Sales Windows */}
           <div className="bg-[#F7F2EC] rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">Sales Windows</h3>
+              <Tooltip content="Active sales periods where customers can place orders - track upcoming events and order volumes">
+                <h3 className="text-lg font-semibold text-gray-900 cursor-help">Sales Windows</h3>
+              </Tooltip>
               <Link href="/dashboard/vendor/sales-windows">
                 <button 
                   className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
@@ -354,7 +359,9 @@ export default function PulsePage() {
               <div className="p-2 bg-blue-100 rounded-lg">
                 <Brain className="w-5 h-5 text-blue-600" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">AI Insight</h3>
+              <Tooltip content="AI-powered insights and recommendations based on your sales data and market trends">
+                <h3 className="text-lg font-semibold text-gray-900 cursor-help">AI Insight</h3>
+              </Tooltip>
             </div>
             <p className="text-gray-800 font-medium mb-3">
               {seasonalFilter === 'summer' && "Summer season is boosting sales! Consider expanding outdoor product lines."}
@@ -372,7 +379,9 @@ export default function PulsePage() {
         {/* Revenue Snapshots */}
         <div className="bg-[#F7F2EC] rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-semibold text-gray-900">Revenue Pulse</h3>
+            <Tooltip content="Real-time revenue tracking across different time periods - shows your income trends and performance">
+              <h3 className="text-xl font-semibold text-gray-900 cursor-help">Revenue Pulse</h3>
+            </Tooltip>
             <div className="flex bg-white rounded-lg p-1 shadow-sm">
               {['daily', 'weekly', 'monthly'].map((range) => (
                 <button
@@ -402,7 +411,7 @@ export default function PulsePage() {
                 </div>
               </div>
               <p className="text-2xl font-bold text-gray-900">
-                ${filteredData.revenue.today.toLocaleString()}
+                ${filteredData.revenue.today.toFixed(2)}
               </p>
               <div className="w-full bg-gray-200 rounded-full h-1 mt-2">
                 <div className="bg-green-500 h-1 rounded-full" style={{ width: '75%' }}></div>
@@ -420,7 +429,7 @@ export default function PulsePage() {
                 </div>
               </div>
               <p className="text-2xl font-bold text-gray-900">
-                ${filteredData.revenue.thisWeek.toLocaleString()}
+                ${filteredData.revenue.thisWeek.toFixed(2)}
               </p>
               <div className="w-full bg-gray-200 rounded-full h-1 mt-2">
                 <div className="bg-green-500 h-1 rounded-full" style={{ width: '85%' }}></div>
@@ -438,7 +447,7 @@ export default function PulsePage() {
                 </div>
               </div>
               <p className="text-2xl font-bold text-gray-900">
-                ${filteredData.revenue.thisMonth.toLocaleString()}
+                ${filteredData.revenue.thisMonth.toFixed(2)}
               </p>
               <div className="w-full bg-gray-200 rounded-full h-1 mt-2">
                 <div className="bg-green-500 h-1 rounded-full" style={{ width: '65%' }}></div>
@@ -451,7 +460,9 @@ export default function PulsePage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Order Funnel */}
           <div className="bg-[#F7F2EC] rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Funnel</h3>
+            <Tooltip content="Visual representation of orders moving through different stages - from new orders to completed deliveries">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 cursor-help">Order Funnel</h3>
+            </Tooltip>
             <div className="space-y-4">
               {Object.entries(filteredData.orderFunnel).map(([stage, count]) => (
                 <div key={stage} className="flex items-center justify-between">
@@ -474,7 +485,9 @@ export default function PulsePage() {
 
           {/* Product Performance */}
           <div className="bg-[#F7F2EC] rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Performers</h3>
+            <Tooltip content="Your best-selling products ranked by revenue and units sold - identify your most profitable items">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 cursor-help">Top Performers</h3>
+            </Tooltip>
             <div className="space-y-3">
               {filteredData.topProducts.map((product, index) => (
                 <div key={index} className="flex items-center justify-between p-3 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200">
@@ -486,7 +499,7 @@ export default function PulsePage() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium text-gray-900">${product.revenue.toLocaleString()}</p>
+                    <p className="font-medium text-gray-900">${product.revenue.toFixed(2)}</p>
                     {getTrendIcon(product.trend)}
                   </div>
                 </div>
@@ -499,27 +512,29 @@ export default function PulsePage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
           {/* Customer Health */}
           <Link href="/dashboard/vendor/analytics?tab=insights">
-            <div className="bg-[#F7F2EC] rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200 cursor-pointer group">
+            <div className="bg-[#F7F2EC] rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200 cursor-pointer group h-full flex flex-col">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">Customer Health</h3>
+                <Tooltip content="Analysis of your customer base - returning vs new customers, engagement levels, and at-risk customers">
+                  <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors cursor-help">Customer Health</h3>
+                </Tooltip>
                 <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors" />
               </div>
-              <div className="space-y-4">
+              <div className="space-y-4 flex-1">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Returning</span>
-                  <span className="text-lg font-bold text-green-600">{filteredData.customerHealth.returning}%</span>
+                  <span className="text-lg font-bold text-green-600">{filteredData.customerHealth.returning.toFixed(2)}%</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">New</span>
-                  <span className="text-lg font-bold text-blue-600">{filteredData.customerHealth.new}%</span>
+                  <span className="text-lg font-bold text-blue-600">{filteredData.customerHealth.new.toFixed(2)}%</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Engagement</span>
-                  <span className="text-lg font-bold text-purple-600">{filteredData.customerHealth.engagement}%</span>
+                  <span className="text-lg font-bold text-purple-600">{filteredData.customerHealth.engagement.toFixed(2)}%</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">At Risk</span>
-                  <span className="text-lg font-bold text-red-600">{filteredData.customerHealth.atRisk}%</span>
+                  <span className="text-lg font-bold text-red-600">{filteredData.customerHealth.atRisk.toFixed(2)}%</span>
                 </div>
               </div>
             </div>
@@ -527,12 +542,14 @@ export default function PulsePage() {
 
           {/* Inventory Status */}
           <Link href="/dashboard/vendor/inventory">
-            <div className="bg-[#F7F2EC] rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200 cursor-pointer group">
+            <div className="bg-[#F7F2EC] rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200 cursor-pointer group h-full flex flex-col">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">Inventory Status</h3>
+                <Tooltip content="Current inventory levels, waste trends, spoilage rates, and turnover - manage your stock efficiently">
+                  <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors cursor-help">Inventory Status</h3>
+                </Tooltip>
                 <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors" />
               </div>
-              <div className="space-y-4">
+              <div className="space-y-4 flex-1">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Low Stock Alerts</span>
                   <span className="text-lg font-bold text-orange-600">{filteredData.inventory.lowStock}</span>
@@ -543,7 +560,7 @@ export default function PulsePage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Spoilage Rate</span>
-                  <span className="text-lg font-bold text-blue-600">{filteredData.inventory.spoilageRate}%</span>
+                  <span className="text-lg font-bold text-blue-600">{filteredData.inventory.spoilageRate.toFixed(2)}%</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Turnover Rate</span>
@@ -555,27 +572,29 @@ export default function PulsePage() {
 
           {/* Profitability Pulse */}
           <Link href="/dashboard/vendor/analytics?tab=financial-statements">
-            <div className="bg-[#F7F2EC] rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200 cursor-pointer group">
+            <div className="bg-[#F7F2EC] rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200 cursor-pointer group h-full flex flex-col">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">Profitability</h3>
+                <Tooltip content="Financial performance metrics - gross margin, cost of goods sold, revenue, and net profit calculations">
+                  <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors cursor-help">Profitability</h3>
+                </Tooltip>
                 <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors" />
               </div>
-              <div className="space-y-4">
+              <div className="space-y-4 flex-1">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Gross Margin</span>
-                  <span className="text-lg font-bold text-green-600">{filteredData.profitability.grossMargin}%</span>
+                  <span className="text-lg font-bold text-green-600">{filteredData.profitability.grossMargin.toFixed(2)}%</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">COGS</span>
-                  <span className="text-lg font-bold text-red-600">${filteredData.profitability.cogs.toLocaleString()}</span>
+                  <span className="text-lg font-bold text-red-600">${filteredData.profitability.cogs.toFixed(2)}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Revenue</span>
-                  <span className="text-lg font-bold text-green-600">${filteredData.profitability.revenue.toLocaleString()}</span>
+                  <span className="text-lg font-bold text-green-600">${filteredData.profitability.revenue.toFixed(2)}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">Net Profit</span>
-                  <span className="text-lg font-bold text-blue-600">${(filteredData.profitability.revenue - filteredData.profitability.cogs).toLocaleString()}</span>
+                  <span className="text-lg font-bold text-blue-600">${(filteredData.profitability.revenue - filteredData.profitability.cogs).toFixed(2)}</span>
                 </div>
               </div>
             </div>
@@ -584,7 +603,9 @@ export default function PulsePage() {
 
         {/* Underperformers Alert */}
         <div className="bg-[#F7F2EC] rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Underperformers</h3>
+          <Tooltip content="Products with low sales performance - consider promotions, pricing adjustments, or inventory reduction">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 cursor-help">Underperformers</h3>
+          </Tooltip>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filteredData.underperformers.map((product, index) => (
               <div key={index} className="flex items-center justify-between p-4 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 border-l-4 border-orange-400">

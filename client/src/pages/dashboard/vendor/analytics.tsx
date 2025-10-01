@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from 'wouter';
 import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
 import { useUrlTab } from '@/hooks/useUrlTab';
+import { Tooltip } from '@/components/ui/Tooltip';
 import ConversionFunnel from "@/components/analytics/ConversionFunnel";
 import EnhancedBestSellers from "@/components/analytics/EnhancedBestSellers";
 import { PerformanceKpis } from "@/components/vendor/analytics/PerformanceKpis";
@@ -148,32 +149,40 @@ export default function VendorAnalyticsPage() {
             {/* Real-time Analytics Overview */}
             {!isLoading && flags.LIVE_ANALYTICS && (
               <div className="bg-[#F7F2EC] rounded-lg shadow-xl border border-gray-200 p-6 mb-8 hover:shadow-2xl transition-shadow duration-300">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Real-time Analytics Overview</h3>
+                <Tooltip content="Live performance metrics showing current sales, orders, and revenue trends">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4 cursor-help">Real-time Analytics Overview</h3>
+                </Tooltip>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="bg-white rounded-lg p-4 border border-gray-200">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="text-gray-600"><DollarSign size={20} /></div>
-                      <span className="text-xs text-green-600">+12.5%</span>
+                  <Tooltip content="Total income from all sales across all channels and time periods">
+                    <div className="bg-white rounded-lg p-4 border border-gray-200 cursor-help">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="text-gray-600"><DollarSign size={20} /></div>
+                        <span className="text-xs text-green-600">+12.5%</span>
+                      </div>
+                      <div className="text-2xl font-bold text-gray-900">${overviewData.totals.totalRevenue.toLocaleString()}</div>
+                      <div className="text-sm text-gray-600">Total Revenue</div>
                     </div>
-                    <div className="text-2xl font-bold text-gray-900">${overviewData.totals.totalRevenue.toLocaleString()}</div>
-                    <div className="text-sm text-gray-600">Total Revenue</div>
-                  </div>
-                  <div className="bg-white rounded-lg p-4 border border-gray-200">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="text-gray-600"><Package size={20} /></div>
-                      <span className="text-xs text-green-600">+8.2%</span>
+                  </Tooltip>
+                  <Tooltip content="Total number of orders placed by customers across all sales channels">
+                    <div className="bg-white rounded-lg p-4 border border-gray-200 cursor-help">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="text-gray-600"><Package size={20} /></div>
+                        <span className="text-xs text-green-600">+8.2%</span>
+                      </div>
+                      <div className="text-2xl font-bold text-gray-900">{overviewData.totals.totalOrders.toLocaleString()}</div>
+                      <div className="text-sm text-gray-600">Total Orders</div>
                     </div>
-                    <div className="text-2xl font-bold text-gray-900">{overviewData.totals.totalOrders.toLocaleString()}</div>
-                    <div className="text-sm text-gray-600">Total Orders</div>
-                  </div>
-                  <div className="bg-white rounded-lg p-4 border border-gray-200">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="text-gray-600"><TrendingUp size={20} /></div>
-                      <span className="text-xs text-green-600">+5.1%</span>
+                  </Tooltip>
+                  <Tooltip content="Average amount spent per order - calculated by dividing total revenue by total orders">
+                    <div className="bg-white rounded-lg p-4 border border-gray-200 cursor-help">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="text-gray-600"><TrendingUp size={20} /></div>
+                        <span className="text-xs text-green-600">+5.1%</span>
+                      </div>
+                      <div className="text-2xl font-bold text-gray-900">${overviewData.totals.avgOrderValue.toFixed(2)}</div>
+                      <div className="text-sm text-gray-600">Avg Order Value</div>
                     </div>
-                    <div className="text-2xl font-bold text-gray-900">${overviewData.totals.avgOrderValue.toFixed(2)}</div>
-                    <div className="text-sm text-gray-600">Avg Order Value</div>
-                  </div>
+                  </Tooltip>
                 </div>
               </div>
             )}
@@ -332,27 +341,28 @@ export default function VendorAnalyticsPage() {
             <div className="border-b border-gray-200">
               <nav className="flex space-x-8 px-6">
                 {[
-                  { id: 'insights', label: 'Insights', icon: '📊' },
-                  { id: 'financial-statements', label: 'Financial Statements', icon: '📋' },
-                  { id: 'taxes', label: 'Taxes', icon: '📋' },
-                  { id: 'pricing', label: 'Pricing Optimizer', icon: '🎯' },
-                  { id: 'portfolio', label: 'Portfolio Builder', icon: '📈' }
+                  { id: 'insights', label: 'Insights', icon: '📊', tooltip: 'Sales performance, customer insights, and product analytics' },
+                  { id: 'financial-statements', label: 'Financial Statements', icon: '📋', tooltip: 'Profit & loss, balance sheet, and cash flow statements' },
+                  { id: 'taxes', label: 'Taxes', icon: '📋', tooltip: 'Tax calculations, deductions, and reporting for compliance' },
+                  { id: 'pricing', label: 'Pricing Optimizer', icon: '🎯', tooltip: 'AI-powered pricing recommendations and optimization' },
+                  { id: 'portfolio', label: 'Portfolio Builder', icon: '📈', tooltip: 'Product portfolio analysis and strategic recommendations' }
                 ].map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setTab(tab.id as TabType)}
-                    disabled={!allowedTabs.includes(tab.id as TabType)}
-                    className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                      activeTab === tab.id
-                        ? 'border-[#5B6E02] text-[#5B6E02]'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    } ${
-                      !allowedTabs.includes(tab.id as TabType) ? 'opacity-50 cursor-not-allowed' : ''
-                    }`}
-                  >
-                    <span>{tab.icon}</span>
-                    {tab.label}
-                  </button>
+                  <Tooltip key={tab.id} content={tab.tooltip}>
+                    <button
+                      onClick={() => setTab(tab.id as TabType)}
+                      disabled={!allowedTabs.includes(tab.id as TabType)}
+                      className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                        activeTab === tab.id
+                          ? 'border-[#5B6E02] text-[#5B6E02]'
+                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      } ${
+                        !allowedTabs.includes(tab.id as TabType) ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
+                    >
+                      <span>{tab.icon}</span>
+                      {tab.label}
+                    </button>
+                  </Tooltip>
                 ))}
               </nav>
             </div>

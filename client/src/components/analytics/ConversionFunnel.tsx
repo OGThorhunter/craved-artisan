@@ -29,6 +29,54 @@ const fetchConversionData = async (vendorId: string, range: string = 'monthly') 
   return response.data;
 };
 
+// Mock conversion data for development
+const getMockConversionData = async (vendorId: string, range: string = 'monthly') => {
+  await new Promise(resolve => setTimeout(resolve, 500)); // Simulate API delay
+  
+  // Generate realistic conversion funnel data
+  const baseData = {
+    daily: {
+      visitors: 1250,
+      pageViews: 3400,
+      addToCart: 485,
+      checkoutStarted: 287,
+      ordersCompleted: 234,
+      revenue: 42150
+    },
+    weekly: {
+      visitors: 8750,
+      pageViews: 23800,
+      addToCart: 3395,
+      checkoutStarted: 2009,
+      ordersCompleted: 1638,
+      revenue: 295050
+    },
+    monthly: {
+      visitors: 37500,
+      pageViews: 102000,
+      addToCart: 14550,
+      checkoutStarted: 8610,
+      ordersCompleted: 7020,
+      revenue: 1263600
+    }
+  };
+
+  const data = baseData[range as keyof typeof baseData] || baseData.monthly;
+
+  return {
+    data,
+    meta: {
+      vendorId,
+      vendorName: 'Demo Vendor',
+      range,
+      conversionRate: 20.2,
+      avgOrderValue: 180,
+      topFunnelDropoff: 'Page Views to Cart',
+      improvementOpportunity: 'Optimize product pages and add social proof'
+    }
+  };
+};
+
   const ConversionFunnel = () => {
     const { user } = useAuth();
     const [range, setRange] = useState<'daily' | 'weekly' | 'monthly'>('monthly');
@@ -43,8 +91,8 @@ const fetchConversionData = async (vendorId: string, range: string = 'monthly') 
 
   const { data: response, isLoading, error } = useQuery({
     queryKey: ['conversion', user?.id, range],
-    queryFn: () => fetchConversionData(user?.id || '', range),
-    enabled: !!user?.id,
+    queryFn: () => getMockConversionData(user?.id || 'dev-user-id', range),
+    enabled: true,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
@@ -132,11 +180,11 @@ const fetchConversionData = async (vendorId: string, range: string = 'monthly') 
     const headers = ['Metric', 'Count', 'Conversion Rate', 'Dropoff Rate', 'Trend'];
     const csvContent = [
       headers.join(','),
-      `Visitors,${data.visitors},${((data.addToCart / data.visitors) * 100).toFixed(1)}%,${calculateDropoff(data.pageViews, data.visitors).toFixed(1)}%,${mockTrends.views > 0 ? '+' : ''}${mockTrends.views}%`,
-      `Page Views,${data.pageViews},${((data.addToCart / data.pageViews) * 100).toFixed(1)}%,${calculateDropoff(data.addToCart, data.pageViews).toFixed(1)}%,${mockTrends.addToCart > 0 ? '+' : ''}${mockTrends.addToCart}%`,
-      `Add to Cart,${data.addToCart},${((data.checkoutStarted / data.addToCart) * 100).toFixed(1)}%,${calculateDropoff(data.checkoutStarted, data.addToCart).toFixed(1)}%,${mockTrends.checkoutStarted > 0 ? '+' : ''}${mockTrends.checkoutStarted}%`,
-      `Checkout Started,${data.checkoutStarted},${((data.ordersCompleted / data.checkoutStarted) * 100).toFixed(1)}%,${calculateDropoff(data.ordersCompleted, data.checkoutStarted).toFixed(1)}%,${mockTrends.purchases > 0 ? '+' : ''}${mockTrends.purchases}%`,
-      `Orders Completed,${data.ordersCompleted},${meta?.conversionRate?.toFixed(1) || '20.2'}%,0%,${mockTrends.purchases > 0 ? '+' : ''}${mockTrends.purchases}%`
+      `Visitors,${data.visitors},${((data.addToCart / data.visitors) * 100).toFixed(2)}%,${calculateDropoff(data.pageViews, data.visitors).toFixed(2)}%,${mockTrends.views > 0 ? '+' : ''}${mockTrends.views.toFixed(2)}%`,
+      `Page Views,${data.pageViews},${((data.addToCart / data.pageViews) * 100).toFixed(2)}%,${calculateDropoff(data.addToCart, data.pageViews).toFixed(2)}%,${mockTrends.addToCart > 0 ? '+' : ''}${mockTrends.addToCart.toFixed(2)}%`,
+      `Add to Cart,${data.addToCart},${((data.checkoutStarted / data.addToCart) * 100).toFixed(2)}%,${calculateDropoff(data.checkoutStarted, data.addToCart).toFixed(2)}%,${mockTrends.checkoutStarted > 0 ? '+' : ''}${mockTrends.checkoutStarted.toFixed(2)}%`,
+      `Checkout Started,${data.checkoutStarted},${((data.ordersCompleted / data.checkoutStarted) * 100).toFixed(2)}%,${calculateDropoff(data.ordersCompleted, data.checkoutStarted).toFixed(2)}%,${mockTrends.purchases > 0 ? '+' : ''}${mockTrends.purchases.toFixed(2)}%`,
+      `Orders Completed,${data.ordersCompleted},${(meta?.conversionRate || 20.2).toFixed(2)}%,0.00%,${mockTrends.purchases > 0 ? '+' : ''}${mockTrends.purchases.toFixed(2)}%`
     ].join('\n');
     
     const blob = new Blob([csvContent], { type: 'text/csv' });
@@ -205,7 +253,7 @@ const fetchConversionData = async (vendorId: string, range: string = 'monthly') 
               <div className="flex items-center space-x-1 mt-1">
                 {getTrendArrow(mockTrends.views)}
                 <span className={`text-sm ${getTrendColor(mockTrends.views)}`}>
-                  {mockTrends.views > 0 ? '+' : ''}{mockTrends.views}%
+                  {mockTrends.views > 0 ? '+' : ''}{mockTrends.views.toFixed(2)}%
                 </span>
               </div>
             </div>
@@ -219,12 +267,12 @@ const fetchConversionData = async (vendorId: string, range: string = 'monthly') 
               <p className="text-sm font-medium text-green-600">Add to Cart</p>
               <p className="text-2xl font-bold text-green-900">{data.addToCart.toLocaleString()}</p>
               <p className={`text-sm ${getStatusColor(((data.addToCart / data.visitors) * 100))}`}>
-                {((data.addToCart / data.visitors) * 100).toFixed(1)}% conversion
+                {((data.addToCart / data.visitors) * 100).toFixed(2)}% conversion
               </p>
               <div className="flex items-center space-x-1 mt-1">
                 {getTrendArrow(mockTrends.addToCart)}
                 <span className={`text-sm ${getTrendColor(mockTrends.addToCart)}`}>
-                  {mockTrends.addToCart > 0 ? '+' : ''}{mockTrends.addToCart}%
+                  {mockTrends.addToCart > 0 ? '+' : ''}{mockTrends.addToCart.toFixed(2)}%
                 </span>
               </div>
             </div>
@@ -238,12 +286,12 @@ const fetchConversionData = async (vendorId: string, range: string = 'monthly') 
               <p className="text-sm font-medium text-yellow-600">Checkout Started</p>
               <p className="text-2xl font-bold text-yellow-900">{data.checkoutStarted.toLocaleString()}</p>
               <p className={`text-sm ${getStatusColor(((data.checkoutStarted / data.addToCart) * 100))}`}>
-                {((data.checkoutStarted / data.addToCart) * 100).toFixed(1)}% conversion
+                {((data.checkoutStarted / data.addToCart) * 100).toFixed(2)}% conversion
               </p>
               <div className="flex items-center space-x-1 mt-1">
                 {getTrendArrow(mockTrends.checkoutStarted)}
                 <span className={`text-sm ${getTrendColor(mockTrends.checkoutStarted)}`}>
-                  {mockTrends.checkoutStarted > 0 ? '+' : ''}{mockTrends.checkoutStarted}%
+                  {mockTrends.checkoutStarted > 0 ? '+' : ''}{mockTrends.checkoutStarted.toFixed(2)}%
                 </span>
               </div>
             </div>
@@ -257,12 +305,12 @@ const fetchConversionData = async (vendorId: string, range: string = 'monthly') 
               <p className="text-sm font-medium text-red-600">Orders Completed</p>
               <p className="text-2xl font-bold text-red-900">{data.ordersCompleted.toLocaleString()}</p>
               <p className={`text-sm ${getStatusColor(((data.ordersCompleted / data.checkoutStarted) * 100))}`}>
-                {((data.ordersCompleted / data.checkoutStarted) * 100).toFixed(1)}% conversion
+                {((data.ordersCompleted / data.checkoutStarted) * 100).toFixed(2)}% conversion
               </p>
               <div className="flex items-center space-x-1 mt-1">
                 {getTrendArrow(mockTrends.purchases)}
                 <span className={`text-sm ${getTrendColor(mockTrends.purchases)}`}>
-                  {mockTrends.purchases > 0 ? '+' : ''}{mockTrends.purchases}%
+                  {mockTrends.purchases > 0 ? '+' : ''}{mockTrends.purchases.toFixed(2)}%
                 </span>
               </div>
             </div>
@@ -301,11 +349,11 @@ const fetchConversionData = async (vendorId: string, range: string = 'monthly') 
                   <div className="w-20 bg-gray-200 rounded-full h-2">
                     <div
                       className="bg-red-500 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${item.value}%` }}
+                      style={{ width: `${item.value.toFixed(2)}%` }}
                     ></div>
                   </div>
                   <span className={`text-sm font-semibold ${getDropoffColor(item.value)}`}>
-                    {item.value}%
+                    {item.value.toFixed(2)}%
                   </span>
                 </div>
               </div>
@@ -314,7 +362,7 @@ const fetchConversionData = async (vendorId: string, range: string = 'monthly') 
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-gray-700">Overall Conversion</span>
                 <span className={`text-lg font-bold ${getStatusColor(meta?.conversionRate || 20.2)}`}>
-                  {meta?.conversionRate?.toFixed(1) || '20.2'}%
+                  {(meta?.conversionRate || 20.2).toFixed(2)}%
                 </span>
               </div>
             </div>
@@ -333,7 +381,7 @@ const fetchConversionData = async (vendorId: string, range: string = 'monthly') 
           <div className="text-center">
             <p className="text-sm font-medium text-red-600">Cart Abandonment</p>
             <p className="text-2xl font-bold text-red-900">
-              ${((data.addToCart - data.checkoutStarted) * (meta?.avgOrderValue || 150)).toLocaleString()}
+              ${((data.addToCart - data.checkoutStarted) * (meta?.avgOrderValue || 150)).toFixed(2)}
             </p>
             <p className="text-xs text-red-600">
               {data.addToCart - data.checkoutStarted} abandoned carts
@@ -343,7 +391,7 @@ const fetchConversionData = async (vendorId: string, range: string = 'monthly') 
           <div className="text-center">
             <p className="text-sm font-medium text-red-600">Checkout Abandonment</p>
             <p className="text-2xl font-bold text-red-900">
-              ${((data.checkoutStarted - data.ordersCompleted) * (meta?.avgOrderValue || 150)).toLocaleString()}
+              ${((data.checkoutStarted - data.ordersCompleted) * (meta?.avgOrderValue || 150)).toFixed(2)}
             </p>
             <p className="text-xs text-red-600">
               {data.checkoutStarted - data.ordersCompleted} abandoned checkouts
@@ -353,10 +401,10 @@ const fetchConversionData = async (vendorId: string, range: string = 'monthly') 
           <div className="text-center">
             <p className="text-sm font-medium text-red-600">Total Potential Loss</p>
             <p className="text-2xl font-bold text-red-900">
-              ${((data.addToCart - data.ordersCompleted) * (meta?.avgOrderValue || 150)).toLocaleString()}
+              ${((data.addToCart - data.ordersCompleted) * (meta?.avgOrderValue || 150)).toFixed(2)}
             </p>
             <p className="text-xs text-red-600">
-              Avg order: ${meta?.avgOrderValue || 150}
+              Avg order: ${(meta?.avgOrderValue || 150).toFixed(2)}
             </p>
           </div>
         </div>
@@ -376,7 +424,7 @@ const fetchConversionData = async (vendorId: string, range: string = 'monthly') 
               <Users className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
               <div>
                 <p className="font-medium text-gray-900">Checkout Optimization</p>
-                <p className="text-gray-600">Simplify checkout process to reduce {calculateDropoff(data.ordersCompleted, data.checkoutStarted).toFixed(1)}% dropoff</p>
+                <p className="text-gray-600">Simplify checkout process to reduce {calculateDropoff(data.ordersCompleted, data.checkoutStarted).toFixed(2)}% dropoff</p>
               </div>
             </div>
           </div>

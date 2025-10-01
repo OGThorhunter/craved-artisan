@@ -117,7 +117,7 @@ export function CustomerInsights() {
             <span className="font-medium text-gray-800">Loyalty Impact</span>
           </div>
           <p className={`text-xl font-bold ${getLoyaltyImpactColor(customerMetrics.loyaltyImpact)}`}>
-            +{customerMetrics.loyaltyImpact}%
+            +{customerMetrics.loyaltyImpact.toFixed(2)}%
           </p>
           <p className="text-sm text-gray-600">Revenue increase from loyalty program</p>
         </div>
@@ -127,7 +127,7 @@ export function CustomerInsights() {
             <span className="font-medium text-gray-800">Return Rate</span>
           </div>
           <p className={`text-xl font-bold ${getReturnRateColor(customerMetrics.returnRate)}`}>
-            {customerMetrics.returnRate}%
+            {customerMetrics.returnRate.toFixed(2)}%
           </p>
           <p className="text-sm text-gray-600">Below industry average (5.2%)</p>
         </div>
@@ -136,7 +136,7 @@ export function CustomerInsights() {
             <TrendingUp size={16} className="text-green-500" />
             <span className="font-medium text-gray-800">Repeat Purchase</span>
           </div>
-          <p className="text-xl font-bold text-green-600">{customerMetrics.repeatPurchaseRate}%</p>
+          <p className="text-xl font-bold text-green-600">{customerMetrics.repeatPurchaseRate.toFixed(2)}%</p>
           <p className="text-sm text-gray-600">Customers who buy again</p>
         </div>
       </div>
@@ -240,20 +240,20 @@ export function CustomerInsights() {
                 {cohortData.map((cohort, idx) => (
                   <tr key={idx} className="border-b hover:bg-gray-50">
                     <td className="p-2 font-medium">{cohort.cohort}</td>
-                    <td className="p-2 text-center">{cohort.day1}%</td>
+                    <td className="p-2 text-center">{cohort.day1.toFixed(2)}%</td>
                     <td className="p-2 text-center">
                       <span className={cohort.day7 > 80 ? "text-green-600" : "text-yellow-600"}>
-                        {cohort.day7}%
+                        {cohort.day7.toFixed(2)}%
                       </span>
                     </td>
                     <td className="p-2 text-center">
                       <span className={cohort.day30 > 50 ? "text-green-600" : "text-yellow-600"}>
-                        {cohort.day30}%
+                        {cohort.day30.toFixed(2)}%
                       </span>
                     </td>
                     <td className="p-2 text-center">
                       <span className={cohort.day90 > 30 ? "text-green-600" : "text-yellow-600"}>
-                        {cohort.day90}%
+                        {cohort.day90.toFixed(2)}%
                       </span>
                     </td>
                   </tr>
