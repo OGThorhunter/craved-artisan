@@ -86,6 +86,7 @@ const VendorDashboardPage: React.FC = () => {
     { id: 'pulse', label: '🔥 UPDATED Pulse', icon: Activity },
     { id: 'analytics-crm', label: 'Analytics & CRM', icon: TrendingUp },
     { id: 'inventory', label: 'Inventory', icon: Package },
+    { id: 'inventory-management', label: '🧠 AI Inventory', icon: Brain },
     { id: 'financials', label: 'Financials', icon: DollarSign },
     { id: 'messaging', label: 'Messaging', icon: MessageSquare },
     { id: 'settings', label: 'Settings', icon: Settings }
@@ -487,8 +488,27 @@ const VendorDashboardPage: React.FC = () => {
           </div>
         )}
 
+        {/* AI Inventory Management Tab */}
+        {activeTab === 'inventory-management' && (
+          <div className="text-center py-12">
+            <h3 className="text-lg font-medium text-gray-900 mb-2">🧠 AI Inventory Management</h3>
+            <p className="text-gray-600 mb-4">Smart inventory control with AI insights, receipt parsing, and automated restocking</p>
+            <div className="flex justify-center gap-4">
+              <a 
+                href="/dashboard/vendor/inventory-management" 
+                className="px-6 py-3 bg-[#7F232E] text-white rounded-lg hover:bg-[#7F232E]/90 transition-colors"
+              >
+                Open AI Inventory
+              </a>
+            </div>
+            <div className="mt-6 text-sm text-gray-500">
+              <p>Features: Restock alerts, price watches, receipt scanning, seasonal forecasts, and B2B sourcing</p>
+            </div>
+          </div>
+        )}
+
         {/* Other tabs content would go here */}
-        {activeTab !== 'pulse' && activeTab !== 'analytics-crm' && (
+        {activeTab !== 'pulse' && activeTab !== 'analytics-crm' && activeTab !== 'inventory-management' && (
           <div className="text-center py-12">
             <h3 className="text-lg font-medium text-gray-900 mb-2">{tabs.find(t => t.id === activeTab)?.label} Coming Soon</h3>
             <p className="text-gray-600">This section is under development</p>

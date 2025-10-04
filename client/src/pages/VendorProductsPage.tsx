@@ -4,8 +4,8 @@ import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import MotivationalQuote from '@/components/dashboard/MotivationalQuote';
 import { getQuoteByCategory } from '@/data/motivationalQuotes';
-import {
-  Plus,
+import { 
+  Plus, 
   Search,
   Grid3X3,
   List,
@@ -201,7 +201,7 @@ const VendorProductsPage: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [showAIInsights, setShowAIInsights] = useState(false);
-
+  
   // Mock queries - replace with actual API calls
   const { data: products = mockProducts, isLoading: productsLoading } = useQuery({
     queryKey: ['products', { searchQuery, selectedCategory, selectedType, sortBy, sortOrder }],
@@ -357,7 +357,7 @@ const VendorProductsPage: React.FC = () => {
               )}
               <button className="p-1 hover:bg-gray-100 rounded" aria-label="More actions">
                 <MoreVertical className="w-4 h-4 text-gray-500" />
-              </button>
+                </button>
               </div>
             </div>
 
@@ -427,7 +427,7 @@ const VendorProductsPage: React.FC = () => {
                 <Edit className="w-3 h-3 mr-1" />
                 Edit
               </Button>
-            </div>
+                </div>
               </div>
             </div>
       </Card>
@@ -519,8 +519,8 @@ const VendorProductsPage: React.FC = () => {
             <Button variant="ghost" className="p-1">
               <MoreVertical className="w-4 h-4" />
             </Button>
-          </div>
-        </td>
+                          </div>
+                        </td>
                       </tr>
     );
   };
@@ -606,7 +606,7 @@ const VendorProductsPage: React.FC = () => {
                   </div>
 
               {/* Category Filter */}
-              <select
+                    <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5B6E02] focus:border-transparent"
@@ -621,7 +621,7 @@ const VendorProductsPage: React.FC = () => {
                     </select>
 
               {/* Type Filter */}
-              <select
+                      <select
                 value={selectedType}
                 onChange={(e) => setSelectedType(e.target.value as ProductType | '')}
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5B6E02] focus:border-transparent"
@@ -636,7 +636,7 @@ const VendorProductsPage: React.FC = () => {
               {/* Sort */}
               <select
                 value={`${sortBy}-${sortOrder}`}
-                onChange={(e) => {
+                         onChange={(e) => {
                   const [field, order] = e.target.value.split('-');
                   setSortBy(field as 'name' | 'price' | 'updatedAt');
                   setSortOrder(order as 'asc' | 'desc');
@@ -756,7 +756,7 @@ const VendorProductsPage: React.FC = () => {
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
                     <th className="px-4 py-3 text-left">
-            <input
+                         <input
               type="checkbox"
               checked={selectedProducts.length === filteredProducts.length && filteredProducts.length > 0}
               onChange={handleSelectAll}

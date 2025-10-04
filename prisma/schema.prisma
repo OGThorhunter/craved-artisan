@@ -66,6 +66,11 @@ model VendorProfile {
   categories            Category[]
   subcategories         Subcategory[]
   recipeParseJobs       RecipeParseJob[]
+  // System Messages
+  systemMessages        SystemMessage[]
+  // Orders Management
+  orders                Order[]
+  orderFieldDefs        OrderFieldDef[]
 
   @@index([userId])
 }
@@ -116,6 +121,7 @@ model Product {
   analyticsEvents       AnalyticsEvent[]
   cartItems             CartItem[]
   orderItems            OrderItem[]
+  orderItemsNew         OrderItem[]
   recipe                Recipe?                  @relation(fields: [recipeId], references: [id])
   vendor                VendorProfile            @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
   competitorPrices      ProductCompetitorPrice[] // AI: Competitor pricing data
@@ -155,6 +161,22 @@ model Order {
   windowId          String?
   createdAt         DateTime               @default(now())
   updatedAt         DateTime               @updatedAt
+  
+  // Extended fields for Orders Management System
+  vendorProfileId   String?
+  customerName      String?
+  customerEmail     String?
+  phone             String?
+  priority          OrderPriority          @default(MEDIUM)
+  source            String?                // 'online','pos','manual','wholesale','market'
+  salesWindowId     String?
+  expectedAt        DateTime?              // promised ready/deliver/pickup time
+  dueAt             DateTime?              // production due (can differ from expected)
+  paymentStatus     String?                // 'paid','pending','refunded','cod'
+  customFields      String?                // JSON stored as string for SQLite
+  station           String?                // current station (prep/bake/pack/etc) for KDS
+  tags              String?                // JSON array stored as string for SQLite
+  
   analyticsEvents   AnalyticsEvent[]
   shippingAddress   ShippingAddress?       @relation(fields: [shippingAddressId], references: [id])
   user              User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -162,10 +184,19 @@ model Order {
   fulfillments      OrderFulfillment[]
   orderItems        OrderItem[]
   customerVehicle   OrderCustomerVehicle?
+  
+  // New relations for Orders Management System
+  vendor            VendorProfile?         @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  salesWindow       SalesWindow?           @relation(fields: [salesWindowId], references: [id])
+  timeline          OrderTimeline[]
 
   @@index([userId, createdAt])
   @@index([contextType, marketId])
   @@index([contextType, windowId])
+  @@index([vendorProfileId, status, createdAt])
+  @@index([vendorProfileId, dueAt])
+  @@index([vendorProfileId, expectedAt])
+  @@index([status, dueAt])
 }
 
 model Ingredient {
@@ -219,23 +250,23 @@ model InventoryTx {
   @@index([vendorProfileId, ingredientId, type, createdAt])
 }
 
-// Enhanced inventory item model for supplies/ingredients
+// AI: Enhanced inventory item model for supplies/ingredients
 model InventoryItem {
   id              String    @id @default(cuid())
   vendorProfileId String
   name            String
   category        String    // FOOD_GRADE, PACKAGING, EQUIPMENT, etc.
   unit            String    // kg, g, ml, bottles, boxes...
-  currentQty      Float     @default(0)
-  reorderPoint    Float     @default(0)
-  preferredQty    Float     @default(0)
-  avgCost         Float     @default(0)
-  lastCost        Float     @default(0)
-  supplierName    String?
+  current_qty     Decimal   @default(0)
+  reorder_point   Decimal   @default(0)
+  preferred_qty   Decimal   @default(0)
+  avg_cost        Decimal   @default(0)
+  last_cost       Decimal   @default(0)
+  supplier_name   String?
   location        String?   // shelf/bin/room
-  batchNumber     String?
-  expiryDate      DateTime?
-  tags            String?   // JSON array stored as string
+  batch_number    String?
+  expiry_date     DateTime?
+  tags            String?   // JSON array stored as string for SQLite
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   
@@ -243,13 +274,13 @@ model InventoryItem {
   vendor          VendorProfile                @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
   movements       InventoryMovement[]
   priceWatches    PriceWatch[]
+  productMaterials ProductMaterial[]
   supplierOffers  InventorySupplierOffer[]
   purchaseOrderLines InventoryPurchaseOrderLine[]
-  productMaterials ProductMaterial[]
   
   @@index([vendorProfileId, name])
   @@index([vendorProfileId, category])
-  @@index([expiryDate])
+  @@index([expiry_date])
 }
 
 model InventoryMovement {
@@ -257,18 +288,18 @@ model InventoryMovement {
   vendorProfileId String
   inventoryItemId String
   type            MovementType  // RECEIVE, ADJUST, CONSUME, RETURN, WASTE, DONATION, RESERVE
-  qty             Float         // + for receive/adjust+, - for consume/adjust-
-  unitCost        Float?        // for RECEIVE (updates avg_cost via moving average)
+  qty             Decimal       // + for receive/adjust+, - for consume/adjust-
+  unit_cost       Decimal?      // for RECEIVE (updates avg_cost via moving average)
   refType         String?       // ORDER, PRODUCTION, WINDOW, MANUAL
   refId           String?
   notes           String?
   createdAt       DateTime      @default(now())
   
   // Relations
-  vendor          VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
   inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
   
   @@index([vendorProfileId, inventoryItemId, createdAt])
+  @@index([refType, refId])
 }
 
 enum MovementType {
@@ -285,14 +316,13 @@ model PriceWatch {
   id              String      @id @default(cuid())
   vendorProfileId String
   inventoryItemId String
-  targetUnitCost  Float
+  target_unit_cost Decimal
   source          WatchSource // B2B, MARKET, CUSTOM_URL
-  sourceMeta      String?     // JSON stored as string
+  source_meta     String?     // JSON stored as string for SQLite
   active          Boolean     @default(true)
   createdAt       DateTime    @default(now())
   
   // Relations
-  vendor          VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
   inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
   
   @@index([vendorProfileId, inventoryItemId, active])
@@ -305,17 +335,14 @@ enum WatchSource {
 }
 
 model ReceiptParseJob {
-  id              String        @id @default(cuid())
+  id            String        @id @default(cuid())
   vendorProfileId String
-  sourceType      ReceiptSource // IMAGE, PDF, TEXT
-  status          JobStatus     // PENDING, DONE, FAILED
-  rawText         String?
-  parsedJson      String?       // JSON stored as string
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  
-  // Relations
-  vendor          VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  source_type   ReceiptSource // IMAGE, PDF, TEXT
+  status        ReceiptJobStatus     // PENDING, DONE, FAILED
+  raw_text      String?
+  parsed_json   String?       // JSON stored as string for SQLite
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
   
   @@index([vendorProfileId, createdAt])
 }
@@ -326,27 +353,24 @@ enum ReceiptSource {
   TEXT
 }
 
-enum JobStatus {
+enum ReceiptJobStatus {
   PENDING
   DONE
   FAILED
 }
 
 model ProductionPlan {
-  id              String   @id @default(cuid())
+  id            String   @id @default(cuid())
   vendorProfileId String
-  productId       String
-  qtyToMake       Int
-  plannedAt       DateTime
-  status          String   // PLANNED, IN_PROGRESS, DONE, CANCELLED
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  productId     String
+  qty_to_make   Int
+  planned_at    DateTime
+  status        String   // PLANNED, IN_PROGRESS, DONE, CANCELLED
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
   
-  // Relations
-  vendor          VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
-  product         Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
-  
-  @@index([vendorProfileId, plannedAt])
+  @@index([vendorProfileId, planned_at])
+  @@index([productId, status])
 }
 
 model Recipe {
@@ -425,11 +449,24 @@ model OrderItem {
   total           Float
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+  
+  // Extended fields for Orders Management System
+  productName     String?
+  variantName     String?
+  qty             Int?     // alias for quantity
+  subtotal        Float?   // alias for total
+  notes           String?
+  labelsJson      String?  // JSON stored as string for SQLite
+  status          ItemStatus @default(QUEUED)
+  madeQty         Int      @default(0) // partials for large batches
+  
   product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([orderId])
   @@index([vendorProfileId])
+  @@index([orderId, productId])
+  @@index([orderId, status])
 }
 
 model AnalyticsEvent {
@@ -855,6 +892,7 @@ model SalesWindow {
   consignment         ConsignmentLedger[]
   wholesaleInvoices   WholesaleInvoice[]
   qrTokens            QrToken[]
+  orders              Order[]
 
   @@index([vendorId, status, fulfill_start_at])
 }
@@ -1414,4 +1452,75 @@ enum RecipeParseStatus {
   PENDING
   DONE
   FAILED
+}
+
+/** System Messages (replaces email) **/
+model SystemMessage {
+  id        String   @id @default(cuid())
+  vendorProfileId String
+  scope     String   // 'inventory', 'orders', 'products', 'pricing', etc.
+  type      String   // 'restock_alert', 'price_watch_hit', 'shortfall', 'seasonal_forecast', 'receipt_parsed', 'pricing_advice'
+  title     String
+  body      String
+  data      String?  // JSON stored as string for SQLite
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+  /** extension point for SMS opt-in later **/
+  // smsSentAt DateTime?
+  
+  // Relations
+  vendor    VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  
+  @@index([vendorProfileId, createdAt])
+  @@index([vendorProfileId, scope, readAt])
+  @@index([type, createdAt])
+}
+
+
+/** Orders Management System - Extended Models **/
+model OrderTimeline {
+  id         String   @id @default(cuid())
+  orderId    String
+  type       String   // 'created','status','station','note','print','label','system_message'
+  data       String?  // JSON stored as string for SQLite
+  createdAt  DateTime @default(now())
+  
+  // Relations
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  
+  @@index([orderId, createdAt])
+  @@index([orderId, type])
+}
+
+model OrderFieldDef {
+  id        String @id @default(cuid())
+  vendorProfileId String
+  key       String  // 'allergen_note','gift_message', etc.
+  label     String
+  type      String  // 'text','number','boolean','select'
+  options   String? // JSON array stored as string for SQLite
+  required  Boolean @default(false)
+  order     Int     @default(0)
+  
+  // Relations
+  vendor    VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  
+  @@index([vendorProfileId, order])
+  @@unique([vendorProfileId, key])
+}
+
+enum OrderPriority {
+  LOW
+  MEDIUM
+  HIGH
+  RUSH
+}
+
+enum ItemStatus {
+  QUEUED
+  PREP
+  COOK
+  COOL
+  PACK
+  READY
 }

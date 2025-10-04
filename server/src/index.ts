@@ -21,6 +21,16 @@ import productsRouter from './routes/products.router';
 import aiProductsRouter from './routes/ai-products.router';
 import productsImportRouter from './routes/products-import.router';
 import salesWindowsRouter from './routes/sales-windows.router';
+import inventoryManagementRouter from './routes/inventory-management.router';
+import inventoryInsightsRouter from './routes/inventory-insights.router';
+import inventoryReceiptParserRouter from './routes/inventory-receipt-parser.router';
+import inventoryShortfallRouter from './routes/inventory-shortfall.router';
+import inventoryExportRouter from './routes/inventory-export.router';
+import systemMessagesRouter from './routes/system-messages.router';
+// AI Routes
+import aiReceiptRouter from './routes/ai-receipt.router';
+import aiInsightsRouter from './routes/ai-insights.router';
+import aiSystemMessagesRouter from './routes/ai-system-messages.router';
 
 const app = express();
 const PORT = Number(process.env.PORT || 3001);
@@ -94,6 +104,21 @@ app.use('/api/vendor', productsImportRouter);
 
 // Sales Windows routes
 app.use('/api/vendor/sales-windows', salesWindowsRouter);
+
+// Inventory Management routes
+app.use('/api/vendor/inventory', inventoryManagementRouter);
+app.use('/api/vendor/inventory', inventoryInsightsRouter);
+app.use('/api/vendor/inventory', inventoryReceiptParserRouter);
+app.use('/api/vendor/inventory', inventoryShortfallRouter);
+app.use('/api/vendor/inventory', inventoryExportRouter);
+
+// System Messages routes
+app.use('/api/vendor/system-messages', systemMessagesRouter);
+
+// AI Routes
+app.use('/api/ai/receipt', aiReceiptRouter);
+app.use('/api/ai/insights', aiInsightsRouter);
+app.use('/api/ai/system-messages', aiSystemMessagesRouter);
 
 // Start server
 app.listen(PORT, () => {

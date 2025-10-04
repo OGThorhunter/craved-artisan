@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Database } from 'lucide-react';
+import { Database, Brain, Bell, Camera } from 'lucide-react';
 import VendorDashboardLayout from '../layouts/VendorDashboardLayout';
 import DashboardHeader from '../components/dashboard/DashboardHeader';
 import MotivationalQuote from '../components/dashboard/MotivationalQuote';
@@ -9,6 +9,9 @@ import InventorySearchAndFilters from '../components/inventory/InventorySearchAn
 import InventoryItemsGrid from '../components/inventory/InventoryItemsGrid';
 import InventoryItemsList from '../components/inventory/InventoryItemsList';
 import InventoryModals from '../components/inventory/InventoryModals';
+import AIInsightsDrawer from '../components/inventory/AIInsightsDrawer';
+import SystemMessagesDrawer from '../components/inventory/SystemMessagesDrawer';
+import ReceiptParserModal from '../components/inventory/ReceiptParserModal';
 import { 
   useInventoryItems, 
   useCreateInventoryItem, 
@@ -32,6 +35,9 @@ const VendorInventoryPage: React.FC = () => {
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [viewingItem, setViewingItem] = useState<InventoryItem | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [showAIInsights, setShowAIInsights] = useState(false);
+  const [showSystemMessages, setShowSystemMessages] = useState(false);
+  const [showReceiptParser, setShowReceiptParser] = useState(false);
 
   // Data fetching
   const { data: inventoryItems = [], isLoading, error } = useInventoryItems();
@@ -91,7 +97,7 @@ const VendorInventoryPage: React.FC = () => {
         await createMutation.mutateAsync(data);
       }
       handleCloseModals();
-    } catch (error) {
+    } catch {
       // Error handling is done in the mutation hooks
     }
   };
@@ -192,13 +198,38 @@ const VendorInventoryPage: React.FC = () => {
       <div className="min-h-screen bg-white space-y-6">
         {/* Header */}
         <DashboardHeader
-          title="Inventory Management"
-          description="Currently viewing: Inventory"
+          title="AI-Assisted Inventory Management"
+          description="Smart inventory control with AI insights and system notifications"
           currentView="Inventory"
           icon={Database}
           iconColor="text-blue-600"
           iconBg="bg-blue-100"
         />
+
+        {/* Action Buttons */}
+        <div className="flex gap-4 justify-end">
+          <button
+            onClick={() => setShowReceiptParser(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            <Camera className="h-4 w-4" />
+            Scan Receipt
+          </button>
+          <button
+            onClick={() => setShowAIInsights(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            <Brain className="h-4 w-4" />
+            AI Insights
+          </button>
+          <button
+            onClick={() => setShowSystemMessages(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+          >
+            <Bell className="h-4 w-4" />
+            System Messages
+          </button>
+        </div>
 
         {/* Motivational Quote */}
         <MotivationalQuote
@@ -253,6 +284,36 @@ const VendorInventoryPage: React.FC = () => {
           onSave={handleSave}
           onEdit={handleEdit}
           isSaving={createMutation.isPending || updateMutation.isPending}
+        />
+
+        {/* AI Insights Drawer */}
+        <AIInsightsDrawer
+          isOpen={showAIInsights}
+          onClose={() => setShowAIInsights(false)}
+          insights={{
+            restock: [],
+            priceWatches: [],
+            seasonal: [],
+            shortfall: []
+          }}
+          isLoading={isLoading}
+        />
+
+        {/* System Messages Drawer */}
+        <SystemMessagesDrawer
+          isOpen={showSystemMessages}
+          onClose={() => setShowSystemMessages(false)}
+          scope="inventory"
+        />
+
+        {/* Receipt Parser Modal */}
+        <ReceiptParserModal
+          isOpen={showReceiptParser}
+          onClose={() => setShowReceiptParser(false)}
+          onSuccess={() => {
+            // Refresh inventory data when items are added
+            window.location.reload();
+          }}
         />
       </div>
     </VendorDashboardLayout>

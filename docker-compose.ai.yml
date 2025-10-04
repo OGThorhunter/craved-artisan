@@ -1,0 +1,46 @@
+version: "3.8"
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    ports: 
+      - "11434:11434"
+    volumes: 
+      - "./ollama:/root/.ollama"
+    healthcheck: 
+      test: ["CMD", "bash", "-lc", "curl -s localhost:11434/api/tags | grep -q ollama"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+    restart: unless-stopped
+
+  receipt-ocr:
+    build:
+      context: ./services/receipt-ocr
+      dockerfile: Dockerfile
+    ports: 
+      - "9001:9001"
+    depends_on:
+      - ollama
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9001/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  insights:
+    build:
+      context: ./services/insights
+      dockerfile: Dockerfile
+    ports: 
+      - "9002:9002"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9002/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  ollama_data:
