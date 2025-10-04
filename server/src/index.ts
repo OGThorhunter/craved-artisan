@@ -17,6 +17,9 @@ import { crmRouter } from './routes/crm.router';
 import { labelProfilesRouter } from './routes/label-profiles.router';
 import { analyticsRouter } from './routes/analytics.router';
 import labelsRouter from './routes/labels';
+import productsRouter from './routes/products.router';
+import aiProductsRouter from './routes/ai-products.router';
+import productsImportRouter from './routes/products-import.router';
 
 const app = express();
 const PORT = Number(process.env.PORT || 3001);
@@ -82,6 +85,11 @@ app.use('/api', labelProfilesRouter);
 
 // Analytics routes
 app.use('/api', analyticsRouter);
+
+// Products routes
+app.use('/api/vendor', productsRouter);
+app.use('/api/vendor/ai', aiProductsRouter);
+app.use('/api/vendor', productsImportRouter);
 
 // Start server
 app.listen(PORT, () => {

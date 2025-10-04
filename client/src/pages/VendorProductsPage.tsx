@@ -1,2463 +1,810 @@
 import React, { useState, useMemo } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
-import { toast } from 'react-hot-toast';
-import { 
-  Plus, 
-  Edit, 
-  Trash2, 
-  X, 
+import { useQuery } from '@tanstack/react-query';
+import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
+import DashboardHeader from '@/components/dashboard/DashboardHeader';
+import MotivationalQuote from '@/components/dashboard/MotivationalQuote';
+import { getQuoteByCategory } from '@/data/motivationalQuotes';
+import {
+  Plus,
   Search,
-  Package,
-  DollarSign,
-  Tag,
-  Download,
-  Upload,
   Grid3X3,
   List,
-  SortAsc,
-  SortDesc,
-  Camera,
+  Download,
+  Upload,
+  MoreVertical,
+  Edit,
+  Eye,
+  AlertTriangle,
+  CheckCircle,
+  Package,
+  Users,
+  Brain,
   ChevronDown,
-  Wrench,
-  UtensilsCrossed,
-  ShoppingBag,
-  Printer,
-  Share2
+  X,
+  Loader2,
 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import VendorDashboardLayout from '../layouts/VendorDashboardLayout';
-import MotivationalQuote from '../components/dashboard/MotivationalQuote';
-import DashboardHeader from '../components/dashboard/DashboardHeader';
-import { getQuoteByCategory } from '../data/motivationalQuotes';
-import { MOCK_INGREDIENTS, MOCK_UNITS, MOCK_TRADE_SUPPLIES, MOCK_TRADE_UNITS } from '../types/recipes';
-import { AIInsightsDrawer } from '../components/ai/AIInsightsDrawer';
+import Button from '@/components/ui/Button';
+import Card from '@/components/ui/Card';
 
-// Enhanced Product Card interface
-interface ProductCard {
+type ProductType = 'FOOD' | 'NON_FOOD' | 'SERVICE';
+
+// Types
+interface Product {
   id: string;
   name: string;
+  slug: string;
+  type: ProductType;
   description?: string;
-  category: 'food' | 'service' | 'non-food';
-  subcategory: string;
   price: number;
+  baseCost: number;
+  laborCost: number;
   imageUrl?: string;
+  active: boolean;
+  sku?: string;
+  category?: { name: string };
+  subcategory?: { name: string };
   tags: string[];
-  isActive: boolean;
+  costRollup: {
+    materialsCost: number;
+  laborCost: number;
+    baseCost: number;
+  totalCost: number;
+    marginAtPrice: number;
+    marginPct: number;
+  };
+  materials: Array<{
+    qty: number;
+  unit: string;
+    inventoryItem: { name: string; currentQty: number; reorderPoint: number };
+  }>;
+  variants: Array<{
+  id: string;
+  name: string;
+    priceDelta: number;
+    isDefault: boolean;
+  }>;
   createdAt: string;
   updatedAt: string;
-  
-  // Cost breakdown
-  ingredients: ProductIngredient[];
-  tradeSupplies?: ProductTradeSupply[];
-  laborCost: number;
-  overheadCost: number;
-  totalCost: number;
-  profitMargin: number;
-  
-  // Recipe details (for food items)
-  recipe?: {
-    instructions: string[];
-    prepTime: number;
-    cookTime: number;
-    servings: number;
-    yield: number;
-    yieldUnit: string;
-  };
-  
-  // Additional properties for compatibility
-  servings?: number;
-  
-  // Service details (for service items)
-  service?: {
-    duration: number;
-    skillLevel: 'beginner' | 'intermediate' | 'expert';
-    requirements: string[];
-  };
-}
-
-interface ProductIngredient {
-  id: string;
-  ingredientId: string;
-  ingredient: any; // From MOCK_INGREDIENTS
-  quantity: number;
-  unit: string;
-  cost: number;
-  notes?: string;
-}
-
-interface ProductTradeSupply {
-  id: string;
-  supplyId: string;
-  supply: any; // From MOCK_TRADE_SUPPLIES
-  quantity: number;
-  unit: string;
-  cost: number;
-  notes?: string;
-}
-
-interface CreateProductCardForm {
-  name: string;
-  description: string;
-  category: 'food' | 'service' | 'non-food';
-  subcategory: string;
-  price: number;
-  imageUrl: string;
-  tags: string;
-  ingredients: ProductIngredient[];
-  tradeSupplies: ProductTradeSupply[];
-  laborCost: number;
-  overheadCost: number;
-  profitMargin: number;
 }
 
 interface Category {
   id: string;
   name: string;
-  icon: any;
-  subcategories: string[];
-  description: string;
+  children: Category[];
+  subcategories: Array<{ id: string; name: string }>;
+  _count: { products: number };
 }
 
-// Enhanced categories with icons and descriptions
-const PRODUCT_CATEGORIES: Category[] = [
+interface AIInsight {
+  productId: string;
+  productName: string;
+  currentPrice: number;
+  recommendedPrice: number;
+  recommendation: 'increase' | 'decrease' | 'maintain';
+  confidence: number;
+  reasoning: string;
+  currentMargin: number;
+  projectedMargin: number;
+  imageUrl?: string;
+  type: ProductType;
+}
+
+// Mock data for development
+const mockProducts: Product[] = [
   {
-         id: 'food',
-     name: 'Food',
-     icon: UtensilsCrossed,
-     subcategories: ['Baked Goods', 'Preserved Foods', 'Fresh Produce', 'Beverages', 'Dairy', 'Meat & Seafood'],
-     description: 'Food-based products with ingredient tracking and recipe management'
+    id: '1',
+    name: 'Artisan Sourdough Bread',
+    slug: 'artisan-sourdough-bread',
+    type: 'FOOD',
+    description: 'Traditional sourdough bread made with organic flour',
+    price: 8.99,
+    baseCost: 2.50,
+    laborCost: 1.50,
+    imageUrl: '/images/bread.jpg',
+    active: true,
+    sku: 'BREAD-001',
+    category: { name: 'Baked Goods' },
+    tags: ['organic', 'sourdough', 'artisan'],
+    costRollup: {
+      materialsCost: 2.50,
+      laborCost: 1.50,
+      baseCost: 2.50,
+      totalCost: 6.50,
+      marginAtPrice: 2.49,
+      marginPct: 27.7,
+    },
+    materials: [
+      {
+        qty: 3,
+        unit: 'cups',
+        inventoryItem: { name: 'Organic Flour', currentQty: 50, reorderPoint: 10 },
+      },
+    ],
+    variants: [],
+    createdAt: '2024-01-15T10:00:00Z',
+    updatedAt: '2024-01-20T14:30:00Z',
   },
   {
-    id: 'service',
+    id: '2',
+    name: 'Custom Cake Decorating',
+    slug: 'custom-cake-decorating',
+    type: 'SERVICE',
+    description: 'Professional cake decorating service',
+    price: 75.00,
+    baseCost: 0,
+    laborCost: 25.00,
+    active: true,
+    sku: 'SERVICE-001',
+    category: { name: 'Services' },
+    tags: ['custom', 'decorating', 'cakes'],
+    costRollup: {
+      materialsCost: 0,
+      laborCost: 25.00,
+      baseCost: 0,
+      totalCost: 25.00,
+      marginAtPrice: 50.00,
+      marginPct: 66.7,
+    },
+    materials: [],
+    variants: [],
+    // Service-specific fields would be added here in the real implementation
+    createdAt: '2024-01-10T09:00:00Z',
+    updatedAt: '2024-01-18T16:45:00Z',
+  },
+];
+
+const mockCategories: Category[] = [
+  {
+    id: '1',
+    name: 'Baked Goods',
+    children: [],
+    subcategories: [
+      { id: '1-1', name: 'Bread' },
+      { id: '1-2', name: 'Pastries' },
+    ],
+    _count: { products: 5 },
+  },
+  {
+    id: '2',
     name: 'Services',
-    icon: Wrench,
-    subcategories: ['Yard Work', 'Tattoo Services', 'Consulting', 'Maintenance', 'Creative Services', 'Other'],
-    description: 'Service-based offerings with labor and material cost tracking'
+    children: [],
+    subcategories: [
+      { id: '2-1', name: 'Decorating' },
+      { id: '2-2', name: 'Consultation' },
+    ],
+    _count: { products: 3 },
   },
+];
+
+const mockAIInsights: AIInsight[] = [
   {
-    id: 'non-food',
-    name: 'Non-Food Goods',
-    icon: ShoppingBag,
-    subcategories: ['Crafts', 'Textiles', 'Pottery', 'Jewelry', 'Home Decor', 'Other'],
-    description: 'Handcrafted items with material and labor cost management'
-  }
+    productId: '1',
+    productName: 'Artisan Sourdough Bread',
+    currentPrice: 8.99,
+    recommendedPrice: 9.50,
+    recommendation: 'increase',
+    confidence: 0.85,
+    reasoning: 'Current margin (27.7%) is below target (30%). Competitor average: $9.25',
+    currentMargin: 27.7,
+    projectedMargin: 31.6,
+    imageUrl: '/images/bread.jpg',
+    type: 'FOOD',
+  },
 ];
 
 const VendorProductsPage: React.FC = () => {
-  const queryClient = useQueryClient();
-  
-  // State management
-
-  const [viewMode, setViewMode] = useState<'cards' | 'list'>('cards');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState<'name' | 'price' | 'totalCost' | 'createdAt'>('name');
+  const [selectedType, setSelectedType] = useState<ProductType | ''>('');
+  const [sortBy, setSortBy] = useState<'name' | 'price' | 'updatedAt'>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
-  
-  // Product card management
-  const [showProductCard, setShowProductCard] = useState(false);
-  const [showViewDetails, setShowViewDetails] = useState(false);
-  const [editingCard, setEditingCard] = useState<ProductCard | null>(null);
-  const [viewingCard, setViewingCard] = useState<ProductCard | null>(null);
-  const [selectedCategoryForCard, setSelectedCategoryForCard] = useState<'food' | 'service' | 'non-food' | ''>('');
-  
-  // AI recipe parsing
-  const [showImageUpload, setShowImageUpload] = useState(false);
-  const [setUploadedImage] = useState<File | null>(null);
-  const [parsingRecipe, setParsingRecipe] = useState(false);
-  
-  // Add product dropdown
-  const [showAddProductDropdown, setShowAddProductDropdown] = useState(false);
-  const [showCsvImport, setShowCsvImport] = useState(false);
-  
-  // AI Insights
+  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [showAIInsights, setShowAIInsights] = useState(false);
-  
-  // Close dropdown when clicking outside
-  React.useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (showAddProductDropdown) {
-        const target = event.target as Element;
-        if (!target.closest('.relative')) {
-          setShowAddProductDropdown(false);
-        }
-      }
-    };
-    
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showAddProductDropdown]);
-  
-  // Ingredient management
-  const [ingredientLines, setIngredientLines] = useState<Array<{
-    id: string;
-    ingredientId: string;
-    quantity: number;
-    unit: string;
-    cost: number;
-  }>>([]);
 
-  // Trade supply management
-  const [tradeSupplyLines, setTradeSupplyLines] = useState<Array<{
-    id: string;
-    supplyId: string;
-    quantity: number;
-    unit: string;
-    cost: number;
-  }>>([]);
-  
-  // Unit conversion reference
-  const [showUnitConverter, setShowUnitConverter] = useState(false);
-  const [converterFromValue, setConverterFromValue] = useState('');
-  const [converterFromUnit, setConverterFromUnit] = useState('grams');
-  const [converterToUnit, setConverterToUnit] = useState('ounces');
-
-  // Unit conversion functions
-  const convertUnit = (value: number, fromUnit: string, toUnit: string): number => {
-    if (fromUnit === toUnit) return value;
-
-    let grams = 0;
-    switch (fromUnit) {
-      case 'grams': grams = value; break;
-      case 'kilograms': grams = value * 1000; break;
-      case 'ounces': grams = value * 28.3495; break;
-      case 'pounds': grams = value * 453.592; break;
-      case 'milliliters': grams = value; break; // Assuming water density
-      case 'liters': grams = value * 1000; break;
-      case 'cups': grams = value * 240; break; // Assuming water
-      case 'tablespoons': grams = value * 15; break;
-      case 'teaspoons': grams = value * 5; break;
-      case 'pieces': grams = value * 50; break; // Average piece weight
-      case 'pinch': grams = value * 0.5; break;
-      case 'dash': grams = value * 0.1; break;
-      default: grams = value;
-    }
-
-    switch (toUnit) {
-      case 'grams': return grams;
-      case 'kilograms': return grams / 1000;
-      case 'ounces': return grams / 28.3495;
-      case 'pounds': return grams / 453.592;
-      case 'milliliters': return grams; // Assuming water density
-      case 'liters': return grams / 1000;
-      case 'cups': return grams / 240; // Assuming water
-      case 'tablespoons': return grams / 15;
-      case 'teaspoons': return grams / 5;
-      case 'pieces': return grams / 50; // Average piece weight
-      case 'pinch': return grams / 0.5;
-      case 'dash': return grams / 0.1;
-      default: return grams;
-    }
-  };
-
-  const getConvertedValue = (): string => {
-    const value = parseFloat(converterFromValue);
-    if (isNaN(value) || value <= 0) return '';
-
-    const converted = convertUnit(value, converterFromUnit, converterToUnit);
-    return converted.toFixed(4).replace(/\.?0+$/, '');
-  };
-  
-  // Trade supplies modal
-  const [showTradeSuppliesModal, setShowTradeSuppliesModal] = useState(false);
-  
-  // Mock product cards for development
-  const [productCards, setProductCards] = useState<ProductCard[]>([
-    {
-      id: '1',
-      name: 'Artisan Sourdough Bread',
-      description: 'Traditional sourdough bread with crispy crust',
-      category: 'food',
-      subcategory: 'Baked Goods',
-      price: 12.99,
-      imageUrl: '',
-      tags: ['bread', 'sourdough', 'artisan'],
-      isActive: true,
-      createdAt: '2025-08-30',
-      updatedAt: '2025-08-30',
-      ingredients: [
-        {
-          id: '1',
-          ingredientId: '1',
-          ingredient: MOCK_INGREDIENTS[0],
-          quantity: 3.5,
-          unit: 'kg',
-          cost: 8.75,
-          notes: 'High protein content'
-        }
-      ],
-      laborCost: 15.00,
-      overheadCost: 2.50,
-      totalCost: 26.25,
-      profitMargin: 30,
-      servings: 8,
-      recipe: {
-        instructions: ['Mix ingredients', 'Knead dough', 'Let rise', 'Bake'],
-        prepTime: 30,
-        cookTime: 45,
-        servings: 8,
-        yield: 1,
-        yieldUnit: 'loaf'
-      }
-    }
-  ]);
-
-  // React Hook Form
-  const {
-    register,
-    handleSubmit,
-    reset,
-    watch,
-    setValue,
-    formState: { errors, isSubmitting }
-  } = useForm<CreateProductCardForm>({
-    defaultValues: {
-      name: '',
-      description: '',
-      category: 'food',
-      subcategory: '',
-      price: 0,
-      imageUrl: '',
-      tags: '',
-      ingredients: [],
-      tradeSupplies: [],
-      laborCost: 0,
-      overheadCost: 0,
-      profitMargin: 30
-    }
+  // Mock queries - replace with actual API calls
+  const { data: products = mockProducts, isLoading: productsLoading } = useQuery({
+    queryKey: ['products', { searchQuery, selectedCategory, selectedType, sortBy, sortOrder }],
+    queryFn: async () => {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return mockProducts;
+    },
   });
 
-  // const watchedCategory = watch('category');
+  const { data: categories = mockCategories } = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      await new Promise(resolve => setTimeout(resolve, 300));
+      return mockCategories;
+    },
+  });
 
-  // Computed values
-  const filteredAndSortedCards = useMemo(() => {
-    let filtered = productCards.filter(card => {
-      const matchesSearch = card.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        card.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        card.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-      
-      const matchesCategory = !selectedCategory || card.category === selectedCategory;
-      
-      return matchesSearch && matchesCategory;
-    });
+  const { data: aiInsights = mockAIInsights, isLoading: aiInsightsLoading } = useQuery({
+    queryKey: ['ai-insights'],
+    queryFn: async () => {
+      await new Promise(resolve => setTimeout(resolve, 800));
+      return mockAIInsights;
+    },
+    enabled: showAIInsights,
+  });
 
-    // Sort cards
+  // Filter and sort products
+  const filteredProducts = useMemo(() => {
+    let filtered = products;
+
+    if (searchQuery) {
+      filtered = filtered.filter(product =>
+        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+      );
+    }
+
+    if (selectedCategory) {
+      filtered = filtered.filter(product => product.category?.name === selectedCategory);
+    }
+
+    if (selectedType) {
+      filtered = filtered.filter(product => product.type === selectedType);
+    }
+
+    // Sort
     filtered.sort((a, b) => {
-      let aValue: any = a[sortBy];
-      let bValue: any = b[sortBy];
+      let aValue: string | number, bValue: string | number;
       
-      if (sortBy === 'price' || sortBy === 'totalCost') {
-        aValue = Number(aValue) || 0;
-        bValue = Number(bValue) || 0;
+      switch (sortBy) {
+        case 'name':
+          aValue = a.name.toLowerCase();
+          bValue = b.name.toLowerCase();
+          break;
+        case 'price':
+          aValue = a.price;
+          bValue = b.price;
+          break;
+        case 'updatedAt':
+          aValue = new Date(a.updatedAt).getTime();
+          bValue = new Date(b.updatedAt).getTime();
+          break;
+        default:
+          aValue = a.name.toLowerCase();
+          bValue = b.name.toLowerCase();
       }
       
       if (sortOrder === 'asc') {
-        return aValue > bValue ? 1 : -1;
+        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
     } else {
-        return aValue < bValue ? 1 : -1;
+        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
       }
     });
 
     return filtered;
-  }, [productCards, searchTerm, selectedCategory, sortBy, sortOrder]);
+  }, [products, searchQuery, selectedCategory, selectedType, sortBy, sortOrder]);
 
-  // View details handler
-  const handleViewDetails = (card: ProductCard) => {
-    setViewingCard(card);
-    setShowViewDetails(true);
-  };
-
-  // Form handlers
-  const onSubmit = (data: CreateProductCardForm) => {
-    // Check for duplicates
-    if (!editingCard && checkForDuplicate(data.name, data.category)) {
-      toast.error('A product with this name already exists in this category. Please choose a different name.');
-      return;
+  // Helper functions
+  const getTypeIcon = (type: ProductType) => {
+    switch (type) {
+      case 'FOOD': return Package;
+      case 'SERVICE': return Users;
+      case 'NON_FOOD': return Package;
+      default: return Package;
     }
+  };
 
-    // Validate required fields
-    if (!data.name.trim()) {
-      toast.error('Product name is required.');
-      return;
+  const getTypeColor = (type: ProductType) => {
+    switch (type) {
+      case 'FOOD': return 'bg-green-100 text-green-800';
+      case 'SERVICE': return 'bg-blue-100 text-blue-800';
+      case 'NON_FOOD': return 'bg-purple-100 text-purple-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
+  };
 
-    if (!data.subcategory.trim()) {
-      toast.error('Subcategory is required.');
-      return;
+  const getMarginColor = (marginPct: number) => {
+    if (marginPct < 20) return 'text-red-600';
+    if (marginPct < 30) return 'text-yellow-600';
+    return 'text-green-600';
+  };
+
+  const getStockStatus = (materials: Product['materials']) => {
+    const lowStockItems = materials.filter(material => 
+      material.inventoryItem.currentQty <= material.inventoryItem.reorderPoint
+    );
+    
+    if (lowStockItems.length > 0) {
+      return { status: 'low', count: lowStockItems.length };
     }
-
-    // Calculate suggested price if not provided
-    const suggestedPrice = calculateSuggestedPrice();
-    const finalPrice = Number(data.price) > 0 ? Number(data.price) : suggestedPrice;
-
-    const newCard: ProductCard = {
-      id: editingCard?.id || Date.now().toString(),
-      name: data.name.trim(),
-      description: data.description.trim(),
-      category: data.category,
-      subcategory: data.subcategory.trim(),
-      price: finalPrice,
-      imageUrl: data.imageUrl,
-      tags: data.tags.split(',').map(tag => tag.trim()).filter(Boolean),
-      isActive: true,
-      createdAt: editingCard?.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      ingredients: ingredientLines.map(line => ({
-        id: line.id,
-        ingredientId: line.ingredientId,
-        ingredient: MOCK_INGREDIENTS.find(ing => ing.id === line.ingredientId),
-        quantity: line.quantity,
-        unit: line.unit,
-        cost: line.cost,
-        notes: ''
-      })),
-      laborCost: Number(data.laborCost) || 0,
-      overheadCost: Number(data.overheadCost) || 0,
-      totalCost: getTotalIngredientCost() + (Number(data.laborCost) || 0) + (Number(data.overheadCost) || 0),
-      profitMargin: Number(data.profitMargin) || 30
-    };
-
-    if (editingCard) {
-      setProductCards(cards => cards.map(card => card.id === editingCard.id ? newCard : card));
-      toast.success('Product card updated successfully!');
-    } else {
-      setProductCards(cards => [...cards, newCard]);
-      toast.success('Product card created successfully!');
-    }
-
-    setShowProductCard(false);
-    setEditingCard(null);
-    reset();
+    return { status: 'ok', count: 0 };
   };
 
-  const handleEdit = (card: ProductCard) => {
-    setEditingCard(card);
-    setSelectedCategoryForCard(card.category);
-    setIngredientLines(card.ingredients.map(ing => ({
-      id: ing.id,
-      ingredientId: ing.ingredientId,
-      quantity: ing.quantity,
-      unit: ing.unit,
-      cost: ing.cost
-    })));
-    reset({
-      name: card.name,
-      description: card.description || '',
-      category: card.category,
-      subcategory: card.subcategory,
-      price: card.price,
-      imageUrl: card.imageUrl || '',
-      tags: card.tags.join(', '),
-      ingredients: card.ingredients,
-      laborCost: card.laborCost,
-      overheadCost: card.overheadCost,
-      profitMargin: card.profitMargin
-    });
-    setShowProductCard(true);
-  };
-
-  const handleCancel = () => {
-    setShowProductCard(false);
-    setEditingCard(null);
-    setIngredientLines([]);
-    setTradeSupplyLines([]);
-    reset();
-  };
-
-  // Ingredient management functions
-  const addIngredientLine = () => {
-    const newLine = {
-      id: Date.now().toString(),
-      ingredientId: '',
-      quantity: 0,
-      unit: 'grams',
-      cost: 0
-    };
-    setIngredientLines([...ingredientLines, newLine]);
-  };
-
-  const removeIngredientLine = (id: string) => {
-    setIngredientLines(ingredientLines.filter(line => line.id !== id));
-  };
-
-  const updateIngredientLine = (id: string, field: string, value: any) => {
-    setIngredientLines(ingredientLines.map(line => {
-      if (line.id === id) {
-        const updated = { ...line, [field]: value };
-        
-        if (field === 'ingredientId') {
-          if (value === 'custom') {
-            // Transform this line into a custom ingredient input
-            updated.ingredientId = 'custom';
-            updated.ingredient = {
-              id: 'custom',
-              name: '',
-              costPerUnit: 0,
-              unit: 'pieces',
-              category: 'Custom',
-              isAvailable: true,
-              currentStock: 0
-            };
-            updated.cost = 0;
-          } else {
-            // Recalculate cost based on ingredient selection
-            const ingredient = MOCK_INGREDIENTS.find(ing => ing.id === updated.ingredientId);
-            if (ingredient) {
-              updated.cost = ingredient.costPerUnit * updated.quantity;
-              updated.ingredient = ingredient;
-            }
-          }
-        } else if (field === 'quantity') {
-          // Recalculate cost based on quantity change
-          if (updated.ingredientId && updated.ingredientId !== 'custom') {
-            const ingredient = MOCK_INGREDIENTS.find(ing => ing.id === updated.ingredientId);
-            if (ingredient) {
-              updated.cost = ingredient.costPerUnit * updated.quantity;
-            }
-          }
-        } else if (field === 'customName') {
-          // Update custom ingredient name
-          if (updated.ingredientId === 'custom' && updated.ingredient) {
-            updated.ingredient.name = value;
-            // If we have a name, quantity, and unit, we can finalize this custom ingredient
-            if (value.trim() && updated.quantity > 0 && updated.unit) {
-              // Create a proper custom ingredient ID and add to inventory
-              const customId = `custom-${Date.now()}`;
-              updated.ingredientId = customId;
-              updated.ingredient.id = customId;
-              updated.ingredient.unit = updated.unit;
-              updated.cost = 0; // Custom ingredients start with zero cost
-              
-              // Show success message
-              toast.success(`Custom ingredient "${value.trim()}" added to inventory with zero stock!`);
-            }
-          }
-        }
-        
-        return updated;
-      }
-      return line;
-    }));
-  };
-
-
-  // Trade supply management functions
-  const addTradeSupplyLine = () => {
-    const newLine = {
-      id: Date.now().toString(),
-      supplyId: '',
-      quantity: 0,
-      unit: 'piece',
-      cost: 0
-    };
-    setTradeSupplyLines([...tradeSupplyLines, newLine]);
-  };
-
-  const removeTradeSupplyLine = (id: string) => {
-    setTradeSupplyLines(tradeSupplyLines.filter(line => line.id !== id));
-  };
-
-  const updateTradeSupplyLine = (id: string, field: string, value: any) => {
-    setTradeSupplyLines(tradeSupplyLines.map(line => {
-      if (line.id === id) {
-        const updated = { ...line, [field]: value };
-        
-        if (field === 'supplyId') {
-          if (value === 'custom') {
-            // Transform this line into a custom supply input
-            updated.supplyId = 'custom';
-            updated.supply = {
-              id: 'custom',
-              name: '',
-              costPerUnit: 0,
-              unit: 'pieces'
-            };
-            updated.cost = 0;
-          } else {
-            // Recalculate cost based on supply selection
-            const supply = MOCK_TRADE_SUPPLIES.find(sup => sup.id === updated.supplyId);
-            if (supply) {
-              updated.cost = supply.costPerUnit * updated.quantity;
-              updated.supply = supply;
-            }
-          }
-        } else if (field === 'quantity') {
-          // Recalculate cost based on quantity change
-          if (updated.supplyId && updated.supplyId !== 'custom') {
-            const supply = MOCK_TRADE_SUPPLIES.find(sup => sup.id === updated.supplyId);
-            if (supply) {
-              updated.cost = supply.costPerUnit * updated.quantity;
-            }
-          }
-        } else if (field === 'customSupplyName') {
-          // Update custom supply name
-          if (updated.supplyId === 'custom' && updated.supply) {
-            updated.supply.name = value;
-            // If we have a name, quantity, and unit, we can finalize this custom supply
-            if (value.trim() && updated.quantity > 0 && updated.unit) {
-              // Create a proper custom supply ID and add to inventory
-              const customId = `custom-supply-${Date.now()}`;
-              updated.supplyId = customId;
-              updated.supply.id = customId;
-              updated.supply.unit = updated.unit;
-              updated.cost = 0; // Custom supplies start with zero cost
-              
-              // Show success message
-              toast.success(`Custom supply "${value.trim()}" added to inventory with zero stock!`);
-            }
-          }
-        }
-        
-        return updated;
-      }
-      return line;
-    }));
-  };
-
-  const getTotalIngredientCost = () => {
-    return ingredientLines.reduce((total, line) => total + line.cost, 0);
-  };
-
-  const getTotalTradeSuppliesCost = () => {
-    return tradeSupplyLines.reduce((total, line) => total + line.cost, 0);
-  };
-
-  const getTotalCost = () => {
-    const ingredientCost = getTotalIngredientCost();
-    const tradeSuppliesCost = getTotalTradeSuppliesCost();
-    const laborCost = Number(watch('laborCost')) || 0;
-    const overheadCost = Number(watch('overheadCost')) || 0;
-    return ingredientCost + tradeSuppliesCost + laborCost + overheadCost;
-  };
-
-  const calculateSuggestedPrice = () => {
-    const totalCost = getTotalCost();
-    const profitMargin = Number(watch('profitMargin')) || 30;
-    const suggestedPrice = totalCost * (1 + profitMargin / 100);
-    // Round to nearest penny (2 decimal places)
-    return Math.round(suggestedPrice * 100) / 100;
-  };
-
-  // Safe price formatting helper
-  const formatPrice = (price: any) => {
-    const numPrice = Number(price);
-    return isNaN(numPrice) ? 0 : numPrice.toFixed(2);
-  };
-
-  // Duplicate prevention
-  const checkForDuplicate = (name: string, category: string) => {
-    return productCards.some(card => 
-      card.name.toLowerCase() === name.toLowerCase() && 
-      card.category === category
+  const handleProductSelect = (productId: string) => {
+    setSelectedProducts(prev =>
+      prev.includes(productId)
+        ? prev.filter(id => id !== productId)
+        : [...prev, productId]
     );
   };
 
-  // CSV Import
-  const handleCsvImport = async (file: File) => {
-    try {
-      const text = await file.text();
-      const lines = text.split('\n');
-      const headers = lines[0].split(',').map(h => h.trim());
-      
-      // Expected CSV format: name,description,price,category,subcategory
-      const expectedHeaders = ['name', 'description', 'price', 'category', 'subcategory'];
-      const hasValidHeaders = expectedHeaders.every(header => headers.includes(header));
-      
-      if (!hasValidHeaders) {
-        toast.error('Invalid CSV format. Expected columns: name, description, price, category, subcategory');
-        return;
-      }
-      
-      let importedCount = 0;
-      for (let i = 1; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (!line) continue;
-        
-        const values = line.split(',').map(v => v.trim());
-        if (values.length !== headers.length) continue;
-        
-        const productData = {
-          name: values[headers.indexOf('name')],
-          description: values[headers.indexOf('description')],
-          price: parseFloat(values[headers.indexOf('price')]) || 0,
-          category: values[headers.indexOf('category')] as 'food' | 'service' | 'non-food',
-          subcategory: values[headers.indexOf('subcategory')],
-        };
-        
-        // Create product card
-        const newCard: ProductCard = {
-          id: `imported-${Date.now()}-${i}`,
-          name: productData.name,
-          description: productData.description,
-          price: productData.price,
-          category: productData.category,
-          subcategory: productData.subcategory,
-          profitMargin: 30,
-          isAvailable: true,
-          tags: [],
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        
-        setProductCards(prev => [...prev, newCard]);
-        importedCount++;
-      }
-      
-      toast.success(`Successfully imported ${importedCount} products from CSV!`);
-      setShowCsvImport(false);
-    } catch (error) {
-      console.error('Error importing CSV:', error);
-      toast.error('Failed to import CSV file. Please check the format and try again.');
-    }
-  };
-
-  // AI Recipe Parsing
-  const handleImageUpload = async (file: File) => {
-    setUploadedImage(file);
-    setParsingRecipe(true);
-    
-    // Simulate AI parsing
-    setTimeout(() => {
-      // Mock parsed recipe data
-      const parsedRecipe = {
-        name: 'Parsed Recipe from Image',
-        ingredients: [
-          { name: 'Flour', quantity: 2, unit: 'cups' },
-          { name: 'Sugar', quantity: 1, unit: 'cup' }
-        ],
-        instructions: ['Mix ingredients', 'Bake at 350°F']
-      };
-      
-      // Auto-fill form with parsed data
-      setValue('name', parsedRecipe.name);
-      setValue('description', 'Recipe parsed from uploaded image');
-      setValue('ingredients', parsedRecipe.ingredients.map((ing, index) => ({
-        id: index.toString(),
-        ingredientId: '',
-        ingredient: null,
-        quantity: ing.quantity,
-        unit: ing.unit,
-        cost: 0,
-        notes: `Parsed from image`
-      })));
-      
-      setParsingRecipe(false);
-      setShowImageUpload(false);
-      toast.success('Recipe parsed successfully!');
-    }, 2000);
-  };
-
-  // Export functionality
-  const handleExport = () => {
-    const csvContent = [
-      ['Name', 'Category', 'Subcategory', 'Price', 'Total Cost', 'Profit Margin', 'Tags'],
-      ...filteredAndSortedCards.map(card => [
-        card.name,
-        card.category,
-        card.subcategory,
-        card.price.toString(),
-        card.price.toString(),
-        card.profitMargin.toString(),
-        card.tags.join(', ')
-      ])
-    ].map(row => row.map(field => `"${field}"`).join(',')).join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'product-cards-export.csv';
-    a.click();
-    window.URL.revokeObjectURL(url);
-    
-    toast.success('Product cards exported successfully!');
-  };
-
-  // Print functionality
-  const handlePrint = () => {
-    if (!viewingCard) return;
-    
-    const printWindow = window.open('', '_blank');
-    if (printWindow) {
-      const printContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>${viewingCard.name} - Recipe Card</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            .recipe-card { max-width: 600px; margin: 0 auto; }
-            .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
-            .recipe-title { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
-            .recipe-subtitle { color: #666; margin-bottom: 20px; }
-            .section { margin-bottom: 20px; }
-            .section-title { font-size: 18px; font-weight: bold; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-bottom: 10px; }
-            .ingredient-list { list-style: none; padding: 0; }
-            .ingredient-item { padding: 5px 0; border-bottom: 1px solid #eee; }
-            .instructions { list-style: decimal; padding-left: 20px; }
-            .footer { margin-top: 30px; text-align: center; color: #666; font-size: 12px; }
-            @media print { body { margin: 0; } .no-print { display: none; } }
-          </style>
-        </head>
-        <body>
-          <div class="recipe-card">
-            <div class="header">
-              <div class="recipe-title">${viewingCard.name}</div>
-              <div class="recipe-subtitle">${viewingCard.description}</div>
-              <div>${PRODUCT_CATEGORIES.find(c => c.id === viewingCard.category)?.name} • ${viewingCard.subcategory}</div>
-                  </div>
-            
-            ${viewingCard.category === 'food' && viewingCard.recipe ? `
-              <div class="section">
-                <div class="section-title">Recipe Details</div>
-                <div>Prep Time: ${viewingCard.recipe.prepTime} minutes</div>
-                <div>Cook Time: ${viewingCard.recipe.cookTime} minutes</div>
-                <div>Servings: ${viewingCard.recipe.servings}</div>
-                <div>Yield: ${viewingCard.recipe.yield} ${viewingCard.recipe.yieldUnit}</div>
-              </div>
-            ` : ''}
-            
-            <div class="section">
-              <div class="section-title">Ingredients</div>
-              <ul class="ingredient-list">
-                ${viewingCard.ingredients.map(ing => `
-                  <li class="ingredient-item">
-                    <strong>${ing.quantity} ${ing.unit}</strong> ${ing.ingredient.name}
-                    ${ing.notes ? ` - ${ing.notes}` : ''}
-                  </li>
-                `).join('')}
-              </ul>
-            </div>
-            
-            ${viewingCard.category === 'food' && viewingCard.recipe ? `
-              <div class="section">
-                <div class="section-title">Instructions</div>
-                <ol class="instructions">
-                  ${viewingCard.recipe.instructions.map(instruction => `
-                    <li>${instruction}</li>
-                  `).join('')}
-                </ol>
-          </div>
-            ` : ''}
-            
-            <div class="section">
-              <div class="section-title">Cost Breakdown</div>
-              <div>Total Cost: $${viewingCard.totalCost.toFixed(2)}</div>
-              <div>Price: $${viewingCard.price.toFixed(2)}</div>
-              <div>Profit Margin: ${viewingCard.profitMargin}%</div>
-        </div>
-            
-            <div class="footer">
-              <div>Generated on ${new Date().toLocaleDateString()}</div>
-              <div>Craved Artisan - Product Management System</div>
-            </div>
-          </div>
-        </body>
-        </html>
-      `;
-      
-      printWindow.document.write(printContent);
-      printWindow.document.close();
-      printWindow.focus();
-      printWindow.print();
-    }
-  };
-
-  // Share functionality
-  const handleShare = async () => {
-    if (!viewingCard) return;
-    
-    const shareData = {
-      title: viewingCard.name,
-      text: viewingCard.description,
-      url: window.location.href
-    };
-    
-    if (navigator.share) {
-      try {
-        await navigator.share(shareData);
-        toast.success('Product card shared successfully!');
-      } catch (error) {
-        console.log('Error sharing:', error);
-      }
+  const handleSelectAll = () => {
+    if (selectedProducts.length === filteredProducts.length) {
+      setSelectedProducts([]);
     } else {
-      // Fallback: copy to clipboard
-      const shareText = `${viewingCard.name}\n${viewingCard.description}\n\nView at: ${window.location.href}`;
-      try {
-        await navigator.clipboard.writeText(shareText);
-        toast.success('Product details copied to clipboard!');
-      } catch (error) {
-        console.log('Error copying to clipboard:', error);
-      }
+      setSelectedProducts(filteredProducts.map(p => p.id));
     }
+  };
+
+  // Product Card Component
+  const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
+    const TypeIcon = getTypeIcon(product.type);
+    const stockStatus = getStockStatus(product.materials);
+
+  return (
+      <Card className="bg-[#F7F2EC] shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+        <div className="p-4">
+          {/* Header */}
+          <div className="flex items-start justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <TypeIcon className="w-4 h-4 text-gray-600" />
+              <span className={`px-2 py-1 text-xs font-medium rounded-full ${getTypeColor(product.type)}`}>
+                {product.type.replace('_', ' ')}
+              </span>
+              </div>
+            <div className="flex items-center gap-1">
+              {stockStatus.status === 'low' && (
+                <div title={`${stockStatus.count} items low stock`}>
+                  <AlertTriangle className="w-4 h-4 text-red-500" />
+                </div>
+              )}
+              <button className="p-1 hover:bg-gray-100 rounded" aria-label="More actions">
+                <MoreVertical className="w-4 h-4 text-gray-500" />
+              </button>
+              </div>
+            </div>
+
+          {/* Image */}
+          <div className="w-full h-32 bg-gray-100 rounded-lg mb-3 flex items-center justify-center">
+            {product.imageUrl ? (
+              <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover rounded-lg" />
+            ) : (
+              <Package className="w-8 h-8 text-gray-400" />
+            )}
+          </div>
+
+          {/* Content */}
+          <div className="space-y-2">
+            <h3 className="font-semibold text-gray-900 line-clamp-1">{product.name}</h3>
+            {product.description && (
+              <p className="text-sm text-gray-600 line-clamp-2">{product.description}</p>
+            )}
+            
+            {/* Price and Margin */}
+              <div className="flex items-center justify-between">
+              <span className="text-lg font-bold text-gray-900">${product.price.toFixed(2)}</span>
+              <span className={`text-sm font-medium ${getMarginColor(product.costRollup.marginPct)}`}>
+                {product.costRollup.marginPct.toFixed(1)}% margin
+              </span>
+            </div>
+
+            {/* Cost Breakdown */}
+            <div className="text-xs text-gray-500 space-y-1">
+              <div className="flex justify-between">
+                <span>Materials:</span>
+                <span>${product.costRollup.materialsCost.toFixed(2)}</span>
+                      </div>
+              <div className="flex justify-between">
+                <span>Labor:</span>
+                <span>${product.costRollup.laborCost.toFixed(2)}</span>
+                  </div>
+              <div className="flex justify-between font-medium">
+                <span>Total Cost:</span>
+                <span>${product.costRollup.totalCost.toFixed(2)}</span>
+            </div>
+          </div>
+
+            {/* Tags */}
+            {product.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {product.tags.slice(0, 3).map(tag => (
+                  <span key={tag} className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
+                    {tag}
+                  </span>
+                ))}
+                {product.tags.length > 3 && (
+                  <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
+                    +{product.tags.length - 3}
+                  </span>
+                )}
+                 </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex gap-2 pt-2">
+              <Button variant="secondary" className="flex-1 text-sm">
+                <Eye className="w-3 h-3 mr-1" />
+                View
+              </Button>
+              <Button variant="secondary" className="flex-1 text-sm">
+                <Edit className="w-3 h-3 mr-1" />
+                Edit
+              </Button>
+            </div>
+              </div>
+            </div>
+      </Card>
+    );
+  };
+
+  // Product List Row Component
+  const ProductRow: React.FC<{ product: Product }> = ({ product }) => {
+    const TypeIcon = getTypeIcon(product.type);
+    const stockStatus = getStockStatus(product.materials);
+
+    return (
+      <tr className="hover:bg-gray-50">
+        <td className="px-4 py-3">
+          <div className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              checked={selectedProducts.includes(product.id)}
+              onChange={() => handleProductSelect(product.id)}
+              className="rounded border-gray-300"
+              aria-label={`Select ${product.name}`}
+            />
+            <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center">
+              {product.imageUrl ? (
+                <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover rounded" />
+              ) : (
+                <TypeIcon className="w-5 h-5 text-gray-400" />
+                      )}
+                    </div>
+                         </div>
+        </td>
+        <td className="px-4 py-3">
+          <div>
+            <div className="font-medium text-gray-900">{product.name}</div>
+            <div className="flex items-center gap-2 mt-1">
+              <span className={`px-2 py-1 text-xs font-medium rounded-full ${getTypeColor(product.type)}`}>
+                {product.type.replace('_', ' ')}
+                        </span>
+              {product.sku && (
+                <span className="text-xs text-gray-500">SKU: {product.sku}</span>
+              )}
+                      </div>
+                      </div>
+        </td>
+        <td className="px-4 py-3 text-gray-900 font-medium">
+          ${product.price.toFixed(2)}
+        </td>
+        <td className="px-4 py-3 text-gray-600">
+          ${product.costRollup.totalCost.toFixed(2)}
+        </td>
+        <td className="px-4 py-3">
+          <span className={`font-medium ${getMarginColor(product.costRollup.marginPct)}`}>
+            {product.costRollup.marginPct.toFixed(1)}%
+          </span>
+        </td>
+        <td className="px-4 py-3">
+          <div className="flex items-center gap-2">
+            {stockStatus.status === 'low' ? (
+              <div className="flex items-center gap-1 text-red-600">
+                <AlertTriangle className="w-4 h-4" />
+                <span className="text-sm">Low ({stockStatus.count})</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1 text-green-600">
+                <CheckCircle className="w-4 h-4" />
+                <span className="text-sm">OK</span>
+                              </div>
+            )}
+                          </div>
+                        </td>
+        <td className="px-4 py-3">
+          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+            product.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+          }`}>
+            {product.active ? 'Active' : 'Inactive'}
+                          </span>
+                        </td>
+        <td className="px-4 py-3 text-sm text-gray-500">
+          {new Date(product.updatedAt).toLocaleDateString()}
+                        </td>
+        <td className="px-4 py-3">
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" className="p-1">
+              <Eye className="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" className="p-1">
+              <Edit className="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" className="p-1">
+              <MoreVertical className="w-4 h-4" />
+            </Button>
+          </div>
+        </td>
+                      </tr>
+    );
   };
 
   return (
     <VendorDashboardLayout>
-      <div className="py-8 bg-white min-h-screen">
-        <div className="container-responsive">
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">Product Catalog</h1>
-                <p className="text-sm text-gray-600">Currently viewing: <span className="text-green-600 font-medium">Products</span></p>
-              </div>
-              <div className="flex items-center space-x-3">
-                <button 
-                  onClick={() => setShowAIInsights(true)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2"
+      <div className="space-y-6">
+        {/* Header */}
+        <DashboardHeader
+          title="Product Cards"
+          description="Manage your product inventory and recipes"
+          currentView="Products"
+          icon={Package}
+          iconColor="text-[#5B6E02]"
+          iconBg="bg-[#5B6E02]/10"
+        />
+
+        {/* Motivational Quote */}
+        <MotivationalQuote
+          quote={getQuoteByCategory('success').quote}
+          author={getQuoteByCategory('success').author}
+          icon={getQuoteByCategory('success').icon}
+          variant={getQuoteByCategory('success').variant}
+        />
+
+        {/* Toolbar */}
+        <Card className="bg-[#F7F2EC] shadow-sm border border-gray-200">
+          <div className="p-4">
+            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+              {/* Left side - Actions */}
+              <div className="flex items-center gap-3">
+                <Button
+                  className="flex items-center gap-2"
                 >
-                  <DollarSign className="w-4 h-4" />
-                  <span>AI Insights</span>
-                </button>
-                <button className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors">
-                  Products
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Motivational Quote */}
-          <MotivationalQuote
-            quote={getQuoteByCategory('perseverance').quote}
-            author={getQuoteByCategory('perseverance').author}
-            icon={getQuoteByCategory('perseverance').icon}
-            variant={getQuoteByCategory('perseverance').variant}
-          />
-
-          {/* Main Content Area */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-8">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-6">Product Cards</h2>
-            <p className="text-gray-600 mb-6">Manage your product inventory and recipes</p>
-
-        {/* Action Bar */}
-            <div className="bg-offwhite rounded-lg shadow-lg p-6 mb-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-              <div className="relative">
-                    <button
-                      onClick={() => setShowAddProductDropdown(!showAddProductDropdown)}
-                      className="bg-brand-green text-white px-6 py-3 rounded-lg hover:bg-brand-green/90 transition-colors flex items-center gap-2 text-lg font-medium"
-                    >
-                      <Plus className="w-5 h-5" />
-                      Add Product
-                      <ChevronDown className="w-4 h-4" />
-                    </button>
-                    
-                    {showAddProductDropdown && (
-                      <div className="absolute top-full left-0 mt-1 w-48 bg-offwhite rounded-lg shadow-lg border border-gray-200 z-10">
-                        <button
-                          onClick={() => {
-                            setSelectedCategoryForCard('');
-                            setShowProductCard(true);
-                            setShowAddProductDropdown(false);
-                          }}
-                          className="w-full text-left px-4 py-2 text-sm text-amber-600 hover:bg-amber-100 rounded-t-lg flex items-center gap-2"
-                        >
-                          <Plus className="w-4 h-4" />
-                          Manual Entry
-                        </button>
-                        <button
-                          onClick={() => {
-                            setShowImageUpload(true);
-                            setShowAddProductDropdown(false);
-                          }}
-                          className="w-full text-left px-4 py-2 text-sm text-amber-600 hover:bg-amber-100 flex items-center gap-2"
-                        >
-                          <Camera className="w-4 h-4" />
-                          AI Recipe Parser
-                        </button>
-                        <button
-                          onClick={() => {
-                            setShowCsvImport(true);
-                            setShowAddProductDropdown(false);
-                          }}
-                          className="w-full text-left px-4 py-2 text-sm text-amber-600 hover:bg-amber-100 rounded-b-lg flex items-center gap-2"
-                        >
-                          <Upload className="w-4 h-4" />
-                          Import CSV
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={handleExport}
-                    className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors flex items-center gap-2"
-                  >
-                    <Download className="w-4 h-4" />
-                    Export
-                  </button>
-                </div>
-            </div>
-          </div>
-
-          {/* Search and Filters */}
-            <div className="bg-offwhite rounded-lg shadow-lg p-6 mb-6">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                  <input
-                    type="text"
-                    placeholder="Search products..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
-                  />
-                </div>
-                                 <div>
-                   <label htmlFor="category-filter" className="sr-only">Filter by category</label>
-                <select
-                     id="category-filter"
-                     value={selectedCategory}
-                     onChange={(e) => setSelectedCategory(e.target.value)}
-                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
-                     aria-label="Filter by category"
-                   >
-                     <option value="">All Categories</option>
-                     {PRODUCT_CATEGORIES.map(category => (
-                       <option key={category.id} value={category.id}>
-                         {category.name}
-                       </option>
-                     ))}
-                </select>
-                 </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setViewMode('cards')}
-                    className={`p-2 rounded-md ${viewMode === 'cards' ? 'bg-brand-green text-white' : 'bg-amber-100 text-gray-600 hover:bg-gray-200'}`}
-                    aria-label="View as cards"
-                  >
-                    <Grid3X3 className="w-5 h-5" />
-                  </button>
-                  <button
-                    onClick={() => setViewMode('list')}
-                    className={`p-2 rounded-md ${viewMode === 'list' ? 'bg-brand-green text-white' : 'bg-amber-100 text-gray-600 hover:bg-gray-200'}`}
-                    aria-label="View as list"
-                  >
-                    <List className="w-5 h-5" />
-                  </button>
-                </div>
-                                 <div className="flex gap-2">
-                   <label htmlFor="sort-select" className="sr-only">Sort by</label>
-                   <select
-                     id="sort-select"
-                     value={sortBy}
-                     onChange={(e) => setSortBy(e.target.value as any)}
-                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent"
-                     aria-label="Sort by"
-                   >
-                     <option value="name">Name</option>
-                     <option value="price">Price</option>
-                     <option value="totalCost">Cost</option>
-                     <option value="createdAt">Date</option>
-                   </select>
-                                     <button
-                     onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                     className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                     aria-label={`Sort ${sortOrder === 'asc' ? 'descending' : 'ascending'}`}
-                   >
-                     {sortOrder === 'asc' ? <SortAsc className="w-4 h-4" /> : <SortDesc className="w-4 h-4" />}
-                   </button>
-              </div>
-            </div>
-          </div>
-
-            {/* Product Cards Display */}
-            {viewMode === 'cards' ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredAndSortedCards.map((card) => (
-                  <div key={card.id} className="bg-offwhite rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow flex flex-col">
-                    <div className="aspect-video bg-amber-100 flex items-center justify-center">
-                      {card.imageUrl ? (
-                        <img src={card.imageUrl} alt={card.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <Package className="w-16 h-16 text-gray-400" />
-                      )}
-                    </div>
-                    <div className="p-4 flex flex-col flex-1">
-                      <div className="flex items-start justify-between mb-3">
-                        <h3 className="font-semibold text-gray-900 text-lg">{card.name}</h3>
-                                                 <div className="flex gap-1">
-                           <button
-                             onClick={() => handleEdit(card)}
-                             className="p-1 text-blue-600 hover:text-blue-800"
-                             aria-label="Edit product card"
-                           >
-                             <Edit className="w-4 h-4" />
-                           </button>
-                           <button
-                             onClick={() => {
-                               setProductCards(cards => cards.filter(c => c.id !== card.id));
-                             }}
-                             className="p-1 text-red-600 hover:text-red-800"
-                             aria-label="Delete product card"
-                           >
-                             <Trash2 className="w-4 h-4" />
-                           </button>
-                         </div>
-                      </div>
-                      
-                      <p className="text-gray-600 text-sm mb-3 min-h-[3rem] line-clamp-2">{card.description}</p>
-                      
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className={`inline-block text-xs px-2 py-1 rounded-full ${
-                          card.category === 'food' ? 'bg-green-100 text-green-800' :
-                          card.category === 'service' ? 'bg-blue-100 text-blue-800' :
-                          'bg-purple-100 text-purple-800'
-                        }`}>
-                          {PRODUCT_CATEGORIES.find(c => c.id === card.category)?.name}
-                        </span>
-                        <span className="inline-block bg-amber-100 text-gray-800 text-xs px-2 py-1 rounded-full">
-                          {card.subcategory}
-                        </span>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 mb-4">
-                        <div>💰 Price: ${formatPrice(card.price)}</div>
-                        <div>📦 Cost: ${formatPrice(card.totalCost)}</div>
-                        <div>👷 Labor: ${formatPrice(card.laborCost)}</div>
-                        <div>📊 Margin: {card.profitMargin}%</div>
-                      </div>
-
-                      <div className="flex gap-2 mt-auto">
-                        <button 
-                          onClick={() => handleViewDetails(card)}
-                          className="flex-1 bg-blue-600 text-white px-3 py-2 rounded-md hover:bg-blue-700 transition-colors text-sm"
-                        >
-                          View Details
-                        </button>
-                        <button 
-                          onClick={() => handleEdit(card)}
-                          className="flex-1 bg-green-600 text-white px-3 py-2 rounded-md hover:bg-green-700 transition-colors text-sm"
-                        >
-                          Edit Recipe
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="bg-offwhite rounded-lg shadow-lg overflow-hidden">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cost</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Margin</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-offwhite divide-y divide-gray-200">
-                    {filteredAndSortedCards.map((card) => (
-                      <tr key={card.id} className="hover:bg-brand-beige">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="flex-shrink-0 h-10 w-10">
-                              <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                                <Package className="w-5 h-5 text-gray-400" />
-                              </div>
-                            </div>
-                            <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900">{card.name}</div>
-                              <div className="text-sm text-gray-500">{card.description}</div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-block text-xs px-2 py-1 rounded-full ${
-                            card.category === 'food' ? 'bg-green-100 text-green-800' :
-                            card.category === 'service' ? 'bg-blue-100 text-blue-800' :
-                            'bg-purple-100 text-purple-800'
-                          }`}>
-                            {PRODUCT_CATEGORIES.find(c => c.id === card.category)?.name}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          ${formatPrice(card.price)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          ${formatPrice(card.totalCost)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {card.profitMargin}%
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex gap-2">
-                            <button 
-                              onClick={() => handleEdit(card)}
-                              className="text-blue-600 hover:text-blue-900"
-                            >
-                              Edit
-                            </button>
-                            <button 
-                              onClick={() => {
-                                setProductCards(cards => cards.filter(c => c.id !== card.id));
-                              }}
-                              className="text-red-600 hover:text-red-900"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-
-            {/* Empty State */}
-            {filteredAndSortedCards.length === 0 && (
-              <div className="text-center py-12">
-                <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No product cards found</h3>
-                <p className="text-gray-600 mb-4">
-                  {searchTerm || selectedCategory ? 'Try adjusting your search terms or filters' : 'Get started by creating your first product card'}
-                </p>
-                {!searchTerm && !selectedCategory && (
-                  <div className="flex justify-center">
-                    <div className="relative">
-                      <button
-                        onClick={() => setShowAddProductDropdown(!showAddProductDropdown)}
-                        className="bg-brand-green text-white px-6 py-3 rounded-lg hover:bg-brand-green/90 transition-colors flex items-center gap-2 text-lg font-medium"
-                      >
-                        <Plus className="w-5 h-5" />
+                  <Plus className="w-4 h-4" />
                         Add Product
                         <ChevronDown className="w-4 h-4" />
-                      </button>
-                      
-                      {showAddProductDropdown && (
-                        <div className="absolute top-full left-0 mt-1 w-48 bg-offwhite rounded-lg shadow-lg border border-gray-200 z-10">
-                          <button
-                            onClick={() => {
-                              setSelectedCategoryForCard('');
-                              setShowProductCard(true);
-                              setShowAddProductDropdown(false);
-                            }}
-                            className="w-full text-left px-4 py-2 text-sm text-amber-600 hover:bg-amber-100 rounded-t-lg flex items-center gap-2"
-                          >
-                            <Plus className="w-4 h-4" />
-                            Manual Entry
-                          </button>
-                          <button
-                            onClick={() => {
-                              setShowImageUpload(true);
-                              setShowAddProductDropdown(false);
-                            }}
-                            className="w-full text-left px-4 py-2 text-sm text-amber-600 hover:bg-amber-100 flex items-center gap-2"
-                          >
-                            <Camera className="w-4 h-4" />
-                            AI Recipe Parser
-                          </button>
-                          <button
-                            onClick={() => {
-                              setShowCsvImport(true);
-                              setShowAddProductDropdown(false);
-                            }}
-                            className="w-full text-left px-4 py-2 text-sm text-amber-600 hover:bg-amber-100 rounded-b-lg flex items-center gap-2"
-                          >
+                </Button>
+                
+                <Button variant="secondary" className="flex items-center gap-2">
                             <Upload className="w-4 h-4" />
                             Import CSV
-                          </button>
-                        </div>
+                </Button>
+
+                {selectedProducts.length > 0 && (
+                  <Button variant="secondary" className="flex items-center gap-2">
+                    <Download className="w-4 h-4" />
+                    Export ({selectedProducts.length})
+                  </Button>
                       )}
                     </div>
-                  </div>
-                )}
-              </div>
-            )}
 
-        {/* Product Card Modal */}
-        {showProductCard && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-offwhite rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl font-semibold text-gray-900">
-                    {editingCard ? 'Edit Product Card' : 'Add New Product'}
-              </h2>
-                  <button
-                    onClick={handleCancel}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    <X className="w-6 h-6" />
-                  </button>
-                </div>
-
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                  {/* Category Selection Indicator */}
-                  {watch('category') && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              {/* Right side - AI Insights */}
                       <div className="flex items-center gap-3">
-                        <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                        <span className="text-blue-800 font-medium">
-                          Creating: {PRODUCT_CATEGORIES.find(c => c.id === watch('category'))?.name}
+                <Button
+                  variant="secondary"
+                  onClick={() => setShowAIInsights(!showAIInsights)}
+                  className="flex items-center gap-2"
+                >
+                  <Brain className="w-4 h-4" />
+                  AI Insights
+                  {aiInsights.length > 0 && (
+                    <span className="px-2 py-1 bg-[#5B6E02] text-white text-xs rounded-full">
+                      {aiInsights.length}
                         </span>
-                        {watch('category') === 'food' && (
-                          <span className="text-blue-600 text-sm">• Ingredient management will be available</span>
-                        )}
-                        {watch('category') === 'service' && (
-                          <span className="text-blue-600 text-sm">• Labor and overhead costs required</span>
-                        )}
-                        {watch('category') === 'non-food' && (
-                          <span className="text-blue-600 text-sm">• Raw materials and labor costs</span>
-                        )}
+                  )}
+                </Button>
                       </div>
                     </div>
-                  )}
 
-                  {/* Basic Information */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-amber-600 mb-1">
-                      Product Name *
-                    </label>
+            {/* Filters Bar */}
+            <div className="flex flex-col lg:flex-row lg:items-center gap-4 mt-4 pt-4 border-t border-gray-200">
+              {/* Search */}
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input
                       type="text"
-                        {...register('name', { required: 'Product name is required' })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-green focus:border-transparent"
-                      placeholder="Enter product name"
-                    />
-                    {errors.name && (
-                      <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
-                    )}
+                  placeholder="Search products..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5B6E02] focus:border-transparent"
+                />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-amber-600 mb-1">
-                        Category
-                    </label>
-                    <select
-                        {...register('category')}
-                        onChange={(e) => {
-                          setValue('category', e.target.value as 'food' | 'service' | 'non-food');
-                          setValue('subcategory', ''); // Reset subcategory when category changes
-                        }}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-green focus:border-transparent"
-                      >
-                        <option value="">Select Category</option>
-                        {PRODUCT_CATEGORIES.map(category => (
-                          <option key={category.id} value={category.id}>
-                            {category.name}
+              {/* Category Filter */}
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5B6E02] focus:border-transparent"
+                aria-label="Filter by category"
+              >
+                <option value="">All Categories</option>
+                {categories.map(category => (
+                  <option key={category.id} value={category.name}>
+                    {category.name} ({category._count.products})
                           </option>
                         ))}
                     </select>
-                  </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-amber-600 mb-1">
-                        Subcategory
-                    </label>
-                      <select
-                        {...register('subcategory')}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-green focus:border-transparent"
-                        disabled={!watch('category')}
-                      >
-                        <option value="">Select Subcategory</option>
-                        {watch('category') && PRODUCT_CATEGORIES.find(cat => cat.id === watch('category'))?.subcategories.map(subcat => (
-                          <option key={subcat} value={subcat}>
-                            {subcat}
-                          </option>
-                        ))}
+              {/* Type Filter */}
+              <select
+                value={selectedType}
+                onChange={(e) => setSelectedType(e.target.value as ProductType | '')}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5B6E02] focus:border-transparent"
+                aria-label="Filter by product type"
+              >
+                <option value="">All Types</option>
+                <option value="FOOD">Food</option>
+                <option value="NON_FOOD">Non-Food</option>
+                <option value="SERVICE">Service</option>
                       </select>
-                    </div>
-                  </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-amber-600 mb-1">
-                       Description
-                    </label>
-                     <textarea
-                       {...register('description')}
-                       rows={3}
-                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-green focus:border-transparent"
-                       placeholder="Enter product description"
-                     />
-                  </div>
+              {/* Sort */}
+              <select
+                value={`${sortBy}-${sortOrder}`}
+                onChange={(e) => {
+                  const [field, order] = e.target.value.split('-');
+                  setSortBy(field as 'name' | 'price' | 'updatedAt');
+                  setSortOrder(order as 'asc' | 'desc');
+                }}
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5B6E02] focus:border-transparent"
+                aria-label="Sort products"
+              >
+                <option value="name-asc">Name A-Z</option>
+                <option value="name-desc">Name Z-A</option>
+                <option value="price-asc">Price Low-High</option>
+                <option value="price-desc">Price High-Low</option>
+                <option value="updatedAt-desc">Recently Updated</option>
+                <option value="updatedAt-asc">Oldest Updated</option>
+              </select>
 
-                  <div>
-                    <label className="block text-sm font-medium text-amber-600 mb-1">
-                       Tags (Optional)
-                    </label>
-                    <input
-                       type="text"
-                       {...register('tags')}
-                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-green focus:border-transparent"
-                       placeholder="Enter tags separated by commas (e.g., organic, gluten-free, seasonal)"
-                     />
-                     <p className="text-xs text-gray-500 mt-1">Add tags to help categorize and search for your products</p>
-                </div>
-
-                   {/* Image Upload */}
-                <div>
-                  <label className="block text-sm font-medium text-amber-600 mb-1">
-                       Product Image (Optional)
-                  </label>
-                     <div className="flex items-center gap-3">
-                  <input
-                         type="file"
-                         accept="image/*"
-                         onChange={(e) => {
-                           const file = e.target.files?.[0];
-                           if (file) {
-                             const imageUrl = URL.createObjectURL(file);
-                             setValue('imageUrl', imageUrl);
-                           }
-                         }}
-                         className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-green focus:border-transparent"
-                       />
-                       {watch('imageUrl') && (
-                         <div className="w-16 h-16 bg-amber-100 rounded-md overflow-hidden">
-                           <img 
-                             src={watch('imageUrl')} 
-                        alt="Product preview"
-                             className="w-full h-full object-cover"
-                      />
-                    </div>
-                  )}
-                     </div>
-                     <p className="text-xs text-gray-500 mt-1">Upload a product image to help customers visualize your product</p>
-                </div>
-
-                   {/* Custom Material Management - Only for Non-Food Products */}
-                   {watch('category') === 'non-food' && (
-                     <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-                       <div className="flex items-center justify-between mb-4">
-                         <h3 className="text-lg font-medium text-purple-900">Custom Material Management</h3>
-                         <div className="flex items-center gap-2">
-                           <button
-                             type="button"
-                             onClick={() => setShowCustomIngredientForm(true)}
-                             className="bg-purple-600 text-white px-3 py-1 rounded-md hover:bg-purple-700 transition-colors text-sm flex items-center gap-1"
-                           >
-                             <Plus className="w-4 w-4" />
-                             Add Custom Material
-                           </button>
-                         </div>
-                       </div>
-
-                       {/* Custom Material Disclaimer */}
-                       <div className="bg-purple-100 border border-purple-300 rounded-lg p-3 mb-3">
-                         <div className="flex items-start gap-2">
-                           <div className="w-4 h-4 bg-purple-500 rounded-full mt-0.5 flex-shrink-0"></div>
-                           <div className="text-xs text-purple-800">
-                             <p className="font-medium mb-1">Custom Material Notice</p>
-                             <p>When you add a custom material, it will automatically be added to your vendor inventory at zero stock. You can manage inventory levels later in your inventory dashboard.</p>
-                           </div>
-                         </div>
-                       </div>
-
-                       {/* Custom Material Form */}
-                       {showCustomIngredientForm && (
-                         <div className="bg-white rounded-lg border border-purple-200 p-3">
-                           <h5 className="text-sm font-medium text-purple-900 mb-3">Add Custom Material</h5>
-                           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div>
-                               <label className="block text-xs font-medium text-purple-700 mb-1">
-                                 Material Name *
-                  </label>
-                    <input
-                      type="text"
-                                 value={customIngredientInput}
-                                 onChange={(e) => setCustomIngredientInput(e.target.value)}
-                                 className="w-full px-3 py-2 border border-purple-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
-                                 placeholder="e.g., Custom Fabric"
-                               />
-                             </div>
-                             <div>
-                               <label className="block text-xs font-medium text-purple-700 mb-1">
-                                 Unit
-                               </label>
-                               <input
-                                 type="text"
-                                 value={customIngredientUnit}
-                                 onChange={(e) => setCustomIngredientUnit(e.target.value)}
-                                 className="w-full px-3 py-2 border border-purple-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
-                                 placeholder="e.g., yard, piece"
-                               />
-                             </div>
-                             <div className="flex items-end gap-2">
+              {/* View Toggle */}
+              <div className="flex items-center bg-gray-100 rounded-lg p-1">
                     <button
-                      type="button"
-                                 onClick={addCustomIngredient}
-                                 disabled={!customIngredientInput.trim()}
-                                 className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-                                 title="Add custom material"
-                    >
-                      Add
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2 rounded-md transition-colors ${
+                    viewMode === 'grid' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'
+                  }`}
+                >
+                  <Grid3X3 className="w-4 h-4" />
                     </button>
                           <button
-                            type="button"
-                                 onClick={() => {
-                                   setShowCustomIngredientForm(false);
-                                   setCustomIngredientInput('');
-                                   setCustomIngredientUnit('');
-                                 }}
-                                 className="px-4 py-2 bg-gray-300 text-amber-600 rounded-md hover:bg-gray-400 transition-colors text-sm"
-                                 title="Cancel custom material"
-                               >
-                                 Cancel
+                  onClick={() => setViewMode('list')}
+                  className={`p-2 rounded-md transition-colors ${
+                    viewMode === 'list' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'
+                  }`}
+                >
+                  <List className="w-4 h-4" />
                           </button>
                              </div>
                            </div>
                     </div>
-                  )}
-                </div>
-                   )}
+        </Card>
 
-                                     {/* Ingredient Management - Only for Food Products */}
-                   {watch('category') === 'food' && (
-                     <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+        {/* AI Insights Drawer */}
+        {showAIInsights && (
+          <Card className="bg-[#F7F2EC] shadow-sm border border-gray-200">
+            <div className="p-4">
                        <div className="flex items-center justify-between mb-4">
-                         <h3 className="text-lg font-medium text-green-900">Ingredient Management</h3>
-                         <div className="flex items-center gap-2">
-                           <button
-                             type="button"
-                             onClick={() => setShowUnitConverter(true)}
-                             className="text-sm text-green-700 hover:text-green-900 underline"
-                           >
-                             Unit Converter
-                           </button>
-                                                       <div className="flex gap-2">
-                              <button
-                                type="button"
-                                onClick={addIngredientLine}
-                                className="bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 transition-colors text-sm flex items-center gap-1"
-                                title="Add ingredient from existing inventory"
-                              >
-                                <Plus className="w-4 h-4" />
-                                Add Ingredient
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setShowCustomIngredientForm(true)}
-                                className="bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition-colors text-sm flex items-center gap-1"
-                                title="Add custom ingredient"
-                              >
-                                <Plus className="w-4 h-4" />
-                                Custom
-                              </button>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-[#5B6E02]/10 rounded-lg">
+                    <Brain className="w-5 h-5 text-[#5B6E02]" />
                           </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">AI Pricing Insights</h3>
+                    <p className="text-sm text-gray-600">Smart pricing recommendations based on costs and market data</p>
                           </div>
                         </div>
-                       
-                       {ingredientLines.length === 0 ? (
-                         <p className="text-green-700 text-sm">No ingredients added yet. Click "Add Ingredient" to get started.</p>
+                <Button variant="ghost" onClick={() => setShowAIInsights(false)}>
+                                    <X className="w-4 h-4" />
+                </Button>
+                              </div>
+
+              {aiInsightsLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin text-[#5B6E02]" />
+                  <span className="ml-2 text-gray-600">Analyzing pricing...</span>
+                        </div>
                        ) : (
                          <div className="space-y-3">
-                                                       {ingredientLines.map((line) => (
-                             <>
-                             <div key={line.id} className="grid grid-cols-12 gap-2 items-center p-3 bg-white rounded-md border border-green-200">
-                                                               <div className="col-span-5">
-                                  {line.ingredientId === 'custom' ? (
-                                    <input
-                                      type="text"
-                                      value={line.ingredient?.name || ''}
-                                      onChange={(e) => updateIngredientLine(line.id, 'customName', e.target.value)}
-                                      className="w-full px-3 py-2 border border-blue-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                                      placeholder="Enter custom ingredient name"
-                                      aria-label="Custom ingredient name"
-                                    />
-                                  ) : (
-                                    <select
-                                      value={line.ingredientId}
-                                      onChange={(e) => updateIngredientLine(line.id, 'ingredientId', e.target.value)}
-                                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
-                                      aria-label="Select ingredient"
-                                    >
-                                      <option value="">Select Ingredient</option>
-                                      {MOCK_INGREDIENTS.map(ingredient => (
-                                        <option key={ingredient.id} value={ingredient.id}>
-                                          {ingredient.name} (${ingredient.costPerUnit}/{ingredient.unit})
-                                        </option>
-                                      ))}
-                                      <option value="custom">+ Add Custom Ingredient</option>
-                                    </select>
-                                  )}
-                      </div>
-                               <div className="col-span-2">
-                                 <input
-                                   type="number"
-                                   value={line.quantity}
-                                   onChange={(e) => updateIngredientLine(line.id, 'quantity', parseFloat(e.target.value) || 0)}
-                                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
-                                   placeholder="0"
-                                   min="0"
-                                   step="0.01"
-                                 />
-                               </div>
-                               <div className="col-span-2">
-                                 <select
-                                   value={line.unit}
-                                   onChange={(e) => updateIngredientLine(line.id, 'unit', e.target.value)}
-                                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm"
-                                   aria-label="Select unit"
-                                 >
-                                   {MOCK_UNITS.map(unit => (
-                                     <option key={unit} value={unit}>{unit}</option>
-                                   ))}
-                                 </select>
-                               </div>
-                               <div className="col-span-2 text-sm text-gray-600">
-                                 ${line.cost.toFixed(2)}
-                               </div>
-                                                               <div className="col-span-1">
-                    <button
-                      type="button"
-                                    onClick={() => removeIngredientLine(line.id)}
-                                    className="text-red-600 hover:text-red-800 p-1"
-                                    aria-label="Remove ingredient line"
-                    >
-                                    <X className="w-4 h-4" />
-                    </button>
-                                </div>
-                              </div>
-
-                    {/* Custom Ingredient Disclaimer */}
-                              {line.ingredientId === 'custom' && (
-                                <div className="col-span-12 mt-2">
-                                  <div className="bg-blue-100 border border-blue-300 rounded-lg p-3">
-                      <div className="flex items-start gap-2">
-                                      <div className="w-4 h-4 bg-blue-500 rounded-full mt-0.5 flex-shrink-0"></div>
-                                      <div className="text-xs text-blue-800">
-                          <p className="font-medium mb-1">Custom Ingredient Notice</p>
-                                        <p>This custom ingredient will be added to your vendor inventory at zero stock. You can manage inventory levels later in your inventory dashboard.</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                              )}
-                            </>
-                          ))}
-                         
-                         <div className="flex justify-between items-center pt-2 border-t border-green-200">
-                           <span className="text-sm font-medium text-green-900">Total Ingredient Cost:</span>
-                           <span className="text-lg font-semibold text-green-900">${getTotalIngredientCost().toFixed(2)}</span>
-                         </div>
-                         </div>
-                       )}
-
-                </div>
-                   )}
-
-                   {/* Trade Supplies Management - Only for Service Products */}
-                   {watch('category') === 'service' && (
-                     <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-                       <div className="flex items-center justify-between mb-4">
-                         <h3 className="text-lg font-medium text-orange-900">Trade Supplies Management</h3>
-                         <div className="flex items-center gap-2">
-                  <button
-                             type="button"
-                             onClick={() => setShowTradeSuppliesModal(true)}
-                             className="text-sm text-orange-700 hover:text-orange-900 underline"
-                           >
-                             View Available Supplies
-                  </button>
-                                                       <div className="flex gap-2">
-                  <button
-                    type="button"
-                                onClick={addTradeSupplyLine}
-                                className="bg-orange-600 text-white px-3 py-1 rounded-md hover:bg-orange-700 transition-colors text-sm flex items-center gap-1"
-                                title="Add trade supply from existing inventory"
-                              >
-                                <Plus className="w-4 h-4" />
-                                Add Trade Supply
-                  </button>
-                <button
-                                type="button"
-                                onClick={() => setShowCustomIngredientForm(true)}
-                                className="bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition-colors text-sm flex items-center gap-1"
-                                title="Add custom trade supply"
-                              >
-                                <Plus className="w-4 h-4" />
-                                Custom
-                </button>
-                            </div>
-              </div>
-            </div>
-
-                       {tradeSupplyLines.length === 0 ? (
-                         <p className="text-orange-700 text-sm">No trade supplies added yet. Click "Add Trade Supply" to get started.</p>
-                       ) : (
-                         <div className="space-y-3">
-                                                       {tradeSupplyLines.map((line) => (
-                             <>
-                             <div key={line.id} className="grid grid-cols-12 gap-2 items-center p-3 bg-white rounded-md border border-orange-200">
-                                                               <div className="col-span-5">
-                                  {line.supplyId === 'custom' ? (
-                                    <input
-                                      type="text"
-                                      value={line.supply?.name || ''}
-                                      onChange={(e) => updateTradeSupplyLine(line.id, 'customSupplyName', e.target.value)}
-                                      className="w-full px-3 py-2 border border-orange-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
-                                      placeholder="Enter custom supply name"
-                                      aria-label="Custom supply name"
-                                    />
-                                  ) : (
-                                    <select
-                                      value={line.supplyId}
-                                      onChange={(e) => updateTradeSupplyLine(line.id, 'supplyId', e.target.value)}
-                                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
-                                      aria-label="Select trade supply"
-                                    >
-                                      <option value="">Select Trade Supply</option>
-                                      {MOCK_TRADE_SUPPLIES.map(supply => (
-                                        <option key={supply.id} value={supply.id}>
-                                          {supply.name} (${supply.costPerUnit}/{supply.unit})
-                                        </option>
-                                      ))}
-                                      <option value="custom">+ Add Custom Trade Supply</option>
-                                    </select>
+                  {aiInsights.map(insight => (
+                    <div key={insight.productId} className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                          {insight.imageUrl ? (
+                            <img src={insight.imageUrl} alt={insight.productName} className="w-full h-full object-cover rounded-lg" />
+                          ) : (
+                            <Package className="w-6 h-6 text-gray-400" />
                                   )}
                                 </div>
-                               <div className="col-span-2">
-                                 <input
-                                   type="number"
-                                   value={line.quantity}
-                                   onChange={(e) => updateTradeSupplyLine(line.id, 'quantity', parseFloat(e.target.value) || 0)}
-                                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
-                                   placeholder="0"
-                                   min="0"
-                                   step="0.01"
-                                 />
-                               </div>
-                               <div className="col-span-2">
-                                 <select
-                                   value={line.unit}
-                                   onChange={(e) => updateTradeSupplyLine(line.id, 'unit', e.target.value)}
-                                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
-                                   aria-label="Select unit"
-                                 >
-                                   {MOCK_TRADE_UNITS.map(unit => (
-                                     <option key={unit} value={unit}>{unit}</option>
-                                   ))}
-                                 </select>
-                               </div>
-                               <div className="col-span-2 text-sm text-gray-600">
-                                 ${line.cost.toFixed(2)}
-                               </div>
-                                                               <div className="col-span-1">
-                  <button
-                                    type="button"
-                                    onClick={() => removeTradeSupplyLine(line.id)}
-                                    className="text-red-600 hover:text-red-800 p-1"
-                                    aria-label="Remove trade supply line"
-                                  >
-                                    <X className="w-4 h-4" />
-                  </button>
-              </div>
-                            </div>
-                            
-                              {/* Custom Trade Supply Disclaimer */}
-                              {line.supplyId === 'custom' && (
-                                <div className="col-span-12 mt-2">
-                                  <div className="bg-blue-100 border border-blue-300 rounded-lg p-3">
-                                    <div className="flex items-start gap-2">
-                                      <div className="w-4 h-4 bg-blue-500 rounded-full mt-0.5 flex-shrink-0"></div>
-                                      <div className="text-xs text-blue-800">
-                                        <p className="font-medium mb-1">Custom Trade Supply Notice</p>
-                                        <p>This custom trade supply will be added to your vendor inventory at zero stock. You can manage inventory levels later in your inventory dashboard.</p>
-                              </div>
-                              </div>
-                                  </div>
-                                </div>
-                              )}
-                            </>
-                          ))}
-                         
-                         <div className="flex justify-between items-center pt-2 border-t border-orange-200">
-                           <span className="text-sm font-medium text-orange-900">Total Trade Supplies Cost:</span>
-                           <span className="text-lg font-semibold text-orange-900">${getTotalTradeSuppliesCost().toFixed(2)}</span>
-                         </div>
-                                </div>
-                              )}
-
-
-
-                            </div>
-                   )}
-
-                   {/* Cost Management */}
-                   <div className="bg-gray-50 p-4 rounded-lg">
-                     <h3 className="text-lg font-medium text-gray-900 mb-4">Cost Management</h3>
-                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                        <div>
-                         <label className="block text-sm font-medium text-amber-600 mb-1">
-                           Labor Cost
-                         </label>
-                         <div className="relative">
-                           <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-                           <input
-                             type="number"
-                             step="0.01"
-                             min="0"
-                             {...register('laborCost', { min: { value: 0, message: 'Labor cost must be positive' } })}
-                             className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-green focus:border-transparent"
-                             placeholder="0.00"
-                           />
+                          <div className="font-medium text-gray-900">{insight.productName}</div>
+                          <div className="text-sm text-gray-600">{insight.reasoning}</div>
                          </div>
                        </div>
-
-                       <div>
-                         <label className="block text-sm font-medium text-amber-600 mb-1">
-                           Overhead Cost
-                         </label>
-                         <div className="relative">
-                           <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
-                           <input
-                             type="number"
-                             step="0.01"
-                             min="0"
-                             {...register('overheadCost', { min: { value: 0, message: 'Overhead cost must be positive' } })}
-                             className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-green focus:border-transparent"
-                             placeholder="0.00"
-                           />
-                         </div>
-                       </div>
-
-                       <div>
-                         <label className="block text-sm font-medium text-amber-600 mb-1">
-                           Target Profit Margin (%)
-                         </label>
-                         <input
-                           type="number"
-                           min="0"
-                           max="100"
-                           {...register('profitMargin', { min: { value: 0, message: 'Margin must be positive' } })}
-                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-green focus:border-transparent"
-                           placeholder="30"
-                         />
-                       </div>
-                     </div>
-                     
-                     {/* Total Cost Display */}
-                     <div className="mt-4 pt-4 border-t border-gray-200">
-                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 text-sm">
-                         <div>
-                           <span className="text-gray-600">Ingredient Cost:</span>
-                           <span className="ml-2 font-medium">${getTotalIngredientCost().toFixed(2)}</span>
-                         </div>
-                         {watch('category') === 'service' && (
-                           <div>
-                             <span className="text-gray-600">Trade Supplies:</span>
-                             <span className="ml-2 font-medium">${getTotalTradeSuppliesCost().toFixed(2)}</span>
-                           </div>
-                         )}
-                         <div>
-                           <span className="text-gray-600">Labor Cost:</span>
-                           <span className="ml-2 font-medium">${(Number(watch('laborCost')) || 0).toFixed(2)}</span>
-                         </div>
-                         <div>
-                           <span className="text-gray-600">Overhead Cost:</span>
-                           <span className="ml-2 font-medium">${(Number(watch('overheadCost')) || 0).toFixed(2)}</span>
-                         </div>
-                         <div className="lg:col-span-2">
-                           <span className="text-gray-600 font-medium">Total Cost:</span>
-                           <span className="ml-2 font-semibold text-lg">${getTotalCost().toFixed(2)}</span>
-                         </div>
-                       </div>
-                     </div>
-                   </div>
-
-                   {/* Price Calculation */}
-                   <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                     <h3 className="text-lg font-medium text-blue-900 mb-3">Price Calculation</h3>
-                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                       <div>
-                         <span className="text-blue-700 font-medium">Total Cost:</span>
-                         <span className="ml-2 font-semibold">${getTotalCost().toFixed(2)}</span>
-                       </div>
-                       <div>
-                         <span className="text-blue-700 font-medium">Profit Margin:</span>
-                         <span className="ml-2 font-semibold">{watch('profitMargin') || 30}%</span>
-                       </div>
-                       <div>
-                         <span className="text-blue-700 font-medium">Suggested Price:</span>
-                         <span className="ml-2 font-semibold text-green-600">${calculateSuggestedPrice().toFixed(2)}</span>
-                       </div>
-                     </div>
-                     <p className="text-xs text-blue-600 mt-2">Price is calculated as: Total Cost × (1 + Profit Margin %)</p>
-                     
-                     {/* Price Input Field */}
-                     <div className="mt-4">
-                       <label className="block text-sm font-medium text-blue-700 mb-2">
-                         Product Price (USD)
-                       </label>
-                       <div className="flex items-center gap-3">
-                         <div className="relative flex-1">
-                           <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-500">$</span>
-                           <input
-                             type="number"
-                             step="0.01"
-                             min="0"
-                             {...register('price', { 
-                               min: { value: 0, message: 'Price must be positive' },
-                               required: 'Price is required'
-                             })}
-                             value={watch('price') || calculateSuggestedPrice()}
-                             onChange={(e) => {
-                               const value = parseFloat(e.target.value) || 0;
-                               setValue('price', value);
-                             }}
-                             className="w-full pl-8 pr-3 py-2 border border-blue-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                             placeholder="0.00"
-                           />
-                         </div>
-                         <button
-                           type="button"
-                           onClick={() => {
-                             const suggestedPrice = calculateSuggestedPrice();
-                             setValue('price', suggestedPrice);
-                           }}
-                           className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
-                         >
-                           Use Suggested
-                         </button>
-                              </div>
-                       {errors.price && (
-                         <p className="text-red-500 text-sm mt-1">{errors.price.message}</p>
-                       )}
-                     </div>
-                   </div>
-
-                  {/* Submit Button */}
-                  <div className="flex gap-3 pt-4">
-                    <button
-                      type="button"
-                      onClick={handleCancel}
-                      className="flex-1 px-4 py-2 border border-gray-300 text-amber-600 rounded-md hover:bg-gray-50 transition-colors"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={isSubmitting}
-                      className="flex-1 bg-brand-green text-white px-4 py-2 rounded-md hover:bg-brand-green/90 transition-colors disabled:opacity-50"
-                    >
-                      {isSubmitting ? 'Saving...' : (editingCard ? 'Update Product Card' : 'Create Product Card')}
-                    </button>
-                                </div>
-                </form>
-                                  </div>
-            </div>
-                              </div>
-                            )}
-
-        {/* View Details Modal */}
-        {showViewDetails && viewingCard && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-offwhite rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">{viewingCard.name}</h2>
-                  <div className="flex items-center gap-2">
-                              <button
-                      onClick={handlePrint}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2"
-                              >
-                      <Printer className="w-4 h-4" />
-                      Print
-                              </button>
-                              <button
-                      onClick={handleShare}
-                      className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors flex items-center gap-2"
-                    >
-                      <Share2 className="w-4 h-4" />
-                      Share
-                    </button>
-                    <button
-                      onClick={() => setShowViewDetails(false)}
-                      className="text-gray-400 hover:text-gray-600"
-                    >
-                      <X className="w-6 h-6" />
-                              </button>
-                            </div>
-                          </div>
-
-                {/* Recipe Card Layout */}
-                <div className="bg-gradient-to-br from-amber-100 to-orange-100 rounded-lg p-6 mb-6 border border-gray-300 shadow-lg">
-                  <div className="text-center mb-6">
-                    <h3 className="text-xl font-semibold text-gray-800 mb-2">{viewingCard.name}</h3>
-                    <p className="text-gray-600 mb-3">{viewingCard.description}</p>
-                    <div className="flex items-center justify-center gap-4 text-sm text-gray-500">
-                      <span className="flex items-center gap-1">
-                        <Package className="w-4 h-4" />
-                        {PRODUCT_CATEGORIES.find(c => c.id === viewingCard.category)?.name}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Tag className="w-4 h-4" />
-                        {viewingCard.subcategory}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <DollarSign className="w-4 h-4" />
-                        ${viewingCard.price.toFixed(2)}
-                      </span>
-                        </div>
-                      </div>
-
-                  {/* Recipe Details for Food Items */}
-                  {viewingCard.category === 'food' && viewingCard.recipe && (
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 text-center">
-                      <div className="bg-white rounded-lg p-3 border border-gray-300 shadow-md">
-                        <div className="text-2xl font-bold text-amber-600">{viewingCard.recipe.prepTime}</div>
-                        <div className="text-sm text-gray-600">Prep (min)</div>
-                    </div>
-                      <div className="bg-white rounded-lg p-3 border border-gray-300 shadow-md">
-                        <div className="text-2xl font-bold text-amber-600">{viewingCard.recipe.cookTime}</div>
-                        <div className="text-sm text-gray-600">Cook (min)</div>
-                  </div>
-                      <div className="bg-white rounded-lg p-3 border border-gray-300 shadow-md">
-                        <div className="text-2xl font-bold text-amber-600">{viewingCard.recipe.servings}</div>
-                        <div className="text-sm text-gray-600">Servings</div>
-                      </div>
-                      <div className="bg-white rounded-lg p-3 border border-gray-300 shadow-md">
-                        <div className="text-2xl font-bold text-amber-600">{viewingCard.recipe.yield}</div>
-                        <div className="text-sm text-gray-600">{viewingCard.recipe.yieldUnit}</div>
-                      </div>
-              </div>
-            )}
-
-                  {/* Ingredients Section */}
-                  <div className="mb-6">
-                    <h4 className="text-lg font-semibold text-gray-800 mb-3 border-b border-gray-200 pb-2">Ingredients</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {viewingCard.ingredients.map((ingredient, index) => (
-                        <div key={index} className="bg-white rounded-lg p-3 border border-gray-300 shadow-md flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center">
-                              <span className="text-amber-600 font-semibold text-sm">{index + 1}</span>
-          </div>
-                            <div>
-                              <div className="font-medium text-gray-800">{ingredient.ingredient.name}</div>
-                              {ingredient.notes && (
-                                <div className="text-sm text-gray-500">{ingredient.notes}</div>
-                              )}
-                            </div>
-                          </div>
+                      <div className="flex items-center gap-4">
                           <div className="text-right">
-                            <div className="font-semibold text-amber-600">{ingredient.quantity} {ingredient.unit}</div>
-                            <div className="text-sm text-gray-500">${ingredient.cost.toFixed(2)}</div>
+                          <div className="text-sm text-gray-500">Current: ${insight.currentPrice.toFixed(2)}</div>
+                          <div className="font-medium text-gray-900">${insight.recommendedPrice.toFixed(2)}</div>
+                          <div className="text-xs text-gray-500">
+                            {insight.recommendation === 'increase' ? '↑' : insight.recommendation === 'decrease' ? '↓' : '→'} 
+                            {insight.projectedMargin.toFixed(1)}% margin
                           </div>
                         </div>
-                      ))}
-        </div>
-      </div>
-
-                  {/* Instructions for Food Items */}
-                  {viewingCard.category === 'food' && viewingCard.recipe && (
-                    <div className="mb-6">
-                      <h4 className="text-lg font-semibold text-gray-800 mb-3 border-b border-gray-200 pb-2">Instructions</h4>
-                      <div className="space-y-3">
-                        {viewingCard.recipe.instructions.map((instruction, index) => (
-                          <div key={index} className="bg-white rounded-lg p-4 border border-gray-300 shadow-md">
-                            <div className="flex items-start gap-3">
-                              <div className="w-6 h-6 bg-offwhite0 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">
-                                {index + 1}
-              </div>
-                              <p className="text-amber-600">{instruction}</p>
+                        <Button className="bg-[#5B6E02] text-white hover:bg-[#5B6E02]/90 text-sm px-3 py-1">
+                          Apply
+                        </Button>
             </div>
                           </div>
                         ))}
-                      </div>
                     </div>
                   )}
-
-                  {/* Cost Breakdown */}
-                  <div className="bg-white rounded-lg p-4 border border-gray-200">
-                    <h4 className="text-lg font-semibold text-gray-800 mb-3 border-b border-gray-200 pb-2">Cost Breakdown</h4>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                      <div>
-                        <div className="text-sm text-gray-600">Total Cost</div>
-                        <div className="text-lg font-bold text-red-600">${viewingCard.totalCost.toFixed(2)}</div>
                       </div>
-                      <div>
-                        <div className="text-sm text-gray-600">Labor Cost</div>
-                        <div className="text-lg font-bold text-blue-600">${viewingCard.laborCost.toFixed(2)}</div>
-                      </div>
-                      <div>
-                        <div className="text-sm text-gray-600">Profit Margin</div>
-                        <div className="text-lg font-bold text-green-600">{viewingCard.profitMargin}%</div>
-                      </div>
-                      <div>
-                        <div className="text-sm text-gray-600">Final Price</div>
-                        <div className="text-lg font-bold text-purple-600">${viewingCard.price.toFixed(2)}</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          </Card>
         )}
 
-        {/* CSV Import Modal */}
-        {showCsvImport && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-offwhite rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-gray-200">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-medium text-gray-900">Import Products from CSV</h3>
-                  <button
-                    onClick={() => setShowCsvImport(false)}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    <X className="w-6 h-6" />
-                  </button>
+        {/* Products Content */}
+        {productsLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-[#5B6E02]" />
+            <span className="ml-3 text-gray-600">Loading products...</span>
                 </div>
-                
-                <div className="space-y-4">
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <h4 className="font-medium text-blue-900 mb-2">CSV Format Requirements</h4>
-                    <p className="text-sm text-blue-800 mb-2">Your CSV file must include these columns:</p>
-                    <ul className="text-sm text-blue-800 list-disc list-inside space-y-1">
-                      <li><strong>name</strong> - Product name</li>
-                      <li><strong>description</strong> - Product description</li>
-                      <li><strong>price</strong> - Product price (number)</li>
-                      <li><strong>category</strong> - food, service, or non-food</li>
-                      <li><strong>subcategory</strong> - Product subcategory</li>
-                    </ul>
-                  </div>
-                  
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
-                    <div className="text-center">
-                      <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                      <p className="text-gray-600 mb-4">Upload your CSV file</p>
-                      <input
-                        type="file"
-                        accept=".csv"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            handleCsvImport(file);
-                          }
-                        }}
-                        className="hidden"
-                        id="csv-upload"
-                      />
-                      <label
-                        htmlFor="csv-upload"
-                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors cursor-pointer inline-block"
-                      >
-                        Choose CSV File
-                      </label>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                    <h4 className="font-medium text-gray-900 mb-2">Example CSV Format</h4>
-                    <pre className="text-sm text-amber-600 bg-white p-3 rounded border overflow-x-auto">
-{`name,description,price,category,subcategory
-Artisan Bread,Hand-baked sourdough bread,8.99,food,Baked Goods
-Garden Cleanup,Weekly yard maintenance,75.00,service,Yard Work
-Honey Jar,Local organic honey,12.50,food,Preserved Foods`}
-                    </pre>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* AI Recipe Parser Modal */}
-         {showImageUpload && (
-           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-             <div className="bg-white rounded-lg max-w-md w-full p-6">
-               <div className="text-center">
-                 <Camera className="w-16 h-16 text-blue-600 mx-auto mb-4" />
-                 <h3 className="text-lg font-medium text-gray-900 mb-2">AI Recipe Parser</h3>
-                 <p className="text-gray-600 mb-4">Upload an image of a handwritten or printed recipe to automatically parse ingredients and instructions</p>
-                 
-                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 mb-4">
-                   <input
-                     type="file"
-                     accept="image/*"
-                     onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
-                     className="hidden"
-                     id="recipe-image-upload"
-                   />
-                   <label
-                     htmlFor="recipe-image-upload"
-                     className="cursor-pointer block"
-                   >
-                     <div className="text-center">
-                       <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                       <p className="text-sm text-gray-600">
-                         {parsingRecipe ? 'Parsing recipe...' : 'Click to upload recipe image'}
-                       </p>
-                     </div>
-                   </label>
-                 </div>
-
-                 <div className="flex gap-3">
-              <button
-                     onClick={() => setShowImageUpload(false)}
-                     className="flex-1 px-4 py-2 border border-gray-300 text-amber-600 rounded-md hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-                 </div>
-               </div>
-             </div>
-           </div>
-         )}
-
-         {/* Trade Supplies Modal */}
-         {showTradeSuppliesModal && (
-           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-             <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6">
-               <div className="flex items-center justify-between mb-6">
-                 <h3 className="text-xl font-semibold text-gray-900">Available Trade Supplies</h3>
-              <button
-                   onClick={() => setShowTradeSuppliesModal(false)}
-                   className="text-gray-400 hover:text-gray-600"
-                 >
-                   <X className="w-6 h-6" />
-                 </button>
-               </div>
-               
-               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                 {MOCK_TRADE_SUPPLIES.map(supply => (
-                   <div key={supply.id} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                     <div className="flex items-center justify-between mb-2">
-                       <h4 className="font-medium text-gray-900">{supply.name}</h4>
-                       <span className="text-sm text-gray-500">{supply.unit}</span>
-                     </div>
-                     <div className="text-lg font-semibold text-orange-600">
-                       ${supply.costPerUnit.toFixed(2)}/{supply.unit}
-                     </div>
-                     <div className="text-sm text-gray-600 mt-2">
-                       <span className="font-medium">Category:</span> Trade Supplies
-                     </div>
-                   </div>
+        ) : viewMode === 'grid' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredProducts.map(product => (
+              <ProductCard key={product.id} product={product} />
                  ))}
                </div>
-               
-               <div className="mt-6 pt-4 border-t border-gray-200">
-                 <p className="text-sm text-gray-600 text-center">
-                   💡 Tip: Add these trade supplies to your service products to accurately calculate costs
-                 </p>
-               </div>
-             </div>
-           </div>
-         )}
-
-         {/* Unit Converter Modal */}
-         {showUnitConverter && (
-           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-             <div className="bg-white rounded-lg max-w-4xl w-full p-6">
-               <div className="flex items-center justify-between mb-6">
-                 <h3 className="text-xl font-semibold text-gray-900">Unit Converter Calculator</h3>
-                 <button
-                   onClick={() => setShowUnitConverter(false)}
-                   className="text-gray-400 hover:text-gray-600"
-                 >
-                   <X className="w-6 h-6" />
-              </button>
-            </div>
-               
-               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                 {/* Interactive Calculator */}
-                 <div>
-                   <h4 className="font-medium text-gray-900 mb-4">Convert Units</h4>
-                   <div className="space-y-4">
-                     <div>
-                       <label className="block text-sm font-medium text-amber-600 mb-2">
-                         From
-                       </label>
-                       <div className="flex gap-2">
-                         <input
-                           type="number"
-                           value={converterFromValue}
-                           onChange={(e) => setConverterFromValue(e.target.value)}
-                           placeholder="Enter amount"
-                           className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                           step="0.01"
-                           min="0"
-                         />
-                         <select
-                           value={converterFromUnit}
-                           onChange={(e) => setConverterFromUnit(e.target.value)}
-                           className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                           aria-label="Select from unit"
-                         >
-                           <option value="grams">grams (g)</option>
-                           <option value="kilograms">kg</option>
-                           <option value="ounces">oz</option>
-                           <option value="pounds">lb</option>
-                           <option value="milliliters">ml</option>
-                           <option value="liters">l</option>
-                           <option value="cups">cups</option>
-                           <option value="tablespoons">tbsp</option>
-                           <option value="teaspoons">tsp</option>
-                           <option value="pieces">pieces</option>
-                           <option value="pinch">pinch</option>
-                           <option value="dash">dash</option>
-                         </select>
-                       </div>
-                     </div>
-                     <div>
-                       <label className="block text-sm font-medium text-amber-600 mb-2">
-                         To
-                       </label>
-                       <div className="flex gap-2">
-                         <input
-                           type="text"
-                           value={getConvertedValue()}
-                           readOnly
-                           className="flex-1 px-3 py-2 border border-gray-300 rounded-md bg-blue-50 font-medium"
-                           placeholder="Result will appear here"
-                         />
-                         <select
-                           value={converterToUnit}
-                           onChange={(e) => setConverterToUnit(e.target.value)}
-                           className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                           aria-label="Select to unit"
-                         >
-                           <option value="grams">grams (g)</option>
-                           <option value="kilograms">kg</option>
-                           <option value="ounces">oz</option>
-                           <option value="pounds">lb</option>
-                           <option value="milliliters">ml</option>
-                           <option value="liters">l</option>
-                           <option value="cups">cups</option>
-                           <option value="tablespoons">tbsp</option>
-                           <option value="teaspoons">tsp</option>
-                           <option value="pieces">pieces</option>
-                           <option value="pinch">pinch</option>
-                           <option value="dash">dash</option>
-                         </select>
-                       </div>
-                     </div>
-                     {converterFromValue && getConvertedValue() && (
-                       <div className="bg-blue-100 border border-blue-200 rounded-lg p-4">
-                         <div className="text-sm text-blue-800">
-                           <p className="font-medium text-lg">
-                             {converterFromValue} {converterFromUnit} = {getConvertedValue()} {converterToUnit}
-                           </p>
-          </div>
-        </div>
-      )}
-                   </div>
-                 </div>
-
-                 {/* Quick Reference Table */}
-                 <div>
-                   <h4 className="font-medium text-gray-900 mb-4">Quick Reference Conversions</h4>
-                   <div className="bg-white rounded border border-gray-200 overflow-hidden">
-                     <table className="w-full text-sm">
-                       <thead className="bg-amber-100">
-                         <tr>
-                           <th className="px-3 py-2 text-left font-medium text-amber-600">Ingredient</th>
-                           <th className="px-3 py-2 text-left font-medium text-amber-600">Grams</th>
-                           <th className="px-3 py-2 text-left font-medium text-amber-600">Ounces</th>
-                           <th className="px-3 py-2 text-left font-medium text-amber-600">Cups</th>
+        ) : (
+          <Card className="bg-[#F7F2EC] shadow-sm border border-gray-200">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-4 py-3 text-left">
+            <input
+              type="checkbox"
+              checked={selectedProducts.length === filteredProducts.length && filteredProducts.length > 0}
+              onChange={handleSelectAll}
+              className="rounded border-gray-300"
+              aria-label="Select all products"
+            />
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Product</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Price</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Cost</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Margin</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Stock</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Status</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Updated</th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-900">Actions</th>
                          </tr>
                        </thead>
                        <tbody className="divide-y divide-gray-200">
-                         <tr>
-                           <td className="px-3 py-2 text-gray-600">Flour (1 cup)</td>
-                           <td className="px-3 py-2 text-gray-600">120g</td>
-                           <td className="px-3 py-2 text-gray-600">4.2oz</td>
-                           <td className="px-3 py-2 text-gray-600">1 cup</td>
-                         </tr>
-                         <tr>
-                           <td className="px-3 py-2 text-gray-600">Sugar (1 cup)</td>
-                           <td className="px-3 py-2 text-gray-600">200g</td>
-                           <td className="px-3 py-2 text-gray-600">7.1oz</td>
-                           <td className="px-3 py-2 text-gray-600">1 cup</td>
-                         </tr>
-                         <tr>
-                           <td className="px-3 py-2 text-gray-600">Butter (1 cup)</td>
-                           <td className="px-3 py-2 text-gray-600">227g</td>
-                           <td className="px-3 py-2 text-gray-600">8oz</td>
-                           <td className="px-3 py-2 text-gray-600">1 cup</td>
-                         </tr>
-                         <tr>
-                           <td className="px-3 py-2 text-gray-600">Water (1 cup)</td>
-                           <td className="px-3 py-2 text-gray-600">240g</td>
-                           <td className="px-3 py-2 text-gray-600">8.5oz</td>
-                           <td className="px-3 py-2 text-gray-600">1 cup</td>
-                         </tr>
-                         <tr>
-                           <td className="px-3 py-2 text-gray-600">1 tablespoon</td>
-                           <td className="px-3 py-2 text-gray-600">15g</td>
-                           <td className="px-3 py-2 text-gray-600">0.5oz</td>
-                           <td className="px-3 py-2 text-gray-600">1/16 cup</td>
-                         </tr>
-                         <tr>
-                           <td className="px-3 py-2 text-gray-600">1 teaspoon</td>
-                           <td className="px-3 py-2 text-gray-600">5g</td>
-                           <td className="px-3 py-2 text-gray-600">0.18oz</td>
-                           <td className="px-3 py-2 text-gray-600">1/48 cup</td>
-                         </tr>
-                         <tr>
-                           <td className="px-3 py-2 text-gray-600">1 pound</td>
-                           <td className="px-3 py-2 text-gray-600">454g</td>
-                           <td className="px-3 py-2 text-gray-600">16oz</td>
-                           <td className="px-3 py-2 text-gray-600">2 cups</td>
-                         </tr>
-                         <tr>
-                           <td className="px-3 py-2 text-gray-600">1 kilogram</td>
-                           <td className="px-3 py-2 text-gray-600">1000g</td>
-                           <td className="px-3 py-2 text-gray-600">35.3oz</td>
-                           <td className="px-3 py-2 text-gray-600">4.2 cups</td>
-                         </tr>
+                  {filteredProducts.map(product => (
+                    <ProductRow key={product.id} product={product} />
+                  ))}
                        </tbody>
                      </table>
                    </div>
-                   <div className="mt-3 text-xs text-gray-500">
-                     <p>* Conversions are approximate and may vary by ingredient density</p>
-                   </div>
-                 </div>
+          </Card>
+        )}
+
+        {/* Empty State */}
+        {filteredProducts.length === 0 && !productsLoading && (
+          <Card className="bg-[#F7F2EC] shadow-sm border border-gray-200">
+            <div className="text-center py-12">
+              <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
+              <p className="text-gray-600 mb-6">
+                {searchQuery || selectedCategory || selectedType
+                  ? 'Try adjusting your filters to see more products.'
+                  : 'Get started by creating your first product.'}
+              </p>
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Product
+              </Button>
                </div>
-               
-               <div className="mt-6 pt-4 border-t border-gray-200">
-                 <p className="text-sm text-gray-600 text-center">
-                   💡 Tip: Use the calculator above for precise conversions, or reference the table for quick lookups
-                 </p>
-               </div>
-             </div>
-           </div>
+          </Card>
          )}
           </div>
-
-          {/* Financial Data Disclaimer */}
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start gap-3">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div>
-              <p className="font-medium text-yellow-800">Product Data Disclaimer</p>
-              <p className="text-sm text-yellow-700">
-                All product data displayed is for informational purposes only. Users are responsible for verifying the accuracy and security of their product information. This dashboard does not constitute financial advice.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* AI Insights Drawer */}
-      <AIInsightsDrawer
-        isOpen={showAIInsights}
-        onClose={() => setShowAIInsights(false)}
-        type="products"
-        onApplyPrice={(productId, newPrice, rationale) => {
-          console.log('Price applied:', { productId, newPrice, rationale });
-          toast.success(`Price updated to $${newPrice}`);
-        }}
-      />
     </VendorDashboardLayout>
   );
 };
 
 export default VendorProductsPage; 
-

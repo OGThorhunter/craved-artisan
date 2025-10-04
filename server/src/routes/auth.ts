@@ -45,6 +45,7 @@ router.post('/login', async (req, res) => {
       req.session.userId = 'mock-user-id';
       req.session.email = email;
       req.session.role = 'VENDOR';
+      req.session.vendorProfileId = 'mock-user-id';
       
       console.log('🔍 [DEBUG] Session data after setting:', JSON.stringify(req.session, null, 2));
       
@@ -66,6 +67,7 @@ router.post('/login', async (req, res) => {
           userId: req.session.userId,
           email: req.session.email,
           role: req.session.role,
+          vendorProfileId: req.session.vendorProfileId,
           isAuthenticated: true,
           lastActivity: new Date()
         }
@@ -81,6 +83,7 @@ router.post('/login', async (req, res) => {
       req.session.userId = 'vendor-user-id';
       req.session.email = email;
       req.session.role = 'VENDOR';
+      req.session.vendorProfileId = 'vendor-user-id';
       
       console.log('🔍 [DEBUG] Session data after setting:', JSON.stringify(req.session, null, 2));
       
@@ -102,6 +105,7 @@ router.post('/login', async (req, res) => {
           userId: req.session.userId,
           email: req.session.email,
           role: req.session.role,
+          vendorProfileId: req.session.vendorProfileId,
           isAuthenticated: true,
           lastActivity: new Date()
         }
@@ -117,6 +121,7 @@ router.post('/login', async (req, res) => {
       req.session.userId = 'mock-customer-id';
       req.session.email = email;
       req.session.role = 'CUSTOMER';
+      req.session.vendorProfileId = 'mock-customer-id';
       
       console.log('🔍 [DEBUG] Session data after setting:', JSON.stringify(req.session, null, 2));
       
@@ -138,6 +143,7 @@ router.post('/login', async (req, res) => {
           userId: req.session.userId,
           email: req.session.email,
           role: req.session.role,
+          vendorProfileId: req.session.vendorProfileId,
           isAuthenticated: true,
           lastActivity: new Date()
         }
@@ -226,6 +232,7 @@ router.get('/session', (req, res) => {
         userId: req.session.userId,
         email: req.session.email,
         role: req.session.role,
+        vendorProfileId: req.session.vendorProfileId,
         isAuthenticated: true,
         lastActivity: new Date()
       }

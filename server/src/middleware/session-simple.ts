@@ -38,6 +38,7 @@ export const attachUser = (req: any, res: any, next: any) => {
       userId: req.session.userId,
       email: req.session.email,
       role: req.session.role,
+      vendorProfileId: req.session.vendorProfileId || req.session.userId, // Use userId as fallback
       isAuthenticated: true,
       lastActivity: new Date()
     };

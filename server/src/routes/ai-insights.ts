@@ -509,3 +509,4 @@ function generatePricingInsight({
 
 export default router;
 
+

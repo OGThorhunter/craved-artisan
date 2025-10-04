@@ -79,7 +79,7 @@ model Product {
   description           String?
   categoryId            String?
   subcategoryId         String?
-  tags                  String[]         @default([])
+  tags                  String?          // JSON array stored as string
   imageUrl              String?
   active                Boolean          @default(true)
   price                 Float
@@ -93,7 +93,7 @@ model Product {
   barcode               String?
   taxCode               String?
   // Food-specific fields
-  allergenFlags         String[]         @default([])
+  allergenFlags         String?          // JSON array stored as string
   nutritionNotes        String?
   // Service-specific fields
   serviceDurationMin    Int?
