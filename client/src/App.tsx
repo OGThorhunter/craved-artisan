@@ -23,6 +23,7 @@ import CartPage from './pages/CartPage';
 import { VendorSettingsPage } from './pages/VendorSettingsPage';
 import VendorProductsPage from './pages/VendorProductsPage';
 import EnhancedVendorProductsPage from './pages/EnhancedVendorProductsPage';
+import SalesWindowsIndexPage from './pages/SalesWindowsIndexPage';
 import RecipeManagementPage from './pages/RecipeManagementPage';
 import VendorInventoryPage from './pages/VendorInventoryPage';
 import VendorOrdersPage from './pages/VendorOrdersPage';
@@ -169,6 +170,11 @@ function App() {
             <Route path="/dashboard/vendor/products">
               <ProtectedRoute role="VENDOR">
                 <VendorProductsPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/dashboard/vendor/sales-windows">
+              <ProtectedRoute role="VENDOR">
+                <SalesWindowsIndexPage />
               </ProtectedRoute>
             </Route>
             <Route path="/dashboard/vendor/recipes">

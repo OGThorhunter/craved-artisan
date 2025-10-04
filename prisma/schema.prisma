@@ -161,6 +161,7 @@ model Order {
   events            OrderEvent[]
   fulfillments      OrderFulfillment[]
   orderItems        OrderItem[]
+  customerVehicle   OrderCustomerVehicle?
 
   @@index([userId, createdAt])
   @@index([contextType, marketId])
@@ -218,32 +219,134 @@ model InventoryTx {
   @@index([vendorProfileId, ingredientId, type, createdAt])
 }
 
-// AI: Enhanced inventory item model for supplies/ingredients
+// Enhanced inventory item model for supplies/ingredients
 model InventoryItem {
   id              String    @id @default(cuid())
   vendorProfileId String
   name            String
-  supplierName    String?
-  sku             String?
+  category        String    // FOOD_GRADE, PACKAGING, EQUIPMENT, etc.
+  unit            String    // kg, g, ml, bottles, boxes...
   currentQty      Float     @default(0)
   reorderPoint    Float     @default(0)
   preferredQty    Float     @default(0)
-  lastCost        Float?
-  avgCost         Float?
-  unit            String    @default("each")
-  leadTimeDays    Int       @default(7)
+  avgCost         Float     @default(0)
+  lastCost        Float     @default(0)
+  supplierName    String?
+  location        String?   // shelf/bin/room
+  batchNumber     String?
+  expiryDate      DateTime?
+  tags            String?   // JSON array stored as string
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   
   // Relations
   vendor          VendorProfile                @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  movements       InventoryMovement[]
+  priceWatches    PriceWatch[]
   supplierOffers  InventorySupplierOffer[]
   purchaseOrderLines InventoryPurchaseOrderLine[]
   productMaterials ProductMaterial[]
   
-  @@index([vendorProfileId])
-  @@index([name])
-  @@index([supplierName])
+  @@index([vendorProfileId, name])
+  @@index([vendorProfileId, category])
+  @@index([expiryDate])
+}
+
+model InventoryMovement {
+  id              String        @id @default(cuid())
+  vendorProfileId String
+  inventoryItemId String
+  type            MovementType  // RECEIVE, ADJUST, CONSUME, RETURN, WASTE, DONATION, RESERVE
+  qty             Float         // + for receive/adjust+, - for consume/adjust-
+  unitCost        Float?        // for RECEIVE (updates avg_cost via moving average)
+  refType         String?       // ORDER, PRODUCTION, WINDOW, MANUAL
+  refId           String?
+  notes           String?
+  createdAt       DateTime      @default(now())
+  
+  // Relations
+  vendor          VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  
+  @@index([vendorProfileId, inventoryItemId, createdAt])
+}
+
+enum MovementType {
+  RECEIVE
+  ADJUST
+  CONSUME
+  RETURN
+  WASTE
+  DONATION
+  RESERVE
+}
+
+model PriceWatch {
+  id              String      @id @default(cuid())
+  vendorProfileId String
+  inventoryItemId String
+  targetUnitCost  Float
+  source          WatchSource // B2B, MARKET, CUSTOM_URL
+  sourceMeta      String?     // JSON stored as string
+  active          Boolean     @default(true)
+  createdAt       DateTime    @default(now())
+  
+  // Relations
+  vendor          VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  
+  @@index([vendorProfileId, inventoryItemId, active])
+}
+
+enum WatchSource {
+  B2B
+  MARKET
+  CUSTOM_URL
+}
+
+model ReceiptParseJob {
+  id              String        @id @default(cuid())
+  vendorProfileId String
+  sourceType      ReceiptSource // IMAGE, PDF, TEXT
+  status          JobStatus     // PENDING, DONE, FAILED
+  rawText         String?
+  parsedJson      String?       // JSON stored as string
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  vendor          VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  
+  @@index([vendorProfileId, createdAt])
+}
+
+enum ReceiptSource {
+  IMAGE
+  PDF
+  TEXT
+}
+
+enum JobStatus {
+  PENDING
+  DONE
+  FAILED
+}
+
+model ProductionPlan {
+  id              String   @id @default(cuid())
+  vendorProfileId String
+  productId       String
+  qtyToMake       Int
+  plannedAt       DateTime
+  status          String   // PLANNED, IN_PROGRESS, DONE, CANCELLED
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  vendor          VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  product         Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@index([vendorProfileId, plannedAt])
 }
 
 model Recipe {
@@ -677,7 +780,6 @@ model Market {
   createdAt     DateTime             @default(now())
   updatedAt     DateTime             @updatedAt
   registrations MarketRegistration[]
-  linkedWindows SalesWindow[]
 }
 
 model MarketRegistration {
@@ -693,22 +795,170 @@ model MarketRegistration {
 }
 
 model SalesWindow {
-  id           String       @id @default(cuid())
-  vendorId     String
-  title        String
-  description  String?
-  openAt       DateTime
-  closeAt      DateTime
-  fulfillStart DateTime?
-  fulfillEnd   DateTime?
-  locationId   String?
-  capacity     Int?
-  status       WindowStatus @default(DRAFT)
-  tags         String?
-  marketId     String?
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  market       Market?      @relation(fields: [marketId], references: [id])
+  id                  String   @id @default(cuid())
+  vendorId            String
+  type                SalesWindowType
+  name                String
+  description         String?
+  status              SalesWindowStatus @default(DRAFT)
+
+  location_name       String?
+  address_text        String?
+
+  static_map_mode     StaticMapMode      @default(NONE)
+  static_map_image_url String?
+  static_map_tile_url_template String?
+
+  vendor_vehicle_image_url String?
+  vendor_vehicle_plate      String?
+
+  // Delivery
+  epicenter_address   String?
+  radius_miles        Float?
+  delivery_fee_mode   DeliveryFeeMode    @default(NONE)
+  delivery_fee_json   String?            // JSON stored as string
+
+  third_party_delivery String?           // JSON stored as string
+
+  // Timing (not used for Service-Greenfield if evergreen)
+  preorder_open_at    DateTime?
+  preorder_close_at   DateTime?
+  fulfill_start_at    DateTime?
+  fulfill_end_at      DateTime?
+  recurrence_rrule    String?
+  parent_series_id    String?
+
+  // Service – Greenfield
+  is_always_on        Boolean @default(false)
+  scheduling_mode     SchedulingMode?
+  scheduler_config    String?            // JSON stored as string
+
+  // Capacity
+  capacity_total      Int?
+  slot_size_min       Int?
+  slot_capacity       Int?
+  max_items_total     Int?    // NEW
+  auto_close_when_full Boolean @default(true)
+
+  // Porch/Kiosk
+  porch_instructions  String?
+  kiosk_name          String?
+  kiosk_instructions  String?
+
+  policy_json         String?            // JSON stored as string
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  products            SalesWindowProduct[]
+  slots               SalesWindowSlot[]
+  metrics             SalesWindowMetric?
+  consignment         ConsignmentLedger[]
+  wholesaleInvoices   WholesaleInvoice[]
+  qrTokens            QrToken[]
+
+  @@index([vendorId, status, fulfill_start_at])
+}
+
+model SalesWindowProduct {
+  id               String @id @default(cuid())
+  salesWindowId    String
+  productId        String
+  price_override   Float?
+  qty_limit_per_customer Int?
+  active           Boolean @default(true)
+  salesWindow      SalesWindow @relation(fields: [salesWindowId], references: [id], onDelete: Cascade)
+
+  @@index([salesWindowId, productId])
+}
+
+model SalesWindowSlot {
+  id               String @id @default(cuid())
+  salesWindowId    String
+  starts_at        DateTime
+  ends_at          DateTime
+  capacity         Int
+  reserved_count   Int   @default(0)
+  salesWindow      SalesWindow @relation(fields: [salesWindowId], references: [id], onDelete: Cascade)
+
+  @@index([salesWindowId, starts_at])
+}
+
+model SalesWindowMetric {
+  id            String @id @default(cuid())
+  salesWindowId String @unique
+  orders_count  Int    @default(0)
+  items_count   Int    @default(0)
+  gross         Float  @default(0)
+  refunds       Float  @default(0)
+  net           Float  @default(0)
+  salesWindow   SalesWindow @relation(fields: [salesWindowId], references: [id], onDelete: Cascade)
+}
+
+model ConsignmentLedger {
+  id            String @id @default(cuid())
+  salesWindowId String
+  productId     String
+  planned_qty   Int
+  sold_qty      Int   @default(0)
+  unsold_qty    Int   @default(0)
+  donated_qty   Int   @default(0)
+  returned_qty  Int   @default(0)
+  rev_share_pct Float?
+  host_fee_fixed Float?
+  salesWindow   SalesWindow @relation(fields: [salesWindowId], references: [id], onDelete: Cascade)
+
+  @@index([salesWindowId])
+}
+
+model WholesaleInvoice {
+  id            String @id @default(cuid())
+  salesWindowId String
+  business_name String
+  terms         WholesaleTerms
+  status        InvoiceStatus @default(DRAFT)
+  subtotal      Float @default(0)
+  tax           Float @default(0)
+  shipping      Float @default(0)
+  total         Float @default(0)
+  due_date      DateTime?
+  salesWindow   SalesWindow @relation(fields: [salesWindowId], references: [id], onDelete: Cascade)
+  lines         WholesaleInvoiceLine[]
+
+  @@index([salesWindowId, status])
+}
+
+model WholesaleInvoiceLine {
+  id         String @id @default(cuid())
+  invoiceId  String
+  productId  String
+  qty        Int
+  unit_price Float
+  line_total Float
+  invoice    WholesaleInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+}
+
+model QrToken {
+  id            String @id @default(cuid())
+  salesWindowId String
+  token         String  @unique
+  kind          QrKind
+  expires_at    DateTime?
+  salesWindow   SalesWindow @relation(fields: [salesWindowId], references: [id], onDelete: Cascade)
+
+  @@index([salesWindowId, kind])
+}
+
+model OrderCustomerVehicle {
+  id      String @id @default(cuid())
+  orderId String @unique
+  make_model String
+  color     String
+  plate     String?
+  notes     String?
+  walkup    Boolean @default(false)
+  order     Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
 
 // Label System Models
@@ -849,12 +1099,62 @@ enum RegistrationStatus {
   CANCELED
 }
 
-enum WindowStatus {
+enum SalesWindowStatus {
   DRAFT
   SCHEDULED
   OPEN
   CLOSED
-  CANCELED
+  FULFILLED
+  CANCELLED
+}
+
+enum SalesWindowType {
+  PARK_PICKUP
+  DELIVERY
+  CONSIGNMENT
+  WHOLESALE
+  MARKET
+  PORCH_PICKUP
+  KIOSK_PICKUP
+  SERVICE_GREENFIELD
+}
+
+enum StaticMapMode {
+  NONE
+  UPLOAD
+  TILE_URL
+}
+
+enum DeliveryFeeMode {
+  NONE
+  FLAT
+  TIERED
+  FREE_OVER
+}
+
+enum SchedulingMode {
+  VENDOR_CONTACT
+  SCHEDULER
+}
+
+enum WholesaleTerms {
+  COD
+  NET30
+  NET60
+  NET90
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  VOID
+}
+
+enum QrKind {
+  WINDOW
+  PRODUCT
+  ORDER_PICKUP
 }
 
 enum FulfillmentContextType {

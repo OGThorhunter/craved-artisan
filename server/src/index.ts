@@ -20,6 +20,7 @@ import labelsRouter from './routes/labels';
 import productsRouter from './routes/products.router';
 import aiProductsRouter from './routes/ai-products.router';
 import productsImportRouter from './routes/products-import.router';
+import salesWindowsRouter from './routes/sales-windows.router';
 
 const app = express();
 const PORT = Number(process.env.PORT || 3001);
@@ -90,6 +91,9 @@ app.use('/api', analyticsRouter);
 app.use('/api/vendor', productsRouter);
 app.use('/api/vendor/ai', aiProductsRouter);
 app.use('/api/vendor', productsImportRouter);
+
+// Sales Windows routes
+app.use('/api/vendor/sales-windows', salesWindowsRouter);
 
 // Start server
 app.listen(PORT, () => {
