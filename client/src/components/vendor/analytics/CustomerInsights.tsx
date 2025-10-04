@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Users, MapPin, DollarSign, Crown, RefreshCw, TrendingUp, BarChart3 } from "lucide-react";
-import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from "recharts";
+import { Users, MapPin } from "lucide-react";
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from "recharts";
 import { mockAnalyticsData } from "@/mock/analyticsData";
 
 interface CustomerData {
@@ -70,17 +70,6 @@ export function CustomerInsights() {
     });
   }, []);
 
-  const getLoyaltyImpactColor = (impact: number) => {
-    if (impact > 20) return "text-green-600";
-    if (impact > 10) return "text-yellow-600";
-    return "text-red-600";
-  };
-
-  const getReturnRateColor = (rate: number) => {
-    if (rate < 3) return "text-green-600";
-    if (rate < 5) return "text-yellow-600";
-    return "text-red-600";
-  };
 
   return (
     <div className="bg-[#F7F2EC] rounded-2xl p-4 shadow-xl border border-gray-100 hover:shadow-2xl transition-shadow duration-300">
@@ -109,37 +98,6 @@ export function CustomerInsights() {
         </div>
       </div>
 
-      {/* Performance Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="p-3 border border-gray-200 rounded-lg bg-white">
-          <div className="flex items-center gap-2 mb-2">
-            <Crown size={16} className="text-yellow-500" />
-            <span className="font-medium text-gray-800">Loyalty Impact</span>
-          </div>
-          <p className={`text-xl font-bold ${getLoyaltyImpactColor(customerMetrics.loyaltyImpact)}`}>
-            +{customerMetrics.loyaltyImpact.toFixed(2)}%
-          </p>
-          <p className="text-sm text-gray-600">Revenue increase from loyalty program</p>
-        </div>
-        <div className="p-3 border border-gray-200 rounded-lg bg-white">
-          <div className="flex items-center gap-2 mb-2">
-            <RefreshCw size={16} className="text-blue-500" />
-            <span className="font-medium text-gray-800">Return Rate</span>
-          </div>
-          <p className={`text-xl font-bold ${getReturnRateColor(customerMetrics.returnRate)}`}>
-            {customerMetrics.returnRate.toFixed(2)}%
-          </p>
-          <p className="text-sm text-gray-600">Below industry average (5.2%)</p>
-        </div>
-        <div className="p-3 border border-gray-200 rounded-lg bg-white">
-          <div className="flex items-center gap-2 mb-2">
-            <TrendingUp size={16} className="text-green-500" />
-            <span className="font-medium text-gray-800">Repeat Purchase</span>
-          </div>
-          <p className="text-xl font-bold text-green-600">{customerMetrics.repeatPurchaseRate.toFixed(2)}%</p>
-          <p className="text-sm text-gray-600">Customers who buy again</p>
-        </div>
-      </div>
 
       {/* View Toggle */}
       <div className="flex gap-2 mb-4">
@@ -280,22 +238,6 @@ export function CustomerInsights() {
       )}
 
       {/* Action Buttons */}
-      <div className="mt-6 pt-4 border-t">
-        <div className="flex flex-wrap gap-2">
-          <button className="flex items-center gap-1 px-3 py-1 text-sm bg-[#5B6E02] text-white rounded-full hover:bg-[#4A5A01] transition-colors">
-            <Users size={12} />
-            Export Customer Data
-          </button>
-          <button className="flex items-center gap-1 px-3 py-1 text-sm bg-[#7F232E] text-white rounded-full hover:bg-[#6A1E27] transition-colors">
-            <Crown size={12} />
-            Loyalty Campaign
-          </button>
-          <button className="flex items-center gap-1 px-3 py-1 text-sm border border-gray-300 text-gray-700 rounded-full hover:bg-gray-50 transition-colors">
-            <BarChart3 size={12} />
-            Detailed Analytics
-          </button>
-        </div>
-      </div>
     </div>
   );
 } 

@@ -72,6 +72,42 @@ router.post('/login', async (req, res) => {
       });
     }
     
+    // Vendor login
+    if (email === 'vendor@cravedartisan.com' && password === 'vendor123') {
+      console.log('🔍 [DEBUG] Vendor login successful, setting session data...');
+      console.log('🔍 [DEBUG] Session ID before:', req.sessionID);
+      console.log('🔍 [DEBUG] Session data before:', JSON.stringify(req.session, null, 2));
+      
+      req.session.userId = 'vendor-user-id';
+      req.session.email = email;
+      req.session.role = 'VENDOR';
+      
+      console.log('🔍 [DEBUG] Session data after setting:', JSON.stringify(req.session, null, 2));
+      
+      // Force session save
+      req.session.save((err) => {
+        if (err) {
+          console.error('🔍 [DEBUG] Session save error:', err);
+        } else {
+          console.log('🔍 [DEBUG] Session saved successfully');
+        }
+      });
+      
+      logger.info({ email, userId: req.session.userId }, 'User logged in');
+      
+      return res.json({
+        success: true,
+        message: 'Login successful',
+        user: {
+          userId: req.session.userId,
+          email: req.session.email,
+          role: req.session.role,
+          isAuthenticated: true,
+          lastActivity: new Date()
+        }
+      });
+    }
+    
     // Customer login
     if (email === 'customer@cravedartisan.com' && password === 'customer123') {
       console.log('🔍 [DEBUG] Customer login successful, setting session data...');

@@ -1,5 +1,6 @@
-import React from 'react';
-import { Link } from 'wouter';
+import React, { useEffect } from 'react';
+import { Link, useLocation } from 'wouter';
+import { useAuth } from '../contexts/AuthContext';
 import { 
   Users, 
   Package, 
@@ -10,6 +11,46 @@ import {
 } from 'lucide-react';
 
 export default function DashboardPage() {
+  const { user, isLoading } = useAuth();
+  const [, setLocation] = useLocation();
+
+  // Redirect to role-specific dashboard
+  useEffect(() => {
+    if (!isLoading && user) {
+      switch (user.role) {
+        case 'VENDOR':
+          setLocation('/dashboard/vendor/pulse');
+          break;
+        case 'CUSTOMER':
+          setLocation('/dashboard/customer');
+          break;
+        case 'EVENT_COORDINATOR':
+        case 'COORDINATOR':
+          setLocation('/dashboard/event-coordinator');
+          break;
+        case 'ADMIN':
+          setLocation('/dashboard/admin');
+          break;
+        default:
+          // Stay on generic dashboard if role is unknown
+          break;
+      }
+    }
+  }, [user, isLoading, setLocation]);
+
+  // Show loading state while checking auth
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Generic dashboard (only shown if no role match or user not logged in)
   return (
     <div className="min-h-screen bg-white">
         <div className="max-w-7xl mx-auto px-4 py-8">

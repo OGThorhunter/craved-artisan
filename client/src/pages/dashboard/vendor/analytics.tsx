@@ -3,20 +3,15 @@ import { useState, useEffect } from "react";
 import { useLocation } from 'wouter';
 import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
 import { useUrlTab } from '@/hooks/useUrlTab';
-import { Tooltip } from '@/components/ui/Tooltip';
 import ConversionFunnel from "@/components/analytics/ConversionFunnel";
 import EnhancedBestSellers from "@/components/analytics/EnhancedBestSellers";
-import { PerformanceKpis } from "@/components/vendor/analytics/PerformanceKpis";
 import { CustomerInsights } from "@/components/vendor/analytics/CustomerInsights";
 import { PortfolioBuilder } from "@/components/vendor/analytics/PortfolioBuilder";
-import { PriceOptimizer } from "@/components/vendor/analytics/PriceOptimizer";
-import { TaxSummary } from "@/components/vendor/analytics/TaxSummary";
+import StripeTaxDashboard from "@/components/stripe/StripeTaxDashboard";
 import TrendChart from "@/components/charts/TrendChart";
 import MotivationalQuote from "@/components/dashboard/MotivationalQuote";
 import { getQuoteByCategory } from "@/data/motivationalQuotes";
-import AIForecastWidget from "@/components/analytics/AIForecastWidget";
-import AISummaryBuilder from "@/components/analytics/AISummaryBuilder";
-import { mockKpis } from "@/mock/analyticsData";
+// Removed: AIForecastWidget and AISummaryBuilder imports (components removed per user request)
 import { DollarSign, TrendingUp, Package } from "lucide-react";
 import { flags } from "@/lib/flags";
 import { 
@@ -25,13 +20,11 @@ import {
   useMockVendorOverview,
   useMockVendorBestSellers 
 } from "@/hooks/analytics";
-import { useFinancials } from "@/hooks/analytics/useFinancials";
+// Removed useFinancials import - no longer needed for Business Snapshot
 import ProductDeepDiveModal from "@/components/ProductDeepDiveModal";
-import { Breadcrumbs } from "@/components/dashboard/vendor/Breadcrumbs";
-import { ErrorCard } from "@/components/ui/ErrorCard";
-import { EmptyState } from "@/components/ui/EmptyState";
+// Removed unused imports
 
-import { ComprehensiveFinancialStatements } from "@/components/analytics/ComprehensiveFinancialStatements";
+import { BusinessSnapshot } from "@/components/analytics/BusinessSnapshot";
 
 type TabType = 'insights' | 'financial-statements' | 'taxes' | 'pricing' | 'portfolio';
 
@@ -69,14 +62,7 @@ export default function VendorAnalyticsPage() {
 
 
   
-  // Helper to determine if financials should be enabled
-  const financialsEnabled = activeTab === 'financial-statements';
-  
-  // Financials data fetching - enabled for financial-statements tab only
-  const fin = useFinancials(
-    { vendorId, range: 'month' }, 
-    financialsEnabled
-  );
+  // Business Snapshot handles its own data fetching
   
   // Extract data with safe defaults based on feature flags
   const overviewData = flags.LIVE_ANALYTICS 
@@ -103,12 +89,7 @@ export default function VendorAnalyticsPage() {
     console.log('Current URL:', window.location.href);
   }, [location, activeTab, allowedTabs]);
 
-  const icons = [
-    <DollarSign key="revenue" size={20} />,
-    <DollarSign key="monthly" size={20} />,
-    <TrendingUp key="avg" size={20} />,
-    <Package key="orders" size={20} />,
-  ];
+  // Removed unused icons array
   
   // Debug information
   useEffect(() => {
@@ -118,13 +99,8 @@ export default function VendorAnalyticsPage() {
     console.log('Overview data:', overviewData);
     console.log('Best sellers data:', bestSellersData);
     console.log('Loading state:', isLoading);
-    console.log('Financials query state:', {
-      isLoading: fin.isLoading,
-      isError: fin.isError,
-      data: fin.data,
-      error: fin.error
-    });
-  }, [overviewData, bestSellersData, isLoading, fin.isLoading, fin.isError, fin.data, fin.error]);
+    // Business Snapshot handles its own data fetching
+  }, [overviewData, bestSellersData, isLoading]);
 
   const renderTabContent = () => {
     console.log('=== RENDER TAB CONTENT DEBUG ===');
@@ -149,70 +125,49 @@ export default function VendorAnalyticsPage() {
             {/* Real-time Analytics Overview */}
             {!isLoading && flags.LIVE_ANALYTICS && (
               <div className="bg-[#F7F2EC] rounded-lg shadow-xl border border-gray-200 p-6 mb-8 hover:shadow-2xl transition-shadow duration-300">
-                <Tooltip content="Live performance metrics showing current sales, orders, and revenue trends">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4 cursor-help">Real-time Analytics Overview</h3>
-                </Tooltip>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Real-time Analytics Overview</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <Tooltip content="Total income from all sales across all channels and time periods">
-                    <div className="bg-white rounded-lg p-4 border border-gray-200 cursor-help">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="text-gray-600"><DollarSign size={20} /></div>
-                        <span className="text-xs text-green-600">+12.5%</span>
-                      </div>
-                      <div className="text-2xl font-bold text-gray-900">${overviewData.totals.totalRevenue.toLocaleString()}</div>
-                      <div className="text-sm text-gray-600">Total Revenue</div>
+                  <div className="bg-white rounded-lg p-4 border border-gray-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-gray-600"><DollarSign size={20} /></div>
+                      <span className="text-xs text-green-600">+12.5%</span>
                     </div>
-                  </Tooltip>
-                  <Tooltip content="Total number of orders placed by customers across all sales channels">
-                    <div className="bg-white rounded-lg p-4 border border-gray-200 cursor-help">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="text-gray-600"><Package size={20} /></div>
-                        <span className="text-xs text-green-600">+8.2%</span>
-                      </div>
-                      <div className="text-2xl font-bold text-gray-900">{overviewData.totals.totalOrders.toLocaleString()}</div>
-                      <div className="text-sm text-gray-600">Total Orders</div>
+                    <div className="text-2xl font-bold text-gray-900">${overviewData.totals.totalRevenue.toLocaleString()}</div>
+                    <div className="text-sm text-gray-600">Total Revenue</div>
+                  </div>
+                  <div className="bg-white rounded-lg p-4 border border-gray-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-gray-600"><Package size={20} /></div>
+                      <span className="text-xs text-green-600">+8.2%</span>
                     </div>
-                  </Tooltip>
-                  <Tooltip content="Average amount spent per order - calculated by dividing total revenue by total orders">
-                    <div className="bg-white rounded-lg p-4 border border-gray-200 cursor-help">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="text-gray-600"><TrendingUp size={20} /></div>
-                        <span className="text-xs text-green-600">+5.1%</span>
-                      </div>
-                      <div className="text-2xl font-bold text-gray-900">${overviewData.totals.avgOrderValue.toFixed(2)}</div>
-                      <div className="text-sm text-gray-600">Avg Order Value</div>
+                    <div className="text-2xl font-bold text-gray-900">{overviewData.totals.totalOrders.toLocaleString()}</div>
+                    <div className="text-sm text-gray-600">Total Orders</div>
+                  </div>
+                  <div className="bg-white rounded-lg p-4 border border-gray-200">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-gray-600"><TrendingUp size={20} /></div>
+                      <span className="text-xs text-green-600">+5.1%</span>
                     </div>
-                  </Tooltip>
+                    <div className="text-2xl font-bold text-gray-900">${overviewData.totals.avgOrderValue.toFixed(2)}</div>
+                    <div className="text-sm text-gray-600">Avg Order Value</div>
+                  </div>
                 </div>
               </div>
             )}
             
-            {/* AI Summary Builder - This Month's Performance */}
-            <AISummaryBuilder />
-            
-            {/* AI Forecasting Widget */}
-            <AIForecastWidget />
+            {/* Removed: AI Summary Builder and AI Forecasting Widget per user request */}
             
             {/* Trend Chart with Revenue Data */}
-            {Array.isArray(overviewData?.series) && overviewData.series.length > 0 ? (
+            {Array.isArray(overviewData?.series) && overviewData.series.length > 0 && (
               <TrendChart data={overviewData.series} xKey="date" yKey="revenue" />
-            ) : (
-              <div className="text-sm text-neutral-500">No trends yet</div>
             )}
             
             {/* Conversion Funnel */}
             <ConversionFunnel />
             
             {/* Enhanced Best Sellers with Filters */}
-            <EnhancedBestSellers 
-              onProductClick={(product) => {
-                setSelectedProduct({ id: product.productId, name: product.name });
-                setIsProductModalOpen(true);
-              }}
-            />
+            <EnhancedBestSellers />
             
-            {/* Product Performance */}
-            <PerformanceKpis />
             
             {/* Customer Insights */}
             <CustomerInsights />
@@ -222,51 +177,70 @@ export default function VendorAnalyticsPage() {
 
       
       case 'financial-statements':
-        console.log('Rendering financial statements tab content');
-        
-        if (fin.isError) {
-          return (
-            <ErrorCard
-              title="Failed to Load Financial Data"
-              message="Unable to load financial information. Please check your connection and try again."
-              onRetry={() => fin.refetch()}
-            />
-          );
-        }
-        
-        if (fin.isLoading && !fin.data) {
-          return (
-            <div className="flex items-center justify-center p-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5B6E02]"></div>
-              <span className="ml-2 text-gray-600">Loading comprehensive financial data...</span>
-            </div>
-          );
-        }
-        
-        if (!fin.data || fin.data.series.length === 0) {
-          return (
-            <EmptyState
-              title="No Financial Data Available"
-              message="No financial transactions found for the selected period. Try adjusting your date range or check back later."
-            />
-          );
-        }
-        
-        return <ComprehensiveFinancialStatements data={fin.data} vendorId={vendorId} />;
+        console.log('Rendering business snapshot tab content');
+        return <BusinessSnapshot vendorId={vendorId} />;
       
       case 'taxes':
         return (
           <div className="space-y-8">
-            {/* Tax Summary */}
-            <TaxSummary />
+            {/* Stripe Tax Dashboard */}
+            <StripeTaxDashboard />
           </div>
         );
       
       case 'pricing':
         return (
           <div className="space-y-8">
-            {/* Price Optimizer */}
-            <PriceOptimizer />
+            {/* Pricing & Inventory Insights Moved Notice */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+              <div className="flex items-start space-x-4">
+                <div className="flex-shrink-0">
+                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <span className="text-2xl">🎯</span>
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-blue-900 mb-2">
+                    Pricing & Inventory Insights Moved
+                  </h3>
+                  <p className="text-blue-700 mb-4">
+                    AI-powered pricing and inventory insights are now available directly in your workflow:
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-white rounded-lg p-4 border border-blue-200">
+                      <h4 className="font-semibold text-gray-900 mb-2">📦 Products</h4>
+                      <p className="text-sm text-gray-600 mb-3">Pricing insights and competitor analysis</p>
+                      <button 
+                        onClick={() => window.location.href = '/dashboard/vendor/products'}
+                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                      >
+                        View Products →
+                      </button>
+                    </div>
+                    <div className="bg-white rounded-lg p-4 border border-blue-200">
+                      <h4 className="font-semibold text-gray-900 mb-2">📋 Orders</h4>
+                      <p className="text-sm text-gray-600 mb-3">Price sensitivity and cart abandonment insights</p>
+                      <button 
+                        onClick={() => window.location.href = '/dashboard/vendor/orders'}
+                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                      >
+                        View Orders →
+                      </button>
+                    </div>
+                    <div className="bg-white rounded-lg p-4 border border-blue-200">
+                      <h4 className="font-semibold text-gray-900 mb-2">📦 Inventory</h4>
+                      <p className="text-sm text-gray-600 mb-3">Stockout alerts and supplier optimization</p>
+                      <button 
+                        onClick={() => window.location.href = '/dashboard/vendor/inventory'}
+                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                      >
+                        View Inventory →
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         );
       
@@ -286,7 +260,7 @@ export default function VendorAnalyticsPage() {
   const getTabDisplayName = (tab: TabType) => {
     switch (tab) {
       case 'insights': return 'Insights';
-      case 'financial-statements': return 'Financial Statements';
+      case 'financial-statements': return 'Business Snapshot';
       case 'taxes': return 'Taxes';
       case 'pricing': return 'Pricing Optimizer';
       case 'portfolio': return 'Portfolio Builder';
@@ -298,7 +272,6 @@ export default function VendorAnalyticsPage() {
     <VendorDashboardLayout>
       <div className="space-y-6">
         <div>
-          <Breadcrumbs />
           <div className="bg-[#F7F2EC] rounded-2xl shadow-xl p-6 mb-6 border border-gray-100 hover:shadow-2xl transition-shadow duration-300">
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -342,27 +315,25 @@ export default function VendorAnalyticsPage() {
               <nav className="flex space-x-8 px-6">
                 {[
                   { id: 'insights', label: 'Insights', icon: '📊', tooltip: 'Sales performance, customer insights, and product analytics' },
-                  { id: 'financial-statements', label: 'Financial Statements', icon: '📋', tooltip: 'Profit & loss, balance sheet, and cash flow statements' },
+                  { id: 'financial-statements' as const, label: 'Business Snapshot', icon: '📊', tooltip: 'Operational metrics, sales funnel, and payout information' },
                   { id: 'taxes', label: 'Taxes', icon: '📋', tooltip: 'Tax calculations, deductions, and reporting for compliance' },
-                  { id: 'pricing', label: 'Pricing Optimizer', icon: '🎯', tooltip: 'AI-powered pricing recommendations and optimization' },
                   { id: 'portfolio', label: 'Portfolio Builder', icon: '📈', tooltip: 'Product portfolio analysis and strategic recommendations' }
                 ].map((tab) => (
-                  <Tooltip key={tab.id} content={tab.tooltip}>
-                    <button
-                      onClick={() => setTab(tab.id as TabType)}
-                      disabled={!allowedTabs.includes(tab.id as TabType)}
-                      className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                        activeTab === tab.id
-                          ? 'border-[#5B6E02] text-[#5B6E02]'
-                          : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                      } ${
-                        !allowedTabs.includes(tab.id as TabType) ? 'opacity-50 cursor-not-allowed' : ''
-                      }`}
-                    >
-                      <span>{tab.icon}</span>
-                      {tab.label}
-                    </button>
-                  </Tooltip>
+                  <button
+                    key={tab.id}
+                    onClick={() => setTab(tab.id as TabType)}
+                    disabled={!allowedTabs.includes(tab.id as TabType)}
+                    className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                      activeTab === tab.id
+                        ? 'border-[#5B6E02] text-[#5B6E02]'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    } ${
+                      !allowedTabs.includes(tab.id as TabType) ? 'opacity-50 cursor-not-allowed' : ''
+                    }`}
+                  >
+                    <span>{tab.icon}</span>
+                    {tab.label}
+                  </button>
                 ))}
               </nav>
             </div>

@@ -7,7 +7,7 @@ import authRoutes from './routes/auth';
 import { pulseRouter } from './routes/pulse.router';
 import { vendorRouter } from './routes/vendor.router';
 import { ingredientsRouter } from './routes/ingredients.router';
-import { inventoryRouter } from './routes/inventory.router';
+// import { inventoryRouter } from './routes/inventory.router'; // Temporarily disabled
 import { aiInsightsRouter } from './routes/ai-insights.router';
 import { b2bNetworkRouter } from './routes/b2b-network.router';
 import { aiReceiptParserRouter } from './routes/ai-receipt-parser.router';
@@ -15,6 +15,7 @@ import { unitConverterRouter } from './routes/unit-converter.router';
 import { advancedInventoryRouter } from './routes/advanced-inventory.router';
 import { crmRouter } from './routes/crm.router';
 import { labelProfilesRouter } from './routes/label-profiles.router';
+import { analyticsRouter } from './routes/analytics.router';
 import labelsRouter from './routes/labels';
 
 const app = express();
@@ -46,16 +47,16 @@ app.get('/api/health', (_req, res) => {
 app.use('/api/auth', authRoutes);
 
 // Pulse routes
-app.use('/api', pulseRouter);
+// app.use('/api', pulseRouter); // Temporarily disabled to debug
 
 // Vendor routes
-app.use('/api', vendorRouter);
+// app.use('/api', vendorRouter); // Temporarily disabled to debug
 
 // Ingredients routes
-app.use('/api', ingredientsRouter);
+// app.use('/api', ingredientsRouter); // Temporarily disabled to debug
 
 // Inventory routes
-app.use('/api', inventoryRouter);
+// app.use('/api', inventoryRouter); // Temporarily disabled to debug
 
 // AI Insights routes
 app.use('/api', aiInsightsRouter);
@@ -77,7 +78,10 @@ app.use('/api', crmRouter);
 
 // Label system routes
 app.use('/api', labelProfilesRouter);
-app.use('/api/labels', labelsRouter);
+// app.use('/api/labels', labelsRouter); // Temporarily disabled due to middleware issue
+
+// Analytics routes
+app.use('/api', analyticsRouter);
 
 // Start server
 app.listen(PORT, () => {

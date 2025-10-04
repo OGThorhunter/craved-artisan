@@ -130,93 +130,327 @@ const defaultStoreData = {
   ]
 };
 
-// Mock product data
+// Mock product data - Different products for each location
 const products = [
+  // Main Pickup Location Products
   {
-    id: '1',
-    name: 'Artisan Sourdough',
+    id: 'main-1',
+    name: 'Classic Sourdough Loaf',
     price: 8.99,
     originalPrice: 10.99,
     image: '/product-sourdough.jpg',
     category: 'Bread',
-    tags: ['Organic', 'Handmade', 'LocalTo30248'],
+    tags: ['Organic', 'Sourdough'],
     availability: 'In Stock',
-    pickupDays: ['Wednesday', 'Saturday'],
-    stockLevel: 'Low Stock',
+    pickupDays: ['Mon-Fri'],
+    stockLevel: 'In Stock',
     rating: 4.8,
     reviewCount: 127,
-    description: 'Traditional sourdough bread with a perfect crust and tangy flavor.',
+    description: 'Our signature sourdough with a perfect crust',
     isVerified: true,
-    orderWindows: ['home-delivery']
+    locationId: 'main',
+    locationType: 'pickup'
   },
   {
-    id: '2',
-    name: 'Buttery Croissants',
-    price: 4.99,
+    id: 'main-2',
+    name: 'Butter Croissants (6-pack)',
+    price: 12.99,
     originalPrice: null,
     image: '/product-croissants.jpg',
     category: 'Pastries',
-    tags: ['European Butter', 'Handmade', 'Fresh Daily'],
+    tags: ['Butter', 'French'],
     availability: 'In Stock',
     pickupDays: ['Daily'],
     stockLevel: 'In Stock',
     rating: 4.9,
     reviewCount: 89,
-    description: 'Buttery, flaky croissants made with European butter.',
+    description: 'Buttery, flaky French pastries',
     isVerified: true,
-    orderWindows: ['home-delivery', 'farmers-market-sat', 'ponce-market-sun', 'krog-market-first-sat']
+    locationId: 'main',
+    locationType: 'pickup'
   },
-     {
-     id: '3',
-     name: 'Herb Focaccia',
-     price: 6.99,
-     originalPrice: null,
-     image: '/product-focaccia.jpg',
-     category: 'Bread',
-     tags: ['Herbs', 'Olive Oil', 'Artisan'],
-     availability: 'Out of Stock',
-     pickupDays: ['Friday', 'Sunday'],
-     stockLevel: 'Out of Stock',
-     rating: 4.7,
-     reviewCount: 76,
-     description: 'Herb-infused focaccia with olive oil and sea salt.',
-     isVerified: true,
-     orderWindows: ['farmers-market-sat', 'ponce-market-sun', 'krog-market-first-sat']
-   },
   {
-    id: '4',
-    name: 'Glazed Doughnuts',
-    price: 3.99,
+    id: 'main-3',
+    name: 'Chocolate Chip Cookies (12-pack)',
+    price: 9.99,
     originalPrice: null,
-    image: '/product-doughnuts.jpg',
+    image: '/product-cookies.jpg',
     category: 'Pastries',
-    tags: ['Fresh Daily', 'Handmade', 'Classic'],
+    tags: ['Sweet', 'Chocolate'],
     availability: 'In Stock',
     pickupDays: ['Daily'],
     stockLevel: 'In Stock',
-    rating: 4.6,
-    reviewCount: 45,
-    description: 'Classic glazed doughnuts with a perfect sweet glaze.',
+    rating: 4.7,
+    reviewCount: 65,
+    description: 'Fresh baked cookies with premium chocolate',
     isVerified: true,
-    orderWindows: ['farmers-market-sat', 'ponce-market-sun', 'krog-market-first-sat']
+    locationId: 'main',
+    locationType: 'pickup'
   },
-     {
-     id: '5',
-     name: 'Whole Wheat Loaf',
-     price: 7.99,
-     originalPrice: null,
-     image: '/product-wholewheat.jpg',
-     category: 'Bread',
-     tags: ['Whole Grain', 'Healthy', 'Organic'],
-     availability: 'Back Soon',
-     pickupDays: ['Wednesday', 'Saturday'],
-     stockLevel: 'Back Soon',
-     rating: 4.5,
-     reviewCount: 34,
-     description: 'Nutritious whole wheat bread with a hearty texture.',
-     isVerified: true,
-     orderWindows: ['home-delivery']
-   }
+
+  // Midtown Pickup Location Products
+  {
+    id: 'midtown-1',
+    name: 'Multigrain Artisan Bread',
+    price: 7.99,
+    originalPrice: null,
+    image: '/product-multigrain.jpg',
+    category: 'Bread',
+    tags: ['Whole Grain', 'Organic'],
+    availability: 'In Stock',
+    pickupDays: ['Tue-Sat'],
+    stockLevel: 'In Stock',
+    rating: 4.6,
+    reviewCount: 54,
+    description: 'Hearty multigrain with seeds and nuts',
+    isVerified: true,
+    locationId: 'midtown',
+    locationType: 'pickup'
+  },
+  {
+    id: 'midtown-2',
+    name: 'Almond Croissants (4-pack)',
+    price: 14.99,
+    originalPrice: null,
+    image: '/product-almond-croissants.jpg',
+    category: 'Pastries',
+    tags: ['Almond', 'French'],
+    availability: 'In Stock',
+    pickupDays: ['Tue-Sat'],
+    stockLevel: 'Low Stock',
+    rating: 4.9,
+    reviewCount: 43,
+    description: 'Croissants filled with almond cream',
+    isVerified: true,
+    locationId: 'midtown',
+    locationType: 'pickup'
+  },
+  {
+    id: 'midtown-3',
+    name: 'Cinnamon Rolls (4-pack)',
+    price: 10.99,
+    originalPrice: null,
+    image: '/product-cinnamon-rolls.jpg',
+    category: 'Pastries',
+    tags: ['Sweet', 'Cinnamon'],
+    availability: 'In Stock',
+    pickupDays: ['Tue-Sat'],
+    stockLevel: 'In Stock',
+    rating: 4.8,
+    reviewCount: 78,
+    description: 'Warm, gooey rolls with cream cheese frosting',
+    isVerified: true,
+    locationId: 'midtown',
+    locationType: 'pickup'
+  },
+
+  // Storefront 0 Products (Saturday Farmers Market)
+  {
+    id: 'store-0-1',
+    name: 'Rustic Country Loaf',
+    price: 9.99,
+    originalPrice: null,
+    image: '/product-country-loaf.jpg',
+    category: 'Bread',
+    tags: ['Organic', 'Rustic'],
+    availability: 'In Stock',
+    pickupDays: ['Saturday'],
+    stockLevel: 'In Stock',
+    rating: 4.7,
+    reviewCount: 92,
+    description: 'Traditional country-style bread',
+    isVerified: true,
+    locationId: 'storefront-0',
+    locationType: 'storefront'
+  },
+  {
+    id: 'store-0-2',
+    name: 'Blueberry Muffins (6-pack)',
+    price: 11.99,
+    originalPrice: null,
+    image: '/product-blueberry-muffins.jpg',
+    category: 'Pastries',
+    tags: ['Sweet', 'Blueberry'],
+    availability: 'In Stock',
+    pickupDays: ['Saturday'],
+    stockLevel: 'In Stock',
+    rating: 4.8,
+    reviewCount: 61,
+    description: 'Fresh blueberry muffins with streusel topping',
+    isVerified: true,
+    locationId: 'storefront-0',
+    locationType: 'storefront'
+  },
+  {
+    id: 'store-0-3',
+    name: 'Focaccia Bread',
+    price: 8.99,
+    originalPrice: null,
+    image: '/product-focaccia.jpg',
+    category: 'Bread',
+    tags: ['Italian', 'Herb'],
+    availability: 'In Stock',
+    pickupDays: ['Saturday'],
+    stockLevel: 'In Stock',
+    rating: 4.6,
+    reviewCount: 47,
+    description: 'Italian flatbread with rosemary and olive oil',
+    isVerified: true,
+    locationId: 'storefront-0',
+    locationType: 'storefront'
+  },
+
+  // Storefront 1 Products (Sunday Afternoon Market)
+  {
+    id: 'store-1-1',
+    name: 'Baguette (French Bread)',
+    price: 5.99,
+    originalPrice: null,
+    image: '/product-baguette.jpg',
+    category: 'Bread',
+    tags: ['French', 'Classic'],
+    availability: 'In Stock',
+    pickupDays: ['Sunday'],
+    stockLevel: 'In Stock',
+    rating: 4.9,
+    reviewCount: 112,
+    description: 'Classic French baguette with crispy crust',
+    isVerified: true,
+    locationId: 'storefront-1',
+    locationType: 'storefront'
+  },
+  {
+    id: 'store-1-2',
+    name: 'Pain au Chocolat (4-pack)',
+    price: 13.99,
+    originalPrice: null,
+    image: '/product-pain-au-chocolat.jpg',
+    category: 'Pastries',
+    tags: ['Chocolate', 'French'],
+    availability: 'In Stock',
+    pickupDays: ['Sunday'],
+    stockLevel: 'In Stock',
+    rating: 4.9,
+    reviewCount: 87,
+    description: 'Chocolate-filled pastries',
+    isVerified: true,
+    locationId: 'storefront-1',
+    locationType: 'storefront'
+  },
+
+  // Event 0 Products
+  {
+    id: 'event-0-1',
+    name: 'Pretzel Rolls (6-pack)',
+    price: 8.99,
+    originalPrice: null,
+    image: '/product-pretzel-rolls.jpg',
+    category: 'Bread',
+    tags: ['Pretzel', 'Salt'],
+    availability: 'In Stock',
+    pickupDays: ['Event Days'],
+    stockLevel: 'In Stock',
+    rating: 4.7,
+    reviewCount: 56,
+    description: 'Soft pretzel-style dinner rolls',
+    isVerified: true,
+    locationId: 'event-0',
+    locationType: 'event'
+  },
+  {
+    id: 'event-0-2',
+    name: 'Danish Pastries (4-pack)',
+    price: 12.99,
+    originalPrice: null,
+    image: '/product-danish.jpg',
+    category: 'Pastries',
+    tags: ['Sweet', 'Fruit'],
+    availability: 'In Stock',
+    pickupDays: ['Event Days'],
+    stockLevel: 'Low Stock',
+    rating: 4.8,
+    reviewCount: 72,
+    description: 'Assorted fruit-filled Danish pastries',
+    isVerified: true,
+    locationId: 'event-0',
+    locationType: 'event'
+  },
+
+  // Event 1 Products
+  {
+    id: 'event-1-1',
+    name: 'Ciabatta Bread',
+    price: 7.99,
+    originalPrice: null,
+    image: '/product-ciabatta.jpg',
+    category: 'Bread',
+    tags: ['Italian', 'Artisan'],
+    availability: 'In Stock',
+    pickupDays: ['Event Days'],
+    stockLevel: 'In Stock',
+    rating: 4.6,
+    reviewCount: 49,
+    description: 'Italian white bread with open crumb',
+    isVerified: true,
+    locationId: 'event-1',
+    locationType: 'event'
+  },
+  {
+    id: 'event-1-2',
+    name: 'Lemon Poppy Seed Muffins (6-pack)',
+    price: 10.99,
+    originalPrice: null,
+    image: '/product-lemon-muffins.jpg',
+    category: 'Pastries',
+    tags: ['Sweet', 'Lemon'],
+    availability: 'In Stock',
+    pickupDays: ['Event Days'],
+    stockLevel: 'In Stock',
+    rating: 4.7,
+    reviewCount: 58,
+    description: 'Light and zesty lemon muffins',
+    isVerified: true,
+    locationId: 'event-1',
+    locationType: 'event'
+  },
+
+  // Event 2 Products
+  {
+    id: 'event-2-1',
+    name: 'Rye Bread',
+    price: 8.99,
+    originalPrice: null,
+    image: '/product-rye.jpg',
+    category: 'Bread',
+    tags: ['Rye', 'Seeds'],
+    availability: 'In Stock',
+    pickupDays: ['Event Days'],
+    stockLevel: 'In Stock',
+    rating: 4.5,
+    reviewCount: 38,
+    description: 'Traditional rye with caraway seeds',
+    isVerified: true,
+    locationId: 'event-2',
+    locationType: 'event'
+  },
+  {
+    id: 'event-2-2',
+    name: 'Scones (4-pack)',
+    price: 11.99,
+    originalPrice: null,
+    image: '/product-scones.jpg',
+    category: 'Pastries',
+    tags: ['British', 'Cream'],
+    availability: 'In Stock',
+    pickupDays: ['Event Days'],
+    stockLevel: 'In Stock',
+    rating: 4.8,
+    reviewCount: 64,
+    description: 'British-style scones with clotted cream',
+    isVerified: true,
+    locationId: 'event-2',
+    locationType: 'event'
+  }
 ];
 
 // Order window options
@@ -410,7 +644,6 @@ const DemoStorefrontPage: React.FC = () => {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [showQuickAddModal, setShowQuickAddModal] = useState(false);
   const [showVacationOverlay, setShowVacationOverlay] = useState(storeData.isOnVacation);
-  const [selectedOrderWindow, setSelectedOrderWindow] = useState('home-delivery');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [priceRange, setPriceRange] = useState('all');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -424,9 +657,20 @@ const DemoStorefrontPage: React.FC = () => {
   const [showCartModal, setShowCartModal] = useState(false);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
   const [showSiteEditor, setShowSiteEditor] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<{type: 'pickup' | 'storefront' | 'event', id: string, name: string} | null>(null);
   const [siteSettings, setSiteSettings] = useState({
     siteName: storeData.siteName,
     tagline: storeData.tagline,
+    ourStory: 'We started as a small family bakery with a passion for creating authentic, delicious bread using traditional methods and modern techniques. Our sourdough starter has been lovingly maintained for over 15 years, creating the perfect foundation for our artisanal breads.',
+    values: storeData.values,
+    sustainabilityCommitments: storeData.sustainabilityCommitments,
+    awards: ['Best Bakery 2024 - Atlanta Magazine', 'Gold Medal - National Bread Competition', 'Top 10 Artisan Bakers in Georgia'],
+    charities: ['Atlanta Community Food Bank', 'Local Schools Breakfast Program', 'Sustainable Farming Initiative'],
+    trustAndSafety: {
+      secureCheckout: 'SSL encrypted payments',
+      verifiedVendor: 'Identity confirmed',
+      returnPolicy: '7-day satisfaction guarantee'
+    },
     pageBackgroundColor: '#FFFFFF',
     boxBackgroundColor: '#F7F2EC',
     fontColor: '#2C2C2C',
@@ -595,8 +839,13 @@ const DemoStorefrontPage: React.FC = () => {
   };
 
   const filteredProducts = products.filter(product => {
-    // Filter by order window first
-    if (!product.orderWindows.includes(selectedOrderWindow)) return false;
+    // Filter by selected location (pickup, storefront, or event)
+    if (!selectedLocation) return false;
+    
+    // Match products to selected location
+    if (product.locationId !== selectedLocation.id || product.locationType !== selectedLocation.type) {
+      return false;
+    }
     
     // Filter by category
     if (selectedCategory !== 'all' && product.category !== selectedCategory) return false;
@@ -607,9 +856,6 @@ const DemoStorefrontPage: React.FC = () => {
       if (max && product.price > max) return false;
       if (min && product.price < min) return false;
     }
-    
-    // Filter by tags
-    if (selectedTags.length > 0 && !selectedTags.some(tag => product.tags.includes(tag))) return false;
     
     return true;
   });
@@ -876,22 +1122,239 @@ const DemoStorefrontPage: React.FC = () => {
            </div>
          </div>
          
-                   {/* Map Section */}
-          <div 
-            className="rounded-2xl p-6 mb-8 shadow-xl border border-gray-200"
-            style={{ backgroundColor: siteSettings.boxBackgroundColor }}
-          >
-            <h3 className="text-xl font-bold mb-4" style={{ color: siteSettings.fontColor }}>Service Area & Events</h3>
-            <div className="w-full h-64 rounded-lg shadow-lg border border-gray-200 relative overflow-hidden bg-white">
-              <CoverageMap 
-                coverageZips={storeData.coverageZips}
-                city={storeData.city}
-                state={storeData.state}
-                upcomingEvents={upcomingEvents}
-                siteSettings={siteSettings}
-              />
-            </div>
-          </div>
+                  {/* Where to Find Us - Three Box Layout */}
+         <div className="mb-8">
+           <div className="flex items-start justify-between mb-6">
+             <div>
+               <h2 className="text-2xl font-bold" style={{ color: siteSettings.fontColor }}>
+                 Where to Find Us
+               </h2>
+               <p className="text-sm mt-2" style={{ color: siteSettings.fontColor, opacity: 0.7 }}>
+                 Click on any location below to view products available at that sales window
+               </p>
+             </div>
+             {selectedLocation && (
+               <button
+                 onClick={() => setSelectedLocation(null)}
+                 className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                 style={{ color: siteSettings.fontColor }}
+               >
+                 Clear Selection
+               </button>
+             )}
+           </div>
+           
+           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+             {/* Pickup Locations */}
+             <div 
+               className="rounded-2xl p-6 shadow-xl border border-gray-200"
+               style={{ backgroundColor: siteSettings.boxBackgroundColor }}
+             >
+               <div className="flex items-center gap-2 mb-4">
+                 <MapPin className="w-6 h-6" style={{ color: siteSettings.linkColor }} />
+                 <h3 className="text-xl font-bold" style={{ color: siteSettings.fontColor }}>
+                   Pickup Locations
+                 </h3>
+               </div>
+               <p className="text-sm mb-4" style={{ color: siteSettings.fontColor, opacity: 0.8 }}>
+                 Order online and pick up at these locations
+               </p>
+               
+               <div className="space-y-3">
+                 <button
+                   onClick={() => setSelectedLocation({type: 'pickup', id: 'main', name: 'Main Location'})}
+                   className={`w-full text-left bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-all ${
+                     selectedLocation?.type === 'pickup' && selectedLocation?.id === 'main' 
+                       ? 'ring-2 ring-offset-2' 
+                       : ''
+                   }`}
+                   style={{
+                     ringColor: selectedLocation?.type === 'pickup' && selectedLocation?.id === 'main' 
+                       ? siteSettings.linkColor 
+                       : undefined
+                   }}
+                 >
+                   <h4 className="font-semibold mb-1" style={{ color: siteSettings.fontColor }}>
+                     Main Location
+                   </h4>
+                   <p className="text-sm mb-2" style={{ color: siteSettings.fontColor, opacity: 0.7 }}>
+                     123 Artisan Way, Atlanta, GA 30301
+                   </p>
+                   <div className="text-xs space-y-1" style={{ color: siteSettings.fontColor, opacity: 0.6 }}>
+                     <div>Mon-Fri: 7AM - 6PM</div>
+                     <div>Sat: 8AM - 5PM</div>
+                     <div>Sun: 9AM - 3PM</div>
+                   </div>
+                   {selectedLocation?.type === 'pickup' && selectedLocation?.id === 'main' && (
+                     <div className="mt-2 text-xs font-medium" style={{ color: siteSettings.linkColor }}>
+                       ✓ Showing products for this location
+                     </div>
+                   )}
+                 </button>
+                 
+                 <button
+                   onClick={() => setSelectedLocation({type: 'pickup', id: 'midtown', name: 'Midtown Location'})}
+                   className={`w-full text-left bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-all ${
+                     selectedLocation?.type === 'pickup' && selectedLocation?.id === 'midtown' 
+                       ? 'ring-2 ring-offset-2' 
+                       : ''
+                   }`}
+                   style={{
+                     ringColor: selectedLocation?.type === 'pickup' && selectedLocation?.id === 'midtown' 
+                       ? siteSettings.linkColor 
+                       : undefined
+                   }}
+                 >
+                   <h4 className="font-semibold mb-1" style={{ color: siteSettings.fontColor }}>
+                     Midtown Location
+                   </h4>
+                   <p className="text-sm mb-2" style={{ color: siteSettings.fontColor, opacity: 0.7 }}>
+                     456 Peachtree St, Atlanta, GA 30308
+                   </p>
+                   <div className="text-xs space-y-1" style={{ color: siteSettings.fontColor, opacity: 0.6 }}>
+                     <div>Tue-Sat: 9AM - 5PM</div>
+                     <div>Closed Sun-Mon</div>
+                   </div>
+                   {selectedLocation?.type === 'pickup' && selectedLocation?.id === 'midtown' && (
+                     <div className="mt-2 text-xs font-medium" style={{ color: siteSettings.linkColor }}>
+                       ✓ Showing products for this location
+                     </div>
+                   )}
+                 </button>
+               </div>
+             </div>
+
+             {/* Storefronts */}
+             <div 
+               className="rounded-2xl p-6 shadow-xl border border-gray-200"
+               style={{ backgroundColor: siteSettings.boxBackgroundColor }}
+             >
+               <div className="flex items-center gap-2 mb-4">
+                 <Package className="w-6 h-6" style={{ color: siteSettings.buttonColor }} />
+                 <h3 className="text-xl font-bold" style={{ color: siteSettings.fontColor }}>
+                   Storefronts
+                 </h3>
+               </div>
+               <p className="text-sm mb-4" style={{ color: siteSettings.fontColor, opacity: 0.8 }}>
+                 Find us at these retail locations
+               </p>
+               
+               <div className="space-y-3">
+                 {orderWindows.slice(0, 2).map((window, index) => (
+                   <button
+                     key={index}
+                     onClick={() => setSelectedLocation({type: 'storefront', id: `storefront-${index}`, name: window.name})}
+                     className={`w-full text-left bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-all ${
+                       selectedLocation?.type === 'storefront' && selectedLocation?.id === `storefront-${index}` 
+                         ? 'ring-2 ring-offset-2' 
+                         : ''
+                     }`}
+                     style={{
+                       ringColor: selectedLocation?.type === 'storefront' && selectedLocation?.id === `storefront-${index}` 
+                         ? siteSettings.buttonColor 
+                         : undefined
+                     }}
+                   >
+                     <div className="flex items-start justify-between mb-2">
+                       <h4 className="font-semibold" style={{ color: siteSettings.fontColor }}>
+                         {window.name}
+                       </h4>
+                       <span 
+                         className="inline-block px-2 py-1 rounded-full text-xs font-medium"
+                         style={{ 
+                           backgroundColor: window.status === 'Open' ? '#22c55e20' : '#ef444420',
+                           color: window.status === 'Open' ? '#16a34a' : '#dc2626'
+                         }}
+                       >
+                         {window.status}
+                       </span>
+                     </div>
+                     <div className="space-y-1 text-sm">
+                       <div className="flex items-center gap-2" style={{ color: siteSettings.fontColor, opacity: 0.8 }}>
+                         <Clock className="w-3 h-3" />
+                         <span>{window.time}</span>
+                       </div>
+                       <div className="flex items-center gap-2" style={{ color: siteSettings.fontColor, opacity: 0.8 }}>
+                         <MapPin className="w-3 h-3" />
+                         <span className="text-xs">{window.location}</span>
+                       </div>
+                       {window.orderBy && (
+                         <div className="flex items-center gap-2 text-orange-600 font-medium text-xs">
+                           <Package className="w-3 h-3" />
+                           <span>Order by: {window.orderBy}</span>
+                         </div>
+                       )}
+                     </div>
+                     {selectedLocation?.type === 'storefront' && selectedLocation?.id === `storefront-${index}` && (
+                       <div className="mt-2 text-xs font-medium" style={{ color: siteSettings.buttonColor }}>
+                         ✓ Showing products for this location
+                       </div>
+                     )}
+                   </button>
+                 ))}
+               </div>
+             </div>
+
+             {/* Markets & Vendor Events */}
+             <div 
+               className="rounded-2xl p-6 shadow-xl border border-gray-200"
+               style={{ backgroundColor: siteSettings.boxBackgroundColor }}
+             >
+               <div className="flex items-center gap-2 mb-4">
+                 <Calendar className="w-6 h-6" style={{ color: siteSettings.linkColor }} />
+                 <h3 className="text-xl font-bold" style={{ color: siteSettings.fontColor }}>
+                   Markets & Events
+                 </h3>
+               </div>
+               <p className="text-sm mb-4" style={{ color: siteSettings.fontColor, opacity: 0.8 }}>
+                 Visit us at upcoming markets and events
+               </p>
+               
+               <div className="space-y-3">
+                 {upcomingEvents.slice(0, 3).map((event, index) => (
+                   <button
+                     key={`event-${index}`}
+                     onClick={() => setSelectedLocation({type: 'event', id: `event-${index}`, name: event.name})}
+                     className={`w-full text-left bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-all ${
+                       selectedLocation?.type === 'event' && selectedLocation?.id === `event-${index}` 
+                         ? 'ring-2 ring-offset-2' 
+                         : ''
+                     }`}
+                     style={{
+                       ringColor: selectedLocation?.type === 'event' && selectedLocation?.id === `event-${index}` 
+                         ? siteSettings.linkColor 
+                         : undefined
+                     }}
+                   >
+                     <div className="flex items-start justify-between mb-2">
+                       <h4 className="font-semibold text-sm" style={{ color: siteSettings.fontColor }}>
+                         {event.name}
+                       </h4>
+                       <span className="inline-block px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                         Event
+                       </span>
+                     </div>
+                     <div className="space-y-1 text-xs">
+                       <div className="flex items-center gap-2" style={{ color: siteSettings.fontColor, opacity: 0.8 }}>
+                         <Calendar className="w-3 h-3" />
+                         <span>{event.date}</span>
+                       </div>
+                       <div className="flex items-center gap-2" style={{ color: siteSettings.fontColor, opacity: 0.8 }}>
+                         <MapPin className="w-3 h-3" />
+                         <span>{event.location}</span>
+                       </div>
+                     </div>
+                     {selectedLocation?.type === 'event' && selectedLocation?.id === `event-${index}` && (
+                       <div className="mt-2 text-xs font-medium" style={{ color: siteSettings.linkColor }}>
+                         ✓ Showing products for this event
+                       </div>
+                     )}
+                   </button>
+                 ))}
+               </div>
+             </div>
+           </div>
+         </div>
 
                  {/* Filters */}
          <div 
@@ -903,19 +1366,6 @@ const DemoStorefrontPage: React.FC = () => {
                <Filter className="w-4 h-4" style={{ color: siteSettings.fontColor }} />
                <span className="font-medium" style={{ color: siteSettings.fontColor }}>Filters:</span>
              </div>
-             
-             <select
-               value={selectedOrderWindow}
-               onChange={(e) => setSelectedOrderWindow(e.target.value)}
-               className="px-3 py-2 border border-gray-300 rounded-lg focus:border-[#5B6E02] focus:outline-none shadow-sm min-w-[200px]"
-               aria-label="Select order window"
-             >
-               {orderWindows.map(window => (
-                 <option key={window.id} value={window.id}>
-                   {window.name}
-                 </option>
-               ))}
-             </select>
 
              <select
                value={selectedCategory}
@@ -939,64 +1389,43 @@ const DemoStorefrontPage: React.FC = () => {
                <option value="5-10">$5 - $10</option>
                <option value="10-20">$10 - $20</option>
              </select>
-
-             <div className="flex flex-wrap gap-2">
-               {allTags.map(tag => (
-                 <button
-                   key={tag}
-                   onClick={() => setSelectedTags(prev => 
-                     prev.includes(tag) 
-                       ? prev.filter(t => t !== tag)
-                       : [...prev, tag]
-                   )}
-                   className={`px-3 py-1 rounded-full text-sm transition-colors shadow-sm ${
-                     selectedTags.includes(tag)
-                       ? 'bg-[#5B6E02] text-white'
-                       : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                   }`}
-                 >
-                   #{tag}
-                 </button>
-               ))}
-             </div>
-           </div>
-           
-           {/* Order Window Info */}
-           <div className="mt-4 p-3 bg-white rounded-lg border border-gray-200">
-             <div className="flex items-center justify-between">
-               <div>
-                 <h4 className="font-medium text-[#2C2C2C]">
-                   {orderWindows.find(w => w.id === selectedOrderWindow)?.name}
-                 </h4>
-                 <p className="text-sm text-gray-600">
-                   {orderWindows.find(w => w.id === selectedOrderWindow)?.description}
-                 </p>
-                 <p className="text-xs text-gray-500 mt-1">
-                   {orderWindows.find(w => w.id === selectedOrderWindow)?.address}
-                 </p>
-               </div>
-               <div className="text-right">
-                 <p className="text-sm text-gray-600">
-                   {orderWindows.find(w => w.id === selectedOrderWindow)?.days?.join(', ')}
-                 </p>
-                 <p className="text-sm text-gray-600">
-                   {orderWindows.find(w => w.id === selectedOrderWindow)?.time}
-                 </p>
-                 {orderWindows.find(w => w.id === selectedOrderWindow)?.fee && (
-                   <p className="text-sm font-medium text-[#5B6E02]">
-                     Delivery Fee: {orderWindows.find(w => w.id === selectedOrderWindow)?.fee}
-                   </p>
-                 )}
-               </div>
-             </div>
            </div>
          </div>
 
         {/* Products Grid */}
         <div className="mb-12">
-          <h2 className="text-2xl font-bold mb-6" style={{ color: siteSettings.fontColor }}>Products</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProducts.map((product) => (
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold" style={{ color: siteSettings.fontColor }}>Products</h2>
+            {selectedLocation && (
+              <span className="text-sm px-4 py-2 rounded-lg shadow-sm" style={{ backgroundColor: siteSettings.boxBackgroundColor, color: siteSettings.fontColor }}>
+                Showing products for: <span className="font-semibold">{selectedLocation.name}</span>
+              </span>
+            )}
+          </div>
+
+          {!selectedLocation ? (
+            <div className="text-center py-16 rounded-xl shadow-xl border border-gray-200" style={{ backgroundColor: siteSettings.boxBackgroundColor }}>
+              <Package className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+              <h3 className="text-xl font-semibold mb-2" style={{ color: siteSettings.fontColor }}>
+                Select a Location to View Products
+              </h3>
+              <p className="text-gray-600 mb-4">
+                Choose a pickup location, storefront, or event above to see available products
+              </p>
+            </div>
+          ) : filteredProducts.length === 0 ? (
+            <div className="text-center py-16 rounded-xl shadow-xl border border-gray-200" style={{ backgroundColor: siteSettings.boxBackgroundColor }}>
+              <Package className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+              <h3 className="text-xl font-semibold mb-2" style={{ color: siteSettings.fontColor }}>
+                No Products Match Your Filters
+              </h3>
+              <p className="text-gray-600">
+                Try adjusting your category, price, or tag filters
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredProducts.map((product) => (
                              <div key={product.id} className="rounded-xl shadow-xl overflow-hidden border border-gray-200 hover:shadow-2xl transition-shadow duration-300 flex flex-col"
                     style={{ backgroundColor: siteSettings.boxBackgroundColor }}>
                 <div className="relative">
@@ -1108,140 +1537,22 @@ const DemoStorefrontPage: React.FC = () => {
               </div>
             ))}
           </div>
-        </div>
-
-        {/* Fulfillment Info */}
-        <div className="rounded-xl shadow-xl p-6 mb-8"
-             style={{ backgroundColor: siteSettings.boxBackgroundColor }}>
-          <h3 className="text-xl font-bold mb-4" style={{ color: siteSettings.fontColor }}>Fulfillment & Pickup</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-              <div className="flex items-center space-x-3">
-                <Calendar className="w-6 h-6" style={{ color: siteSettings.linkColor }} />
-                <div>
-                  <div className="font-medium" style={{ color: siteSettings.fontColor }}>Next Pickup</div>
-                  <div className="text-sm" style={{ color: siteSettings.fontColor }}>Wednesday, Jan 17 • 2:00 PM</div>
-                </div>
-              </div>
-              <div className="flex items-center space-x-3">
-                <MapPin className="w-6 h-6" style={{ color: siteSettings.linkColor }} />
-                <div>
-                  <div className="font-medium" style={{ color: siteSettings.fontColor }}>Pickup Location</div>
-                  <div className="text-sm" style={{ color: siteSettings.fontColor }}>123 Artisan Way, Atlanta</div>
-                </div>
-              </div>
-              <div className="flex items-center space-x-3">
-                <Truck className="w-6 h-6" style={{ color: siteSettings.linkColor }} />
-                <div>
-                  <div className="font-medium" style={{ color: siteSettings.fontColor }}>Delivery</div>
-                  <div className="text-sm" style={{ color: siteSettings.fontColor }}>Available in {storeData.coverageZips.length} ZIP codes • $5.99</div>
-                </div>
-              </div>
-            </div>
-          
-                     {/* Upcoming Events */}
-           <div className="border-t pt-4">
-             <h4 className="font-semibold mb-3" style={{ color: siteSettings.fontColor }}>Upcoming Events & Markets</h4>
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-               {(showAllEvents ? upcomingEvents : upcomingEvents.slice(0, 4)).map(event => (
-                 <div key={event.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow">
-                   <div className="flex items-start justify-between mb-2">
-                     <div className="flex-1">
-                       <h5 className="font-medium mb-1" style={{ color: siteSettings.fontColor }}>{event.name}</h5>
-                       <p className="text-sm mb-1" style={{ color: siteSettings.fontColor }}>
-                         {new Date(event.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} • {event.time}
-                       </p>
-                       <p className="text-xs mb-2" style={{ color: siteSettings.fontColor }}>{event.address}</p>
-                       <div className="flex items-center gap-2 mb-2">
-                         <span className={`text-xs px-2 py-1 rounded-full ${
-                           event.type === 'Market' 
-                             ? 'bg-green-100 text-green-800' 
-                             : 'bg-blue-100 text-blue-800'
-                         }`}>
-                           {event.type}
-                         </span>
-                         <span className="text-xs" style={{ color: siteSettings.fontColor }}>{event.available} spots left</span>
-                       </div>
-                       <p className="text-xs line-clamp-2" style={{ color: siteSettings.fontColor }}>{event.description}</p>
-                     </div>
-                   </div>
-                                       <div className="flex items-center justify-between">
-                      <button 
-                        onClick={() => {
-                          // Handle joining the event
-                          if (event.available > 0) {
-                            alert(`You've successfully joined ${event.name}! We'll send you a confirmation email with details.`);
-                          } else {
-                            alert(`Sorry, ${event.name} is currently full. Please check back later or contact the vendor for waitlist options.`);
-                          }
-                        }}
-                        className={`px-3 py-1 rounded text-sm shadow-sm transition-colors ${
-                          event.available > 0 
-                            ? 'text-white' 
-                            : 'bg-gray-400 text-gray-600 cursor-not-allowed'
-                        }`}
-                        style={{
-                          backgroundColor: event.available > 0 ? siteSettings.buttonColor : undefined
-                        }}
-                        disabled={event.available === 0}
-                      >
-                        {event.available > 0 ? 'Join Event' : 'Event Full'}
-                      </button>
-                      {event.eventUrl && (
-                        <a 
-                          href={event.eventUrl} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-xs underline flex items-center gap-1"
-                          style={{ color: siteSettings.linkColor }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.color = siteSettings.buttonColor;
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.color = siteSettings.linkColor;
-                          }}
-                        >
-                          Details
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
-                      )}
-                    </div>
-                 </div>
-               ))}
-             </div>
-             {upcomingEvents.length > 4 && (
-               <div className="text-center mt-4">
-                                <button 
-                 onClick={() => setShowAllEvents(!showAllEvents)}
-                 className="text-sm font-medium flex items-center justify-center gap-2 mx-auto"
-                 style={{ color: siteSettings.linkColor }}
-                 onMouseEnter={(e) => {
-                   e.currentTarget.style.color = siteSettings.buttonColor;
-                 }}
-                 onMouseLeave={(e) => {
-                   e.currentTarget.style.color = siteSettings.linkColor;
-                 }}
-               >
-                 {showAllEvents ? 'Show Less' : `View All ${upcomingEvents.length} Events`}
-                 {showAllEvents ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-               </button>
-               </div>
-             )}
-           </div>
+          )}
         </div>
 
         {/* Vendor Story */}
         <div className="rounded-xl shadow-xl p-6 mb-8"
              style={{ backgroundColor: siteSettings.boxBackgroundColor }}>
-          <h3 className="text-xl font-bold text-[#2C2C2C] mb-4">Our Story</h3>
+          <h3 className="text-xl font-bold mb-4" style={{ color: siteSettings.fontColor }}>Our Story</h3>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                We started as a small family bakery with a passion for creating authentic, delicious bread using traditional methods and modern techniques. Our sourdough starter has been lovingly maintained for over 15 years, creating the perfect foundation for our artisanal breads.
+              <p className="leading-relaxed mb-4" style={{ color: siteSettings.fontColor }}>
+                {siteSettings.ourStory || 'We started as a small family bakery with a passion for creating authentic, delicious bread using traditional methods and modern techniques. Our sourdough starter has been lovingly maintained for over 15 years, creating the perfect foundation for our artisanal breads.'}
               </p>
               <div className="space-y-3">
-                <h4 className="font-semibold text-[#2C2C2C]">Sustainability Commitments:</h4>
+                <h4 className="font-semibold" style={{ color: siteSettings.fontColor }}>Sustainability Commitments:</h4>
                 <div className="flex flex-wrap gap-2">
-                  {storeData.sustainabilityCommitments.map(commitment => (
+                  {(siteSettings.sustainabilityCommitments || storeData.sustainabilityCommitments).map(commitment => (
                     <span key={commitment} className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
                       {commitment}
                     </span>
@@ -1250,18 +1561,73 @@ const DemoStorefrontPage: React.FC = () => {
               </div>
             </div>
             <div className="space-y-4">
-              <h4 className="font-semibold text-[#2C2C2C]">Our Values:</h4>
+              <h4 className="font-semibold" style={{ color: siteSettings.fontColor }}>Our Values:</h4>
               <div className="space-y-2">
-                {storeData.values.map(value => (
+                {(siteSettings.values || storeData.values).map(value => (
                   <div key={value} className="flex items-center space-x-2">
                     <CheckCircle className="w-4 h-4 text-green-500" />
-                    <span className="text-gray-700">{value}</span>
+                    <span style={{ color: siteSettings.fontColor }}>{value}</span>
                   </div>
                 ))}
               </div>
             </div>
           </div>
         </div>
+
+        {/* Awards & Charities */}
+        {((siteSettings.awards && siteSettings.awards.length > 0) || (siteSettings.charities && siteSettings.charities.length > 0)) && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            {/* Awards & Achievements */}
+            {siteSettings.awards && siteSettings.awards.length > 0 && (
+              <div 
+                className="rounded-xl shadow-xl p-6"
+                style={{ backgroundColor: siteSettings.boxBackgroundColor }}
+              >
+                <div className="flex items-center gap-2 mb-4">
+                  <Award className="w-6 h-6 text-yellow-600" />
+                  <h3 className="text-xl font-bold" style={{ color: siteSettings.fontColor }}>
+                    Awards & Recognition
+                  </h3>
+                </div>
+                <div className="space-y-3">
+                  {siteSettings.awards.filter(award => award.trim()).map((award, index) => (
+                    <div key={index} className="flex items-start gap-3 bg-white rounded-lg p-3 shadow-sm">
+                      <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <Award className="w-4 h-4 text-yellow-600" />
+                      </div>
+                      <p className="text-sm flex-1" style={{ color: siteSettings.fontColor }}>{award}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Supported Charities */}
+            {siteSettings.charities && siteSettings.charities.length > 0 && (
+              <div 
+                className="rounded-xl shadow-xl p-6"
+                style={{ backgroundColor: siteSettings.boxBackgroundColor }}
+              >
+                <div className="flex items-center gap-2 mb-4">
+                  <Heart className="w-6 h-6 text-red-500" />
+                  <h3 className="text-xl font-bold" style={{ color: siteSettings.fontColor }}>
+                    Supporting Our Community
+                  </h3>
+                </div>
+                <div className="space-y-3">
+                  {siteSettings.charities.filter(charity => charity.trim()).map((charity, index) => (
+                    <div key={index} className="flex items-start gap-3 bg-white rounded-lg p-3 shadow-sm">
+                      <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <Heart className="w-4 h-4 text-red-500" />
+                      </div>
+                      <p className="text-sm flex-1" style={{ color: siteSettings.fontColor }}>{charity}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Reviews */}
         <div className="rounded-xl shadow-xl p-6 mb-8"
@@ -1335,27 +1701,33 @@ const DemoStorefrontPage: React.FC = () => {
         {/* Trust & Safety */}
         <div className="rounded-xl shadow-xl p-6 mb-8"
              style={{ backgroundColor: siteSettings.boxBackgroundColor }}>
-          <h3 className="text-xl font-bold text-[#2C2C2C] mb-4">Trust & Safety</h3>
+          <h3 className="text-xl font-bold mb-4" style={{ color: siteSettings.fontColor }}>Trust & Safety</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="flex items-center space-x-3">
               <Shield className="w-6 h-6 text-green-500" />
               <div>
-                <div className="font-medium">Secure Checkout</div>
-                <div className="text-sm text-gray-600">SSL encrypted payments</div>
+                <div className="font-medium" style={{ color: siteSettings.fontColor }}>Secure Checkout</div>
+                <div className="text-sm" style={{ color: siteSettings.fontColor, opacity: 0.7 }}>
+                  {siteSettings.trustAndSafety?.secureCheckout || 'SSL encrypted payments'}
+                </div>
               </div>
             </div>
             <div className="flex items-center space-x-3">
               <CheckCircle className="w-6 h-6 text-green-500" />
               <div>
-                <div className="font-medium">Verified Vendor</div>
-                <div className="text-sm text-gray-600">Identity confirmed</div>
+                <div className="font-medium" style={{ color: siteSettings.fontColor }}>Verified Vendor</div>
+                <div className="text-sm" style={{ color: siteSettings.fontColor, opacity: 0.7 }}>
+                  {siteSettings.trustAndSafety?.verifiedVendor || 'Identity confirmed'}
+                </div>
               </div>
             </div>
             <div className="flex items-center space-x-3">
               <Package className="w-6 h-6 text-green-500" />
               <div>
-                <div className="font-medium">Return Policy</div>
-                <div className="text-sm text-gray-600">7-day satisfaction guarantee</div>
+                <div className="font-medium" style={{ color: siteSettings.fontColor }}>Return Policy</div>
+                <div className="text-sm" style={{ color: siteSettings.fontColor, opacity: 0.7 }}>
+                  {siteSettings.trustAndSafety?.returnPolicy || '7-day satisfaction guarantee'}
+                </div>
               </div>
             </div>
           </div>

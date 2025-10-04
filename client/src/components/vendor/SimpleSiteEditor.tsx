@@ -5,12 +5,24 @@ import {
   Upload,
   Image as ImageIcon,
   Camera,
-  Palette
+  Palette,
+  Plus,
+  Trash2
 } from 'lucide-react';
 
 interface SiteSettings {
   siteName: string;
   tagline: string;
+  ourStory?: string;
+  values?: string[];
+  sustainabilityCommitments?: string[];
+  awards?: string[];
+  charities?: string[];
+  trustAndSafety?: {
+    secureCheckout?: string;
+    verifiedVendor?: string;
+    returnPolicy?: string;
+  };
   pageBackgroundColor: string;
   boxBackgroundColor: string;
   fontColor: string;
@@ -48,6 +60,16 @@ interface SimpleSiteEditorProps {
 const defaultSettings: SiteSettings = {
   siteName: 'Artisan Bakes Atlanta',
   tagline: 'Handcrafted with Love',
+  ourStory: 'We started as a small family bakery with a passion for creating authentic, delicious bread using traditional methods and modern techniques. Our sourdough starter has been lovingly maintained for over 15 years, creating the perfect foundation for our artisanal breads.',
+  values: ['Community First', 'Traditional Methods', 'Quality Over Quantity'],
+  sustainabilityCommitments: ['Carbon Neutral', 'Zero Waste', 'Local Ingredients'],
+  awards: ['Best Bakery 2024 - Atlanta Magazine', 'Gold Medal - National Bread Competition', 'Top 10 Artisan Bakers in Georgia'],
+  charities: ['Atlanta Community Food Bank', 'Local Schools Breakfast Program', 'Sustainable Farming Initiative'],
+  trustAndSafety: {
+    secureCheckout: 'SSL encrypted payments',
+    verifiedVendor: 'Identity confirmed',
+    returnPolicy: '7-day satisfaction guarantee'
+  },
   pageBackgroundColor: '#FFFFFF',
   boxBackgroundColor: '#F7F2EC',
   fontColor: '#2C2C2C',
@@ -57,22 +79,22 @@ const defaultSettings: SiteSettings = {
   backgroundImage: '',
   // New default values for contact and business info
   contactInfo: {
-    phone: '',
-    email: '',
-    website: '',
-    address: '',
+    phone: '(404) 555-0123',
+    email: 'hello@artisanbakesatlanta.com',
+    website: 'https://artisanbakesatlanta.com',
+    address: '123 Artisan Way, Atlanta, GA 30301',
   },
   businessHours: {
-    'Monday - Friday': '',
-    'Saturday': '',
-    'Sunday': '',
+    'Monday - Friday': '7:00 AM - 6:00 PM',
+    'Saturday': '8:00 AM - 5:00 PM',
+    'Sunday': '9:00 AM - 3:00 PM',
   },
   socialMedia: {
-    instagram: '',
-    facebook: '',
-    twitter: '',
-    youtube: '',
-    tiktok: '',
+    instagram: 'https://instagram.com/artisanbakesatlanta',
+    facebook: 'https://facebook.com/artisanbakesatlanta',
+    twitter: 'https://twitter.com/artisanbakesatl',
+    youtube: 'https://youtube.com/@artisanbakesatlanta',
+    tiktok: 'https://tiktok.com/@artisanbakesatlanta',
   },
 };
 
@@ -112,6 +134,12 @@ const SimpleSiteEditor: React.FC<SimpleSiteEditorProps> = ({
   const handleSave = () => {
     onSave(settings);
     onClose();
+  };
+
+  const handleRestoreDefaults = () => {
+    if (window.confirm('Are you sure you want to restore all settings to default? This will reset all customizations.')) {
+      setSettings(defaultSettings);
+    }
   };
 
   const colorOptions = [
@@ -173,6 +201,19 @@ const SimpleSiteEditor: React.FC<SimpleSiteEditorProps> = ({
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5B6E02] focus:border-transparent"
                       placeholder="Enter tagline"
                     />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Our Story
+                    </label>
+                    <textarea
+                      value={settings.ourStory || ''}
+                      onChange={(e) => setSettings(prev => ({ ...prev, ourStory: e.target.value }))}
+                      rows={6}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5B6E02] focus:border-transparent resize-none"
+                      placeholder="Tell your story... Share your background, passion, and what makes your products special."
+                    />
+                    <p className="text-xs text-gray-500 mt-1">This will appear in the "Our Story" section of your storefront</p>
                   </div>
                 </div>
               </div>
@@ -378,6 +419,237 @@ const SimpleSiteEditor: React.FC<SimpleSiteEditorProps> = ({
                       }))}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5B6E02] focus:border-transparent"
                       placeholder="e.g., 9:00 AM - 3:00 PM"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Values */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Our Values</h3>
+                <div className="space-y-3">
+                  {(settings.values || []).map((value, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={value}
+                        onChange={(e) => {
+                          const newValues = [...(settings.values || [])];
+                          newValues[index] = e.target.value;
+                          setSettings(prev => ({ ...prev, values: newValues }));
+                        }}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5B6E02] focus:border-transparent"
+                        placeholder="Enter a value"
+                      />
+                      <button
+                        onClick={() => {
+                          const newValues = (settings.values || []).filter((_, i) => i !== index);
+                          setSettings(prev => ({ ...prev, values: newValues }));
+                        }}
+                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        aria-label="Remove value"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    onClick={() => {
+                      setSettings(prev => ({ 
+                        ...prev, 
+                        values: [...(prev.values || []), ''] 
+                      }));
+                    }}
+                    className="w-full px-3 py-2 border border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-[#5B6E02] hover:text-[#5B6E02] transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Value
+                  </button>
+                </div>
+              </div>
+
+              {/* Sustainability Commitments */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Sustainability Commitments</h3>
+                <div className="space-y-3">
+                  {(settings.sustainabilityCommitments || []).map((commitment, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={commitment}
+                        onChange={(e) => {
+                          const newCommitments = [...(settings.sustainabilityCommitments || [])];
+                          newCommitments[index] = e.target.value;
+                          setSettings(prev => ({ ...prev, sustainabilityCommitments: newCommitments }));
+                        }}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5B6E02] focus:border-transparent"
+                        placeholder="Enter a commitment"
+                      />
+                      <button
+                        onClick={() => {
+                          const newCommitments = (settings.sustainabilityCommitments || []).filter((_, i) => i !== index);
+                          setSettings(prev => ({ ...prev, sustainabilityCommitments: newCommitments }));
+                        }}
+                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        aria-label="Remove commitment"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    onClick={() => {
+                      setSettings(prev => ({ 
+                        ...prev, 
+                        sustainabilityCommitments: [...(prev.sustainabilityCommitments || []), ''] 
+                      }));
+                    }}
+                    className="w-full px-3 py-2 border border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-[#5B6E02] hover:text-[#5B6E02] transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Commitment
+                  </button>
+                </div>
+              </div>
+
+              {/* Awards & Achievements */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Awards & Achievements</h3>
+                <div className="space-y-3">
+                  {(settings.awards || []).map((award, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={award}
+                        onChange={(e) => {
+                          const newAwards = [...(settings.awards || [])];
+                          newAwards[index] = e.target.value;
+                          setSettings(prev => ({ ...prev, awards: newAwards }));
+                        }}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5B6E02] focus:border-transparent"
+                        placeholder="Enter award or recognition"
+                      />
+                      <button
+                        onClick={() => {
+                          const newAwards = (settings.awards || []).filter((_, i) => i !== index);
+                          setSettings(prev => ({ ...prev, awards: newAwards }));
+                        }}
+                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        aria-label="Remove award"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    onClick={() => {
+                      setSettings(prev => ({ 
+                        ...prev, 
+                        awards: [...(prev.awards || []), ''] 
+                      }));
+                    }}
+                    className="w-full px-3 py-2 border border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-[#5B6E02] hover:text-[#5B6E02] transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Award
+                  </button>
+                </div>
+              </div>
+
+              {/* Supported Charities */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Supported Charities</h3>
+                <div className="space-y-3">
+                  {(settings.charities || []).map((charity, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={charity}
+                        onChange={(e) => {
+                          const newCharities = [...(settings.charities || [])];
+                          newCharities[index] = e.target.value;
+                          setSettings(prev => ({ ...prev, charities: newCharities }));
+                        }}
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5B6E02] focus:border-transparent"
+                        placeholder="Enter charity or cause"
+                      />
+                      <button
+                        onClick={() => {
+                          const newCharities = (settings.charities || []).filter((_, i) => i !== index);
+                          setSettings(prev => ({ ...prev, charities: newCharities }));
+                        }}
+                        className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        aria-label="Remove charity"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    onClick={() => {
+                      setSettings(prev => ({ 
+                        ...prev, 
+                        charities: [...(prev.charities || []), ''] 
+                      }));
+                    }}
+                    className="w-full px-3 py-2 border border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-[#5B6E02] hover:text-[#5B6E02] transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Charity
+                  </button>
+                </div>
+              </div>
+
+              {/* Trust & Safety */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Trust & Safety</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Secure Checkout Message</label>
+                    <input
+                      type="text"
+                      value={settings.trustAndSafety?.secureCheckout || ''}
+                      onChange={(e) => setSettings(prev => ({ 
+                        ...prev, 
+                        trustAndSafety: { 
+                          ...prev.trustAndSafety, 
+                          secureCheckout: e.target.value 
+                        }
+                      }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5B6E02] focus:border-transparent"
+                      placeholder="e.g., SSL encrypted payments"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Verified Vendor Message</label>
+                    <input
+                      type="text"
+                      value={settings.trustAndSafety?.verifiedVendor || ''}
+                      onChange={(e) => setSettings(prev => ({ 
+                        ...prev, 
+                        trustAndSafety: { 
+                          ...prev.trustAndSafety, 
+                          verifiedVendor: e.target.value 
+                        }
+                      }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5B6E02] focus:border-transparent"
+                      placeholder="e.g., Identity confirmed"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Return Policy</label>
+                    <input
+                      type="text"
+                      value={settings.trustAndSafety?.returnPolicy || ''}
+                      onChange={(e) => setSettings(prev => ({ 
+                        ...prev, 
+                        trustAndSafety: { 
+                          ...prev.trustAndSafety, 
+                          returnPolicy: e.target.value 
+                        }
+                      }))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5B6E02] focus:border-transparent"
+                      placeholder="e.g., 7-day satisfaction guarantee"
                     />
                   </div>
                 </div>
@@ -600,20 +872,28 @@ const SimpleSiteEditor: React.FC<SimpleSiteEditorProps> = ({
 
         {/* Footer */}
         <div className="p-6 border-t border-gray-200 bg-gray-50">
-          <div className="flex items-center justify-end space-x-3">
+          <div className="flex items-center justify-between">
             <button
-              onClick={onClose}
-              className="px-6 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              onClick={handleRestoreDefaults}
+              className="px-4 py-2 text-orange-600 border border-orange-300 rounded-lg hover:bg-orange-50 transition-colors text-sm font-medium"
             >
-              Cancel
+              Restore to Default
             </button>
-            <button
-              onClick={handleSave}
-              className="px-6 py-2 bg-[#5B6E02] text-white rounded-lg hover:bg-[#4A5A01] transition-colors flex items-center space-x-2"
-            >
-              <Save className="w-4 h-4" />
-              <span>Save Changes</span>
-            </button>
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={onClose}
+                className="px-6 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                className="px-6 py-2 bg-[#5B6E02] text-white rounded-lg hover:bg-[#4A5A01] transition-colors flex items-center space-x-2"
+              >
+                <Save className="w-4 h-4" />
+                <span>Save Changes</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>

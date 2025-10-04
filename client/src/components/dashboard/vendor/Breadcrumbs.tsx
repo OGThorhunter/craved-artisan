@@ -12,7 +12,7 @@ export const Breadcrumbs = () => {
   const getBreadcrumbs = (): BreadcrumbItem[] => {
     const pathSegments = location.split('/').filter(Boolean);
     const breadcrumbs: BreadcrumbItem[] = [
-      { label: 'Dashboard', href: '/dashboard/vendor' }
+      { label: 'Dashboard' }
     ];
 
     if (pathSegments.includes('vendor')) {

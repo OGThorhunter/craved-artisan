@@ -7,7 +7,6 @@ import {
   TrendingUp, 
   DollarSign, 
   Package, 
-  Bell, 
   MessageSquare, 
   Settings, 
   Users, 
@@ -23,19 +22,6 @@ import {
   ArrowDownRight
 } from 'lucide-react';
 
-// Mock vendor data
-const vendor = {
-  id: 'mock-user-id',
-  name: 'Sarah Johnson',
-  storeName: 'Artisan Creations',
-  avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=64&h=64&fit=crop&crop=face',
-  verified: true,
-  averageRating: 4.8,
-  totalProducts: 24,
-  totalRevenue: 15420,
-  totalOrders: 342,
-  totalCustomers: 156
-};
 
 // Mock Pulse data
 const pulseData = {
@@ -65,13 +51,14 @@ const pulseData = {
     completed: 342
   },
   topProducts: [
-    { name: 'Handmade Soap Set', units: 45, revenue: 1247.50, trend: 'up' },
-    { name: 'Artisan Bread', units: 38, revenue: 1083.00, trend: 'up' },
-    { name: 'Organic Honey', units: 32, revenue: 896.00, trend: 'stable' }
+    { name: 'Handmade Soap Set', units: 45, revenue: 1247.50, trend: 'up', recipeId: 'soap-recipe-001' },
+    { name: 'Artisan Bread', units: 38, revenue: 1083.00, trend: 'up', recipeId: 'bread-recipe-002' },
+    { name: 'Organic Honey', units: 32, revenue: 896.00, trend: 'stable', recipeId: 'honey-recipe-003' }
   ],
   underperformers: [
-    { name: 'Handcrafted Mug', units: 3, revenue: 56.25, inventory: 12 },
-    { name: 'Lavender Sachet', units: 2, revenue: 18.00, inventory: 8 }
+    { name: 'Handcrafted Mug', units: 3, revenue: 56.25, inventory: 12, recipeId: 'mug-recipe-001' },
+    { name: 'Lavender Sachet', units: 2, revenue: 18.00, inventory: 8, recipeId: 'sachet-recipe-002' },
+    { name: 'Artisan Candle', units: 1, revenue: 12.50, inventory: 15, recipeId: 'candle-recipe-003' }
   ],
   customerHealth: {
     returning: 78,
@@ -97,7 +84,7 @@ const VendorDashboardPage: React.FC = () => {
   const [seasonalFilter, setSeasonalFilter] = useState('current');
 
   const tabs = [
-    { id: 'pulse', label: 'Pulse', icon: Activity },
+    { id: 'pulse', label: '🔥 UPDATED Pulse', icon: Activity },
     { id: 'analytics', label: 'Analytics', icon: TrendingUp },
     { id: 'crm', label: 'CRM', icon: Users },
     { id: 'inventory', label: 'Inventory', icon: Package },
@@ -137,8 +124,8 @@ const VendorDashboardPage: React.FC = () => {
         <div className="container-responsive">
           {/* Header */}
           <DashboardHeader
-            title="Business Dashboard"
-            description="Your business at a glance - updated in real-time"
+            title="🚀 UPDATED Business Dashboard 🚀"
+            description="Your business at a glance - updated in real-time - CHANGES APPLIED!"
             currentView="Dashboard"
             icon={Activity}
             iconColor="text-blue-600"
@@ -356,35 +343,12 @@ const VendorDashboardPage: React.FC = () => {
 
             {/* Secondary KPI Panels */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Order Funnel */}
+              {/* Bottom Performers */}
               <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Funnel</h3>
-                <div className="space-y-4">
-                  {Object.entries(pulseData.orderFunnel).map(([stage, count]) => (
-                    <div key={stage} className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-3 h-3 rounded-full ${
-                          stage === 'new' ? 'bg-blue-500' :
-                          stage === 'inProgress' ? 'bg-yellow-500' :
-                          stage === 'ready' ? 'bg-orange-500' :
-                          'bg-green-500'
-                        }`}></div>
-                        <span className="text-sm font-medium text-gray-700 capitalize">
-                          {stage === 'inProgress' ? 'In Progress' : stage}
-                        </span>
-                      </div>
-                      <span className="text-lg font-bold text-gray-900">{count}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Product Performance */}
-              <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Performers</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">🔴 Bottom Performers (Updated!)</h3>
                 <div className="space-y-3">
-                  {pulseData.topProducts.map((product, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm">
+                  {pulseData.underperformers.map((product, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm border-l-4 border-red-400">
                       <div className="flex items-center gap-3">
                         <span className="text-sm font-medium text-gray-500">#{index + 1}</span>
                         <div>
@@ -394,7 +358,44 @@ const VendorDashboardPage: React.FC = () => {
                       </div>
                       <div className="text-right">
                         <p className="font-medium text-gray-900">${product.revenue.toLocaleString()}</p>
-                        {getTrendIcon(product.trend)}
+                        <a 
+                          href={`/recipes/${product.recipeId}`}
+                          className="text-blue-600 hover:text-blue-700 text-sm font-medium inline-flex items-center gap-1"
+                        >
+                          View Recipe
+                          <ChevronRight className="w-3 h-3" />
+                        </a>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Top Performers */}
+              <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">🟢 Top Performers (Updated!)</h3>
+                <div className="space-y-3">
+                  {pulseData.topProducts.map((product, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm border-l-4 border-green-400">
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-medium text-gray-500">#{index + 1}</span>
+                        <div>
+                          <p className="font-medium text-gray-900">{product.name}</p>
+                          <p className="text-sm text-gray-600">{product.units} units</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium text-gray-900">${product.revenue.toLocaleString()}</p>
+                        <div className="flex items-center gap-2">
+                          {getTrendIcon(product.trend)}
+                          <a 
+                            href={`/recipes/${product.recipeId}`}
+                            className="text-blue-600 hover:text-blue-700 text-sm font-medium inline-flex items-center gap-1"
+                          >
+                            View Recipe
+                            <ChevronRight className="w-3 h-3" />
+                          </a>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -466,27 +467,6 @@ const VendorDashboardPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Underperformers Alert */}
-            <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Underperformers</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {pulseData.underperformers.map((product, index) => (
-                  <div key={index} className="flex items-center justify-between p-4 bg-white rounded-lg shadow-sm border-l-4 border-orange-400">
-                    <div>
-                      <p className="font-medium text-gray-900">{product.name}</p>
-                      <p className="text-sm text-gray-600">{product.units} units sold</p>
-                      <p className="text-sm text-orange-600">{product.inventory} in inventory</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium text-gray-900">${product.revenue.toLocaleString()}</p>
-                      <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-                        Take Action
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         )}
 

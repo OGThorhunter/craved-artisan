@@ -10,6 +10,11 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: true,
+    host: true, // Allow external connections
+    hmr: {
+      port: 5173,
+      host: 'localhost',
+    },
     proxy: {
       '/api': {
         target: 'http://localhost:3001',
@@ -21,6 +26,7 @@ export default defineConfig({
         target: 'http://localhost:3001',
         changeOrigin: true,
         secure: false,
+        ws: true,
       },
       '/health': {
         target: 'http://localhost:3001',
