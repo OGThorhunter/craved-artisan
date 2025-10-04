@@ -31,6 +31,7 @@ import MotivationalQuote from '../components/dashboard/MotivationalQuote';
 import DashboardHeader from '../components/dashboard/DashboardHeader';
 import { getQuoteByCategory } from '../data/motivationalQuotes';
 import { MOCK_INGREDIENTS, MOCK_UNITS, MOCK_TRADE_SUPPLIES, MOCK_TRADE_UNITS } from '../types/recipes';
+import { AIInsightsDrawer } from '../components/ai/AIInsightsDrawer';
 
 // Enhanced Product Card interface
 interface ProductCard {
@@ -169,6 +170,9 @@ const VendorProductsPage: React.FC = () => {
   // Add product dropdown
   const [showAddProductDropdown, setShowAddProductDropdown] = useState(false);
   const [showCsvImport, setShowCsvImport] = useState(false);
+  
+  // AI Insights
+  const [showAIInsights, setShowAIInsights] = useState(false);
   
   // Close dropdown when clicking outside
   React.useEffect(() => {
@@ -900,9 +904,18 @@ const VendorProductsPage: React.FC = () => {
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">Product Catalog</h1>
                 <p className="text-sm text-gray-600">Currently viewing: <span className="text-green-600 font-medium">Products</span></p>
               </div>
-              <button className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors">
-                Products
-              </button>
+              <div className="flex items-center space-x-3">
+                <button 
+                  onClick={() => setShowAIInsights(true)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                >
+                  <DollarSign className="w-4 h-4" />
+                  <span>AI Insights</span>
+                </button>
+                <button className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors">
+                  Products
+                </button>
+              </div>
             </div>
           </div>
 
@@ -2431,6 +2444,17 @@ Honey Jar,Local organic honey,12.50,food,Preserved Foods`}
           </div>
         </div>
       </div>
+
+      {/* AI Insights Drawer */}
+      <AIInsightsDrawer
+        isOpen={showAIInsights}
+        onClose={() => setShowAIInsights(false)}
+        type="products"
+        onApplyPrice={(productId, newPrice, rationale) => {
+          console.log('Price applied:', { productId, newPrice, rationale });
+          toast.success(`Price updated to $${newPrice}`);
+        }}
+      />
     </VendorDashboardLayout>
   );
 };

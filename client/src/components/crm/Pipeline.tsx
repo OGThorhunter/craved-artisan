@@ -486,7 +486,7 @@ const Pipeline: React.FC<PipelineProps> = ({
                   opportunitiesByStage[stage.id]?.map((opportunity) => (
                     <div
                       key={opportunity.id}
-                      className={`bg-white rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-200 cursor-pointer shadow-sm ${
+                      className={`bg-[#F7F2EC] rounded-lg border border-gray-200 hover:border-gray-300 transition-all duration-200 cursor-pointer shadow-sm ${
                         viewMode === 'list' ? 'p-2' : 'p-3'
                       }`}
                       onClick={() => {
@@ -678,7 +678,7 @@ const Pipeline: React.FC<PipelineProps> = ({
       {/* Opportunity Details Modal */}
       {showDetails && selectedOpportunity && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+          <div className="bg-[#F7F2EC] rounded-lg shadow-xl border border-gray-200 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-gray-900">{selectedOpportunity.title}</h2>
@@ -783,7 +783,7 @@ const Pipeline: React.FC<PipelineProps> = ({
       {/* Add Opportunity Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+          <div className="bg-[#F7F2EC] rounded-lg shadow-xl border border-gray-200 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-gray-900">Add New Opportunity</h2>

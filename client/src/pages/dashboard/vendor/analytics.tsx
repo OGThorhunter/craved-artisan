@@ -1,46 +1,28 @@
 // pages/dashboard/vendor/analytics.tsx
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useLocation } from 'wouter';
 import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
 import { useUrlTab } from '@/hooks/useUrlTab';
-import ConversionFunnel from "@/components/analytics/ConversionFunnel";
-import EnhancedBestSellers from "@/components/analytics/EnhancedBestSellers";
-import { CustomerInsights } from "@/components/vendor/analytics/CustomerInsights";
-import { PortfolioBuilder } from "@/components/vendor/analytics/PortfolioBuilder";
 import StripeTaxDashboard from "@/components/stripe/StripeTaxDashboard";
-import TrendChart from "@/components/charts/TrendChart";
 import MotivationalQuote from "@/components/dashboard/MotivationalQuote";
 import { getQuoteByCategory } from "@/data/motivationalQuotes";
-// Removed: AIForecastWidget and AISummaryBuilder imports (components removed per user request)
-import { DollarSign, TrendingUp, Package } from "lucide-react";
 import { flags } from "@/lib/flags";
-import { 
-  useVendorOverview, 
-  useVendorBestSellers,
-  useMockVendorOverview,
-  useMockVendorBestSellers 
-} from "@/hooks/analytics";
-// Removed useFinancials import - no longer needed for Business Snapshot
-import ProductDeepDiveModal from "@/components/ProductDeepDiveModal";
-// Removed unused imports
 
 import { BusinessSnapshot } from "@/components/analytics/BusinessSnapshot";
 
-type TabType = 'insights' | 'financial-statements' | 'taxes' | 'pricing' | 'portfolio';
+type TabType = 'financial-statements' | 'taxes';
 
 export default function VendorAnalyticsPage() {
   const [location] = useLocation();
-  const [selectedProduct, setSelectedProduct] = useState<{ id: string; name: string } | null>(null);
-  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
   
   // Use real vendor ID from context or mock for development
   const vendorId = 'dev-user-id'; // This should come from auth context in production
   
   // Define allowed tabs with feature flag support
-  const TABS: TabType[] = ['insights', 'financial-statements', 'taxes', 'pricing', 'portfolio'];
+  const TABS: TabType[] = ['financial-statements', 'taxes'];
   const { tab: activeTab, setTab, allowed: allowedTabs } = useUrlTab(
     TABS,
-    'insights',
+    'financial-statements',
     { 
       'financial-statements': flags.LIVE_ANALYTICS && flags.FINANCIALS
     }
@@ -53,30 +35,7 @@ export default function VendorAnalyticsPage() {
     console.log('Current URL:', window.location.href);
   }, [activeTab]);
   
-  // Analytics data fetching with feature flag support
-  const overviewQuery = useVendorOverview(vendorId, { interval: 'day' });
-  const mockOverviewQuery = useMockVendorOverview(vendorId, { interval: 'day' });
-    
-  const bestSellersQuery = useVendorBestSellers(vendorId, { limit: 10 });
-  const mockBestSellersQuery = useMockVendorBestSellers(vendorId, { limit: 10 });
-
-
-  
   // Business Snapshot handles its own data fetching
-  
-  // Extract data with safe defaults based on feature flags
-  const overviewData = flags.LIVE_ANALYTICS 
-    ? (overviewQuery.data || { totals: { totalRevenue: 0, totalOrders: 0, avgOrderValue: 0 }, series: [] })
-    : (mockOverviewQuery.data || { totals: { totalRevenue: 0, totalOrders: 0, avgOrderValue: 0 }, series: [] });
-  
-  const bestSellersData = flags.LIVE_ANALYTICS
-    ? (bestSellersQuery.data || { items: [] })
-    : (mockBestSellersQuery.data || { items: [] });
-  
-  // Loading states based on feature flags
-  const isLoading = flags.LIVE_ANALYTICS
-    ? (overviewQuery.isLoading || bestSellersQuery.isLoading)
-    : (mockOverviewQuery.isLoading || mockBestSellersQuery.isLoading);
 
   // Debug information for development
   useEffect(() => {
@@ -91,16 +50,6 @@ export default function VendorAnalyticsPage() {
 
   // Removed unused icons array
   
-  // Debug information
-  useEffect(() => {
-    console.log('=== ANALYTICS DATA DEBUG ===');
-    console.log('Feature flag LIVE_ANALYTICS:', flags.LIVE_ANALYTICS);
-    console.log('Feature flag FINANCIALS:', flags.FINANCIALS);
-    console.log('Overview data:', overviewData);
-    console.log('Best sellers data:', bestSellersData);
-    console.log('Loading state:', isLoading);
-    // Business Snapshot handles its own data fetching
-  }, [overviewData, bestSellersData, isLoading]);
 
   const renderTabContent = () => {
     console.log('=== RENDER TAB CONTENT DEBUG ===');
@@ -108,73 +57,6 @@ export default function VendorAnalyticsPage() {
     console.log('Rendering content for tab:', activeTab);
     
     switch (activeTab) {
-      case 'insights':
-        console.log('Rendering insights tab content');
-        return (
-          <div className="space-y-8">
-            {/* Loading State */}
-            {isLoading && (
-              <div className="bg-[#F7F2EC] rounded-lg p-8 border border-gray-200">
-                <div className="flex items-center justify-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#5B6E02]"></div>
-                  <span className="ml-2 text-gray-600">Loading analytics data...</span>
-                </div>
-              </div>
-            )}
-            
-            {/* Real-time Analytics Overview */}
-            {!isLoading && flags.LIVE_ANALYTICS && (
-              <div className="bg-[#F7F2EC] rounded-lg shadow-xl border border-gray-200 p-6 mb-8 hover:shadow-2xl transition-shadow duration-300">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Real-time Analytics Overview</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="bg-white rounded-lg p-4 border border-gray-200">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="text-gray-600"><DollarSign size={20} /></div>
-                      <span className="text-xs text-green-600">+12.5%</span>
-                    </div>
-                    <div className="text-2xl font-bold text-gray-900">${overviewData.totals.totalRevenue.toLocaleString()}</div>
-                    <div className="text-sm text-gray-600">Total Revenue</div>
-                  </div>
-                  <div className="bg-white rounded-lg p-4 border border-gray-200">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="text-gray-600"><Package size={20} /></div>
-                      <span className="text-xs text-green-600">+8.2%</span>
-                    </div>
-                    <div className="text-2xl font-bold text-gray-900">{overviewData.totals.totalOrders.toLocaleString()}</div>
-                    <div className="text-sm text-gray-600">Total Orders</div>
-                  </div>
-                  <div className="bg-white rounded-lg p-4 border border-gray-200">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="text-gray-600"><TrendingUp size={20} /></div>
-                      <span className="text-xs text-green-600">+5.1%</span>
-                    </div>
-                    <div className="text-2xl font-bold text-gray-900">${overviewData.totals.avgOrderValue.toFixed(2)}</div>
-                    <div className="text-sm text-gray-600">Avg Order Value</div>
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            {/* Removed: AI Summary Builder and AI Forecasting Widget per user request */}
-            
-            {/* Trend Chart with Revenue Data */}
-            {Array.isArray(overviewData?.series) && overviewData.series.length > 0 && (
-              <TrendChart data={overviewData.series} xKey="date" yKey="revenue" />
-            )}
-            
-            {/* Conversion Funnel */}
-            <ConversionFunnel />
-            
-            {/* Enhanced Best Sellers with Filters */}
-            <EnhancedBestSellers />
-            
-            
-            {/* Customer Insights */}
-            <CustomerInsights />
-          </div>
-        );
-      
-
       
       case 'financial-statements':
         console.log('Rendering business snapshot tab content');
@@ -244,13 +126,6 @@ export default function VendorAnalyticsPage() {
           </div>
         );
       
-      case 'portfolio':
-        return (
-          <div className="space-y-8">
-            {/* Portfolio Builder */}
-            <PortfolioBuilder />
-          </div>
-        );
       
       default:
         return null;
@@ -259,12 +134,9 @@ export default function VendorAnalyticsPage() {
 
   const getTabDisplayName = (tab: TabType) => {
     switch (tab) {
-      case 'insights': return 'Insights';
       case 'financial-statements': return 'Business Snapshot';
       case 'taxes': return 'Taxes';
-      case 'pricing': return 'Pricing Optimizer';
-      case 'portfolio': return 'Portfolio Builder';
-      default: return 'Insights';
+      default: return 'Business Snapshot';
     }
   };
 
@@ -277,12 +149,12 @@ export default function VendorAnalyticsPage() {
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Analytics Dashboard</h1>
                 <p className="text-gray-600 mt-1">
-                  Currently viewing: <span className="font-semibold text-[#5B6E02]">{getTabDisplayName(activeTab)}</span>
+                  Currently viewing: <span className="font-semibold text-[#5B6E02]">{getTabDisplayName(activeTab as TabType)}</span>
                 </p>
               </div>
               <div className="text-right">
                 <div className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-[#5B6E02] text-white">
-                  {getTabDisplayName(activeTab)}
+                  {getTabDisplayName(activeTab as TabType)}
                 </div>
               </div>
             </div>
@@ -314,10 +186,8 @@ export default function VendorAnalyticsPage() {
             <div className="border-b border-gray-200">
               <nav className="flex space-x-8 px-6">
                 {[
-                  { id: 'insights', label: 'Insights', icon: '📊', tooltip: 'Sales performance, customer insights, and product analytics' },
                   { id: 'financial-statements' as const, label: 'Business Snapshot', icon: '📊', tooltip: 'Operational metrics, sales funnel, and payout information' },
-                  { id: 'taxes', label: 'Taxes', icon: '📋', tooltip: 'Tax calculations, deductions, and reporting for compliance' },
-                  { id: 'portfolio', label: 'Portfolio Builder', icon: '📈', tooltip: 'Product portfolio analysis and strategic recommendations' }
+                  { id: 'taxes', label: 'Taxes', icon: '📋', tooltip: 'Tax calculations, deductions, and reporting for compliance' }
                 ].map((tab) => (
                   <button
                     key={tab.id}
@@ -342,32 +212,9 @@ export default function VendorAnalyticsPage() {
 
           
           {/* Tab Content */}
-          {isLoading ? (
-            <div className="bg-[#F7F2EC] rounded-lg py-12 border border-gray-200">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#5B6E02] mx-auto mb-4"></div>
-                <p className="text-gray-600">Loading analytics data...</p>
-              </div>
-            </div>
-          ) : (
-            renderTabContent()
-          )}
+          {renderTabContent()}
         </div>
       </div>
-      
-      {/* Product Deep Dive Modal */}
-      {selectedProduct && (
-        <ProductDeepDiveModal
-          isOpen={isProductModalOpen}
-          onClose={() => {
-            setIsProductModalOpen(false);
-            setSelectedProduct(null);
-          }}
-          vendorId={vendorId}
-          productId={selectedProduct.id}
-          productName={selectedProduct.name}
-        />
-      )}
     </VendorDashboardLayout>
   );
 } 

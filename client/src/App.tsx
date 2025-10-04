@@ -23,9 +23,7 @@ import CartPage from './pages/CartPage';
 import { VendorSettingsPage } from './pages/VendorSettingsPage';
 import VendorProductsPage from './pages/VendorProductsPage';
 import EnhancedVendorProductsPage from './pages/EnhancedVendorProductsPage';
-import SimpleVendorProductsPage from './pages/SimpleVendorProductsPage';
 import RecipeManagementPage from './pages/RecipeManagementPage';
-import VendorCRMPage from './pages/VendorCRMPage';
 import VendorInventoryPage from './pages/VendorInventoryPage';
 import VendorOrdersPage from './pages/VendorOrdersPage';
 import VendorPromotionsPage from './pages/VendorPromotionsPage';
@@ -61,7 +59,7 @@ import CheckoutSuccessPage from './pages/CheckoutSuccessPage';
 import NotFoundPage from './pages/NotFoundPage';
 import MaintenancePage from './pages/MaintenancePage';
 import VendorAnalyticsPage from './pages/VendorAnalyticsPage';
-import VendorAnalyticsKpiPage from './pages/dashboard/vendor/analytics';
+import VendorAnalyticsCRMPage from './pages/VendorAnalyticsCRMPage';
 import { VendorFinancialPage } from './pages/VendorFinancialPage';
 import VendorOnboardingPage from './pages/VendorOnboardingPage';
 import TestDataPage from './pages/TestDataPage';
@@ -208,11 +206,6 @@ function App() {
                 <TemplateEditorPage />
               </ProtectedRoute>
             </Route>
-            <Route path="/dashboard/vendor/crm">
-              <ProtectedRoute role="VENDOR">
-                <VendorCRMPage />
-              </ProtectedRoute>
-            </Route>
             <Route path="/dashboard/vendor/events">
               <ProtectedRoute role="VENDOR">
                 <VendorEventsPage />
@@ -267,9 +260,9 @@ function App() {
                 <VendorAnalyticsPage />
               </ProtectedRoute>
             </Route>
-            <Route path="/dashboard/vendor/analytics">
+            <Route path="/dashboard/vendor/analytics-crm">
               <ProtectedRoute role="VENDOR">
-                <VendorAnalyticsKpiPage />
+                <VendorAnalyticsCRMPage />
               </ProtectedRoute>
             </Route>
 
@@ -280,11 +273,6 @@ function App() {
               </ProtectedRoute>
             </Route>
             
-            <Route path="/dashboard/vendor/crm">
-              <ProtectedRoute role="VENDOR">
-                <VendorCRMPage />
-              </ProtectedRoute>
-            </Route>
             
 
             <Route path="/dashboard/vendor/pulse">

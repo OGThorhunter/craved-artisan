@@ -26,8 +26,7 @@ export const Breadcrumbs = () => {
           const tabLabels: Record<string, string> = {
             'financials': 'Financials',
             'taxes': 'Taxes',
-            'pricing': 'Pricing Optimizer',
-            'portfolio': 'Portfolio Builder'
+            'pricing': 'Pricing Optimizer'
           };
           breadcrumbs.push({ label: tabLabels[tab] || 'Insights' });
         }

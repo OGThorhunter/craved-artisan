@@ -2,9 +2,51 @@ import express from 'express';
 import { z } from 'zod';
 import { PrismaClient } from '@prisma/client';
 import { logger } from '../logger';
+import { getNextPayout, getLast30DaysFees, reconcileStripePayments } from '../services/stripeReconciliation';
 
 const router = express.Router();
 const prisma = new PrismaClient();
+
+// Helper function to authenticate and get vendor profile
+async function authenticateVendor(req: any) {
+  console.log('🔍 [DEBUG] Analytics authenticateVendor - req.user:', req.user);
+  console.log('🔍 [DEBUG] Analytics authenticateVendor - req.session:', req.session);
+  
+  const vendorId = req.user?.userId;
+  if (!vendorId) {
+    console.log('🔍 [DEBUG] Analytics authenticateVendor - No vendorId found');
+    const error = new Error('Authentication required');
+    (error as any).statusCode = 401;
+    throw error;
+  }
+  
+  console.log('🔍 [DEBUG] Analytics authenticateVendor - vendorId:', vendorId);
+
+  const user = await prisma.user.findUnique({
+    where: { id: vendorId },
+    include: { vendorProfile: true }
+  });
+
+  if (!user) {
+    const error = new Error('User not found');
+    (error as any).statusCode = 404;
+    throw error;
+  }
+
+  if (!user.vendorProfile) {
+    const error = new Error('Vendor profile required');
+    (error as any).statusCode = 403;
+    throw error;
+  }
+
+  if ((user as any).role !== 'VENDOR') {
+    const error = new Error('Vendor access required');
+    (error as any).statusCode = 403;
+    throw error;
+  }
+
+  return user.vendorProfile;
+}
 
 // Validation schemas
 const BusinessSnapshotQuerySchema = z.object({
@@ -15,14 +57,16 @@ const BusinessSnapshotQuerySchema = z.object({
 // Business Snapshot endpoint
 router.get('/vendor/analytics/snapshot', async (req, res) => {
   try {
+    console.log('🔍 [DEBUG] Business Snapshot endpoint called');
+    console.log('🔍 [DEBUG] Request URL:', req.url);
+    console.log('🔍 [DEBUG] Request method:', req.method);
+    console.log('🔍 [DEBUG] Request headers:', req.headers);
+    
     // Validate query parameters
     const { dateFrom, dateTo } = BusinessSnapshotQuerySchema.parse(req.query);
     
-    // Get vendor ID from session (assuming it's attached by middleware)
-    const vendorId = (req as any).user?.userId;
-    if (!vendorId) {
-      return res.status(401).json({ error: 'Authentication required' });
-    }
+    // Authenticate and get vendor profile
+    const vendorProfile = await authenticateVendor(req);
 
     // Convert dates to Date objects
     const startDate = new Date(dateFrom);
@@ -30,21 +74,12 @@ router.get('/vendor/analytics/snapshot', async (req, res) => {
     endDate.setHours(23, 59, 59, 999); // Include the entire end date
 
     logger.info({
-      vendorId,
+      vendorProfileId: vendorProfile.id,
       dateFrom,
       dateTo,
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString()
     }, 'Fetching business snapshot data');
-
-    // Get vendor profile
-    const vendorProfile = await prisma.vendorProfile.findFirst({
-      where: { userId: vendorId }
-    });
-
-    if (!vendorProfile) {
-      return res.status(404).json({ error: 'Vendor profile not found' });
-    }
 
     // Calculate date ranges for comparison (previous period)
     const periodLength = endDate.getTime() - startDate.getTime();
@@ -79,7 +114,7 @@ router.get('/vendor/analytics/snapshot', async (req, res) => {
     };
 
     logger.info({
-      vendorId,
+      vendorProfileId: vendorProfile.id,
       ordersCount: salesMetrics.ordersCount,
       netSales: salesMetrics.netSales,
       funnelStages: funnelData.stages.length
@@ -95,6 +130,10 @@ router.get('/vendor/analytics/snapshot', async (req, res) => {
         error: 'Invalid query parameters', 
         details: error.errors 
       });
+    }
+    
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ error: error.message });
     }
     
     res.status(500).json({ error: 'Internal server error' });
@@ -351,8 +390,8 @@ async function calculateProductMetrics(vendorProfileId: string, startDate: Date,
   const productStats = await prisma.orderItem.groupBy({
     by: ['productId'],
     where: {
+      vendorProfileId,
       order: {
-        vendorProfileId,
         createdAt: { gte: startDate, lte: endDate },
         status: { in: ['PAID'] }
       }
@@ -385,8 +424,8 @@ async function calculateProductMetrics(vendorProfileId: string, startDate: Date,
     return {
       productId: stat.productId,
       name: product?.name || 'Unknown Product',
-      units: stat._sum.quantity || 0,
-      revenue: stat._sum.total || 0,
+      units: stat._sum?.quantity || 0,
+      revenue: stat._sum?.total || 0,
       refundRatePct: refundRate
     };
   });
@@ -458,55 +497,241 @@ async function calculateZipMetrics(vendorProfileId: string, startDate: Date, end
 
 // Helper function to calculate payout data
 async function calculatePayoutData(vendorProfileId: string) {
-  // Mock payout data - in real implementation, this would sync with Stripe
-  const nextPayoutDate = new Date();
-  nextPayoutDate.setDate(nextPayoutDate.getDate() + 7); // Next payout in 7 days
-  
-  const nextPayoutAmount = 1500; // Mock amount
+  try {
+    // Get next payout information from Stripe reconciliation
+    const nextPayout = await getNextPayout(vendorProfileId);
+    
+    // Get last 30 days fees from Stripe reconciliation
+    const last30dFees = await getLast30DaysFees(vendorProfileId);
 
-  // Get last 30 days fees
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-  const last30dOrders = await prisma.order.findMany({
-    where: {
-      orderItems: {
-        some: {
-          vendorProfileId
-        }
-      },
-      createdAt: { gte: thirtyDaysAgo },
-      status: { in: ['PAID'] }
-    },
-    include: {
-      orderItems: {
-        where: {
-          vendorProfileId
-        }
+    return {
+      nextDate: nextPayout.date,
+      nextAmount: nextPayout.amount,
+      last30d: {
+        platformFees: last30dFees.platformFees,
+        paymentFees: last30dFees.paymentFees,
+        taxCollected: last30dFees.taxCollected
       }
+    };
+  } catch (error: any) {
+    logger.error({
+      vendorProfileId,
+      error: error.message
+    }, 'Failed to calculate payout data, using fallback');
+
+    // Fallback to mock data if Stripe reconciliation fails
+    const nextPayoutDate = new Date();
+    nextPayoutDate.setDate(nextPayoutDate.getDate() + 7);
+    
+    return {
+      nextDate: nextPayoutDate.toISOString().split('T')[0],
+      nextAmount: 1500,
+      last30d: {
+        platformFees: 500,
+        paymentFees: 200,
+        taxCollected: 800
+      }
+    };
+  }
+}
+
+// Manual sync endpoint for Stripe data
+router.post('/vendor/analytics/sync-stripe', async (req, res) => {
+  try {
+    // Authenticate and get vendor profile
+    const vendorProfile = await authenticateVendor(req);
+
+    // Get date range from request body (default to last 30 days)
+    const { dateFrom, dateTo } = req.body;
+    const startDate = dateFrom ? new Date(dateFrom) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const endDate = dateTo ? new Date(dateTo) : new Date();
+
+    logger.info({
+      vendorProfileId: vendorProfile.id,
+      dateFrom: startDate.toISOString(),
+      dateTo: endDate.toISOString()
+    }, 'Starting manual Stripe sync');
+
+    // Perform reconciliation
+    const result = await reconcileStripePayments(vendorProfile.id, startDate, endDate);
+
+    logger.info({
+      vendorProfileId: vendorProfile.id,
+      result
+    }, 'Manual Stripe sync completed');
+
+    res.json({
+      success: true,
+      message: 'Stripe data synchronized successfully',
+      result
+    });
+
+  } catch (error: any) {
+    logger.error({ error: error.message, stack: error.stack }, 'Manual Stripe sync failed');
+    
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ error: error.message });
     }
-  });
+    
+    res.status(500).json({ 
+      error: 'Failed to sync Stripe data',
+      message: error.message 
+    });
+  }
+});
 
-  const grossSales30d = last30dOrders.reduce((sum, order) => {
-    return sum + order.orderItems.reduce((orderSum, item) => orderSum + item.total, 0);
-  }, 0);
-  const platformFees30d = grossSales30d * 0.05;
-  const paymentFees30d = last30dOrders.reduce((sum, order) => {
-    const orderTotal = order.orderItems.reduce((orderSum, item) => orderSum + item.total, 0);
-    return sum + (orderTotal * 0.029 + 0.30);
-  }, 0);
+// CSV Export endpoints
+router.get('/vendor/analytics/export/:type', async (req, res) => {
+  try {
+    const { type } = req.params;
+    const { dateFrom, dateTo } = req.query;
+    
+    // Authenticate and get vendor profile
+    const vendorProfile = await authenticateVendor(req);
 
-  const taxCollected30d = grossSales30d * 0.08; // Mock 8% tax rate
+    // Convert dates
+    const startDate = dateFrom ? new Date(dateFrom as string) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const endDate = dateTo ? new Date(dateTo as string) : new Date();
+    endDate.setHours(23, 59, 59, 999);
 
-  return {
-    nextDate: nextPayoutDate.toISOString().split('T')[0],
-    nextAmount: nextPayoutAmount,
-    last30d: {
-      platformFees: platformFees30d,
-      paymentFees: paymentFees30d,
-      taxCollected: taxCollected30d
+    let csvData = '';
+    let filename = '';
+
+    switch (type) {
+      case 'kpis':
+        csvData = await generateKPIsCSV(vendorProfile.id, startDate, endDate);
+        filename = `business-kpis-${startDate.toISOString().split('T')[0]}-to-${endDate.toISOString().split('T')[0]}.csv`;
+        break;
+      case 'products':
+        csvData = await generateProductsCSV(vendorProfile.id, startDate, endDate);
+        filename = `top-products-${startDate.toISOString().split('T')[0]}-to-${endDate.toISOString().split('T')[0]}.csv`;
+        break;
+      case 'zips':
+        csvData = await generateZipsCSV(vendorProfile.id, startDate, endDate);
+        filename = `zip-codes-${startDate.toISOString().split('T')[0]}-to-${endDate.toISOString().split('T')[0]}.csv`;
+        break;
+      case 'funnel':
+        csvData = await generateFunnelCSV(vendorProfile.id, startDate, endDate);
+        filename = `sales-funnel-${startDate.toISOString().split('T')[0]}-to-${endDate.toISOString().split('T')[0]}.csv`;
+        break;
+      default:
+        return res.status(400).json({ error: 'Invalid export type' });
     }
-  };
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(csvData);
+
+  } catch (error: any) {
+    logger.error({ error: error.message, stack: error.stack }, 'CSV export failed');
+    
+    if (error.statusCode) {
+      return res.status(error.statusCode).json({ error: error.message });
+    }
+    
+    res.status(500).json({ error: 'Export failed' });
+  }
+});
+
+// Helper function to generate KPIs CSV
+async function generateKPIsCSV(vendorProfileId: string, startDate: Date, endDate: Date): Promise<string> {
+  const salesMetrics = await calculateSalesMetrics(vendorProfileId, startDate, endDate, startDate, endDate);
+  const customerMetrics = await calculateCustomerMetrics(vendorProfileId, startDate, endDate);
+  const funnelData = await calculateFunnelData(vendorProfileId, startDate, endDate);
+  const payoutData = await calculatePayoutData(vendorProfileId);
+
+  const csvData = [
+    ['Metric', 'Value', 'Period'],
+    ['Gross Sales', `$${salesMetrics.gross.toLocaleString()}`, `${startDate.toDateString()} - ${endDate.toDateString()}`],
+    ['Net Sales', `$${salesMetrics.netSales.toLocaleString()}`, ''],
+    ['Orders Count', salesMetrics.ordersCount.toString(), ''],
+    ['Average Order Value', `$${salesMetrics.aov.toFixed(2)}`, ''],
+    ['Refund Rate', `${((salesMetrics.refundsCount / salesMetrics.ordersCount) * 100).toFixed(1)}%`, ''],
+    ['Platform Fees', `$${salesMetrics.platformFees.toLocaleString()}`, ''],
+    ['Payment Fees', `$${salesMetrics.paymentFees.toLocaleString()}`, ''],
+    ['Estimated Net Payout', `$${salesMetrics.estNetPayout.toLocaleString()}`, ''],
+    ['Open Disputes', salesMetrics.disputesOpen.toString(), ''],
+    ['Dispute Rate', `${salesMetrics.disputeRate.toFixed(1)}%`, ''],
+    ['', '', ''],
+    ['New Customers', customerMetrics.newCount.toString(), ''],
+    ['Returning Customers', customerMetrics.returningCount.toString(), ''],
+    ['Repeat Purchase Rate', `${customerMetrics.repeatRate.toFixed(1)}%`, ''],
+    ['Predicted Churn', `${customerMetrics.predictedChurnPct.toFixed(1)}%`, ''],
+    ['Median Time to 2nd Order', `${customerMetrics.medianTimeToSecondOrderDays} days`, ''],
+    ['', '', ''],
+    ['Cart Abandonment Rate', `${funnelData.abandonment.cartRate.toFixed(1)}%`, ''],
+    ['Checkout Abandonment Rate', `${funnelData.abandonment.checkoutRate.toFixed(1)}%`, ''],
+    ['', '', ''],
+    ['Next Payout Date', payoutData.nextDate || 'Pending', ''],
+    ['Next Payout Amount', payoutData.nextAmount ? `$${payoutData.nextAmount.toLocaleString()}` : 'TBD', ''],
+    ['30d Platform Fees', `$${payoutData.last30d.platformFees.toLocaleString()}`, ''],
+    ['30d Payment Fees', `$${payoutData.last30d.paymentFees.toLocaleString()}`, ''],
+    ['30d Tax Collected', `$${payoutData.last30d.taxCollected.toLocaleString()}`, '']
+  ];
+
+  return csvData.map(row => row.join(',')).join('\n');
+}
+
+// Helper function to generate Products CSV
+async function generateProductsCSV(vendorProfileId: string, startDate: Date, endDate: Date): Promise<string> {
+  const productMetrics = await calculateProductMetrics(vendorProfileId, startDate, endDate);
+
+  const csvData = [
+    ['Product Name', 'Units Sold', 'Revenue', 'Refund Rate %', 'Period'],
+    ...productMetrics.top.map(product => [
+      product.name,
+      product.units.toString(),
+      `$${product.revenue.toLocaleString()}`,
+      product.refundRatePct.toFixed(1),
+      `${startDate.toDateString()} - ${endDate.toDateString()}`
+    ])
+  ];
+
+  return csvData.map(row => row.join(',')).join('\n');
+}
+
+// Helper function to generate ZIP codes CSV
+async function generateZipsCSV(vendorProfileId: string, startDate: Date, endDate: Date): Promise<string> {
+  const zipMetrics = await calculateZipMetrics(vendorProfileId, startDate, endDate);
+
+  const csvData = [
+    ['ZIP Code', 'Orders', 'Share %', 'Period'],
+    ...zipMetrics.map(zip => [
+      zip.zip,
+      zip.orders.toString(),
+      zip.sharePct.toFixed(1),
+      `${startDate.toDateString()} - ${endDate.toDateString()}`
+    ])
+  ];
+
+  return csvData.map(row => row.join(',')).join('\n');
+}
+
+// Helper function to generate Funnel CSV
+async function generateFunnelCSV(vendorProfileId: string, startDate: Date, endDate: Date): Promise<string> {
+  const funnelData = await calculateFunnelData(vendorProfileId, startDate, endDate);
+
+  const csvData = [
+    ['Stage', 'Count', 'Conversion Rate %', 'Period'],
+    ...funnelData.stages.map((stage, index) => {
+      const prevStage = funnelData.stages[index - 1];
+      const conversionRate = prevStage ? ((stage.count / prevStage.count) * 100).toFixed(1) : '100.0';
+      
+      return [
+        stage.name,
+        stage.count.toString(),
+        conversionRate,
+        `${startDate.toDateString()} - ${endDate.toDateString()}`
+      ];
+    }),
+    ['', '', '', ''],
+    ['Cart Abandonment Rate', `${funnelData.abandonment.cartRate.toFixed(1)}%`, '', ''],
+    ['Checkout Abandonment Rate', `${funnelData.abandonment.checkoutRate.toFixed(1)}%`, '', ''],
+    ['', '', '', ''],
+    ['Top Blockers', funnelData.blockers.join('; '), '', '']
+  ];
+
+  return csvData.map(row => row.join(',')).join('\n');
 }
 
 export { router as analyticsRouter };

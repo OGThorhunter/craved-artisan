@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
 import {
   TrendingUp,
-  TrendingDown,
   Users,
   DollarSign,
   Target,
@@ -10,17 +9,8 @@ import {
   AlertTriangle,
   CheckCircle,
   BarChart3,
-  PieChart,
   Activity,
-  Calendar,
-  Phone,
-  Mail,
-  MessageSquare,
-  UserCheck,
-  UserX,
-  ArrowUpRight,
-  ArrowDownRight,
-  Minus
+  UserX
 } from 'lucide-react';
 
 interface Customer {
@@ -173,11 +163,6 @@ const CustomerHealthOverview: React.FC<CustomerHealthOverviewProps> = ({
     };
   }, [customers, opportunities, tasks]);
 
-  const getTrendIcon = (current: number, previous: number) => {
-    if (current > previous) return <ArrowUpRight className="h-4 w-4 text-green-500" />;
-    if (current < previous) return <ArrowDownRight className="h-4 w-4 text-red-500" />;
-    return <Minus className="h-4 w-4 text-gray-500" />;
-  };
 
   const getHealthScore = () => {
     let score = 100;
@@ -434,7 +419,7 @@ const CustomerHealthOverview: React.FC<CustomerHealthOverviewProps> = ({
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {metrics.customers.churnRisk > 0 && (
-            <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-red-200">
+            <div className="flex items-center gap-3 p-3 bg-[#F7F2EC] rounded-lg border border-gray-200 shadow-sm">
               <AlertTriangle className="h-5 w-5 text-red-500" />
               <div>
                 <div className="font-medium text-red-900">Address Churn Risk</div>
@@ -443,7 +428,7 @@ const CustomerHealthOverview: React.FC<CustomerHealthOverviewProps> = ({
             </div>
           )}
           {metrics.tasks.overdue > 0 && (
-            <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-yellow-200">
+            <div className="flex items-center gap-3 p-3 bg-[#F7F2EC] rounded-lg border border-gray-200 shadow-sm">
               <Clock className="h-5 w-5 text-yellow-500" />
               <div>
                 <div className="font-medium text-yellow-900">Complete Overdue Tasks</div>
@@ -452,7 +437,7 @@ const CustomerHealthOverview: React.FC<CustomerHealthOverviewProps> = ({
             </div>
           )}
           {metrics.customers.blocked > 0 && (
-            <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-orange-200">
+            <div className="flex items-center gap-3 p-3 bg-[#F7F2EC] rounded-lg border border-gray-200 shadow-sm">
               <UserX className="h-5 w-5 text-orange-500" />
               <div>
                 <div className="font-medium text-orange-900">Review Blocked Customers</div>
@@ -461,7 +446,7 @@ const CustomerHealthOverview: React.FC<CustomerHealthOverviewProps> = ({
             </div>
           )}
           {metrics.pipeline.winRate < 25 && (
-            <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-blue-200">
+            <div className="flex items-center gap-3 p-3 bg-[#F7F2EC] rounded-lg border border-gray-200 shadow-sm">
               <Target className="h-5 w-5 text-blue-500" />
               <div>
                 <div className="font-medium text-blue-900">Improve Win Rate</div>
@@ -470,7 +455,7 @@ const CustomerHealthOverview: React.FC<CustomerHealthOverviewProps> = ({
             </div>
           )}
           {metrics.customers.highValue > 0 && (
-            <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-green-200">
+            <div className="flex items-center gap-3 p-3 bg-[#F7F2EC] rounded-lg border border-gray-200 shadow-sm">
               <Star className="h-5 w-5 text-green-500" />
               <div>
                 <div className="font-medium text-green-900">Focus on VIPs</div>
@@ -479,7 +464,7 @@ const CustomerHealthOverview: React.FC<CustomerHealthOverviewProps> = ({
             </div>
           )}
           {metrics.leads.total > 0 && (
-            <div className="flex items-center gap-3 p-3 bg-white rounded-lg border border-purple-200">
+            <div className="flex items-center gap-3 p-3 bg-[#F7F2EC] rounded-lg border border-gray-200 shadow-sm">
               <Users className="h-5 w-5 text-purple-500" />
               <div>
                 <div className="font-medium text-purple-900">Qualify Leads</div>

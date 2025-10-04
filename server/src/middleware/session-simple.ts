@@ -24,6 +24,8 @@ export const attachUser = (req: any, res: any, next: any) => {
   console.log('🔍 [DEBUG] Session ID:', req.sessionID);
   console.log('🔍 [DEBUG] Has session:', !!req.session);
   console.log('🔍 [DEBUG] Session data:', JSON.stringify(req.session, null, 2));
+  console.log('🔍 [DEBUG] Request cookies:', req.headers.cookie);
+  console.log('🔍 [DEBUG] Request headers:', JSON.stringify(req.headers, null, 2));
   
   logger.info({ 
     sessionId: req.sessionID, 

@@ -51,39 +51,84 @@ model VendorProfile {
   labelProfiles         LabelProfile[]
   labelTemplates        LabelTemplate[]
   labelJobs             LabelJob[]
-  user                  User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user                  User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // AI Insights relations
+  competitorPrices      ProductCompetitorPrice[]
+  priceHistory          ProductPriceHistory[]
+  inventoryItems        InventoryItem[]
+  supplierOffers        InventorySupplierOffer[]
+  purchaseOrders        InventoryPurchaseOrder[]
+  // Stripe relations
+  stripePayments        StripePayment[]
+  stripeBalanceTransactions StripeBalanceTransaction[]
+  stripePayouts         StripePayout[]
+  // Product system relations
+  categories            Category[]
+  subcategories         Subcategory[]
+  recipeParseJobs       RecipeParseJob[]
 
   @@index([userId])
 }
 
 model Product {
-  id               String           @id @default(cuid())
-  vendorProfileId  String
-  name             String
-  description      String?
-  price            Float
-  cost             Float?
-  imageUrl         String?
-  tags             String?
-  stock            Int              @default(0)
-  isAvailable      Boolean          @default(true)
-  targetMargin     Float?
-  marginAlert      Boolean          @default(false)
-  alertNote        String?
-  onWatchlist      Boolean          @default(false)
-  lastAiSuggestion DateTime?
-  aiSuggestionNote String?
-  taxCode          String?
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-  recipeId         String?
-  analyticsEvents  AnalyticsEvent[]
-  cartItems        CartItem[]
-  orderItems       OrderItem[]
-  recipe           Recipe?          @relation(fields: [recipeId], references: [id])
-  vendor           VendorProfile    @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  id                    String           @id @default(cuid())
+  vendorProfileId       String
+  type                  ProductType      @default(FOOD)
+  name                  String
+  slug                  String           @unique
+  description           String?
+  categoryId            String?
+  subcategoryId         String?
+  tags                  String[]         @default([])
+  imageUrl              String?
+  active                Boolean          @default(true)
+  price                 Float
+  baseCost              Float            @default(0)
+  laborCost             Float            @default(0)
+  targetMarginLowPct    Float            @default(30)
+  targetMarginHighPct   Float            @default(45)
+  minPrice              Float?
+  maxPrice              Float?
+  sku                   String?          @unique
+  barcode               String?
+  taxCode               String?
+  // Food-specific fields
+  allergenFlags         String[]         @default([])
+  nutritionNotes        String?
+  // Service-specific fields
+  serviceDurationMin    Int?
+  serviceCapacityPerDay Int?
+  serviceLeadTimeDays   Int?
+  requiresDeposit       Boolean          @default(false)
+  // Legacy fields for backward compatibility
+  cost                  Float?
+  stock                 Int              @default(0)
+  isAvailable           Boolean          @default(true)
+  targetMargin          Float?
+  marginAlert           Boolean          @default(false)
+  alertNote             String?
+  onWatchlist           Boolean          @default(false)
+  lastAiSuggestion      DateTime?
+  aiSuggestionNote      String?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+  recipeId              String?
+  analyticsEvents       AnalyticsEvent[]
+  cartItems             CartItem[]
+  orderItems            OrderItem[]
+  recipe                Recipe?                  @relation(fields: [recipeId], references: [id])
+  vendor                VendorProfile            @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  competitorPrices      ProductCompetitorPrice[] // AI: Competitor pricing data
+  priceHistory          ProductPriceHistory[]    // AI: Price change history
+  // New relations
+  category              Category?                @relation(fields: [categoryId], references: [id])
+  subcategory           Subcategory?             @relation(fields: [subcategoryId], references: [id])
+  variants              ProductVariant[]
+  materials             ProductMaterial[]
 
-  @@index([vendorProfileId])
+  @@index([vendorProfileId, active, name])
+  @@index([categoryId])
+  @@index([type])
   @@index([createdAt])
 }
 
@@ -171,6 +216,34 @@ model InventoryTx {
   ingredient      Ingredient @relation(fields: [ingredientId], references: [id], onDelete: Cascade)
 
   @@index([vendorProfileId, ingredientId, type, createdAt])
+}
+
+// AI: Enhanced inventory item model for supplies/ingredients
+model InventoryItem {
+  id              String    @id @default(cuid())
+  vendorProfileId String
+  name            String
+  supplierName    String?
+  sku             String?
+  currentQty      Float     @default(0)
+  reorderPoint    Float     @default(0)
+  preferredQty    Float     @default(0)
+  lastCost        Float?
+  avgCost         Float?
+  unit            String    @default("each")
+  leadTimeDays    Int       @default(7)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relations
+  vendor          VendorProfile                @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  supplierOffers  InventorySupplierOffer[]
+  purchaseOrderLines InventoryPurchaseOrderLine[]
+  productMaterials ProductMaterial[]
+  
+  @@index([vendorProfileId])
+  @@index([name])
+  @@index([supplierName])
 }
 
 model Recipe {
@@ -536,6 +609,60 @@ model ShippingAddress {
   @@index([postalCode])
 }
 
+// Stripe Integration Models
+model StripePayment {
+  id              String    @id @default(cuid())
+  stripePaymentId String    @unique
+  vendorProfileId String
+  orderId         String?
+  amount          Float
+  fee             Float
+  net             Float
+  currency        String    @default("usd")
+  status          String
+  createdAt       DateTime
+  updatedAt       DateTime  @updatedAt
+  vendorProfile   VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+
+  @@index([vendorProfileId, createdAt])
+  @@index([stripePaymentId])
+}
+
+model StripeBalanceTransaction {
+  id                  String    @id @default(cuid())
+  stripeTransactionId String    @unique
+  vendorProfileId     String
+  amount              Float
+  fee                 Float
+  net                 Float
+  currency            String    @default("usd")
+  type                String
+  description         String?
+  source              String
+  createdAt           DateTime
+  updatedAt           DateTime  @updatedAt
+  vendorProfile       VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+
+  @@index([vendorProfileId, createdAt])
+  @@index([stripeTransactionId])
+}
+
+model StripePayout {
+  id              String    @id @default(cuid())
+  stripePayoutId  String    @unique
+  vendorProfileId String
+  amount          Float
+  currency        String    @default("usd")
+  status          String
+  description     String?
+  arrivalDate     DateTime
+  createdAt       DateTime
+  updatedAt       DateTime  @updatedAt
+  vendorProfile   VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+
+  @@index([vendorProfileId, arrivalDate])
+  @@index([stripePayoutId])
+}
 
 model Market {
   id            String               @id @default(cuid())
@@ -772,6 +899,99 @@ enum TemplateStatus {
   ARCHIVED
 }
 
+// AI INSIGHTS SYSTEM TABLES
+
+model ProductCompetitorPrice {
+  id             String    @id @default(cuid())
+  vendorProfileId String   // For vendor isolation
+  productId      String
+  competitorName String
+  competitorSku  String?
+  price          Float
+  currency       String    @default("USD")
+  sourceUrl      String?
+  capturedAt     DateTime  @default(now())
+  createdAt      DateTime  @default(now())
+  
+  // Relations
+  vendor         VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  product        Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@index([vendorProfileId, productId, capturedAt(sort: Desc)])
+  @@index([competitorName])
+}
+
+model ProductPriceHistory {
+  id             String    @id @default(cuid())
+  vendorProfileId String   // For vendor isolation
+  productId      String
+  oldPrice       Float?
+  newPrice       Float
+  changedBy      String    // 'vendor' | 'system' | 'ai_suggest'
+  reason         String?
+  createdAt      DateTime  @default(now())
+  
+  // Relations
+  vendor         VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  product        Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@index([vendorProfileId, productId, createdAt(sort: Desc)])
+}
+
+model InventorySupplierOffer {
+  id               String    @id @default(cuid())
+  vendorProfileId  String    // For vendor isolation
+  inventoryItemId  String
+  supplierName     String
+  packSize         Int
+  unitCost         Float
+  bulkBreakQty     Int?
+  bulkUnitCost     Float?
+  shippingCostEst  Float?
+  validFrom        DateTime  @default(now())
+  validTo          DateTime?
+  sourceUrl        String?
+  createdAt        DateTime  @default(now())
+  
+  // Relations
+  vendor           VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  inventoryItem    InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  
+  @@index([vendorProfileId, inventoryItemId])
+  @@index([supplierName])
+}
+
+model InventoryPurchaseOrder {
+  id                  String    @id @default(cuid())
+  vendorProfileId     String    // For vendor isolation
+  status              String    @default("draft") // 'draft' | 'sent' | 'received'
+  totalEstimatedCost  Float?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  
+  // Relations
+  vendor              VendorProfile                @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  lines               InventoryPurchaseOrderLine[]
+  
+  @@index([vendorProfileId, status])
+}
+
+model InventoryPurchaseOrderLine {
+  id                  String    @id @default(cuid())
+  purchaseOrderId     String
+  inventoryItemId     String
+  qty                 Int
+  unitCostEst         Float
+  createdAt           DateTime  @default(now())
+  
+  // Relations
+  purchaseOrder       InventoryPurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  inventoryItem       InventoryItem          @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  
+  @@index([purchaseOrderId])
+  @@index([inventoryItemId])
+}
+
 enum JobStatus {
   QUEUED
   RENDERING
@@ -785,4 +1005,113 @@ enum JobSource {
   ORDER
   PRODUCT
   MANUAL
+}
+
+// Product System Enums
+enum ProductType {
+  FOOD
+  NON_FOOD
+  SERVICE
+}
+
+// New Product System Models
+model Category {
+  id              String        @id @default(cuid())
+  vendorProfileId String
+  name            String
+  parentId        String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  vendor          VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  parent          Category?     @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children        Category[]    @relation("CategoryHierarchy")
+  products        Product[]
+  subcategories   Subcategory[]
+  
+  @@index([vendorProfileId])
+  @@index([parentId])
+}
+
+model Subcategory {
+  id              String        @id @default(cuid())
+  vendorProfileId String
+  categoryId      String
+  name            String
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  vendor          VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  category        Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  products        Product[]
+  
+  @@index([vendorProfileId])
+  @@index([categoryId])
+}
+
+model ProductVariant {
+  id          String  @id @default(cuid())
+  productId   String
+  name        String
+  sku         String?
+  priceDelta  Float   @default(0)
+  isDefault   Boolean @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  product     Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@index([productId])
+}
+
+model ProductMaterial {
+  id              String  @id @default(cuid())
+  productId       String
+  inventoryItemId String
+  qty             Float
+  unit            String
+  wastePct        Float   @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  product         Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  
+  @@index([productId])
+  @@index([inventoryItemId])
+}
+
+model RecipeParseJob {
+  id              String              @id @default(cuid())
+  vendorProfileId String
+  sourceType      RecipeSourceType
+  sourceUrl       String?
+  status          RecipeParseStatus   @default(PENDING)
+  rawText         String?
+  parsedJson      Json?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  
+  // Relations
+  vendor          VendorProfile       @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  
+  @@index([vendorProfileId])
+  @@index([status])
+}
+
+enum RecipeSourceType {
+  IMAGE
+  PDF
+  TEXT
+  URL
+}
+
+enum RecipeParseStatus {
+  PENDING
+  DONE
+  FAILED
 }

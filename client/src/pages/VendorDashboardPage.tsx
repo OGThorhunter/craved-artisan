@@ -9,7 +9,6 @@ import {
   Package, 
   MessageSquare, 
   Settings, 
-  Users, 
   Calendar,
   Activity,
   Brain,
@@ -85,8 +84,7 @@ const VendorDashboardPage: React.FC = () => {
 
   const tabs = [
     { id: 'pulse', label: '🔥 UPDATED Pulse', icon: Activity },
-    { id: 'analytics', label: 'Analytics', icon: TrendingUp },
-    { id: 'crm', label: 'CRM', icon: Users },
+    { id: 'analytics-crm', label: 'Analytics & CRM', icon: TrendingUp },
     { id: 'inventory', label: 'Inventory', icon: Package },
     { id: 'financials', label: 'Financials', icon: DollarSign },
     { id: 'messaging', label: 'Messaging', icon: MessageSquare },
@@ -470,8 +468,27 @@ const VendorDashboardPage: React.FC = () => {
           </div>
         )}
 
+        {/* Analytics & CRM Tab */}
+        {activeTab === 'analytics-crm' && (
+          <div className="text-center py-12">
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Analytics & CRM</h3>
+            <p className="text-gray-600 mb-4">Comprehensive business analytics and customer relationship management in one place</p>
+            <div className="flex justify-center gap-4">
+              <a 
+                href="/dashboard/vendor/analytics-crm" 
+                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Open Analytics & CRM
+              </a>
+            </div>
+            <div className="mt-6 text-sm text-gray-500">
+              <p>Includes: Business Snapshot, Taxes, Customer 360, Pipeline, Tasks, and Customer Health</p>
+            </div>
+          </div>
+        )}
+
         {/* Other tabs content would go here */}
-        {activeTab !== 'pulse' && (
+        {activeTab !== 'pulse' && activeTab !== 'analytics-crm' && (
           <div className="text-center py-12">
             <h3 className="text-lg font-medium text-gray-900 mb-2">{tabs.find(t => t.id === activeTab)?.label} Coming Soon</h3>
             <p className="text-gray-600">This section is under development</p>

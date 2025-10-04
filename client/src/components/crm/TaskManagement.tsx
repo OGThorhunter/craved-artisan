@@ -333,7 +333,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
       case 'in_progress': return <Clock className="h-4 w-4" />;
       case 'pending': return <AlertCircle className="h-4 w-4" />;
       case 'cancelled': return <X className="h-4 w-4" />;
-      case 'on_hold': return <Pause className="h-4 w-4" />;
+      case 'on_hold': return <Clock className="h-4 w-4" />;
       default: return <Clock className="h-4 w-4" />;
     }
   };
@@ -618,7 +618,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
 
       {/* Task List View */}
       {activeView === 'list' && (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="bg-[#F7F2EC] rounded-lg shadow-sm border border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
@@ -764,7 +764,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                 {sortedTasks
                   .filter(task => task.status === status)
                   .map((task) => (
-                    <div key={task.id} className="bg-white rounded-lg shadow p-4 hover:shadow-md transition-shadow">
+                    <div key={task.id} className="bg-[#F7F2EC] rounded-lg shadow-sm border border-gray-200 p-4 hover:shadow-md transition-shadow">
                       <div className="flex items-start justify-between mb-2">
                         <h4 className="font-medium text-gray-900 text-sm">{task.title}</h4>
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(task.priority)}`}>
@@ -854,7 +854,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
       {/* Create Task Modal */}
       {showTaskCreate && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+          <div className="bg-[#F7F2EC] rounded-lg shadow-xl border border-gray-200 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-gray-900">Create New Task</h2>
@@ -1046,7 +1046,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
       {/* Create Team Member Modal */}
       {showTeamMemberCreate && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+          <div className="bg-[#F7F2EC] rounded-lg shadow-xl border border-gray-200 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-gray-900">Add Team Member</h2>
@@ -1195,7 +1195,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
       {/* Edit Team Member Modal */}
       {showTeamMemberEdit && editingTeamMember && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+          <div className="bg-[#F7F2EC] rounded-lg shadow-xl border border-gray-200 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-gray-900">Edit Team Member</h2>

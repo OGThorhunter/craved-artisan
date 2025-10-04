@@ -67,16 +67,17 @@ const pulseData = {
     wasteTrend: 'decreasing',
     spoilageRate: 2.1
   },
-  profitability: {
-    grossMargin: 68.5,
-    cogs: 5120.30,
-    revenue: 15420.00
+  keyMetrics: {
+    averageOrderValue: 45.20,
+    conversionRate: 12.8,
+    customerRetention: 78.5,
+    orderCompletion: 94.2
   }
 };
 
 export default function PulsePage() {
   const { user } = useAuth();
-  const [timeRange, setTimeRange] = useState('weekly');
+  const [timeRange, setTimeRange] = useState('7days');
   const [urlCopied, setUrlCopied] = useState(false);
   const [vendorProfileId, setVendorProfileId] = useState<string | null>(null);
 
@@ -131,39 +132,164 @@ export default function PulsePage() {
     
     // Apply time range filter
     switch (timeRange) {
-      case 'daily':
+      case 'today':
         return {
           ...baseData,
+          pendingOrders: {
+            ...baseData.pendingOrders,
+            count: Math.floor(baseData.pendingOrders.count * 0.3), // Scale down for today
+            value: baseData.pendingOrders.value * 0.3
+          },
           revenue: {
             today: baseData.revenue.today,
-            thisWeek: baseData.revenue.today, // Show today's data
-            thisMonth: baseData.revenue.today, // Show today's data
+            thisWeek: baseData.revenue.today,
+            thisMonth: baseData.revenue.today,
             todayChange: baseData.revenue.todayChange,
             weekChange: baseData.revenue.todayChange,
             monthChange: baseData.revenue.todayChange
+          },
+          orderFunnel: {
+            ...baseData.orderFunnel,
+            new: Math.floor(baseData.orderFunnel.new * 0.2),
+            inProgress: Math.floor(baseData.orderFunnel.inProgress * 0.3),
+            ready: Math.floor(baseData.orderFunnel.ready * 0.2),
+            completed: Math.floor(baseData.orderFunnel.completed * 0.1)
           }
         };
-      case 'weekly':
+      case '7days':
         return {
           ...baseData,
+          pendingOrders: {
+            ...baseData.pendingOrders,
+            count: Math.floor(baseData.pendingOrders.count * 0.8),
+            value: baseData.pendingOrders.value * 0.8
+          },
           revenue: {
-            today: baseData.revenue.thisWeek / 7, // Average daily
+            today: baseData.revenue.thisWeek / 7,
             thisWeek: baseData.revenue.thisWeek,
-            thisMonth: baseData.revenue.thisWeek, // Show week's data
+            thisMonth: baseData.revenue.thisWeek,
             todayChange: baseData.revenue.weekChange,
             weekChange: baseData.revenue.weekChange,
             monthChange: baseData.revenue.weekChange
+          },
+          orderFunnel: {
+            ...baseData.orderFunnel,
+            new: Math.floor(baseData.orderFunnel.new * 0.6),
+            inProgress: Math.floor(baseData.orderFunnel.inProgress * 0.7),
+            ready: Math.floor(baseData.orderFunnel.ready * 0.5),
+            completed: Math.floor(baseData.orderFunnel.completed * 0.3)
           }
         };
-      case 'monthly':
+      case 'mtd':
         return {
           ...baseData,
+          pendingOrders: {
+            ...baseData.pendingOrders,
+            count: baseData.pendingOrders.count,
+            value: baseData.pendingOrders.value
+          },
           revenue: {
-            today: baseData.revenue.thisMonth / 30, // Average daily
-            thisWeek: baseData.revenue.thisMonth / 4, // Average weekly
+            today: baseData.revenue.thisMonth / 20,
+            thisWeek: baseData.revenue.thisMonth / 3,
             thisMonth: baseData.revenue.thisMonth,
             todayChange: baseData.revenue.monthChange,
             weekChange: baseData.revenue.monthChange,
+            monthChange: baseData.revenue.monthChange
+          },
+          orderFunnel: {
+            ...baseData.orderFunnel,
+            new: Math.floor(baseData.orderFunnel.new * 0.8),
+            inProgress: baseData.orderFunnel.inProgress,
+            ready: baseData.orderFunnel.ready,
+            completed: Math.floor(baseData.orderFunnel.completed * 0.7)
+          }
+        };
+      case '30days':
+        return {
+          ...baseData,
+          pendingOrders: {
+            ...baseData.pendingOrders,
+            count: Math.floor(baseData.pendingOrders.count * 1.2),
+            value: baseData.pendingOrders.value * 1.2
+          },
+          revenue: {
+            today: baseData.revenue.thisMonth / 30,
+            thisWeek: baseData.revenue.thisMonth / 4,
+            thisMonth: baseData.revenue.thisMonth,
+            todayChange: baseData.revenue.monthChange,
+            weekChange: baseData.revenue.monthChange,
+            monthChange: baseData.revenue.monthChange
+          },
+          orderFunnel: {
+            ...baseData.orderFunnel,
+            new: baseData.orderFunnel.new,
+            inProgress: baseData.orderFunnel.inProgress,
+            ready: baseData.orderFunnel.ready,
+            completed: Math.floor(baseData.orderFunnel.completed * 0.9)
+          }
+        };
+      case 'qtd':
+        return {
+          ...baseData,
+          pendingOrders: {
+            ...baseData.pendingOrders,
+            count: Math.floor(baseData.pendingOrders.count * 1.5),
+            value: baseData.pendingOrders.value * 1.5
+          },
+          revenue: {
+            today: baseData.revenue.thisMonth / 30,
+            thisWeek: baseData.revenue.thisMonth / 4,
+            thisMonth: baseData.revenue.thisMonth * 1.2,
+            todayChange: baseData.revenue.monthChange,
+            weekChange: baseData.revenue.monthChange,
+            monthChange: '+8.5%'
+          },
+          orderFunnel: {
+            ...baseData.orderFunnel,
+            new: Math.floor(baseData.orderFunnel.new * 1.3),
+            inProgress: Math.floor(baseData.orderFunnel.inProgress * 1.2),
+            ready: Math.floor(baseData.orderFunnel.ready * 1.1),
+            completed: baseData.orderFunnel.completed
+          }
+        };
+      case 'ytd':
+        return {
+          ...baseData,
+          pendingOrders: {
+            ...baseData.pendingOrders,
+            count: Math.floor(baseData.pendingOrders.count * 2),
+            value: baseData.pendingOrders.value * 2
+          },
+          revenue: {
+            today: baseData.revenue.thisMonth / 30,
+            thisWeek: baseData.revenue.thisMonth / 4,
+            thisMonth: baseData.revenue.thisMonth * 4,
+            todayChange: baseData.revenue.monthChange,
+            weekChange: baseData.revenue.monthChange,
+            monthChange: '+15.2%'
+          },
+          orderFunnel: {
+            ...baseData.orderFunnel,
+            new: Math.floor(baseData.orderFunnel.new * 2.5),
+            inProgress: Math.floor(baseData.orderFunnel.inProgress * 2),
+            ready: Math.floor(baseData.orderFunnel.ready * 1.8),
+            completed: Math.floor(baseData.orderFunnel.completed * 1.5)
+          }
+        };
+      case 'custom':
+        return {
+          ...baseData,
+          pendingOrders: {
+            ...baseData.pendingOrders,
+            count: Math.floor(baseData.pendingOrders.count * 0.9),
+            value: baseData.pendingOrders.value * 0.9
+          },
+          revenue: {
+            today: baseData.revenue.today,
+            thisWeek: baseData.revenue.thisWeek,
+            thisMonth: baseData.revenue.thisMonth,
+            todayChange: baseData.revenue.todayChange,
+            weekChange: baseData.revenue.weekChange,
             monthChange: baseData.revenue.monthChange
           }
         };
@@ -357,18 +483,26 @@ export default function PulsePage() {
             <Tooltip content="Real-time revenue tracking across different time periods - shows your income trends and performance">
               <h3 className="text-xl font-semibold text-gray-900 cursor-help">Revenue Pulse</h3>
             </Tooltip>
-            <div className="flex bg-white rounded-lg p-1 shadow-sm">
-              {['daily', 'weekly', 'monthly'].map((range) => (
+            <div className="flex flex-wrap bg-white rounded-lg p-1 shadow-sm gap-1">
+              {[
+                { key: 'today', label: 'Today' },
+                { key: '7days', label: '7 Days' },
+                { key: 'mtd', label: 'MTD' },
+                { key: '30days', label: '30 Days' },
+                { key: 'qtd', label: 'QTD' },
+                { key: 'ytd', label: 'YTD' },
+                { key: 'custom', label: 'Custom' }
+              ].map((range) => (
                 <button
-                  key={range}
-                  onClick={() => setTimeRange(range)}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    timeRange === range
+                  key={range.key}
+                  onClick={() => setTimeRange(range.key)}
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    timeRange === range.key
                       ? 'bg-blue-500 text-white'
-                      : 'text-gray-600 hover:text-gray-900'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                   }`}
                 >
-                  {range.charAt(0).toUpperCase() + range.slice(1)}
+                  {range.label}
                 </button>
               ))}
             </div>
@@ -569,36 +703,36 @@ export default function PulsePage() {
             </div>
           </Link>
 
-          {/* Profitability */}
+          {/* Key Performance Metrics */}
           <Link href="/dashboard/vendor/analytics?tab=financial-statements">
             <div className="bg-[#F7F2EC] rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200 cursor-pointer group h-full flex flex-col">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">Profitability</h3>
+                <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">Key Performance</h3>
                 <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-blue-600 transition-colors" />
               </div>
               <div className="space-y-4 flex-1">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Gross Margin</span>
-                  <span className="text-lg font-bold text-green-600">{filteredData.profitability.grossMargin.toFixed(2)}%</span>
+                  <span className="text-sm text-gray-600">Avg Order Value</span>
+                  <span className="text-lg font-bold text-green-600">${filteredData.keyMetrics.averageOrderValue.toFixed(2)}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">COGS</span>
-                  <span className="text-lg font-bold text-red-600">${filteredData.profitability.cogs.toFixed(2)}</span>
+                  <span className="text-sm text-gray-600">Conversion Rate</span>
+                  <span className="text-lg font-bold text-blue-600">{filteredData.keyMetrics.conversionRate.toFixed(1)}%</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Revenue</span>
-                  <span className="text-lg font-bold text-green-600">${filteredData.profitability.revenue.toFixed(2)}</span>
+                  <span className="text-sm text-gray-600">Customer Retention</span>
+                  <span className="text-lg font-bold text-purple-600">{filteredData.keyMetrics.customerRetention.toFixed(1)}%</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Net Profit</span>
-                  <span className="text-lg font-bold text-blue-600">${(filteredData.profitability.revenue - filteredData.profitability.cogs).toFixed(2)}</span>
+                  <span className="text-sm text-gray-600">Order Completion</span>
+                  <span className="text-lg font-bold text-orange-600">{filteredData.keyMetrics.orderCompletion.toFixed(1)}%</span>
                 </div>
               </div>
               
-              {/* Profitability Note */}
+              {/* Key Performance Note */}
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <div className="text-xs text-gray-500 italic text-center">
-                  Analyze revenue, costs, and margins to understand your business profitability
+                  Track core business metrics that drive growth and operational efficiency
                 </div>
               </div>
             </div>

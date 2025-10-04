@@ -4,7 +4,6 @@ import {
   Package,
   ShoppingCart,
   Database,
-  Users,
   Home,
   ClipboardList,
   Percent,
@@ -13,14 +12,13 @@ import {
 
 const navItems = [
   { label: 'Pulse', href: '/dashboard/vendor/pulse', icon: Home },
-  { label: 'Analytics', href: '/dashboard/vendor/analytics', icon: BarChart3 },
+  { label: 'Analytics & CRM', href: '/dashboard/vendor/analytics-crm', icon: BarChart3 },
   { label: 'Products', href: '/dashboard/vendor/products', icon: Package },
   { label: 'Sales Windows', href: '/dashboard/vendor/sales-windows', icon: ShoppingCart },
   { label: 'Inventory', href: '/dashboard/vendor/inventory', icon: Database },
   { label: 'Orders', href: '/dashboard/vendor/orders', icon: ClipboardList },
   { label: 'Promotions', href: '/dashboard/vendor/promotions', icon: Percent },
   { label: 'Labels', href: '/dashboard/vendor/labels', icon: Printer },
-  { label: 'CRM', href: '/dashboard/vendor/crm', icon: Users },
 ];
 
 export default function DashboardNav() {
@@ -35,6 +33,9 @@ export default function DashboardNav() {
 
   // Compute active state by comparing current location to each item href
   const isActive = (path: string) => {
+    if (path === '/dashboard/vendor/analytics-crm') {
+      return location.startsWith('/dashboard/vendor/analytics-crm');
+    }
     return location === path;
   };
 
