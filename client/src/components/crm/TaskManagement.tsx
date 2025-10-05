@@ -445,7 +445,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
           
           <button 
             onClick={() => setShowTaskCreate(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="flex items-center gap-2 px-3 py-2 bg-brand-green text-white rounded-md hover:bg-brand-green/80 transition-colors text-sm font-medium"
           >
             <Plus className="h-4 w-4" />
             Create Task
@@ -459,13 +459,13 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium text-gray-700">View:</span>
             <div className="flex border border-gray-300 rounded-lg">
-              <button
-                onClick={() => setActiveView('list')}
-                className={`px-3 py-1 text-sm font-medium rounded-l-lg transition-colors ${
-                  activeView === 'list'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-50'
-                }`}
+            <button
+              onClick={() => setActiveView('list')}
+              className={`px-3 py-2 text-sm font-medium rounded-l-md transition-colors ${
+                activeView === 'list'
+                  ? 'bg-brand-green text-white'
+                  : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
                 title="List view"
                 aria-label="Switch to list view"
               >
@@ -473,9 +473,9 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
               </button>
               <button
                 onClick={() => setActiveView('kanban')}
-                className={`px-3 py-1 text-sm font-medium border-l border-gray-300 transition-colors ${
+                className={`px-3 py-2 text-sm font-medium border-l border-gray-300 transition-colors ${
                   activeView === 'kanban'
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-blue-500 text-white'
                     : 'bg-white text-gray-700 hover:bg-gray-50'
                 }`}
                 title="Kanban view"
@@ -485,9 +485,9 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
               </button>
               <button
                 onClick={() => setActiveView('calendar')}
-                className={`px-3 py-1 text-sm font-medium border-l border-gray-300 rounded-r-lg transition-colors ${
+                className={`px-3 py-2 text-sm font-medium border-l border-gray-300 rounded-r-md transition-colors ${
                   activeView === 'calendar'
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-blue-500 text-white'
                     : 'bg-white text-gray-700 hover:bg-gray-50'
                 }`}
                 title="Calendar view"
@@ -506,7 +506,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowTeamMemberCreate(true)}
-            className="flex items-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
+            className="flex items-center gap-2 px-3 py-2 bg-brand-maroon text-white rounded-md hover:bg-brand-maroon/80 transition-colors text-sm font-medium"
           >
             <UserPlus className="h-4 w-4" />
             Add Team Member
@@ -843,7 +843,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
           <p className="text-gray-600 mb-4">Get started by creating your first task</p>
           <button
             onClick={() => setShowTaskCreate(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mx-auto"
+            className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium mx-auto"
           >
             <Plus className="h-4 w-4" />
             Create Task
@@ -1014,7 +1014,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                       tags: []
                     });
                   }}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  className="px-3 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium"
                 >
                   Cancel
                 </button>
@@ -1033,7 +1033,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                       tags: []
                     });
                   }}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
                 >
                   Create Task
                 </button>
@@ -1164,7 +1164,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                       tasksCompleted: 0
                     });
                   }}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  className="px-3 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium"
                 >
                   Cancel
                 </button>
@@ -1182,7 +1182,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                       tasksCompleted: 0
                     });
                   }}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  className="px-3 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors text-sm font-medium"
                 >
                   Add Team Member
                 </button>
@@ -1297,7 +1297,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                     setShowTeamMemberEdit(false);
                     setEditingTeamMember(null);
                   }}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  className="px-3 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium"
                 >
                   Cancel
                 </button>
@@ -1307,7 +1307,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                     setShowTeamMemberEdit(false);
                     setEditingTeamMember(null);
                   }}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  className="px-3 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors text-sm font-medium"
                 >
                   Update Team Member
                 </button>

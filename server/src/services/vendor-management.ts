@@ -601,3 +601,5 @@ export class VendorManagementService {
 
 // Export singleton instance
 export const vendorManagementService = VendorManagementService.getInstance();
+
+

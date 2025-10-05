@@ -14,6 +14,15 @@ import {
   RefreshCw,
   ExternalLink
 } from 'lucide-react';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer
+} from 'recharts';
 import { DateRangePicker } from '@/components/ui/DateRangePicker';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
@@ -78,10 +87,7 @@ interface BusinessSnapshotData {
 }
 
 const QUICK_PRESETS = [
-  { label: 'Today', days: 1 },
   { label: '7 days', days: 7 },
-  { label: 'MTD', days: 'mtd' },
-  { label: '30 days', days: 30 },
   { label: 'QTD', days: 'qtd' },
   { label: 'YTD', days: 'ytd' },
   { label: 'Custom', days: 'custom' }
@@ -98,7 +104,8 @@ export const BusinessSnapshot: React.FC<BusinessSnapshotProps> = ({
     return { from: thirtyDaysAgo, to: today };
   });
 
-  const [selectedPreset, setSelectedPreset] = useState<string>('30 days');
+  const [selectedPreset, setSelectedPreset] = useState<string>('7 days');
+  const [selectedMetric, setSelectedMetric] = useState<string>('netSales');
 
   // Fetch business snapshot data
   const { data: snapshotData, isLoading, error, refetch } = useQuery({
@@ -255,6 +262,76 @@ export const BusinessSnapshot: React.FC<BusinessSnapshotProps> = ({
     } finally {
       setIsSyncing(false);
     }
+  };
+
+  // Generate chart data based on selected metric and time range
+  const getChartData = (metric: string, timeRange: string) => {
+    const data = [];
+    const today = new Date();
+    
+    if (timeRange === '7 days') {
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(today.getDate() - i);
+        data.push({
+          date: date.toISOString().split('T')[0],
+          value: getMetricValue(metric, i, 7)
+        });
+      }
+    } else if (timeRange === 'qtd') {
+      for (let i = 3; i >= 0; i--) {
+        const date = new Date(today);
+        date.setMonth(today.getMonth() - i);
+        data.push({
+          date: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+          value: getMetricValue(metric, i, 4)
+        });
+      }
+    } else if (timeRange === 'ytd') {
+      for (let i = 11; i >= 0; i--) {
+        const date = new Date(today);
+        date.setMonth(today.getMonth() - i);
+        data.push({
+          date: date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
+          value: getMetricValue(metric, i, 12)
+        });
+      }
+    } else if (timeRange === 'custom') {
+      const daysDiff = Math.ceil((dateRange.to.getTime() - dateRange.from.getTime()) / (1000 * 60 * 60 * 24));
+      const dataPoints = Math.min(daysDiff, 30); // Limit to 30 data points max
+      
+      for (let i = dataPoints - 1; i >= 0; i--) {
+        const date = new Date(dateRange.from);
+        date.setDate(dateRange.from.getDate() + i);
+        data.push({
+          date: date.toISOString().split('T')[0],
+          value: getMetricValue(metric, i, dataPoints)
+        });
+      }
+    }
+    
+    return data;
+  };
+
+  // Generate mock metric values with realistic trends
+  const getMetricValue = (metric: string, index: number, totalPoints: number) => {
+    const baseValues: { [key: string]: number } = {
+      netSales: 2000,
+      ordersCount: 50,
+      aov: 40,
+      refundRate: 2.5,
+      discounts: 100,
+      estNetPayout: 1900,
+      disputes: 1,
+      paymentFees: 60
+    };
+    
+    const baseValue = baseValues[metric] || 1000;
+    const trend = Math.sin((index / totalPoints) * Math.PI) * 0.3; // Sine wave trend
+    const randomVariation = (Math.random() - 0.5) * 0.2; // Random variation
+    const multiplier = 1 + trend + randomVariation;
+    
+    return Math.round(baseValue * multiplier * 100) / 100;
   };
 
   const handleExportAll = () => {
@@ -462,7 +539,19 @@ Checkout Abandonment Rate,${snapshotData?.funnel.abandonment.checkoutRate.toFixe
         {/* Main Content */}
         <div className="xl:col-span-3 space-y-6">
           {/* Section A: Today/Period KPIs */}
-          <KPICards data={snapshotData} />
+          <KPICards 
+            data={snapshotData} 
+            selectedMetric={selectedMetric}
+            onMetricSelect={setSelectedMetric}
+            timeRange={selectedPreset}
+          />
+          
+          {/* Interactive Chart */}
+          <InteractiveChart 
+            selectedMetric={selectedMetric}
+            timeRange={selectedPreset}
+            dateRange={dateRange}
+          />
           
           {/* Section B: Sales & Checkout Funnel */}
           <FunnelSection data={snapshotData} onExportFunnel={handleExportFunnel} />
@@ -484,7 +573,12 @@ Checkout Abandonment Rate,${snapshotData?.funnel.abandonment.checkoutRate.toFixe
 };
 
 // KPI Cards Component
-const KPICards: React.FC<{ data: BusinessSnapshotData }> = ({ data }) => {
+const KPICards: React.FC<{ 
+  data: BusinessSnapshotData;
+  selectedMetric: string;
+  onMetricSelect: (metric: string) => void;
+  timeRange: string;
+}> = ({ data, selectedMetric, onMetricSelect, timeRange }) => {
   const cards = [
     {
       title: 'Net Sales',
@@ -493,7 +587,8 @@ const KPICards: React.FC<{ data: BusinessSnapshotData }> = ({ data }) => {
       color: 'text-green-600',
       bgColor: 'bg-green-50',
       borderColor: 'border-green-200',
-      tooltip: 'Total sales after refunds and discounts'
+      tooltip: 'Total sales after refunds and discounts',
+      metricKey: 'netSales'
     },
     {
       title: 'Orders',
@@ -502,7 +597,8 @@ const KPICards: React.FC<{ data: BusinessSnapshotData }> = ({ data }) => {
       color: 'text-blue-600',
       bgColor: 'bg-blue-50',
       borderColor: 'border-blue-200',
-      tooltip: 'Total number of orders'
+      tooltip: 'Total number of orders',
+      metricKey: 'ordersCount'
     },
     {
       title: 'AOV',
@@ -511,7 +607,8 @@ const KPICards: React.FC<{ data: BusinessSnapshotData }> = ({ data }) => {
       color: 'text-purple-600',
       bgColor: 'bg-purple-50',
       borderColor: 'border-purple-200',
-      tooltip: 'Average order value'
+      tooltip: 'Average order value',
+      metricKey: 'aov'
     },
     {
       title: 'Refund Rate',
@@ -520,7 +617,8 @@ const KPICards: React.FC<{ data: BusinessSnapshotData }> = ({ data }) => {
       color: 'text-orange-600',
       bgColor: 'bg-orange-50',
       borderColor: 'border-orange-200',
-      tooltip: 'Percentage of orders that were refunded'
+      tooltip: 'Percentage of orders that were refunded',
+      metricKey: 'refundRate'
     },
     {
       title: 'Discounts',
@@ -529,7 +627,8 @@ const KPICards: React.FC<{ data: BusinessSnapshotData }> = ({ data }) => {
       color: 'text-indigo-600',
       bgColor: 'bg-indigo-50',
       borderColor: 'border-indigo-200',
-      tooltip: 'Total discount value applied'
+      tooltip: 'Total discount value applied',
+      metricKey: 'discounts'
     },
     {
       title: 'Est. Net Payout',
@@ -538,7 +637,8 @@ const KPICards: React.FC<{ data: BusinessSnapshotData }> = ({ data }) => {
       color: 'text-emerald-600',
       bgColor: 'bg-emerald-50',
       borderColor: 'border-emerald-200',
-      tooltip: 'Estimated payout after all fees (see Stripe for final)'
+      tooltip: 'Estimated payout after all fees (see Stripe for final)',
+      metricKey: 'estNetPayout'
     },
     {
       title: 'Open Disputes',
@@ -547,7 +647,8 @@ const KPICards: React.FC<{ data: BusinessSnapshotData }> = ({ data }) => {
       color: 'text-red-600',
       bgColor: 'bg-red-50',
       borderColor: 'border-red-200',
-      tooltip: 'Number of open payment disputes'
+      tooltip: 'Number of open payment disputes',
+      metricKey: 'disputes'
     },
     {
       title: 'Payment Fees (30d)',
@@ -556,7 +657,8 @@ const KPICards: React.FC<{ data: BusinessSnapshotData }> = ({ data }) => {
       color: 'text-gray-600',
       bgColor: 'bg-gray-50',
       borderColor: 'border-gray-200',
-      tooltip: 'Payment processing fees for last 30 days'
+      tooltip: 'Payment processing fees for last 30 days',
+      metricKey: 'paymentFees'
     }
   ];
 
@@ -571,9 +673,19 @@ const KPICards: React.FC<{ data: BusinessSnapshotData }> = ({ data }) => {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {cards.map((card, index) => (
           <Tooltip key={index} content={card.tooltip}>
-            <div className={`${card.bgColor} ${card.borderColor} border rounded-lg p-4 hover:shadow-md transition-shadow cursor-help`}>
+            <div 
+              className={`${card.bgColor} ${card.borderColor} border rounded-lg p-4 hover:shadow-md transition-all cursor-pointer ${
+                selectedMetric === card.metricKey 
+                  ? 'ring-2 ring-brand-green shadow-lg' 
+                  : 'hover:shadow-md'
+              }`}
+              onClick={() => onMetricSelect(card.metricKey)}
+            >
               <div className="flex items-center justify-between mb-2">
                 <card.icon className={`w-5 h-5 ${card.color}`} />
+                {selectedMetric === card.metricKey && (
+                  <div className="w-2 h-2 bg-brand-green rounded-full"></div>
+                )}
               </div>
               <div className="text-2xl font-bold text-gray-900 mb-1">
                 {card.value}

@@ -770,3 +770,5 @@ export class SecurityComplianceService {
 
 // Export singleton instance
 export const securityComplianceService = SecurityComplianceService.getInstance();
+
+

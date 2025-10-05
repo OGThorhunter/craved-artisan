@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'wouter';
 import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
-import { Tooltip } from '@/components/ui/Tooltip';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
   TrendingUp, 
@@ -16,8 +15,12 @@ import {
   Settings,
   ExternalLink,
   Copy,
-  Check
+  Check,
+  DollarSign,
+  Users,
+  ShoppingCart
 } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 
 // Mock Pulse data
 const pulseData = {
@@ -47,14 +50,14 @@ const pulseData = {
     completed: 342
   },
   topProducts: [
-    { name: 'Handmade Soap Set', units: 45, revenue: 1247.50, trend: 'up', recipeId: 'soap-recipe-001' },
-    { name: 'Artisan Bread', units: 38, revenue: 1083.00, trend: 'up', recipeId: 'bread-recipe-002' },
-    { name: 'Organic Honey', units: 32, revenue: 896.00, trend: 'stable', recipeId: 'honey-recipe-003' }
+    { name: 'Artisan Sourdough Bread', units: 45, revenue: 1247.50, trend: 'up', recipeId: 'sourdough-bread' },
+    { name: 'Chocolate Croissant', units: 38, revenue: 1083.00, trend: 'up', recipeId: 'chocolate-croissant' },
+    { name: 'Whole Wheat Bread', units: 32, revenue: 896.00, trend: 'stable', recipeId: 'whole-wheat-bread' }
   ],
   underperformers: [
-    { name: 'Handcrafted Mug', units: 3, revenue: 56.25, inventory: 12, recipeId: 'mug-recipe-001' },
-    { name: 'Lavender Sachet', units: 2, revenue: 18.00, inventory: 8, recipeId: 'sachet-recipe-002' },
-    { name: 'Artisan Candle', units: 1, revenue: 12.50, inventory: 15, recipeId: 'candle-recipe-003' }
+    { name: 'Artisan Sourdough Bread', units: 3, revenue: 56.25, inventory: 12, recipeId: 'sourdough-bread' },
+    { name: 'Chocolate Croissant', units: 2, revenue: 18.00, inventory: 8, recipeId: 'chocolate-croissant' },
+    { name: 'Whole Wheat Bread', units: 1, revenue: 12.50, inventory: 15, recipeId: 'whole-wheat-bread' }
   ],
   customerHealth: {
     returning: 78,
@@ -72,6 +75,55 @@ const pulseData = {
     conversionRate: 12.8,
     customerRetention: 78.5,
     orderCompletion: 94.2
+  },
+  // New metrics for the redesigned revenue pulse
+  sales: {
+    current: 2847.30,
+    previous: 2520.15,
+    change: '+12.9%',
+    changeType: 'positive'
+  },
+  followers: {
+    current: 1247,
+    previous: 1089,
+    change: '+14.5%',
+    changeType: 'positive'
+  },
+  averageOrderValue: {
+    current: 45.20,
+    previous: 42.80,
+    change: '+5.6%',
+    changeType: 'positive'
+  },
+  // Chart data for different metrics
+  chartData: {
+    sales: [
+      { date: '2024-01-01', value: 1200 },
+      { date: '2024-01-02', value: 1350 },
+      { date: '2024-01-03', value: 1100 },
+      { date: '2024-01-04', value: 1450 },
+      { date: '2024-01-05', value: 1600 },
+      { date: '2024-01-06', value: 1750 },
+      { date: '2024-01-07', value: 1900 }
+    ],
+    followers: [
+      { date: '2024-01-01', value: 1000 },
+      { date: '2024-01-02', value: 1025 },
+      { date: '2024-01-03', value: 1050 },
+      { date: '2024-01-04', value: 1080 },
+      { date: '2024-01-05', value: 1110 },
+      { date: '2024-01-06', value: 1150 },
+      { date: '2024-01-07', value: 1247 }
+    ],
+    averageOrderValue: [
+      { date: '2024-01-01', value: 42.50 },
+      { date: '2024-01-02', value: 43.20 },
+      { date: '2024-01-03', value: 41.80 },
+      { date: '2024-01-04', value: 44.10 },
+      { date: '2024-01-05', value: 45.30 },
+      { date: '2024-01-06', value: 44.80 },
+      { date: '2024-01-07', value: 45.20 }
+    ]
   }
 };
 
@@ -80,6 +132,12 @@ export default function PulsePage() {
   const [timeRange, setTimeRange] = useState('7days');
   const [urlCopied, setUrlCopied] = useState(false);
   const [vendorProfileId, setVendorProfileId] = useState<string | null>(null);
+  const [customDateRange, setCustomDateRange] = useState({
+    startDate: '',
+    endDate: ''
+  });
+  const [showCustomDateRange, setShowCustomDateRange] = useState(false);
+  const [selectedMetric, setSelectedMetric] = useState('sales');
 
   // Fetch vendor profile to get the vendor slug for storefront URL
   useEffect(() => {
@@ -127,50 +185,104 @@ export default function PulsePage() {
   };
 
   // Function to get filtered data based on time range
+  // Generate chart data based on timeframe
+  const getChartData = (metric: string, timeframe: string) => {
+    const baseData = pulseData.chartData[metric];
+    const today = new Date();
+    
+    switch (timeframe) {
+      case '7days':
+        // Last 7 days
+        return Array.from({ length: 7 }, (_, i) => {
+          const date = new Date(today);
+          date.setDate(date.getDate() - (6 - i));
+          return {
+            date: date.toISOString().split('T')[0],
+            value: baseData[Math.min(i, baseData.length - 1)].value * (0.8 + Math.random() * 0.4)
+          };
+        });
+      case '30days':
+        // Last 30 days (30 data points, one per day)
+        return Array.from({ length: 30 }, (_, i) => {
+          const date = new Date(today);
+          date.setDate(date.getDate() - (29 - i));
+          return {
+            date: date.toISOString().split('T')[0],
+            value: baseData[Math.min(i % baseData.length, baseData.length - 1)].value * (0.7 + Math.random() * 0.6)
+          };
+        });
+      case 'qtd':
+        // Last 4 months (4 data points, one per month)
+        return Array.from({ length: 4 }, (_, i) => {
+          const date = new Date(today);
+          date.setMonth(date.getMonth() - (3 - i));
+          return {
+            date: date.toISOString().split('T')[0],
+            value: baseData[Math.min(i % baseData.length, baseData.length - 1)].value * (0.5 + Math.random() * 1.0)
+          };
+        });
+      case 'ytd':
+        // Last 12 months (12 data points, one per month)
+        return Array.from({ length: 12 }, (_, i) => {
+          const date = new Date(today);
+          date.setMonth(date.getMonth() - (11 - i));
+          return {
+            date: date.toISOString().split('T')[0],
+            value: baseData[Math.min(i % baseData.length, baseData.length - 1)].value * (0.3 + Math.random() * 1.4)
+          };
+        });
+      case 'custom':
+        if (customDateRange.startDate && customDateRange.endDate) {
+          const start = new Date(customDateRange.startDate);
+          const end = new Date(customDateRange.endDate);
+          const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+          return Array.from({ length: days }, (_, i) => {
+            const date = new Date(start);
+            date.setDate(date.getDate() + i);
+            return {
+              date: date.toISOString().split('T')[0],
+              value: baseData[Math.min(i % baseData.length, baseData.length - 1)].value * (0.6 + Math.random() * 0.8)
+            };
+          });
+        }
+        return baseData.slice(-7);
+      default:
+        return baseData.slice(-7);
+    }
+  };
+
   const getFilteredData = () => {
     const baseData = { ...pulseData };
     
+    // Add dynamic chart data
+    const chartData = {
+      sales: getChartData('sales', timeRange),
+      followers: getChartData('followers', timeRange),
+      averageOrderValue: getChartData('averageOrderValue', timeRange)
+    };
+    
     // Apply time range filter
     switch (timeRange) {
-      case 'today':
-        return {
-          ...baseData,
-          pendingOrders: {
-            ...baseData.pendingOrders,
-            count: Math.floor(baseData.pendingOrders.count * 0.3), // Scale down for today
-            value: baseData.pendingOrders.value * 0.3
-          },
-          revenue: {
-            today: baseData.revenue.today,
-            thisWeek: baseData.revenue.today,
-            thisMonth: baseData.revenue.today,
-            todayChange: baseData.revenue.todayChange,
-            weekChange: baseData.revenue.todayChange,
-            monthChange: baseData.revenue.todayChange
-          },
-          orderFunnel: {
-            ...baseData.orderFunnel,
-            new: Math.floor(baseData.orderFunnel.new * 0.2),
-            inProgress: Math.floor(baseData.orderFunnel.inProgress * 0.3),
-            ready: Math.floor(baseData.orderFunnel.ready * 0.2),
-            completed: Math.floor(baseData.orderFunnel.completed * 0.1)
-          }
-        };
       case '7days':
         return {
           ...baseData,
+          chartData,
           pendingOrders: {
             ...baseData.pendingOrders,
             count: Math.floor(baseData.pendingOrders.count * 0.8),
             value: baseData.pendingOrders.value * 0.8
           },
-          revenue: {
-            today: baseData.revenue.thisWeek / 7,
-            thisWeek: baseData.revenue.thisWeek,
-            thisMonth: baseData.revenue.thisWeek,
-            todayChange: baseData.revenue.weekChange,
-            weekChange: baseData.revenue.weekChange,
-            monthChange: baseData.revenue.weekChange
+          sales: {
+            ...baseData.sales,
+            current: baseData.sales.current * 0.8
+          },
+          followers: {
+            ...baseData.followers,
+            current: Math.floor(baseData.followers.current * 0.8)
+          },
+          averageOrderValue: {
+            ...baseData.averageOrderValue,
+            current: baseData.averageOrderValue.current * 0.8
           },
           orderFunnel: {
             ...baseData.orderFunnel,
@@ -180,45 +292,26 @@ export default function PulsePage() {
             completed: Math.floor(baseData.orderFunnel.completed * 0.3)
           }
         };
-      case 'mtd':
-        return {
-          ...baseData,
-          pendingOrders: {
-            ...baseData.pendingOrders,
-            count: baseData.pendingOrders.count,
-            value: baseData.pendingOrders.value
-          },
-          revenue: {
-            today: baseData.revenue.thisMonth / 20,
-            thisWeek: baseData.revenue.thisMonth / 3,
-            thisMonth: baseData.revenue.thisMonth,
-            todayChange: baseData.revenue.monthChange,
-            weekChange: baseData.revenue.monthChange,
-            monthChange: baseData.revenue.monthChange
-          },
-          orderFunnel: {
-            ...baseData.orderFunnel,
-            new: Math.floor(baseData.orderFunnel.new * 0.8),
-            inProgress: baseData.orderFunnel.inProgress,
-            ready: baseData.orderFunnel.ready,
-            completed: Math.floor(baseData.orderFunnel.completed * 0.7)
-          }
-        };
       case '30days':
         return {
           ...baseData,
+          chartData,
           pendingOrders: {
             ...baseData.pendingOrders,
             count: Math.floor(baseData.pendingOrders.count * 1.2),
             value: baseData.pendingOrders.value * 1.2
           },
-          revenue: {
-            today: baseData.revenue.thisMonth / 30,
-            thisWeek: baseData.revenue.thisMonth / 4,
-            thisMonth: baseData.revenue.thisMonth,
-            todayChange: baseData.revenue.monthChange,
-            weekChange: baseData.revenue.monthChange,
-            monthChange: baseData.revenue.monthChange
+          sales: {
+            ...baseData.sales,
+            current: baseData.sales.current * 1.2
+          },
+          followers: {
+            ...baseData.followers,
+            current: Math.floor(baseData.followers.current * 1.2)
+          },
+          averageOrderValue: {
+            ...baseData.averageOrderValue,
+            current: baseData.averageOrderValue.current * 1.2
           },
           orderFunnel: {
             ...baseData.orderFunnel,
@@ -231,18 +324,23 @@ export default function PulsePage() {
       case 'qtd':
         return {
           ...baseData,
+          chartData,
           pendingOrders: {
             ...baseData.pendingOrders,
             count: Math.floor(baseData.pendingOrders.count * 1.5),
             value: baseData.pendingOrders.value * 1.5
           },
-          revenue: {
-            today: baseData.revenue.thisMonth / 30,
-            thisWeek: baseData.revenue.thisMonth / 4,
-            thisMonth: baseData.revenue.thisMonth * 1.2,
-            todayChange: baseData.revenue.monthChange,
-            weekChange: baseData.revenue.monthChange,
-            monthChange: '+8.5%'
+          sales: {
+            ...baseData.sales,
+            current: baseData.sales.current * 1.5
+          },
+          followers: {
+            ...baseData.followers,
+            current: Math.floor(baseData.followers.current * 1.5)
+          },
+          averageOrderValue: {
+            ...baseData.averageOrderValue,
+            current: baseData.averageOrderValue.current * 1.5
           },
           orderFunnel: {
             ...baseData.orderFunnel,
@@ -255,18 +353,23 @@ export default function PulsePage() {
       case 'ytd':
         return {
           ...baseData,
+          chartData,
           pendingOrders: {
             ...baseData.pendingOrders,
             count: Math.floor(baseData.pendingOrders.count * 2),
             value: baseData.pendingOrders.value * 2
           },
-          revenue: {
-            today: baseData.revenue.thisMonth / 30,
-            thisWeek: baseData.revenue.thisMonth / 4,
-            thisMonth: baseData.revenue.thisMonth * 4,
-            todayChange: baseData.revenue.monthChange,
-            weekChange: baseData.revenue.monthChange,
-            monthChange: '+15.2%'
+          sales: {
+            ...baseData.sales,
+            current: baseData.sales.current * 2
+          },
+          followers: {
+            ...baseData.followers,
+            current: Math.floor(baseData.followers.current * 2)
+          },
+          averageOrderValue: {
+            ...baseData.averageOrderValue,
+            current: baseData.averageOrderValue.current * 2
           },
           orderFunnel: {
             ...baseData.orderFunnel,
@@ -276,23 +379,44 @@ export default function PulsePage() {
             completed: Math.floor(baseData.orderFunnel.completed * 1.5)
           }
         };
-      case 'custom':
+      case 'custom': {
+        // Calculate days between custom date range
+        const startDate = new Date(customDateRange.startDate);
+        const endDate = new Date(customDateRange.endDate);
+        const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        
+        // Scale data based on custom range duration
+        const scaleFactor = Math.min(daysDiff / 7, 1); // Scale relative to 7 days
+        
         return {
           ...baseData,
+          chartData,
           pendingOrders: {
             ...baseData.pendingOrders,
-            count: Math.floor(baseData.pendingOrders.count * 0.9),
-            value: baseData.pendingOrders.value * 0.9
+            count: Math.floor(baseData.pendingOrders.count * scaleFactor),
+            value: baseData.pendingOrders.value * scaleFactor
           },
-          revenue: {
-            today: baseData.revenue.today,
-            thisWeek: baseData.revenue.thisWeek,
-            thisMonth: baseData.revenue.thisMonth,
-            todayChange: baseData.revenue.todayChange,
-            weekChange: baseData.revenue.weekChange,
-            monthChange: baseData.revenue.monthChange
+          sales: {
+            ...baseData.sales,
+            current: baseData.sales.current * scaleFactor
+          },
+          followers: {
+            ...baseData.followers,
+            current: Math.floor(baseData.followers.current * scaleFactor)
+          },
+          averageOrderValue: {
+            ...baseData.averageOrderValue,
+            current: baseData.averageOrderValue.current * scaleFactor
+          },
+          orderFunnel: {
+            ...baseData.orderFunnel,
+            new: Math.floor(baseData.orderFunnel.new * scaleFactor),
+            inProgress: Math.floor(baseData.orderFunnel.inProgress * scaleFactor),
+            ready: Math.floor(baseData.orderFunnel.ready * scaleFactor),
+            completed: Math.floor(baseData.orderFunnel.completed * scaleFactor)
           }
         };
+      }
       default:
         return baseData;
     }
@@ -396,9 +520,7 @@ export default function PulsePage() {
           {/* Pending Orders */}
           <div className="bg-[#F7F2EC] rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200">
             <div className="flex items-center justify-between mb-4">
-              <Tooltip content="Orders waiting to be fulfilled - these need your attention to process and complete">
-                <h3 className="text-lg font-semibold text-gray-900 cursor-help">Pending Orders</h3>
-              </Tooltip>
+              <h3 className="text-lg font-semibold text-gray-900">Pending Orders</h3>
               <Link href="/dashboard/vendor/orders">
                 <button 
                   className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
@@ -430,9 +552,7 @@ export default function PulsePage() {
           {/* Open Sales Windows */}
           <div className="bg-[#F7F2EC] rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200">
             <div className="flex items-center justify-between mb-4">
-              <Tooltip content="Active sales periods where customers can place orders - track upcoming events and order volumes">
-                <h3 className="text-lg font-semibold text-gray-900 cursor-help">Sales Windows</h3>
-              </Tooltip>
+              <h3 className="text-lg font-semibold text-gray-900">Sales Windows</h3>
               <Link href="/dashboard/vendor/sales-windows">
                 <button 
                   className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1"
@@ -450,10 +570,6 @@ export default function PulsePage() {
                 <span className="text-sm text-gray-600">Upcoming</span>
               </div>
               <p className="text-lg font-medium text-gray-900">{filteredData.salesWindows.totalTraffic}</p>
-              <p className="text-sm text-gray-600">Orders associated</p>
-              <div className="text-xs text-blue-600 font-medium">
-                {filteredData.salesWindows.nextEvent}
-              </div>
             </div>
           </div>
 
@@ -463,9 +579,7 @@ export default function PulsePage() {
               <div className="p-2 bg-blue-100 rounded-lg">
                 <Brain className="w-5 h-5 text-blue-600" />
               </div>
-              <Tooltip content="AI-powered insights and recommendations based on your sales data and market trends">
-                <h3 className="text-lg font-semibold text-gray-900 cursor-help">AI Insight</h3>
-              </Tooltip>
+              <h3 className="text-lg font-semibold text-gray-900">AI Insight</h3>
             </div>
             <p className="text-gray-800 font-medium mb-3">
               Sales are up 12% vs last week, but average basket size is down. Recommend promoting bundles.
@@ -480,22 +594,20 @@ export default function PulsePage() {
         {/* Revenue Snapshots */}
         <div className="bg-[#F7F2EC] rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200">
           <div className="flex items-center justify-between mb-6">
-            <Tooltip content="Real-time revenue tracking across different time periods - shows your income trends and performance">
-              <h3 className="text-xl font-semibold text-gray-900 cursor-help">Revenue Pulse</h3>
-            </Tooltip>
+            <h3 className="text-xl font-semibold text-gray-900">Revenue Pulse</h3>
             <div className="flex flex-wrap bg-white rounded-lg p-1 shadow-sm gap-1">
               {[
-                { key: 'today', label: 'Today' },
                 { key: '7days', label: '7 Days' },
-                { key: 'mtd', label: 'MTD' },
                 { key: '30days', label: '30 Days' },
                 { key: 'qtd', label: 'QTD' },
-                { key: 'ytd', label: 'YTD' },
-                { key: 'custom', label: 'Custom' }
+                { key: 'ytd', label: 'YTD' }
               ].map((range) => (
                 <button
                   key={range.key}
-                  onClick={() => setTimeRange(range.key)}
+                  onClick={() => {
+                    setTimeRange(range.key);
+                    setShowCustomDateRange(false);
+                  }}
                   className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                     timeRange === range.key
                       ? 'bg-blue-500 text-white'
@@ -505,62 +617,250 @@ export default function PulsePage() {
                   {range.label}
                 </button>
               ))}
+              <button
+                onClick={() => {
+                  setTimeRange('custom');
+                  setShowCustomDateRange(!showCustomDateRange);
+                }}
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  timeRange === 'custom'
+                    ? 'bg-blue-500 text-white'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                }`}
+              >
+                Custom Range
+              </button>
             </div>
           </div>
+
+          {/* Custom Date Range Input */}
+          {showCustomDateRange && (
+            <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200">
+              <div className="flex items-center gap-4">
+                <div className="flex-1">
+                  <label htmlFor="startDate" className="block text-sm font-medium text-gray-700 mb-1">
+                    Start Date
+                  </label>
+                  <input
+                    type="date"
+                    id="startDate"
+                    value={customDateRange.startDate}
+                    onChange={(e) => setCustomDateRange(prev => ({ ...prev, startDate: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label htmlFor="endDate" className="block text-sm font-medium text-gray-700 mb-1">
+                    End Date
+                  </label>
+                  <input
+                    type="date"
+                    id="endDate"
+                    value={customDateRange.endDate}
+                    onChange={(e) => setCustomDateRange(prev => ({ ...prev, endDate: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+                <div className="flex items-end">
+                  <button
+                    onClick={() => {
+                      if (customDateRange.startDate && customDateRange.endDate) {
+                        setTimeRange('custom');
+                      }
+                    }}
+                    disabled={!customDateRange.startDate || !customDateRange.endDate}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-sm font-medium"
+                  >
+                    Apply Range
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white rounded-lg p-4 shadow-sm">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-600">Today</span>
+            {/* Sales Metric */}
+            <div 
+              className={`bg-white rounded-lg p-6 shadow-sm cursor-pointer transition-all duration-200 hover:shadow-md border-2 ${
+                selectedMetric === 'sales' ? 'border-blue-500 bg-blue-50' : 'border-transparent'
+              }`}
+              onClick={() => setSelectedMetric('sales')}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <DollarSign className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-600">Sales</h4>
+                    <p className="text-2xl font-bold text-gray-900">
+                      ${filteredData.sales.current.toFixed(2)}
+                    </p>
+                  </div>
+                </div>
                 <div className="flex items-center gap-1">
-                  {getChangeIcon('positive')}
-                  <span className="text-sm font-medium text-green-600">
-                    {filteredData.revenue.todayChange}
+                  {getChangeIcon(filteredData.sales.changeType)}
+                  <span className={`text-sm font-medium ${getChangeColor(filteredData.sales.changeType)}`}>
+                    {filteredData.sales.change}
                   </span>
                 </div>
               </div>
-              <p className="text-2xl font-bold text-gray-900">
-                ${filteredData.revenue.today.toFixed(2)}
-              </p>
-              <div className="w-full bg-gray-200 rounded-full h-1 mt-2">
-                <div className="bg-green-500 h-1 rounded-full" style={{ width: '75%' }}></div>
+              {/* Trend line */}
+              <div className="h-8 flex items-end space-x-1">
+                {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+                  <div
+                    key={i}
+                    className="flex-1 bg-green-200 rounded-t"
+                    style={{ height: `${Math.random() * 60 + 20}%` }}
+                  />
+                ))}
               </div>
             </div>
 
-            <div className="bg-white rounded-lg p-4 shadow-sm">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-600">This Week</span>
+            {/* Followers Metric */}
+            <div 
+              className={`bg-white rounded-lg p-6 shadow-sm cursor-pointer transition-all duration-200 hover:shadow-md border-2 ${
+                selectedMetric === 'followers' ? 'border-blue-500 bg-blue-50' : 'border-transparent'
+              }`}
+              onClick={() => setSelectedMetric('followers')}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <Users className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-600">Followers</h4>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {filteredData.followers.current.toLocaleString()}
+                    </p>
+                  </div>
+                </div>
                 <div className="flex items-center gap-1">
-                  {getChangeIcon('positive')}
-                  <span className="text-sm font-medium text-green-600">
-                    {filteredData.revenue.weekChange}
+                  {getChangeIcon(filteredData.followers.changeType)}
+                  <span className={`text-sm font-medium ${getChangeColor(filteredData.followers.changeType)}`}>
+                    {filteredData.followers.change}
                   </span>
                 </div>
               </div>
-              <p className="text-2xl font-bold text-gray-900">
-                ${filteredData.revenue.thisWeek.toFixed(2)}
-              </p>
-              <div className="w-full bg-gray-200 rounded-full h-1 mt-2">
-                <div className="bg-green-500 h-1 rounded-full" style={{ width: '85%' }}></div>
+              {/* Trend line */}
+              <div className="h-8 flex items-end space-x-1">
+                {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+                  <div
+                    key={i}
+                    className="flex-1 bg-blue-200 rounded-t"
+                    style={{ height: `${Math.random() * 60 + 20}%` }}
+                  />
+                ))}
               </div>
             </div>
 
-            <div className="bg-white rounded-lg p-4 shadow-sm">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-600">This Month</span>
+            {/* Average Order Value Metric */}
+            <div 
+              className={`bg-white rounded-lg p-6 shadow-sm cursor-pointer transition-all duration-200 hover:shadow-md border-2 ${
+                selectedMetric === 'averageOrderValue' ? 'border-blue-500 bg-blue-50' : 'border-transparent'
+              }`}
+              onClick={() => setSelectedMetric('averageOrderValue')}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <ShoppingCart className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-gray-600">Avg Order Value</h4>
+                    <p className="text-2xl font-bold text-gray-900">
+                      ${filteredData.averageOrderValue.current.toFixed(2)}
+                    </p>
+                  </div>
+                </div>
                 <div className="flex items-center gap-1">
-                  {getChangeIcon('positive')}
-                  <span className="text-sm font-medium text-green-600">
-                    {filteredData.revenue.monthChange}
+                  {getChangeIcon(filteredData.averageOrderValue.changeType)}
+                  <span className={`text-sm font-medium ${getChangeColor(filteredData.averageOrderValue.changeType)}`}>
+                    {filteredData.averageOrderValue.change}
                   </span>
                 </div>
               </div>
-              <p className="text-2xl font-bold text-gray-900">
-                ${filteredData.revenue.thisMonth.toFixed(2)}
-              </p>
-              <div className="w-full bg-gray-200 rounded-full h-1 mt-2">
-                <div className="bg-green-500 h-1 rounded-full" style={{ width: '65%' }}></div>
+              {/* Trend line */}
+              <div className="h-8 flex items-end space-x-1">
+                {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+                  <div
+                    key={i}
+                    className="flex-1 bg-purple-200 rounded-t"
+                    style={{ height: `${Math.random() * 60 + 20}%` }}
+                  />
+                ))}
               </div>
+            </div>
+          </div>
+
+          {/* Interactive Line Chart */}
+          <div className="mt-6 bg-white rounded-lg p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-gray-900">
+                {selectedMetric === 'sales' && 'Sales Performance'}
+                {selectedMetric === 'followers' && 'Follower Growth'}
+                {selectedMetric === 'averageOrderValue' && 'Average Order Value Trend'}
+              </h3>
+              <div className="text-sm text-gray-500">
+                {timeRange === 'custom' && customDateRange.startDate && customDateRange.endDate
+                  ? `${customDateRange.startDate} to ${customDateRange.endDate}`
+                  : timeRange === '7days' ? 'Last 7 days' :
+                    timeRange === '30days' ? 'Last 4 weeks' :
+                    timeRange === 'qtd' ? 'Last 4 months' :
+                    timeRange === 'ytd' ? 'Last 12 months' :
+                    `Last ${timeRange}`
+                }
+              </div>
+            </div>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={filteredData.chartData[selectedMetric]}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis 
+                    dataKey="date" 
+                    stroke="#666"
+                    fontSize={12}
+                    tickFormatter={(value) => {
+                      if (timeRange === '30days') {
+                        // For 30 days, show labels every 3 days to avoid overcrowding
+                        const date = new Date(value);
+                        const day = date.getDate();
+                        return day % 3 === 0 ? date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+                      }
+                      return new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    }}
+                  />
+                  <YAxis 
+                    stroke="#666"
+                    fontSize={12}
+                    tickFormatter={(value) => 
+                      selectedMetric === 'sales' ? `$${value.toLocaleString()}` :
+                      selectedMetric === 'followers' ? value.toLocaleString() :
+                      `$${value.toFixed(2)}`
+                    }
+                  />
+                  <RechartsTooltip 
+                    labelFormatter={(value) => new Date(value).toLocaleDateString()}
+                    formatter={(value) => [
+                      selectedMetric === 'sales' ? `$${Number(value).toLocaleString()}` :
+                      selectedMetric === 'followers' ? Number(value).toLocaleString() :
+                      `$${Number(value).toFixed(2)}`,
+                      selectedMetric === 'sales' ? 'Sales' :
+                      selectedMetric === 'followers' ? 'Followers' :
+                      'AOV'
+                    ]}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="value" 
+                    stroke={selectedMetric === 'sales' ? '#10b981' : selectedMetric === 'followers' ? '#3b82f6' : '#8b5cf6'}
+                    strokeWidth={2}
+                    dot={{ fill: selectedMetric === 'sales' ? '#10b981' : selectedMetric === 'followers' ? '#3b82f6' : '#8b5cf6', strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6, strokeWidth: 2 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </div>
         </div>
@@ -569,9 +869,7 @@ export default function PulsePage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Bottom Performers */}
           <div className="bg-[#F7F2EC] rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200">
-            <Tooltip content="Products with low sales performance - identify areas for improvement and optimization">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 cursor-help">🔴 Bottom Performers (Updated!)</h3>
-            </Tooltip>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">🔴 Bottom Performers (Updated!)</h3>
             <div className="space-y-3">
               {filteredData.underperformers.map((product, index) => (
                 <div key={index} className="flex items-center justify-between p-3 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 border-l-4 border-red-400">
@@ -585,10 +883,10 @@ export default function PulsePage() {
                   <div className="text-right">
                     <p className="font-medium text-gray-900">${product.revenue.toFixed(2)}</p>
                     <a 
-                      href={`/recipes/${product.recipeId}`}
+                      href={`/product/${product.recipeId}`}
                       className="text-blue-600 hover:text-blue-700 text-sm font-medium inline-flex items-center gap-1"
                     >
-                      View Recipe
+                      View Product
                       <ChevronRight className="w-3 h-3" />
                     </a>
                   </div>
@@ -599,9 +897,7 @@ export default function PulsePage() {
 
           {/* Top Performers */}
           <div className="bg-[#F7F2EC] rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200">
-            <Tooltip content="Your best-selling products ranked by revenue and units sold - identify your most profitable items">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 cursor-help">🟢 Top Performers (Updated!)</h3>
-            </Tooltip>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">🟢 Top Performers (Updated!)</h3>
             <div className="space-y-3">
               {filteredData.topProducts.map((product, index) => (
                 <div key={index} className="flex items-center justify-between p-3 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 border-l-4 border-green-400">
@@ -617,10 +913,10 @@ export default function PulsePage() {
                     <div className="flex items-center gap-2">
                       {getTrendIcon(product.trend)}
                       <a 
-                        href={`/recipes/${product.recipeId}`}
+                        href={`/product/${product.recipeId}`}
                         className="text-blue-600 hover:text-blue-700 text-sm font-medium inline-flex items-center gap-1"
                       >
-                        View Recipe
+                        View Product
                         <ChevronRight className="w-3 h-3" />
                       </a>
                     </div>

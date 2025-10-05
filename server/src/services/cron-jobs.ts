@@ -104,3 +104,5 @@ export class CronJobService {
 
 // Export singleton instance
 export const cronJobs = CronJobService.getInstance();
+
+

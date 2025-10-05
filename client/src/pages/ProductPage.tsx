@@ -11,25 +11,14 @@ import {
   Clock,
   Truck,
   Package,
-  Shield,
   Star as StarFilled,
   ChevronLeft,
   ChevronRight,
   Share2,
-  MessageCircle,
-  Calendar,
-  Users,
   CheckCircle,
-  AlertCircle,
   Minus,
   Plus,
-  ArrowLeft,
-  X,
-  Eye,
-  ThumbsUp,
-  Tag,
-  Leaf,
-  Award
+  X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ReviewBlock } from '../components/vendor';
@@ -97,7 +86,8 @@ interface Review {
 }
 
 export default function ProductPage() {
-  const { productId } = useParams();
+  const params = useParams();
+  const productId = (params as { id?: string })?.id as string;
   const [product, setProduct] = useState<Product | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
@@ -110,63 +100,177 @@ export default function ProductPage() {
 
   // Mock data - replace with actual API calls
   useEffect(() => {
-    const mockProduct: Product = {
-      id: '1',
-      name: 'Artisan Sourdough Bread',
-      description: 'Traditional sourdough bread made with organic flour and natural starter. Perfect crust and tangy flavor.',
-      longDescription: `Our signature sourdough bread is crafted using a 100-year-old starter that has been passed down through generations. Each loaf is hand-shaped and baked in our stone hearth oven, resulting in a crusty exterior and tender, tangy interior.
+    // Generate different products based on productId
+    const getProductData = (id: string): Product => {
+      const products: { [key: string]: Product } = {
+        'sourdough-bread': {
+          id: 'sourdough-bread',
+          name: 'Artisan Sourdough Bread',
+          description: 'Traditional sourdough bread made with organic flour and natural starter. Perfect crust and tangy flavor.',
+          longDescription: `Our signature sourdough bread is crafted using a 100-year-old starter that has been passed down through generations. Each loaf is hand-shaped and baked in our stone hearth oven, resulting in a crusty exterior and tender, tangy interior.
 
 We use only the finest organic flour, filtered water, and sea salt. No preservatives, no shortcuts, just pure artisan craftsmanship. The natural fermentation process creates complex flavors and makes the bread easier to digest.
 
 Perfect for sandwiches, toast, or simply enjoyed with butter and honey.`,
-      price: 9.00,
-      originalPrice: 12.00,
-      vendor: {
-        id: 'v1',
-        name: 'Rose Creek Bakery',
-        rating: 4.9,
-        reviewCount: 127,
-        location: 'Locust Grove, GA',
-        verified: true,
-        description: 'Artisanal bakery specializing in naturally leavened breads and pastries.',
-        joinedDate: '2018-03-15',
-        totalProducts: 24
-      },
-      category: 'Bread',
-      subcategory: 'Sourdough',
-      images: [
-        '/images/products/sourdough-1.jpg',
-        '/images/products/sourdough-2.jpg',
-        '/images/products/sourdough-3.jpg',
-        '/images/products/sourdough-4.jpg'
-      ],
-      tags: ['organic', 'sourdough', 'artisan', 'fresh', 'naturally leavened'],
-      inStock: true,
-      featured: true,
-      rating: 4.9,
-      reviewCount: 89,
-      pickupOptions: ['Same Day', 'Next Day'],
-      deliveryOptions: ['Local Delivery'],
-      allergens: ['wheat', 'gluten'],
-      dietary: ['vegan'],
-      ingredients: ['Organic wheat flour', 'Filtered water', 'Sea salt', 'Sourdough starter'],
-      nutritionInfo: {
-        calories: 120,
-        protein: 4,
-        carbs: 25,
-        fat: 1,
-        fiber: 2
-      },
-      storageInstructions: 'Store in a cool, dry place. For best results, consume within 3-5 days. Can be frozen for up to 3 months.',
-      shelfLife: '3-5 days at room temperature, 3 months frozen',
-      weight: '1 lb',
-      dimensions: '8" x 4" x 3"',
-      createdAt: '2024-01-15',
-      updatedAt: '2024-01-20',
-      isBestseller: true,
-      isLowStock: false,
-      isNew: false
+          price: 9.00,
+          originalPrice: 12.00,
+          vendor: {
+            id: 'v1',
+            name: 'Rose Creek Bakery',
+            rating: 4.9,
+            reviewCount: 127,
+            location: 'Locust Grove, GA',
+            verified: true,
+            description: 'Artisanal bakery specializing in naturally leavened breads and pastries.',
+            joinedDate: '2018-03-15',
+            totalProducts: 24
+          },
+          category: 'Bread',
+          subcategory: 'Sourdough',
+          images: [
+            '/images/products/sourdough-1.jpg',
+            '/images/products/sourdough-2.jpg',
+            '/images/products/sourdough-3.jpg',
+            '/images/products/sourdough-4.jpg'
+          ],
+          tags: ['organic', 'sourdough', 'artisan', 'fresh', 'naturally leavened'],
+          inStock: true,
+          featured: true,
+          rating: 4.9,
+          reviewCount: 89,
+          pickupOptions: ['Same Day', 'Next Day'],
+          deliveryOptions: ['Local Delivery'],
+          allergens: ['wheat', 'gluten'],
+          dietary: ['vegan'],
+          ingredients: ['Organic wheat flour', 'Filtered water', 'Sea salt', 'Sourdough starter'],
+          nutritionInfo: {
+            calories: 120,
+            protein: 4,
+            carbs: 25,
+            fat: 1,
+            fiber: 2
+          },
+          storageInstructions: 'Store in a cool, dry place. For best results, consume within 3-5 days. Can be frozen for up to 3 months.',
+          shelfLife: '3-5 days at room temperature, 3 months frozen',
+          weight: '1 lb',
+          dimensions: '8" x 4" x 3"',
+          createdAt: '2024-01-15',
+          updatedAt: '2024-01-20',
+          isBestseller: true,
+          isLowStock: false,
+          isNew: false
+        },
+        'chocolate-croissant': {
+          id: 'chocolate-croissant',
+          name: 'Chocolate Croissant',
+          description: 'Buttery, flaky croissant filled with rich dark chocolate. Perfect for breakfast or dessert.',
+          longDescription: `Our chocolate croissants are made with premium European butter and filled with the finest Belgian dark chocolate. Each croissant is hand-rolled and proofed to perfection, creating the signature flaky layers that make these pastries so irresistible.
+
+The chocolate filling is made from 70% dark chocolate, providing a perfect balance of sweetness and richness. These croissants are baked fresh daily and are best enjoyed warm.`,
+          price: 4.50,
+          originalPrice: 6.00,
+          vendor: {
+            id: 'v2',
+            name: 'Parisian Patisserie',
+            rating: 4.8,
+            reviewCount: 95,
+            location: 'Atlanta, GA',
+            verified: true,
+            description: 'Authentic French pastries and baked goods made with traditional techniques.',
+            joinedDate: '2019-06-10',
+            totalProducts: 18
+          },
+          category: 'Pastries',
+          subcategory: 'Croissants',
+          images: [
+            '/images/products/chocolate-croissant-1.jpg',
+            '/images/products/chocolate-croissant-2.jpg'
+          ],
+          tags: ['chocolate', 'croissant', 'buttery', 'flaky', 'french'],
+          inStock: true,
+          featured: false,
+          rating: 4.8,
+          reviewCount: 67,
+          pickupOptions: ['Same Day'],
+          deliveryOptions: ['Local Delivery'],
+          allergens: ['wheat', 'gluten', 'dairy', 'eggs'],
+          dietary: [],
+          ingredients: ['Flour', 'Butter', 'Dark chocolate', 'Yeast', 'Sugar', 'Salt'],
+          nutritionInfo: {
+            calories: 320,
+            protein: 6,
+            carbs: 28,
+            fat: 22,
+            fiber: 2
+          },
+          storageInstructions: 'Best consumed fresh. Can be stored at room temperature for 1 day or frozen for up to 2 weeks.',
+          shelfLife: '1 day at room temperature, 2 weeks frozen',
+          weight: '3.5 oz',
+          dimensions: '6" x 3" x 1.5"',
+          createdAt: '2024-01-10',
+          updatedAt: '2024-01-10',
+          isBestseller: false,
+          isLowStock: false,
+          isNew: false
+        },
+        'whole-wheat-bread': {
+          id: 'whole-wheat-bread',
+          name: 'Whole Wheat Bread',
+          description: 'Nutritious whole wheat bread with a hearty texture and nutty flavor.',
+          longDescription: `Our whole wheat bread is made with 100% whole grain flour, providing maximum nutrition and fiber. This hearty bread has a dense, chewy texture and a nutty flavor that pairs perfectly with both sweet and savory toppings.
+
+Made with organic whole wheat flour, this bread is packed with fiber, protein, and essential nutrients. It's perfect for sandwiches, toast, or simply enjoyed with butter.`,
+          price: 7.50,
+          vendor: {
+            id: 'v1',
+            name: 'Rose Creek Bakery',
+            rating: 4.9,
+            reviewCount: 127,
+            location: 'Locust Grove, GA',
+            verified: true,
+            description: 'Artisanal bakery specializing in naturally leavened breads and pastries.',
+            joinedDate: '2018-03-15',
+            totalProducts: 24
+          },
+          category: 'Bread',
+          subcategory: 'Whole Wheat',
+          images: [
+            '/images/products/whole-wheat-bread-1.jpg',
+            '/images/products/whole-wheat-bread-2.jpg'
+          ],
+          tags: ['whole grain', 'healthy', 'nutritious', 'fiber-rich'],
+          inStock: true,
+          featured: false,
+          rating: 4.7,
+          reviewCount: 45,
+          pickupOptions: ['Same Day', 'Next Day'],
+          deliveryOptions: ['Local Delivery'],
+          allergens: ['wheat', 'gluten'],
+          dietary: ['vegan'],
+          ingredients: ['Organic whole wheat flour', 'Water', 'Sea salt', 'Yeast'],
+          nutritionInfo: {
+            calories: 100,
+            protein: 5,
+            carbs: 20,
+            fat: 1,
+            fiber: 4
+          },
+          storageInstructions: 'Store in a cool, dry place. Consume within 5-7 days. Can be frozen for up to 3 months.',
+          shelfLife: '5-7 days at room temperature, 3 months frozen',
+          weight: '1.5 lb',
+          dimensions: '9" x 5" x 4"',
+          createdAt: '2024-01-08',
+          updatedAt: '2024-01-08',
+          isBestseller: false,
+          isLowStock: false,
+          isNew: false
+        }
+      };
+      
+      return products[id] || products['sourdough-bread'];
     };
+
+    const mockProduct = getProductData(productId || 'sourdough-bread');
 
     const mockReviews: Review[] = [
       {
@@ -551,7 +655,7 @@ Perfect for sandwiches, toast, or simply enjoyed with butter and honey.`,
               ].map(tab => (
                 <button
                   key={tab.id}
-                  onClick={() => setSelectedTab(tab.id as any)}
+                  onClick={() => setSelectedTab(tab.id as 'description' | 'reviews' | 'nutrition' | 'vendor')}
                   className={`py-2 px-1 border-b-2 font-medium text-sm ${
                     selectedTab === tab.id
                       ? 'border-brand-green text-brand-green'

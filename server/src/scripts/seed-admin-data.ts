@@ -7,10 +7,17 @@ async function seedAdminData() {
   console.log('🌱 Seeding admin data...');
 
   try {
+    // Get the first vendor profile ID for system messages
+    const vendorProfile = await prisma.vendorProfile.findFirst();
+    if (!vendorProfile) {
+      console.log('⚠️ No vendor profiles found, skipping system messages');
+      return;
+    }
+
     // Create sample system messages
     const sampleMessages = [
       {
-        vendorProfileId: 'vendor-1',
+        vendorProfileId: vendorProfile.id,
         scope: 'orders',
         type: 'warning',
         title: 'High order volume detected',
@@ -22,7 +29,7 @@ async function seedAdminData() {
         })
       },
       {
-        vendorProfileId: 'vendor-2',
+        vendorProfileId: vendorProfile.id,
         scope: 'inventory',
         type: 'error',
         title: 'Low stock alert',
@@ -35,7 +42,7 @@ async function seedAdminData() {
         })
       },
       {
-        vendorProfileId: 'vendor-1',
+        vendorProfileId: vendorProfile.id,
         scope: 'labels',
         type: 'info',
         title: 'Label print queue updated',
@@ -46,7 +53,7 @@ async function seedAdminData() {
         })
       },
       {
-        vendorProfileId: 'vendor-3',
+        vendorProfileId: vendorProfile.id,
         scope: 'events',
         type: 'success',
         title: 'Event application approved',
@@ -58,7 +65,7 @@ async function seedAdminData() {
         })
       },
       {
-        vendorProfileId: 'vendor-2',
+        vendorProfileId: vendorProfile.id,
         scope: 'support',
         type: 'info',
         title: 'Support ticket created',
@@ -75,8 +82,7 @@ async function seedAdminData() {
       await (prisma as any).systemMessage.create({
         data: {
           ...message,
-          createdAt: faker.date.recent({ days: 7 }),
-          updatedAt: faker.date.recent({ days: 7 })
+          createdAt: faker.date.recent({ days: 7 })
         }
       });
     }
@@ -216,7 +222,7 @@ async function seedAdminData() {
         title: 'High API latency detected',
         severity: 'SEV2',
         status: 'MITIGATED',
-        affected: ['api', 'database'],
+        affected: 'api,database',
         timeline: JSON.stringify([
           {
             timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
@@ -236,7 +242,7 @@ async function seedAdminData() {
         title: 'Email queue backlog',
         severity: 'SEV3',
         status: 'OPEN',
-        affected: ['email', 'notifications'],
+        affected: 'email,notifications',
         timeline: JSON.stringify([
           {
             timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(),

@@ -322,7 +322,7 @@ const Customer360: React.FC<Customer360Props> = ({
                     });
                     setShowAddCustomer(true);
                   }}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="flex items-center gap-2 px-3 py-2 bg-brand-green text-white rounded-md hover:bg-brand-green/80 transition-colors text-sm font-medium"
                   title="Add new customer"
                   aria-label="Add new customer to CRM"
                 >
@@ -828,7 +828,7 @@ const Customer360: React.FC<Customer360Props> = ({
                       setSelectedCustomerForMessage(selectedCustomer);
                       setShowMessageModal(true);
                     }}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="flex items-center gap-2 px-3 py-2 bg-brand-green text-white rounded-md hover:bg-brand-green/80 transition-colors text-sm font-medium"
                   >
                     <MessageSquare className="h-4 w-4" />
                     Send Message
@@ -853,7 +853,7 @@ const Customer360: React.FC<Customer360Props> = ({
                   </button>
                   <button
                     onClick={() => onCustomerUpdate(selectedCustomer)}
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                    className="flex items-center gap-2 px-3 py-2 bg-brand-maroon text-white rounded-md hover:bg-brand-maroon/80 transition-colors text-sm font-medium"
                   >
                     <Edit className="h-4 w-4" />
                     Edit Customer
@@ -1080,7 +1080,7 @@ const Customer360: React.FC<Customer360Props> = ({
                       leadScore: 50
                     });
                   }}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  className="px-3 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium"
                 >
                   Cancel
                 </button>
@@ -1212,7 +1212,7 @@ const Customer360: React.FC<Customer360Props> = ({
                     setSelectedCustomerForMessage(null);
                     setMessageContent('');
                   }}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  className="px-3 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium"
                 >
                   Cancel
                 </button>
@@ -1363,7 +1363,7 @@ const Customer360: React.FC<Customer360Props> = ({
                       status: 'pending'
                     });
                   }}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  className="px-3 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium"
                 >
                   Cancel
                 </button>
@@ -1453,7 +1453,7 @@ const Customer360: React.FC<Customer360Props> = ({
                     setShowDuplicateWarning(false);
                     setDuplicateCustomer(null);
                   }}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  className="px-3 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium"
                 >
                   Cancel
                 </button>
@@ -1486,7 +1486,7 @@ const Customer360: React.FC<Customer360Props> = ({
                     setShowDuplicateWarning(false);
                     setDuplicateCustomer(null);
                   }}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
                 >
                   View Existing Customer
                 </button>
@@ -1549,7 +1549,7 @@ const Customer360: React.FC<Customer360Props> = ({
                     setShowDeleteModal(false);
                     setCustomerToDelete(null);
                   }}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  className="px-3 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium"
                 >
                   Cancel
                 </button>
@@ -1559,7 +1559,7 @@ const Customer360: React.FC<Customer360Props> = ({
                     setShowDeleteModal(false);
                     setCustomerToDelete(null);
                   }}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  className="px-3 py-2 bg-brand-maroon text-white rounded-md hover:bg-brand-maroon/80 transition-colors text-sm font-medium"
                 >
                   Delete Customer
                 </button>
@@ -1642,7 +1642,7 @@ const Customer360: React.FC<Customer360Props> = ({
                     setCustomerToBlock(null);
                     setBlockReason('');
                   }}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  className="px-3 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium"
                 >
                   Cancel
                 </button>
@@ -1659,7 +1659,7 @@ const Customer360: React.FC<Customer360Props> = ({
                     setCustomerToBlock(null);
                     setBlockReason('');
                   }}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  className="px-3 py-2 bg-brand-maroon text-white rounded-md hover:bg-brand-maroon/80 transition-colors text-sm font-medium"
                 >
                   Block Customer
                 </button>

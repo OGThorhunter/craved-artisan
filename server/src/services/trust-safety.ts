@@ -528,3 +528,5 @@ export class TrustSafetyService {
 
 // Export singleton instance
 export const trustSafetyService = TrustSafetyService.getInstance();
+
+

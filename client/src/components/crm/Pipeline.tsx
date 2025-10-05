@@ -285,10 +285,10 @@ const Pipeline: React.FC<PipelineProps> = ({
           <div className="flex items-center bg-gray-100 rounded-lg p-1">
             <button
               onClick={() => setViewMode('list')}
-              className={`flex items-center gap-1 px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+              className={`flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 viewMode === 'list' 
-                  ? 'bg-white text-gray-900 shadow-sm' 
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-brand-green text-white' 
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
               }`}
               title="List view"
             >
@@ -297,10 +297,10 @@ const Pipeline: React.FC<PipelineProps> = ({
             </button>
             <button
               onClick={() => setViewMode('card')}
-              className={`flex items-center gap-1 px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+              className={`flex items-center gap-1 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 viewMode === 'card' 
-                  ? 'bg-white text-gray-900 shadow-sm' 
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-brand-green text-white' 
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
               }`}
               title="Card view"
             >
@@ -362,7 +362,7 @@ const Pipeline: React.FC<PipelineProps> = ({
               });
               setShowAddModal(true);
             }}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="flex items-center gap-2 px-3 py-2 bg-brand-green text-white rounded-md hover:bg-brand-green/80 transition-colors text-sm font-medium"
             title="Add new opportunity"
             aria-label="Add new opportunity to pipeline"
           >
@@ -754,21 +754,21 @@ const Pipeline: React.FC<PipelineProps> = ({
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => onStageChange(selectedOpportunity.id, 'closed_won')}
-                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    className="flex items-center gap-2 px-3 py-2 bg-brand-green text-white rounded-md hover:bg-brand-green/80 transition-colors text-sm font-medium"
                   >
                     <CheckCircle className="h-4 w-4" />
                     Mark as Won
                   </button>
                   <button
                     onClick={() => onStageChange(selectedOpportunity.id, 'closed_lost')}
-                    className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                    className="flex items-center gap-2 px-3 py-2 bg-brand-maroon text-white rounded-md hover:bg-brand-maroon/80 transition-colors text-sm font-medium"
                   >
                     <XCircle className="h-4 w-4" />
                     Mark as Lost
                   </button>
                   <button
                     onClick={() => onOpportunityUpdate(selectedOpportunity)}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="flex items-center gap-2 px-3 py-2 bg-brand-green text-white rounded-md hover:bg-brand-green/80 transition-colors text-sm font-medium"
                   >
                     <Edit className="h-4 w-4" />
                     Edit Opportunity
@@ -998,7 +998,7 @@ const Pipeline: React.FC<PipelineProps> = ({
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
                 <button
                   onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  className="px-3 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium"
                 >
                   Cancel
                 </button>
@@ -1041,7 +1041,7 @@ const Pipeline: React.FC<PipelineProps> = ({
                     });
                   }}
                   disabled={!newOpportunity.title || !newOpportunity.expectedCloseDate}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
                 >
                   Create Opportunity
                 </button>
