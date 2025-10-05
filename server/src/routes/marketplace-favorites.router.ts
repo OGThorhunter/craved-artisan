@@ -1,16 +1,16 @@
 import express from 'express';
 import { z } from 'zod';
 import { PrismaClient } from '@prisma/client';
-import { isAuthenticated } from '../middleware/isAuthenticated-mock';
+import { requireAuth } from '../middleware/session-simple';
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
 // Toggle vendor favorite
-router.post('/vendor/:vendorId', isAuthenticated, async (req, res) => {
+router.post('/vendor/:vendorId', requireAuth, async (req, res) => {
   try {
     const { vendorId } = req.params;
-    const userId = req.user!.id;
+    const userId = req.user!.userId;
 
     // Check if vendor exists
     const vendor = await prisma.vendorProfile.findUnique({
@@ -77,10 +77,10 @@ router.post('/vendor/:vendorId', isAuthenticated, async (req, res) => {
 });
 
 // Toggle product favorite
-router.post('/product/:productId', isAuthenticated, async (req, res) => {
+router.post('/product/:productId', requireAuth, async (req, res) => {
   try {
     const { productId } = req.params;
-    const userId = req.user!.id;
+    const userId = req.user!.userId;
 
     // Check if product exists
     const product = await prisma.product.findUnique({
@@ -147,9 +147,9 @@ router.post('/product/:productId', isAuthenticated, async (req, res) => {
 });
 
 // Get user's favorites summary
-router.get('/', isAuthenticated, async (req, res) => {
+router.get('/', requireAuth, async (req, res) => {
   try {
-    const userId = req.user!.id;
+    const userId = req.user!.userId;
 
     const [favoriteVendors, favoriteProducts] = await Promise.all([
       prisma.favoriteVendor.findMany({
@@ -229,10 +229,10 @@ router.get('/', isAuthenticated, async (req, res) => {
 });
 
 // Get favorite status for multiple items
-router.post('/status', isAuthenticated, async (req, res) => {
+router.post('/status', requireAuth, async (req, res) => {
   try {
     const { vendorIds = [], productIds = [] } = req.body;
-    const userId = req.user!.id;
+    const userId = req.user!.userId;
 
     const [favoriteVendors, favoriteProducts] = await Promise.all([
       vendorIds.length > 0 ? prisma.favoriteVendor.findMany({

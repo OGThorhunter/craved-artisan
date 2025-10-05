@@ -1,7 +1,7 @@
 import express from 'express';
 import { z } from 'zod';
 import { PrismaClient } from '@prisma/client';
-import { isAuthenticated } from '../middleware/isAuthenticated-mock';
+import { requireAuth } from '../middleware/session-simple';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -29,9 +29,9 @@ const createSavedSearchSchema = z.object({
 });
 
 // Create saved search
-router.post('/', isAuthenticated, async (req, res) => {
+router.post('/', requireAuth, async (req, res) => {
   try {
-    const userId = req.user!.id;
+    const userId = req.user!.userId;
     const data = createSavedSearchSchema.parse(req.body);
 
     // Check if name already exists for this user
@@ -71,9 +71,9 @@ router.post('/', isAuthenticated, async (req, res) => {
 });
 
 // Get user's saved searches
-router.get('/', isAuthenticated, async (req, res) => {
+router.get('/', requireAuth, async (req, res) => {
   try {
-    const userId = req.user!.id;
+    const userId = req.user!.userId;
 
     const savedSearches = await prisma.savedSearch.findMany({
       where: { userId },
@@ -96,10 +96,10 @@ router.get('/', isAuthenticated, async (req, res) => {
 });
 
 // Delete saved search
-router.delete('/:id', isAuthenticated, async (req, res) => {
+router.delete('/:id', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user!.id;
+    const userId = req.user!.userId;
 
     const savedSearch = await prisma.savedSearch.findFirst({
       where: {
@@ -125,10 +125,10 @@ router.delete('/:id', isAuthenticated, async (req, res) => {
 });
 
 // Update saved search
-router.put('/:id', isAuthenticated, async (req, res) => {
+router.put('/:id', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user!.id;
+    const userId = req.user!.userId;
     const data = createSavedSearchSchema.parse(req.body);
 
     const savedSearch = await prisma.savedSearch.findFirst({
@@ -182,10 +182,10 @@ router.put('/:id', isAuthenticated, async (req, res) => {
 });
 
 // Execute saved search
-router.post('/:id/execute', isAuthenticated, async (req, res) => {
+router.post('/:id/execute', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user!.id;
+    const userId = req.user!.userId;
     const { page = 1, pageSize = 24 } = req.body;
 
     const savedSearch = await prisma.savedSearch.findFirst({

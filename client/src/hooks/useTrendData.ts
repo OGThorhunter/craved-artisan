@@ -4,7 +4,7 @@ import type {
   AnalyticsTrendsResponse,
   AnalyticsSummaryResponse,
   AnalyticsSummary
-} from '../types/analytics';
+} from '../types/analytics.js';
 
 /**
  * React Query hook for fetching analytics trend data
@@ -110,4 +110,4 @@ export async function prefetchAnalyticsSummary(queryClient: any, vendorId: strin
 }
 
 // Re-export types for convenience
-export type { AnalyticsTrend, AnalyticsTrendsResponse, AnalyticsSummary, AnalyticsSummaryResponse } from '../types/analytics'; 
+export type { AnalyticsTrend, AnalyticsTrendsResponse, AnalyticsSummary, AnalyticsSummaryResponse } from '../types/analytics.js'; 

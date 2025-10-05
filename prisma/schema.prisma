@@ -1,12 +1,10 @@
 generator client {
   provider = "prisma-client-js"
-  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
-  extensions = [postgis, pg_trgm, pgvector]
 }
 
 model User {
@@ -88,14 +86,14 @@ model VendorProfile {
   // Marketplace fields
   avatarUrl             String?
   coverUrl              String?
-  baseLocation          Bytes?                   // PostGIS POINT (SRID 4326)
+  baseLocation          String?                  // Location as string for SQLite
   city                  String?
   state                 String?
   country               String?
   shipsNational         Boolean                  @default(false)
   ratingAvg             Float                    @default(0)
   ratingCount           Int                      @default(0)
-  marketplaceTags       String[]                 // bakery, vegan, flowers, woodwork...
+  marketplaceTags       String?                  // bakery, vegan, flowers, woodwork... (comma-separated)
 
   @@index([userId])
   @@index([slug])
@@ -164,7 +162,7 @@ model Product {
   availableNow          Boolean                  @default(true)
   ratingAvg             Float                    @default(0)
   ratingCount           Int                      @default(0)
-  searchVec             Bytes?                   // pgvector(768) for semantic
+  searchVec             String?                  // Search vector as string for SQLite
   favoriteProducts      FavoriteProduct[]
   priceHistory          ProductPriceHistory[]    // AI: Price change history
   // New relations
@@ -884,7 +882,7 @@ model SalesWindow {
 
   location_name       String?
   address_text        String?
-  geoPoint            Bytes?                   // PostGIS POINT for window location
+  geoPoint            String?                  // Location as string for SQLite
 
   static_map_mode     StaticMapMode      @default(NONE)
   static_map_image_url String?
@@ -1614,14 +1612,14 @@ model Vendor {
   bio           String?
   avatarUrl     String?
   coverUrl      String?
-  baseLocation  Bytes?   // PostGIS POINT (SRID 4326) stored via Prisma Bytes
+  baseLocation  String?   // Location as string for SQLite
   city          String?
   state         String?
   country       String?
   shipsNational Boolean  @default(false)
   ratingAvg     Float    @default(0)
   ratingCount   Int      @default(0)
-  tags          String[] // bakery, vegan, flowers, woodwork...
+  tags          String?  // bakery, vegan, flowers, woodwork... (comma-separated)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   
@@ -1705,11 +1703,11 @@ model Event {
   description   String?
   imageUrl      String?
   category      String?        // farmers_market, craft_fair, popup, class, festival
-  tags          String[]
+  tags          String?  // comma-separated tags
   startAt       DateTime
   endAt         DateTime
   addressText   String?
-  geoPoint      Bytes?         // PostGIS POINT (SRID 4326) stored as Bytes
+  geoPoint      String?        // Location as string for SQLite
   city          String?
   state         String?
   country       String?
@@ -1754,7 +1752,7 @@ model EventStall {
   price     Decimal
   qtyTotal  Int
   qtySold   Int       @default(0)
-  perks     String[]  // power, water, shade
+  perks     String?   // power, water, shade (comma-separated)
   notes     String?
   sort      Int       @default(0)
   createdAt DateTime  @default(now())
@@ -1851,4 +1849,73 @@ model EventFaq {
   event     Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
   
   @@index([eventId, order])
+}
+
+model AdminAudit {
+  id        String   @id @default(cuid())
+  adminId   String
+  action    String   // 'vendor.suspend', 'order.refund', 'feature-flag.update'
+  target    String?  // composite 'Vendor:abc123'
+  payload   Json?
+  ip        String?
+  createdAt DateTime @default(now())
+
+  @@index([adminId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model SystemCheck {
+  id        String   @id @default(cuid())
+  kind      String   // 'http', 'queue', 'db', 'stripe', 'storage'
+  name      String
+  status    String   // 'OK','WARN','CRIT','MUTED'
+  value     Float?
+  unit      String?
+  details   Json?
+  updatedAt DateTime @updatedAt
+
+  @@unique([kind, name])
+  @@index([status])
+  @@index([updatedAt])
+}
+
+model FeatureFlag {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  enabled   Boolean  @default(false)
+  rules     Json?    // audience, % rollout
+  notes     String?
+  updatedAt DateTime @updatedAt
+
+  @@index([enabled])
+}
+
+model Incident {
+  id        String    @id @default(cuid())
+  title     String
+  severity  String    // SEV1..SEV4
+  status    String    // OPEN, MITIGATED, CLOSED
+  startedAt DateTime  @default(now())
+  endedAt   DateTime?
+  timeline  Json?     // updates
+  affected  String?   // services keys (comma-separated)
+  runbookId String?
+
+  @@index([status])
+  @@index([severity])
+  @@index([startedAt])
+}
+
+model VendorSegment {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String
+  criteria    String   // JSON object with segment criteria
+  vendorCount Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("vendor_segments")
 }

@@ -1,7 +1,7 @@
 import express from 'express';
 import { z } from 'zod';
 import { PrismaClient } from '@prisma/client';
-import { isAuthenticated } from '../middleware/isAuthenticated-mock';
+import { requireAuth } from '../middleware/session-simple';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -61,7 +61,7 @@ router.post('/search', async (req, res) => {
 });
 
 // Get search analytics (admin only - for now, just return basic stats)
-router.get('/analytics', isAuthenticated, async (req, res) => {
+router.get('/analytics', requireAuth, async (req, res) => {
   try {
     const { days = 7 } = req.query;
     const daysAgo = new Date();
@@ -161,9 +161,9 @@ router.get('/analytics', isAuthenticated, async (req, res) => {
 });
 
 // Get user's search history
-router.get('/history', isAuthenticated, async (req, res) => {
+router.get('/history', requireAuth, async (req, res) => {
   try {
-    const userId = req.user!.id;
+    const userId = req.user!.userId;
     const { page = 1, pageSize = 20 } = req.query;
 
     const searchEvents = await prisma.searchEvent.findMany({

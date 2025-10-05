@@ -43,7 +43,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import api from '../lib/api';
 import VendorDashboardLayout from '../layouts/VendorDashboardLayout';
-import { MOCK_INGREDIENTS, MOCK_UNITS, MOCK_TRADE_SUPPLIES, MOCK_TRADE_UNITS, calculateRecipeCost, calculateMarginAnalysis } from '../types/recipes';
+import { MOCK_INGREDIENTS, MOCK_UNITS, MOCK_TRADE_SUPPLIES, MOCK_TRADE_UNITS, calculateRecipeCost, calculateMarginAnalysis } from '../types/recipes.js';
 
 // Enhanced Product Card interface
 interface ProductCard {

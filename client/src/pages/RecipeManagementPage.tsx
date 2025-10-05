@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ChefHat, Search, Grid3X3, List, Package, Calculator, Calendar, Plus, Edit, Trash2, AlertTriangle, X } from 'lucide-react';
 import VendorDashboardLayout from '../layouts/VendorDashboardLayout';
-import { MOCK_INGREDIENTS, MOCK_INGREDIENT_CATEGORIES_PHASE4, MOCK_COST_UNITS, MOCK_UNITS, MOCK_RECIPES_WITH_INGREDIENTS, MOCK_PRODUCTION_PLANS, calculateRecipeCost, calculateMarginAnalysis, calculateProductionRequirements, calculateProductionCost, getProductionStatusColor, getProductionStatusIcon } from '../types/recipes';
+import { MOCK_INGREDIENTS, MOCK_INGREDIENT_CATEGORIES_PHASE4, MOCK_COST_UNITS, MOCK_UNITS, MOCK_RECIPES_WITH_INGREDIENTS, MOCK_PRODUCTION_PLANS, calculateRecipeCost, calculateMarginAnalysis, calculateProductionRequirements, calculateProductionCost, getProductionStatusColor, getProductionStatusIcon } from '../types/recipes.js';
 
 // Simple mock data - keeping it minimal
 const MOCK_RECIPES = [

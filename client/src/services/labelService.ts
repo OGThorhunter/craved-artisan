@@ -1,4 +1,4 @@
-// import type { LabelTemplate, LabelData, LabelPrintJob, PrintSettings, LabelField } from '../types/labels';
+// import type { LabelTemplate, LabelData, LabelPrintJob, PrintSettings, LabelField } from '../types/labels.js';
 
 // Temporary interfaces to test
 interface LabelTemplate {

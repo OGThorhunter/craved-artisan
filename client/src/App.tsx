@@ -57,6 +57,7 @@ import AboutPage from './pages/AboutPage';
 import EventsSearchPage from './pages/EventsSearchPage';
 import EventsHomePage from './pages/EventsHomePage';
 import EventsCoordinatorConsole from './pages/EventsCoordinatorConsole';
+import AdminDashboard from './pages/AdminDashboard';
 import VendorWatchlistPage from './pages/VendorWatchlistPage';
 import VendorSalesWindowsPage from './pages/VendorSalesWindowsPage';
 import VendorDeliveryBatchingPage from './pages/VendorDeliveryBatchingPage';
@@ -123,6 +124,7 @@ function App() {
             <Route path="/events/search" component={EventsSearchPage} />
             <Route path="/events/:slug" component={EventDetailPage} />
             <Route path="/events/coordinator" component={EventsCoordinatorConsole} />
+            <Route path="/admin" component={AdminDashboard} />
             <Route path="/search" component={AdvancedSearchPage} />
             <Route path="/help" component={KnowledgeBasePage} />
             <Route path="/recipes" component={RecipeToolPage} />

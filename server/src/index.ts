@@ -3,6 +3,7 @@ import helmet from 'helmet';
 import cors from 'cors';
 import { logger } from './logger';
 import { sessionMiddleware, attachUser } from './middleware/session-simple';
+import { cronJobs } from './services/cron-jobs';
 import authRoutes from './routes/auth';
 import { pulseRouter } from './routes/pulse.router';
 import { vendorRouter } from './routes/vendor.router';
@@ -57,6 +58,17 @@ import eventsSearchRouter from './routes/events-search.router';
 import eventsDetailRouter from './routes/events-detail.router';
 import eventsManagementRouter from './routes/events-management.router';
 import eventsCoordinatorRouter from './routes/events-coordinator.router';
+
+// Admin Routes
+import adminOverviewRouter from './routes/admin-overview.router';
+import adminSLORouter from './routes/admin-slo.router';
+import adminMessagesRouter from './routes/admin-messages.router';
+import adminStripeRouter from './routes/admin-stripe.router';
+import adminOpsRouter from './routes/admin-ops.router';
+import adminMarketplaceRouter from './routes/admin-marketplace.router';
+import adminTrustSafetyRouter from './routes/admin-trust-safety.router';
+import adminGrowthSocialRouter from './routes/admin-growth-social.router';
+import adminSecurityComplianceRouter from './routes/admin-security-compliance.router';
 
 const app = express();
 const PORT = Number(process.env.PORT || 3001);
@@ -173,12 +185,40 @@ app.use('/api/events', eventsDetailRouter);
 app.use('/api/events', eventsManagementRouter);
 app.use('/api/events', eventsCoordinatorRouter);
 
+// Admin Routes
+app.use('/api/admin', adminOverviewRouter);
+app.use('/api/admin', adminSLORouter);
+app.use('/api/admin', adminMessagesRouter);
+app.use('/api/admin', adminStripeRouter);
+app.use('/api/admin', adminOpsRouter);
+app.use('/api/admin', adminMarketplaceRouter);
+app.use('/api/admin', adminTrustSafetyRouter);
+app.use('/api/admin', adminGrowthSocialRouter);
+app.use('/api/admin', adminSecurityComplianceRouter);
+
 // Start server
 app.listen(PORT, () => {
   logger.info({ port: PORT, pid: process.pid }, '🚀 Session-based auth server listening');
   logger.info(`📍 Health check: http://localhost:${PORT}/api/health`);
   logger.info(`🔐 Auth endpoints: http://localhost:${PORT}/api/auth`);
   logger.info(`📊 Pulse endpoints: http://localhost:${PORT}/api/vendor/:vendorId/pulse`);
+  logger.info(`👑 Admin dashboard: http://localhost:${PORT}/admin`);
+  
+  // Start cron jobs
+  cronJobs.startAllJobs();
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  logger.info('SIGTERM received, shutting down gracefully...');
+  cronJobs.stopAllJobs();
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  logger.info('SIGINT received, shutting down gracefully...');
+  cronJobs.stopAllJobs();
+  process.exit(0);
 });
 
 export default app; 

@@ -3,7 +3,7 @@ import type {
   AnalyticsTrendsResponse, 
   AnalyticsSummary, 
   AnalyticsSummaryResponse 
-} from '../types/analytics';
+} from '../types/analytics.js';
 
 // API base URL - adjust based on your environment
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
