@@ -112,6 +112,82 @@ router.post('/login', async (req, res) => {
       });
     }
     
+    // Coordinator login
+    if (email === 'coordinator@cravedartisan.com' && password === 'coordinator123') {
+      console.log('🔍 [DEBUG] Coordinator login successful, setting session data...');
+      console.log('🔍 [DEBUG] Session ID before:', req.sessionID);
+      console.log('🔍 [DEBUG] Session data before:', JSON.stringify(req.session, null, 2));
+      
+      req.session.userId = 'coordinator-user-id';
+      req.session.email = email;
+      req.session.role = 'EVENT_COORDINATOR';
+      req.session.vendorProfileId = 'coordinator-user-id';
+      
+      console.log('🔍 [DEBUG] Session data after setting:', JSON.stringify(req.session, null, 2));
+      
+      // Force session save
+      req.session.save((err) => {
+        if (err) {
+          console.error('🔍 [DEBUG] Session save error:', err);
+        } else {
+          console.log('🔍 [DEBUG] Session saved successfully');
+        }
+      });
+      
+      logger.info({ email, userId: req.session.userId }, 'User logged in');
+      
+      return res.json({
+        success: true,
+        message: 'Login successful',
+        user: {
+          userId: req.session.userId,
+          email: req.session.email,
+          role: req.session.role,
+          vendorProfileId: req.session.vendorProfileId,
+          isAuthenticated: true,
+          lastActivity: new Date()
+        }
+      });
+    }
+
+    // Admin login
+    if (email === 'admin@cravedartisan.com' && password === 'admin123') {
+      console.log('🔍 [DEBUG] Admin login successful, setting session data...');
+      console.log('🔍 [DEBUG] Session ID before:', req.sessionID);
+      console.log('🔍 [DEBUG] Session data before:', JSON.stringify(req.session, null, 2));
+      
+      req.session.userId = 'admin-user-id';
+      req.session.email = email;
+      req.session.role = 'ADMIN';
+      req.session.vendorProfileId = 'admin-user-id';
+      
+      console.log('🔍 [DEBUG] Session data after setting:', JSON.stringify(req.session, null, 2));
+      
+      // Force session save
+      req.session.save((err) => {
+        if (err) {
+          console.error('🔍 [DEBUG] Session save error:', err);
+        } else {
+          console.log('🔍 [DEBUG] Session saved successfully');
+        }
+      });
+      
+      logger.info({ email, userId: req.session.userId }, 'User logged in');
+      
+      return res.json({
+        success: true,
+        message: 'Login successful',
+        user: {
+          userId: req.session.userId,
+          email: req.session.email,
+          role: req.session.role,
+          vendorProfileId: req.session.vendorProfileId,
+          isAuthenticated: true,
+          lastActivity: new Date()
+        }
+      });
+    }
+    
     // Customer login
     if (email === 'customer@cravedartisan.com' && password === 'customer123') {
       console.log('🔍 [DEBUG] Customer login successful, setting session data...');

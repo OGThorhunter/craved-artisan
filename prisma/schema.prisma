@@ -1,10 +1,12 @@
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
+  extensions = [postgis, pg_trgm, pgvector]
 }
 
 model User {
@@ -21,8 +23,16 @@ model User {
   updated_at      DateTime         @updatedAt
   analyticsEvents AnalyticsEvent[]
   orders          Order[]
-  labelJobs       LabelJob[]
   vendorProfile   VendorProfile?
+  
+  // Marketplace relations
+  favoriteVendors FavoriteVendor[]
+  favoriteProducts FavoriteProduct[]
+  savedSearches   SavedSearch[]
+  searchEvents    SearchEvent[]
+  eventInterests  EventInterest[]
+  eventFavorites  EventFavorite[]
+  eventReviews    EventReview[]
 
   @@index([zip_code])
 }
@@ -51,6 +61,7 @@ model VendorProfile {
   labelProfiles         LabelProfile[]
   labelTemplates        LabelTemplate[]
   labelJobs             LabelJob[]
+  eventVendors          EventVendor[]
   user                  User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
   // AI Insights relations
   competitorPrices      ProductCompetitorPrice[]
@@ -71,8 +82,26 @@ model VendorProfile {
   // Orders Management
   orders                Order[]
   orderFieldDefs        OrderFieldDef[]
+  // Label Management
+  assets                Asset[]
+  
+  // Marketplace fields
+  avatarUrl             String?
+  coverUrl              String?
+  baseLocation          Bytes?                   // PostGIS POINT (SRID 4326)
+  city                  String?
+  state                 String?
+  country               String?
+  shipsNational         Boolean                  @default(false)
+  ratingAvg             Float                    @default(0)
+  ratingCount           Int                      @default(0)
+  marketplaceTags       String[]                 // bakery, vegan, flowers, woodwork...
 
   @@index([userId])
+  @@index([slug])
+  @@index([city, state])
+  @@index([marketplaceTags])
+  @@index([ratingAvg])
 }
 
 model Product {
@@ -121,10 +150,22 @@ model Product {
   analyticsEvents       AnalyticsEvent[]
   cartItems             CartItem[]
   orderItems            OrderItem[]
-  orderItemsNew         OrderItem[]
+  labelJobs             LabelJob[]
   recipe                Recipe?                  @relation(fields: [recipeId], references: [id])
   vendor                VendorProfile            @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
   competitorPrices      ProductCompetitorPrice[] // AI: Competitor pricing data
+  
+  // Marketplace fields
+  thumbUrl              String?
+  isService             Boolean                  @default(false)
+  pickup                Boolean                  @default(true)
+  delivery              Boolean                  @default(false)
+  ship                  Boolean                  @default(false)
+  availableNow          Boolean                  @default(true)
+  ratingAvg             Float                    @default(0)
+  ratingCount           Int                      @default(0)
+  searchVec             Bytes?                   // pgvector(768) for semantic
+  favoriteProducts      FavoriteProduct[]
   priceHistory          ProductPriceHistory[]    // AI: Price change history
   // New relations
   category              Category?                @relation(fields: [categoryId], references: [id])
@@ -189,6 +230,7 @@ model Order {
   vendor            VendorProfile?         @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
   salesWindow       SalesWindow?           @relation(fields: [salesWindowId], references: [id])
   timeline          OrderTimeline[]
+  labelJobs         LabelJob[]
 
   @@index([userId, createdAt])
   @@index([contextType, marketId])
@@ -462,6 +504,7 @@ model OrderItem {
   
   product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  labelJobs       LabelJob[]
 
   @@index([orderId])
   @@index([vendorProfileId])
@@ -841,6 +884,7 @@ model SalesWindow {
 
   location_name       String?
   address_text        String?
+  geoPoint            Bytes?                   // PostGIS POINT for window location
 
   static_map_mode     StaticMapMode      @default(NONE)
   static_map_image_url String?
@@ -893,6 +937,7 @@ model SalesWindow {
   wholesaleInvoices   WholesaleInvoice[]
   qrTokens            QrToken[]
   orders              Order[]
+  vendor              Vendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
 
   @@index([vendorId, status, fulfill_start_at])
 }
@@ -1004,13 +1049,14 @@ model PrinterProfile {
   id            String        @id @default(cuid())
   vendorProfileId String
   name          String
-  driver        PrinterDriver
+  networkAddr   String?       // ip:port or \\server\share
+  type          PrinterType   // THERMAL | LASER | INKJET | VIRTUAL
+  engine        PrintEngine   // PDF | ZPL | EPL | ESC_POS
   dpi           Int           @default(300)
   maxWidthIn    Float         @default(4.0)
   maxHeightIn   Float         @default(6.0)
-  mediaTypes    String        @default("[]") // JSON array of media types
-  networkAddress String?      // IP address or network path
-  status        PrinterStatus @default(ACTIVE)
+  capabilities  String?       // JSON stored as string for SQLite
+  active        Boolean       @default(true)
   lastSeenAt    DateTime?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
@@ -1020,7 +1066,7 @@ model PrinterProfile {
   vendorProfile VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
 
   @@index([vendorProfileId])
-  @@index([status])
+  @@index([vendorProfileId, active])
 }
 
 model LabelProfile {
@@ -1032,40 +1078,44 @@ model LabelProfile {
   description     String?
   widthIn         Float         @default(4.0)
   heightIn        Float         @default(6.0)
-  orientation     LabelOrientation @default(PORTRAIT)
-  cornerRadiusIn  Float?        @default(0.0)
+  orientation     String        @default("Portrait") // Portrait|Landscape
+  cornerRadius    Float         @default(0.0)
+  background      String?       // JSON stored as string for SQLite
   copies          Int           @default(1)
-  engine          LabelEngine   @default(ZPL)
-  status          LabelStatus   @default(ACTIVE)
+  engine          PrintEngine   @default(ZPL)
+  status          String        @default("ACTIVE")
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   labelJobs       LabelJob[]
 
   vendorProfile   VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
   printerProfile  PrinterProfile @relation(fields: [printerProfileId], references: [id], onDelete: Cascade)
-  template        LabelTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
 
   @@index([vendorProfileId])
-  @@index([status])
+  @@index([vendorProfileId, status])
 }
 
 model LabelTemplate {
   id              String        @id @default(cuid())
   vendorProfileId String
-  title           String
+  labelProfileId  String?
+  name            String
   description     String?
-  schema          String        // JSON schema for template
+  engine          PrintEngine
+  canvasJson      String        // JSON stored as string for SQLite
+  tokensUsed      String?       // JSON array stored as string for SQLite
   version         String        @default("1.0.0")
   isSystem        Boolean       @default(false)
   lastPublishedAt DateTime?
-  status          TemplateStatus @default(DRAFT)
+  status          String        @default("DRAFT")
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
-  labelProfiles   LabelProfile[]
+  labelJobs       LabelJob[]
 
   vendorProfile   VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
 
   @@index([vendorProfileId])
+  @@index([labelProfileId])
   @@index([status])
   @@index([isSystem])
 }
@@ -1073,29 +1123,35 @@ model LabelTemplate {
 model LabelJob {
   id               String        @id @default(cuid())
   vendorProfileId  String
-  printerProfileId String
+  source           String        // 'order','batch','manual','inventory'
+  orderId          String?
+  orderItemId      String?
+  productId        String?
   labelProfileId   String
-  requestedByUserId String
-  status           JobStatus     @default(QUEUED)
-  source           JobSource     @default(ORDER)
-  sourceId         String
-  payload          String        // JSON payload with resolved data
-  renderOutputUrl  String?
-  error            String?
+  templateId       String
+  printerProfileId String?
+  tokensPayload    String        // JSON stored as string for SQLite
+  status           String        @default("QUEUED") // QUEUED|RENDERED|SENT|PRINTED|FAILED|CANCELLED
   copies           Int           @default(1)
+  engine           PrintEngine
+  renderedAt       DateTime?
+  printedAt        DateTime?
+  error            String?
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
-  completedAt      DateTime?
 
   vendorProfile    VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
-  printerProfile   PrinterProfile @relation(fields: [printerProfileId], references: [id], onDelete: Cascade)
-  labelProfile     LabelProfile @relation(fields: [labelProfileId], references: [id], onDelete: Cascade)
-  requestedBy      User @relation(fields: [requestedByUserId], references: [id])
+  labelProfile     LabelProfile @relation(fields: [labelProfileId], references: [id])
+  labelTemplate    LabelTemplate @relation(fields: [templateId], references: [id])
+  printerProfile   PrinterProfile? @relation(fields: [printerProfileId], references: [id])
+  order            Order? @relation(fields: [orderId], references: [id])
+  orderItem        OrderItem? @relation(fields: [orderItemId], references: [id])
+  product          Product? @relation(fields: [productId], references: [id])
 
-  @@index([vendorProfileId])
-  @@index([status])
-  @@index([source, sourceId])
-  @@index([createdAt])
+  @@index([vendorProfileId, status])
+  @@index([vendorProfileId, createdAt])
+  @@index([orderId])
+  @@index([productId])
 }
 
 enum OrderStatus {
@@ -1219,10 +1275,18 @@ enum LabelOrientation {
   LANDSCAPE
 }
 
-enum LabelEngine {
-  ZPL
-  BROTHER_QL
+enum PrintEngine {
   PDF
+  ZPL
+  EPL
+  ESC_POS
+}
+
+enum PrinterType {
+  THERMAL
+  LASER
+  INKJET
+  VIRTUAL
 }
 
 enum LabelStatus {
@@ -1458,8 +1522,8 @@ enum RecipeParseStatus {
 model SystemMessage {
   id        String   @id @default(cuid())
   vendorProfileId String
-  scope     String   // 'inventory', 'orders', 'products', 'pricing', etc.
-  type      String   // 'restock_alert', 'price_watch_hit', 'shortfall', 'seasonal_forecast', 'receipt_parsed', 'pricing_advice'
+  scope     String   // 'inventory', 'orders', 'products', 'pricing', 'events', etc.
+  type      String   // 'restock_alert', 'price_watch_hit', 'shortfall', 'seasonal_forecast', 'receipt_parsed', 'pricing_advice', 'stall_purchase', 'event_interest', 'question', 'event_update'
   title     String
   body      String
   data      String?  // JSON stored as string for SQLite
@@ -1523,4 +1587,268 @@ enum ItemStatus {
   COOL
   PACK
   READY
+}
+
+// Label Management System - Enhanced Models
+model Asset {
+  id        String   @id @default(cuid())
+  vendorId  String
+  kind      String   // 'image','svg'
+  url       String
+  width     Int?
+  height    Int?
+  createdAt DateTime @default(now())
+  
+  // Relations
+  vendor    VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  
+  @@index([vendorId])
+  @@index([vendorId, kind])
+}
+
+// Marketplace Models
+model Vendor {
+  id            String   @id @default(cuid())
+  name          String
+  slug          String   @unique
+  bio           String?
+  avatarUrl     String?
+  coverUrl      String?
+  baseLocation  Bytes?   // PostGIS POINT (SRID 4326) stored via Prisma Bytes
+  city          String?
+  state         String?
+  country       String?
+  shipsNational Boolean  @default(false)
+  ratingAvg     Float    @default(0)
+  ratingCount   Int      @default(0)
+  tags          String[] // bakery, vegan, flowers, woodwork...
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  favoriteVendors FavoriteVendor[]
+  salesWindows  SalesWindow[]
+  
+  @@index([slug])
+  @@index([city, state])
+  @@index([tags])
+  @@index([ratingAvg])
+}
+
+
+model FavoriteVendor {
+  id       String   @id @default(cuid())
+  userId   String
+  vendorId String
+  createdAt DateTime @default(now())
+  
+  // Relations
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vendor   Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, vendorId])
+  @@index([userId])
+  @@index([vendorId])
+}
+
+model FavoriteProduct {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+  
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, productId])
+  @@index([userId])
+  @@index([productId])
+}
+
+model SavedSearch {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  params    Json     // persisted filter set
+  createdAt DateTime @default(now())
+  
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+}
+
+model SearchEvent {
+  id        String   @id @default(cuid())
+  userId    String?
+  query     String?
+  params    Json?
+  results   Int
+  tookMs    Int
+  createdAt DateTime @default(now())
+  
+  // Relations
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// Events System Models
+model Event {
+  id            String   @id @default(cuid())
+  coordinatorId String
+  title         String
+  slug          String   @unique
+  summary       String?
+  description   String?
+  imageUrl      String?
+  category      String?        // farmers_market, craft_fair, popup, class, festival
+  tags          String[]
+  startAt       DateTime
+  endAt         DateTime
+  addressText   String?
+  geoPoint      Bytes?         // PostGIS POINT (SRID 4326) stored as Bytes
+  city          String?
+  state         String?
+  country       String?
+  timezone      String         // e.g., America/New_York
+  status        EventStatus    @default(DRAFT)
+  isRecurring   Boolean        @default(false)
+  recurrence    Json?          // RRULE or rule summary
+  capacity      Int?           // overall attendee capacity (optional)
+  minStallPrice Decimal?       // quick display of lowest stall price
+  socialLinks   Json?          // {instagram,facebook,website}
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // Relations
+  stalls        EventStall[]
+  vendors       EventVendor[]
+  perks         EventPerk[]
+  faqs          EventFaq[]
+  reviews       EventReview[]
+  interests     EventInterest[]
+  favorites     EventFavorite[]
+  
+  @@index([geoPoint(type: Gist)])
+  @@index([startAt])
+  @@index([status])
+  @@index([tags])
+  @@index([coordinatorId])
+}
+
+enum EventStatus { 
+  DRAFT 
+  PUBLISHED 
+  SOLD_OUT 
+  CANCELLED 
+  ENDED 
+}
+
+model EventStall {
+  id        String   @id @default(cuid())
+  eventId   String
+  name      String   // e.g., "10x10 Outdoor", "Food Truck"
+  price     Decimal
+  qtyTotal  Int
+  qtySold   Int       @default(0)
+  perks     String[]  // power, water, shade
+  notes     String?
+  sort      Int       @default(0)
+  createdAt DateTime  @default(now())
+  
+  // Relations
+  event     Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  vendors   EventVendor[]
+  
+  @@index([eventId, sort])
+}
+
+model EventVendor {
+  id         String   @id @default(cuid())
+  eventId    String
+  vendorId   String
+  stallId    String?
+  status     String   @default("APPLIED") // APPLIED|APPROVED|PAID|WAITLIST|CANCELLED
+  message    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  // Relations
+  event      Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  stall      EventStall? @relation(fields: [stallId], references: [id], onDelete: SetNull)
+  vendor     VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  
+  @@index([eventId, vendorId])
+}
+
+model EventPerk {
+  id        String   @id @default(cuid())
+  eventId   String
+  title     String
+  details   String?
+  code      String?    // promo code to redeem on-site
+  kind      String     // 'gift','coupon','raffle','badge'
+  
+  // Relations
+  event     Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+model EventInterest {
+  id        String   @id @default(cuid())
+  eventId   String
+  userId    String?
+  emailHash String?    // guests: hash(email) for dedupe if you collect email softly
+  status    String     @default("INTERESTED") // INTERESTED|GOING
+  createdAt DateTime   @default(now())
+  
+  // Relations
+  event     Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([eventId, userId])
+  @@index([eventId])
+}
+
+model EventFavorite {
+  id        String @id @default(cuid())
+  userId    String
+  eventId   String
+  createdAt DateTime @default(now())
+  
+  // Relations
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event     Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, eventId])
+}
+
+model EventReview {
+  id        String @id @default(cuid())
+  eventId   String
+  userId    String
+  rating    Int
+  body      String?
+  createdAt DateTime @default(now())
+  
+  // Relations
+  event     Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([eventId])
+}
+
+model EventFaq {
+  id        String @id @default(cuid())
+  eventId   String
+  q         String
+  a         String
+  order     Int @default(0)
+  
+  // Relations
+  event     Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  
+  @@index([eventId, order])
 }

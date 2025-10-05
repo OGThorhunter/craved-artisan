@@ -1,808 +1,991 @@
-﻿'use client';
-
-import { useState, useEffect } from 'react';
-import { useRoute } from 'wouter';
-import { Link } from 'wouter';
+﻿import React, { useState } from 'react';
+import { useLocation } from 'wouter';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
 import {
-  MapPin,
   Calendar,
+  MapPin,
   Clock,
   Users,
   Star,
   Heart,
   Share2,
+  ChevronRight,
   MessageCircle,
   ExternalLink,
-  Download,
-  Upload,
-  Settings,
-  Bell,
   CheckCircle,
   AlertCircle,
-  ShoppingBag,
-  Camera,
-  Video,
-  ChevronLeft,
-  ChevronRight,
-  Play,
-  Pause,
-  ThumbsUp,
-  Tag,
-  Leaf,
-  Award,
-  TrendingUp,
-  Eye,
-  X,
-  ChevronDown,
-  ChevronUp,
-  Plus,
-  Minus,
-  Star as StarFilled,
-  MapPin as MapPinFilled,
-  Calendar as CalendarFilled,
-  Users as UsersFilled,
-  ShoppingBag as ShoppingBagFilled,
-  Camera as CameraFilled,
-  Video as VideoFilled,
-  MessageCircle as MessageCircleFilled,
-  ExternalLink as ExternalLinkFilled,
-  Download as DownloadFilled,
-  Upload as UploadFilled,
-  Settings as SettingsFilled,
-  Bell as BellFilled,
-  ThumbsUp as ThumbsUpFilled,
-  Tag as TagFilled,
-  Leaf as LeafFilled,
-  Award as AwardFilled,
-  TrendingUp as TrendingUpFilled,
-  Eye as EyeFilled,
-  Zap,
-  Sparkles,
-  Zap as ZapFilled,
-  Sparkles as SparklesFilled
+  ShoppingCart,
+  Download,
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import Button from '../components/ui/Button';
+import Card from '../components/ui/Card';
+import { Badge } from '../components/ui/Badge';
+import SEOHead from '../components/SEOHead';
 
-interface Event {
+const colors = {
+  bg: 'bg-[#F7F2EC]',
+  card: 'bg-white/70',
+  border: 'border-[#7F232E]/15',
+  primary: 'bg-[#7F232E] text-white hover:bg-[#6b1e27]',
+  secondary: 'border-[#7F232E]/30 text-[#7F232E] bg-white/80 hover:bg-white',
+  accent: 'text-[#5B6E02]',
+  ink: 'text-[#2b2b2b]',
+  sub: 'text-[#4b4b4b]',
+};
+
+type Event = {
   id: string;
-  name: string;
-  description: string;
-  longDescription: string;
-  date: string;
-  time: string;
-  endTime: string;
-  location: {
-    name: string;
-    address: string;
-    city: string;
-    state: string;
-    zip: string;
-    coordinates: { lat: number; lng: number };
-  };
-  type: 'market' | 'class' | 'popup' | 'festival' | 'workshop' | 'tasting';
-  category: string;
-  vendorCount: number;
-  maxVendors: number;
-  attendeeCount: number;
-  maxAttendees: number;
-  price: number;
-  vendorPrice: number;
-  image: string;
-  bannerImage: string;
+  title: string;
+  slug: string;
+  summary?: string;
+  description?: string;
+  imageUrl?: string;
+  startAt: string;
+  endAt: string;
+  addressText?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  timezone: string;
+  category?: string;
   tags: string[];
-  badges: string[];
-  featured: boolean;
-  vendorCallout: {
-    footTraffic: number;
-    pastEarnings: number;
-    tableCost: number;
-    aiMatchScore: number;
+  status: string;
+  capacity?: number;
+  minStallPrice?: number;
+  socialLinks?: {
+    instagram?: string;
+    facebook?: string;
+    website?: string;
   };
+  avgRating: number;
+  stalls: Array<{
+    id: string;
+    name: string;
+    price: number;
+    qtyTotal: number;
+    qtySold: number;
+    perks: string[];
+    notes?: string;
+  }>;
   vendors: Array<{
     id: string;
-    name: string;
-    avatar: string;
-    verified: boolean;
-    booth: string;
-    boothCoordinates: { x: number; y: number };
-    products: Array<{
+    status: string;
+    message?: string;
+    vendor: {
       id: string;
+      storeName: string;
+      imageUrl?: string;
+      slug: string;
+      city?: string;
+      state?: string;
+    };
+    stall?: {
       name: string;
       price: number;
-      image: string;
-    }>;
+    };
   }>;
-  logistics: {
-    parking: boolean;
-    restrooms: boolean;
-    foodTrucks: boolean;
-    kidFriendly: boolean;
-    wheelchairAccessible: boolean;
-    petFriendly: boolean;
+  perks: Array<{
+    id: string;
+    title: string;
+    details?: string;
+    code?: string;
+    kind: string;
+  }>;
+  faqs: Array<{
+    id: string;
+    q: string;
+    a: string;
+    order: number;
+  }>;
+  reviews: Array<{
+    id: string;
+    rating: number;
+    body?: string;
+    createdAt: string;
+    user: {
+      id: string;
+      name: string;
+    };
+  }>;
+  _count: {
+    interests: number;
+    favorites: number;
+    reviews: number;
+    vendors: number;
   };
-  schedule: Array<{
-    time: string;
-    activity: string;
-    description: string;
-  }>;
-  chat: Array<{
-    id: string;
-    userId: string;
-    userName: string;
-    userAvatar: string;
-    message: string;
-    timestamp: string;
-  }>;
-  boothMap: Array<{
-    id: string;
-    booth: string;
-    vendorId?: string;
-    vendorName?: string;
-    coordinates: { x: number; y: number };
-    available: boolean;
-  }>;
-  createdAt: string;
-  updatedAt: string;
-}
+};
+
+type TabType = 'overview' | 'stalls' | 'vendors' | 'map' | 'reviews';
 
 export default function EventDetailPage() {
-  const [, params] = useRoute("/events/:eventId");
-  const eventId = params?.eventId ?? "";
+  const [location, setLocation] = useLocation();
+  const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const [showInterestModal, setShowInterestModal] = useState(false);
+  const [interestStatus, setInterestStatus] = useState<'INTERESTED' | 'GOING'>('INTERESTED');
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewBody, setReviewBody] = useState('');
+  const [showQuestionModal, setShowQuestionModal] = useState(false);
+  const [questionMessage, setQuestionMessage] = useState('');
 
-  const [event, setEvent] = useState<Event | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'vendors' | 'schedule' | 'chat' | 'logistics'>('overview');
-  const [selectedBooth, setSelectedBooth] = useState<string | null>(null);
-  const [showVendorSignup, setShowVendorSignup] = useState(false);
-  const [showRSVP, setShowRSVP] = useState(false);
-  const [rsvpStatus, setRsvpStatus] = useState<'none' | 'going' | 'maybe' | 'not-going'>('none');
-  const [chatMessage, setChatMessage] = useState('');
-  const [isCoordinator, setIsCoordinator] = useState(false);
+  // Extract slug from URL
+  const slug = location.split('/').pop() || '';
 
-  // Mock data - replace with actual API calls
-  useEffect(() => {
-    const mockEvent: Event = {
-      id: eventId,
-      name: 'Locust Grove Artisan Market',
-      description: 'Join us for a day of local artisans, fresh food, and community connection.',
-      longDescription: `The Locust Grove Artisan Market is our flagship community event, bringing together over 50 local artisans, farmers, and food vendors for a day of celebration and connection.
+  const queryClient = useQueryClient();
 
-This year's market features:
-• Handcrafted goods from local artisans
-• Fresh produce from family farms
-• Live music and entertainment
-• Food trucks and local cuisine
-• Kids' activities and crafts
-• Educational workshops and demonstrations
+  // Fetch event details
+  const { data: event, isLoading } = useQuery({
+    queryKey: ['event', slug],
+    queryFn: async () => {
+      const response = await fetch(`/api/events/${slug}`);
+      if (!response.ok) throw new Error('Failed to fetch event');
+      return response.json() as Promise<Event>;
+    },
+  });
 
-Whether you're looking for unique gifts, fresh ingredients, or just a fun day out with the family, there's something for everyone at the Locust Grove Artisan Market.`,
-      date: '2024-02-15',
-      time: '09:00',
-      endTime: '17:00',
-      location: {
-        name: 'Locust Grove Farmers Market',
-        address: '123 Main St',
-        city: 'Locust Grove',
-        state: 'GA',
-        zip: '30248',
-        coordinates: { lat: 33.3467, lng: -84.1091 }
-      },
-      type: 'market',
-      category: 'Artisan Market',
-      vendorCount: 45,
-      maxVendors: 60,
-      attendeeCount: 1200,
-      maxAttendees: 2000,
-      price: 0,
-      vendorPrice: 75,
-      image: '/images/events/market-1.jpg',
-      bannerImage: '/images/events/market-banner-1.jpg',
-      tags: ['artisan', 'local', 'handmade', 'fresh', 'community'],
-      badges: ['Popular', 'Vendor spots available', 'Kid friendly'],
-      featured: true,
-      vendorCallout: {
-        footTraffic: 2500,
-        pastEarnings: 850,
-        tableCost: 75,
-        aiMatchScore: 92
-      },
-      vendors: [
-        {
-          id: 'v1',
-          name: 'Rose Creek Bakery',
-          avatar: '/images/vendors/rosecreek-avatar.jpg',
-          verified: true,
-          booth: 'A12',
-          boothCoordinates: { x: 120, y: 80 },
-          products: [
-            { id: 'p1', name: 'Sourdough Bread', price: 9.00, image: '/images/products/sourdough-1.jpg' },
-            { id: 'p2', name: 'Artisan Baguette', price: 7.50, image: '/images/products/baguette.jpg' }
-          ]
-        },
-        {
-          id: 'v2',
-          name: 'Green Thumb Gardens',
-          avatar: '/images/vendors/greenthumb-avatar.jpg',
-          verified: true,
-          booth: 'B15',
-          boothCoordinates: { x: 200, y: 120 },
-          products: [
-            { id: 'p3', name: 'Organic Tomatoes', price: 4.50, image: '/images/products/tomatoes.jpg' },
-            { id: 'p4', name: 'Fresh Herbs', price: 3.00, image: '/images/products/herbs.jpg' }
-          ]
-        }
-      ],
-      logistics: {
-        parking: true,
-        restrooms: true,
-        foodTrucks: true,
-        kidFriendly: true,
-        wheelchairAccessible: true,
-        petFriendly: false
-      },
-      schedule: [
-        { time: '09:00', activity: 'Market Opens', description: 'Vendors set up and market begins' },
-        { time: '10:00', activity: 'Live Music', description: 'Local band performance' },
-        { time: '12:00', activity: 'Food Truck Arrival', description: 'Lunch options available' },
-        { time: '15:00', activity: 'Craft Demo', description: 'Live artisan demonstration' },
-        { time: '17:00', activity: 'Market Closes', description: 'Thank you for visiting!' }
-      ],
-      chat: [
-        {
-          id: 'c1',
-          userId: 'u1',
-          userName: 'Sarah M.',
-          userAvatar: '/images/avatars/sarah.jpg',
-          message: 'Can\'t wait for this market! Will there be gluten-free options?',
-          timestamp: '2024-02-10T10:30:00Z'
-        },
-        {
-          id: 'c2',
-          userId: 'u2',
-          userName: 'Mike R.',
-          userAvatar: '/images/avatars/mike.jpg',
-          message: 'I\'ll be there with my pottery! Booth C8 if anyone wants to stop by.',
-          timestamp: '2024-02-10T11:15:00Z'
-        }
-      ],
-      boothMap: [
-        { id: '1', booth: 'A12', vendorId: 'v1', vendorName: 'Rose Creek Bakery', coordinates: { x: 120, y: 80 }, available: false },
-        { id: '2', booth: 'B15', vendorId: 'v2', vendorName: 'Green Thumb Gardens', coordinates: { x: 200, y: 120 }, available: false },
-        { id: '3', booth: 'C8', vendorId: 'v3', vendorName: 'Mike\'s Pottery', coordinates: { x: 280, y: 160 }, available: false },
-        { id: '4', booth: 'A15', coordinates: { x: 160, y: 80 }, available: true },
-        { id: '5', booth: 'B8', coordinates: { x: 240, y: 120 }, available: true }
-      ],
-      createdAt: '2024-01-15',
-      updatedAt: '2024-02-10'
-    };
+  // Interest mutation
+  const interestMutation = useMutation({
+    mutationFn: async (status: 'INTERESTED' | 'GOING') => {
+      const response = await fetch(`/api/events/${event?.id}/interest`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+      if (!response.ok) throw new Error('Failed to update interest');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['event', slug] });
+      setShowInterestModal(false);
+    },
+  });
 
-    setEvent(mockEvent);
-    setLoading(false);
-  }, [eventId]);
+  // Favorite mutation
+  const favoriteMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/events/${event?.id}/favorite`, {
+        method: 'POST',
+      });
+      if (!response.ok) throw new Error('Failed to toggle favorite');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['event', slug] });
+    },
+  });
 
-  if (loading) return <div>Loading...</div>;
-  if (!event) return <div>Event not found.</div>;
+  // Review mutation
+  const reviewMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/events/${event?.id}/reviews`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rating: reviewRating, body: reviewBody }),
+      });
+      if (!response.ok) throw new Error('Failed to submit review');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['event', slug] });
+      setShowReviewModal(false);
+      setReviewBody('');
+      setReviewRating(5);
+    },
+  });
 
-  const handleRSVP = (status: 'going' | 'maybe' | 'not-going') => {
-    setRsvpStatus(status);
-    setShowRSVP(false);
-    // TODO: Send RSVP to API
-  };
+  // Question mutation
+  const questionMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/events/${event?.id}/question`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: questionMessage }),
+      });
+      if (!response.ok) throw new Error('Failed to submit question');
+      return response.json();
+    },
+    onSuccess: () => {
+      setShowQuestionModal(false);
+      setQuestionMessage('');
+    },
+  });
 
-  const handleChatSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (chatMessage.trim()) {
-      // TODO: Send message to API
-      setChatMessage('');
-    }
-  };
-
-  const renderBoothMap = () => (
-    <div className="relative bg-gray-100 rounded-lg p-4 h-96">
-      <div className="text-center mb-4">
-        <h3 className="font-semibold">Booth Map</h3>
-        <p className="text-sm text-gray-600">Click on booths for details</p>
-      </div>
-      
-      <div className="relative w-full h-80 bg-white rounded border">
-        {event.boothMap.map((booth) => (
-          <button
-            key={booth.id}
-            onClick={() => setSelectedBooth(booth.booth)}
-            className={`absolute w-16 h-16 rounded-lg border-2 flex items-center justify-center text-xs font-medium transition-colors ${
-              booth.available
-                ? 'bg-green-100 border-green-300 text-green-800 hover:bg-green-200'
-                : 'bg-blue-100 border-blue-300 text-blue-800 hover:bg-blue-200'
-            }`}
-            style={{
-              left: `${booth.coordinates.x}px`,
-              top: `${booth.coordinates.y}px`
-            }}
-            title={booth.vendorName || `Booth ${booth.booth} - Available`}
-            aria-label={booth.vendorName || `Booth ${booth.booth} - Available`}
-          >
-            {booth.booth}
-          </button>
-        ))}
-      </div>
-
-      {/* Legend */}
-      <div className="flex justify-center gap-4 mt-4 text-sm">
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-green-100 border border-green-300 rounded"></div>
-          <span>Available</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-4 h-4 bg-blue-100 border border-blue-300 rounded"></div>
-          <span>Occupied</span>
-        </div>
-      </div>
-    </div>
-  );
-
-  return (
-    <div className="page-container bg-gray-50">
-      {/* Breadcrumbs */}
-      <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 py-3">
-          <nav className="flex items-center space-x-2 text-sm text-gray-500">
-            <Link href="/" className="hover:text-gray-700">Home</Link>
-            <ChevronRight className="w-4 h-4" />
-            <Link href="/events" className="hover:text-gray-700">Events</Link>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-gray-900">{event.name}</span>
-          </nav>
-        </div>
-      </div>
-
-      {/* Hero Section */}
-      <div className="relative">
-        <img src={event.bannerImage} alt={event.name} className="w-full h-64 object-cover" />
-        <div className="absolute inset-0 bg-black/40"></div>
-        <div className="absolute inset-0 flex items-center">
-          <div className="max-w-7xl mx-auto px-4 text-white">
-            <h1 className="text-4xl font-bold mb-2">{event.name}</h1>
-            <div className="flex items-center gap-4 text-lg">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-5 h-5" />
-                <span>{new Date(event.date).toLocaleDateString()}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock className="w-5 h-5" />
-                <span>{event.time} - {event.endTime}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <MapPin className="w-5 h-5" />
-                <span>{event.location.name}</span>
-              </div>
-            </div>
+  if (isLoading) {
+    return (
+      <div className={`${colors.bg} min-h-screen`}>
+        <div className="max-w-6xl mx-auto px-4 py-8">
+          <div className="animate-pulse space-y-6">
+            <div className="h-64 bg-gray-200 rounded-2xl"></div>
+            <div className="h-8 bg-gray-200 rounded w-3/4"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
           </div>
         </div>
       </div>
+    );
+  }
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Main Content */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Quick Stats */}
-            <div className="bg-white rounded-lg p-6">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                <div>
-                  <div className="text-2xl font-bold text-brand-green">{event.vendorCount}</div>
-                  <div className="text-sm text-gray-600">Vendors</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-brand-maroon">{event.attendeeCount}</div>
-                  <div className="text-sm text-gray-600">Attending</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-blue-600">{event.maxVendors - event.vendorCount}</div>
-                  <div className="text-sm text-gray-600">Spots Left</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-purple-600">{event.price === 0 ? 'Free' : `$${event.price}`}</div>
-                  <div className="text-sm text-gray-600">Entry</div>
-                </div>
+  if (!event) {
+    return (
+      <div className={`${colors.bg} min-h-screen flex items-center justify-center`}>
+        <Card className="p-8 text-center">
+          <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-[#2b2b2b] mb-2">Event not found</h2>
+          <p className="text-[#4b4b4b] mb-4">The event you're looking for doesn't exist or has been removed.</p>
+          <Button variant="primary" onClick={() => setLocation('/events')}>
+            Browse Events
+          </Button>
+        </Card>
+      </div>
+    );
+  }
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return {
+      date: date.toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      }),
+      time: date.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit',
+        timeZoneName: 'short'
+      }),
+    };
+  };
+
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit' 
+    });
+  };
+
+  const dateInfo = formatDate(event.startAt);
+  const endTime = formatTime(event.endAt);
+
+  const renderStars = (rating: number) => {
+    return [...Array(5)].map((_, i) => (
+      <Star
+        key={i}
+        className={`h-4 w-4 ${
+          i < rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+        }`}
+      />
+    ));
+  };
+
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'overview':
+        return (
+          <div className="space-y-6">
+            {event.description && (
+              <div>
+                <h3 className="text-lg font-semibold text-[#2b2b2b] mb-3">About this event</h3>
+                <p className="text-[#4b4b4b] leading-relaxed">{event.description}</p>
               </div>
-            </div>
-
-            {/* Tabs */}
-            <div className="bg-white rounded-lg shadow-sm">
-              <div className="border-b">
-                <div className="flex overflow-x-auto">
-                  {['overview', 'vendors', 'schedule', 'chat', 'logistics'].map((tab) => (
-                    <button
-                      key={tab}
-                      onClick={() => setActiveTab(tab as any)}
-                      className={`px-6 py-4 font-medium transition-colors whitespace-nowrap ${
-                        activeTab === tab
-                          ? 'border-b-2 border-brand-green text-brand-green'
-                          : 'text-gray-500 hover:text-gray-700'
-                      }`}
-                    >
-                      {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                    </button>
+            )}
+            
+            {event.tags.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-[#2b2b2b] mb-3">Tags</h3>
+                <div className="flex flex-wrap gap-2">
+                  {event.tags.map(tag => (
+                    <Badge key={tag} variant="secondary">
+                      {tag}
+                    </Badge>
                   ))}
                 </div>
               </div>
-
-              <div className="p-6">
-                <AnimatePresence mode="wait">
-                  {activeTab === 'overview' && (
-                    <motion.div
-                      key="overview"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      className="space-y-6"
-                    >
-                      <div>
-                        <h3 className="text-lg font-semibold mb-3">About this event</h3>
-                        <p className="text-gray-700 leading-relaxed">{event.longDescription}</p>
-                      </div>
-
-                      <div>
-                        <h3 className="text-lg font-semibold mb-3">Event Details</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="flex items-center gap-3">
-                            <Calendar className="w-5 h-5 text-brand-green" />
-                            <div>
-                              <p className="font-medium">Date & Time</p>
-                              <p className="text-sm text-gray-600">
-                                {new Date(event.date).toLocaleDateString()} • {event.time} - {event.endTime}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <MapPin className="w-5 h-5 text-brand-green" />
-                            <div>
-                              <p className="font-medium">Location</p>
-                              <p className="text-sm text-gray-600">
-                                {event.location.name}<br />
-                                {event.location.address}, {event.location.city}, {event.location.state} {event.location.zip}
-                              </p>
-                            </div>
-                          </div>
+            )}
+            
+            {event.perks.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-[#2b2b2b] mb-3">Event perks</h3>
+                <div className="grid gap-3">
+                  {event.perks.map(perk => (
+                    <Card key={perk.id} className="p-4">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h4 className="font-medium text-[#2b2b2b]">{perk.title}</h4>
+                          {perk.details && (
+                            <p className="text-sm text-[#4b4b4b] mt-1">{perk.details}</p>
+                          )}
                         </div>
+                        {perk.code && (
+                          <Badge variant="primary" className="text-xs">
+                            {perk.code}
+                          </Badge>
+                        )}
                       </div>
-
-                      <div>
-                        <h3 className="text-lg font-semibold mb-3">Tags</h3>
-                        <div className="flex flex-wrap gap-2">
-                          {event.tags.map((tag, index) => (
-                            <span key={index} className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
-                              #{tag}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-
-                  {activeTab === 'vendors' && (
-                    <motion.div
-                      key="vendors"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      className="space-y-6"
-                    >
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold">Featured Vendors</h3>
-                        <Link
-                          href={`/events/${event.id}/vendors`}
-                          className="text-brand-green hover:text-brand-green/80"
-                        >
-                          View all vendors →
-                        </Link>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {event.vendors.map((vendor) => (
-                          <div key={vendor.id} className="border border-gray-200 rounded-lg p-4">
-                            <div className="flex items-center gap-3 mb-3">
-                              <img src={vendor.avatar} alt={vendor.name} className="w-12 h-12 rounded-full" />
-                              <div>
-                                <h4 className="font-semibold">{vendor.name}</h4>
-                                <p className="text-sm text-gray-600">Booth {vendor.booth}</p>
-                              </div>
-                              {vendor.verified && <CheckCircle className="w-4 h-4 text-blue-500" />}
-                            </div>
-                            
-                            <div className="grid grid-cols-2 gap-2 mb-3">
-                              {vendor.products.slice(0, 2).map((product) => (
-                                <div key={product.id} className="flex items-center gap-2">
-                                  <img src={product.image} alt={product.name} className="w-8 h-8 rounded object-cover" />
-                                  <div className="text-sm">
-                                    <p className="font-medium">{product.name}</p>
-                                    <p className="text-gray-600">${product.price}</p>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-
-                            <Link
-                              href={`/vendors/${vendor.id}`}
-                              className="text-brand-green hover:text-brand-green/80 text-sm font-medium"
-                            >
-                              Shop in advance →
-                            </Link>
-                          </div>
-                        ))}
-                      </div>
-
-                      {renderBoothMap()}
-                    </motion.div>
-                  )}
-
-                  {activeTab === 'schedule' && (
-                    <motion.div
-                      key="schedule"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      className="space-y-4"
-                    >
-                      <h3 className="text-lg font-semibold">Event Schedule</h3>
-                      {event.schedule.map((item, index) => (
-                        <div key={index} className="flex gap-4 p-4 border border-gray-200 rounded-lg">
-                          <div className="text-center">
-                            <div className="font-semibold text-brand-green">{item.time}</div>
-                          </div>
-                          <div className="flex-1">
-                            <h4 className="font-semibold">{item.activity}</h4>
-                            <p className="text-sm text-gray-600">{item.description}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </motion.div>
-                  )}
-
-                  {activeTab === 'chat' && (
-                    <motion.div
-                      key="chat"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      className="space-y-4"
-                    >
-                      <h3 className="text-lg font-semibold">Event Chat</h3>
-                      
-                      <div className="h-64 overflow-y-auto border border-gray-200 rounded-lg p-4 space-y-4">
-                        {event.chat.map((message) => (
-                          <div key={message.id} className="flex gap-3">
-                            <img src={message.userAvatar} alt={message.userName} className="w-8 h-8 rounded-full" />
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="font-medium text-sm">{message.userName}</span>
-                                <span className="text-xs text-gray-500">
-                                  {new Date(message.timestamp).toLocaleString()}
-                                </span>
-                              </div>
-                              <p className="text-sm">{message.message}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-
-                      <form onSubmit={handleChatSubmit} className="flex gap-2">
-                        <input
-                          type="text"
-                          value={chatMessage}
-                          onChange={(e) => setChatMessage(e.target.value)}
-                          placeholder="Type your message..."
-                          className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green"
-                        />
-                        <button
-                          type="submit"
-                          className="px-4 py-2 bg-brand-green text-white rounded-lg hover:bg-brand-green/80 transition-colors"
-                        >
-                          Send
-                        </button>
-                      </form>
-                    </motion.div>
-                  )}
-
-                  {activeTab === 'logistics' && (
-                    <motion.div
-                      key="logistics"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      className="space-y-6"
-                    >
-                      <h3 className="text-lg font-semibold">Event Logistics</h3>
-                      
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        {Object.entries(event.logistics).map(([key, value]) => (
-                          <div key={key} className="flex items-center gap-2">
-                            {value ? (
-                              <CheckCircle className="w-5 h-5 text-green-500" />
-                            ) : (
-                              <X className="w-5 h-5 text-red-500" />
-                            )}
-                            <span className="text-sm capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
-                          </div>
-                        ))}
-                      </div>
-
-                      <div>
-                        <h4 className="font-semibold mb-3">Getting There</h4>
-                        <div className="space-y-2">
-                          <p className="text-sm text-gray-600">
-                            <strong>Address:</strong> {event.location.address}, {event.location.city}, {event.location.state} {event.location.zip}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            <strong>Parking:</strong> Free parking available on-site
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            <strong>Public Transit:</strong> Bus routes 15 and 23 stop nearby
-                          </p>
-                        </div>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column - Sidebar */}
-          <div className="space-y-6">
-            {/* RSVP Section */}
-            <div className="bg-white rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-4">RSVP</h3>
-              <div className="space-y-3">
-                <button
-                  onClick={() => handleRSVP('going')}
-                  className={`w-full py-2 px-4 rounded-lg border-2 transition-colors ${
-                    rsvpStatus === 'going'
-                      ? 'border-brand-green bg-brand-green text-white'
-                      : 'border-gray-300 hover:border-brand-green'
-                  }`}
-                >
-                  Going
-                </button>
-                <button
-                  onClick={() => handleRSVP('maybe')}
-                  className={`w-full py-2 px-4 rounded-lg border-2 transition-colors ${
-                    rsvpStatus === 'maybe'
-                      ? 'border-yellow-500 bg-yellow-500 text-white'
-                      : 'border-gray-300 hover:border-yellow-500'
-                  }`}
-                >
-                  Maybe
-                </button>
-                <button
-                  onClick={() => handleRSVP('not-going')}
-                  className={`w-full py-2 px-4 rounded-lg border-2 transition-colors ${
-                    rsvpStatus === 'not-going'
-                      ? 'border-red-500 bg-red-500 text-white'
-                      : 'border-gray-300 hover:border-red-500'
-                  }`}
-                >
-                  Not Going
-                </button>
-              </div>
-            </div>
-
-            {/* Vendor Signup */}
-            {event.vendorCount < event.maxVendors && (
-              <div className="bg-white rounded-lg p-6">
-                <h3 className="text-lg font-semibold mb-4">Become a Vendor</h3>
-                <div className="space-y-3 mb-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-brand-green">${event.vendorCallout.footTraffic}</div>
-                    <div className="text-sm text-gray-600">Avg. Foot Traffic</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-brand-green">${event.vendorCallout.pastEarnings}</div>
-                    <div className="text-sm text-gray-600">Avg. Past Earnings</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-brand-maroon">${event.vendorPrice}</div>
-                    <div className="text-sm text-gray-600">Table Cost</div>
-                  </div>
+                    </Card>
+                  ))}
                 </div>
-                <button
-                  onClick={() => setShowVendorSignup(true)}
-                  className="w-full bg-brand-green text-white py-2 px-4 rounded-lg hover:bg-brand-green/80 transition-colors"
-                >
-                  Apply as Vendor
-                </button>
               </div>
             )}
-
-            {/* Share */}
-            <div className="bg-white rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-4">Share Event</h3>
-              <div className="flex gap-2">
-                <button className="flex-1 p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                  Facebook
-                </button>
-                <button className="flex-1 p-2 bg-blue-400 text-white rounded-lg hover:bg-blue-500 transition-colors">
-                  Twitter
-                </button>
-                <button className="flex-1 p-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-                  WhatsApp
-                </button>
+            
+            {event.faqs.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-[#2b2b2b] mb-3">Frequently asked questions</h3>
+                <div className="space-y-3">
+                  {event.faqs.map(faq => (
+                    <details key={faq.id} className="group">
+                      <summary className="cursor-pointer font-medium text-[#2b2b2b] hover:text-[#7F232E] transition-colors">
+                        {faq.q}
+                        <ChevronRight className="inline-block h-4 w-4 ml-2 transform group-open:rotate-90 transition-transform" />
+                      </summary>
+                      <p className="text-[#4b4b4b] mt-2 ml-6">{faq.a}</p>
+                    </details>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
+          </div>
+        );
 
-            {/* Calendar Integration */}
-            <div className="bg-white rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-4">Add to Calendar</h3>
-              <div className="space-y-2">
-                <button className="w-full p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                  Google Calendar
-                </button>
-                <button className="w-full p-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors">
-                  Apple Calendar
-                </button>
-                <button className="w-full p-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
-                  Outlook
-                </button>
+      case 'stalls':
+        return (
+          <div className="space-y-4">
+            {event.stalls.length === 0 ? (
+              <Card className="p-8 text-center">
+                <AlertCircle className="h-12 w-12 text-[#4b4b4b] mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-[#2b2b2b] mb-2">No stalls available</h3>
+                <p className="text-[#4b4b4b]">This event doesn't have any vendor stalls for purchase.</p>
+              </Card>
+            ) : (
+              event.stalls.map(stall => {
+                const available = stall.qtyTotal - stall.qtySold;
+                return (
+                  <Card key={stall.id} className="p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h3 className="text-xl font-semibold text-[#2b2b2b] mb-2">{stall.name}</h3>
+                        <div className="text-2xl font-bold text-[#7F232E] mb-3">
+                          ${stall.price.toFixed(2)}
+                        </div>
+                        
+                        <div className="space-y-2 text-sm text-[#4b4b4b] mb-4">
+                          <div className="flex items-center gap-2">
+                            <Users className="h-4 w-4" />
+                            {available} of {stall.qtyTotal} stalls available
+                          </div>
+                          {stall.perks.length > 0 && (
+                            <div className="flex items-center gap-2">
+                              <CheckCircle className="h-4 w-4" />
+                              Includes: {stall.perks.join(', ')}
+                            </div>
+                          )}
+                        </div>
+                        
+                        {stall.notes && (
+                          <p className="text-sm text-[#4b4b4b] mb-4">{stall.notes}</p>
+                        )}
+                      </div>
+                      
+                      <div className="ml-6">
+                        {available > 0 ? (
+                          <Button
+                            variant="primary"
+                            className="flex items-center gap-2"
+                            onClick={() => {
+                              // Handle stall purchase
+                              console.log('Purchase stall:', stall.id);
+                            }}
+                          >
+                            <ShoppingCart className="h-4 w-4" />
+                            Purchase Stall
+                          </Button>
+                        ) : (
+                          <Badge variant="secondary" className="text-sm">
+                            Sold Out
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })
+            )}
+          </div>
+        );
+
+      case 'vendors':
+        return (
+          <div className="space-y-4">
+            {event.vendors.length === 0 ? (
+              <Card className="p-8 text-center">
+                <Users className="h-12 w-12 text-[#4b4b4b] mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-[#2b2b2b] mb-2">No vendors yet</h3>
+                <p className="text-[#4b4b4b]">Vendors will appear here once they join the event.</p>
+              </Card>
+            ) : (
+              event.vendors.map(vendor => (
+                <Card key={vendor.id} className="p-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-full bg-gray-100 overflow-hidden flex-shrink-0">
+                      {vendor.vendor.imageUrl ? (
+                        <img 
+                          src={vendor.vendor.imageUrl} 
+                          alt={vendor.vendor.storeName}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-[#7F232E]/20 to-[#5B6E02]/20 flex items-center justify-center">
+                          <Users className="h-6 w-6 text-[#7F232E]/60" />
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-[#2b2b2b] truncate">
+                        {vendor.vendor.storeName}
+                      </h3>
+                      <p className="text-sm text-[#4b4b4b]">
+                        {vendor.vendor.city}, {vendor.vendor.state}
+                      </p>
+                      {vendor.stall && (
+                        <p className="text-sm text-[#7F232E]">
+                          {vendor.stall.name} - ${vendor.stall.price}
+                        </p>
+                      )}
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Badge 
+                        variant={vendor.status === 'APPROVED' ? 'success' : 'secondary'}
+                        className="text-xs"
+                      >
+                        {vendor.status}
+                      </Badge>
+                      <Button
+                        variant="ghost"
+                        onClick={() => setLocation(`/marketplace/vendor/${vendor.vendor.slug}`)}
+                        title="View vendor profile"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              ))
+            )}
+          </div>
+        );
+
+      case 'map':
+        return (
+          <div className="space-y-4">
+            <Card className="p-6">
+              <h3 className="text-lg font-semibold text-[#2b2b2b] mb-4">Event Location</h3>
+              
+              {event.addressText && (
+                <div className="mb-4">
+                  <div className="flex items-start gap-2 text-[#4b4b4b]">
+                    <MapPin className="h-5 w-5 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="font-medium">{event.addressText}</p>
+                      <p>{event.city}, {event.state} {event.country}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div className="h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+                <div className="text-center text-[#4b4b4b]">
+                  <MapPin className="h-12 w-12 mx-auto mb-2" />
+                  <p>Map view coming soon</p>
+                  <p className="text-sm">Interactive map will be displayed here</p>
+                </div>
+              </div>
+              
+              <div className="mt-4">
+                <Button
+                  variant="secondary"
+                  className="flex items-center gap-2"
+                  onClick={() => {
+                    // Open in external map
+                    const address = encodeURIComponent(event.addressText || `${event.city}, ${event.state}`);
+                    window.open(`https://maps.google.com/maps?q=${address}`, '_blank');
+                  }}
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  Open in Maps
+                </Button>
+              </div>
+            </Card>
+          </div>
+        );
+
+      case 'reviews':
+        return (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-[#2b2b2b]">Reviews</h3>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="flex items-center gap-1">
+                    {renderStars(Math.round(event.avgRating))}
+                  </div>
+                  <span className="text-sm text-[#4b4b4b]">
+                    {event.avgRating.toFixed(1)} ({event._count.reviews} reviews)
+                  </span>
+                </div>
+              </div>
+              
+              <Button
+                variant="primary"
+                onClick={() => setShowReviewModal(true)}
+              >
+                Write a Review
+              </Button>
+            </div>
+            
+            {event.reviews.length === 0 ? (
+              <Card className="p-8 text-center">
+                <Star className="h-12 w-12 text-[#4b4b4b] mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-[#2b2b2b] mb-2">No reviews yet</h3>
+                <p className="text-[#4b4b4b]">Be the first to review this event!</p>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {event.reviews.map(review => (
+                  <Card key={review.id} className="p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-[#7F232E]/20 flex items-center justify-center flex-shrink-0">
+                        <span className="text-sm font-medium text-[#7F232E]">
+                          {review.user.name.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-medium text-[#2b2b2b]">{review.user.name}</span>
+                          <div className="flex items-center gap-1">
+                            {renderStars(review.rating)}
+                          </div>
+                          <span className="text-xs text-[#4b4b4b]">
+                            {new Date(review.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                        
+                        {review.body && (
+                          <p className="text-[#4b4b4b] text-sm">{review.body}</p>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <>
+      {event && (
+        <SEOHead
+          title={event.title}
+          description={event.summary || event.description || `Join us for ${event.title} in ${event.city}, ${event.state}`}
+          image={event.imageUrl}
+          url={`/events/${event.slug}`}
+          type="event"
+          event={{
+            name: event.title,
+            startDate: event.startAt,
+            endDate: event.endAt,
+            location: {
+              name: `${event.city}, ${event.state}`,
+              address: event.addressText || '',
+              city: event.city || '',
+              state: event.state || '',
+              country: event.country || 'USA'
+            },
+            description: event.description || event.summary || '',
+            image: event.imageUrl,
+            organizer: {
+              name: 'Craved Artisan',
+              url: 'https://craved-artisan.com'
+            }
+          }}
+        />
+      )}
+      <div className={`${colors.bg} min-h-screen`}>
+      {/* Hero Section */}
+      <div className="relative">
+        <div className="h-64 md:h-80 bg-gradient-to-br from-[#7F232E]/20 to-[#5B6E02]/20">
+          {event.imageUrl && (
+            <img
+              src={event.imageUrl}
+              alt={event.title}
+              className="w-full h-full object-cover"
+            />
+          )}
+        </div>
+        
+        <div className="absolute inset-0 bg-black/20"></div>
+        
+        <div className="absolute bottom-0 left-0 right-0 p-6">
+          <div className="max-w-6xl mx-auto">
+            <div className="flex items-end justify-between">
+              <div className="text-white">
+                <h1 className="text-3xl md:text-4xl font-bold mb-2">{event.title}</h1>
+                {event.summary && (
+                  <p className="text-lg opacity-90 mb-4 max-w-2xl">{event.summary}</p>
+                )}
+                
+                <div className="flex items-center gap-6 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    {dateInfo.date}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    {dateInfo.time} - {endTime}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    {event.city}, {event.state}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="secondary"
+                  className="bg-white/90 backdrop-blur-sm"
+                  onClick={() => favoriteMutation.mutate()}
+                >
+                  <Heart className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="secondary"
+                  className="bg-white/90 backdrop-blur-sm"
+                  onClick={() => {
+                    // Handle share
+                    navigator.clipboard.writeText(window.location.href);
+                  }}
+                >
+                  <Share2 className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={() => setShowInterestModal(true)}
+                >
+                  I'm Interested
+                </Button>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Vendor Signup Modal */}
-      <AnimatePresence>
-        {showVendorSignup && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-            onClick={() => setShowVendorSignup(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white rounded-lg p-6 max-w-md w-full"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Apply as Vendor</h3>
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-2">
+            {/* Tabs */}
+            <div className="flex items-center gap-1 mb-6 bg-white/50 rounded-xl p-1">
+              {[
+                { id: 'overview', label: 'Overview' },
+                { id: 'stalls', label: 'Stalls' },
+                { id: 'vendors', label: 'Vendors' },
+                { id: 'map', label: 'Map' },
+                { id: 'reviews', label: 'Reviews' },
+              ].map(tab => (
                 <button
-                  onClick={() => setShowVendorSignup(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id as TabType)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeTab === tab.id
+                      ? 'bg-[#7F232E] text-white'
+                      : 'text-[#4b4b4b] hover:text-[#7F232E]'
+                  }`}
                 >
-                  <X className="w-5 h-5" />
+                  {tab.label}
                 </button>
+              ))}
+            </div>
+            
+            {/* Tab Content */}
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              {renderTabContent()}
+            </motion.div>
+          </div>
+          
+          {/* Sidebar */}
+          <div className="space-y-6">
+            {/* Event Info */}
+            <Card className="p-6">
+              <h3 className="font-semibold text-[#2b2b2b] mb-4">Event Details</h3>
+              
+              <div className="space-y-3 text-sm">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-[#7F232E]" />
+                  <span className="text-[#4b4b4b]">{dateInfo.date}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-[#7F232E]" />
+                  <span className="text-[#4b4b4b]">{dateInfo.time} - {endTime}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-[#7F232E]" />
+                  <span className="text-[#4b4b4b]">{event.city}, {event.state}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4 text-[#7F232E]" />
+                  <span className="text-[#4b4b4b]">{event._count.interests} interested</span>
+                </div>
+                {event.capacity && (
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-[#7F232E]" />
+                    <span className="text-[#4b4b4b]">Capacity: {event.capacity}</span>
+                  </div>
+                )}
               </div>
               
-              <div className="space-y-4">
-                <p className="text-gray-600">
-                  Apply to become a vendor at {event.name}. Table cost: ${event.vendorPrice}
-                </p>
-                <input
-                  type="text"
-                  placeholder="Business Name"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green"
-                />
-                <input
-                  type="email"
-                  placeholder="Email Address"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green"
-                />
-                <textarea
-                  placeholder="Describe your products/services"
-                  rows={4}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green"
-                />
-                <button className="w-full bg-brand-green text-white py-2 px-4 rounded-lg hover:bg-brand-green/80 transition-colors">
-                  Submit Application
-                </button>
+              <div className="mt-6 pt-4 border-t border-[#7F232E]/10">
+                <Button
+                  variant="primary"
+                  className="w-full flex items-center justify-center gap-2"
+                  onClick={() => {
+                    // Generate and download iCal
+                    window.open(`/api/events/${event.id}/ical`, '_blank');
+                  }}
+                >
+                  <Download className="h-4 w-4" />
+                  Add to Calendar
+                </Button>
               </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+            </Card>
+            
+            {/* Social Links */}
+            {event.socialLinks && (
+              <Card className="p-6">
+                <h3 className="font-semibold text-[#2b2b2b] mb-4">Follow Event</h3>
+                <div className="space-y-2">
+                  {event.socialLinks.website && (
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start"
+                      onClick={() => window.open(event.socialLinks!.website, '_blank')}
+                    >
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Website
+                    </Button>
+                  )}
+                  {event.socialLinks.instagram && (
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start"
+                      onClick={() => window.open(event.socialLinks!.instagram, '_blank')}
+                    >
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Instagram
+                    </Button>
+                  )}
+                  {event.socialLinks.facebook && (
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start"
+                      onClick={() => window.open(event.socialLinks!.facebook, '_blank')}
+                    >
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      Facebook
+                    </Button>
+                  )}
+                </div>
+              </Card>
+            )}
+            
+            {/* Contact Coordinator */}
+            <Card className="p-6">
+              <h3 className="font-semibold text-[#2b2b2b] mb-4">Have Questions?</h3>
+              <p className="text-sm text-[#4b4b4b] mb-4">
+                Contact the event coordinator for more information.
+              </p>
+              <Button
+                variant="secondary"
+                className="w-full"
+                onClick={() => setShowQuestionModal(true)}
+              >
+                <MessageCircle className="h-4 w-4 mr-2" />
+                Ask a Question
+              </Button>
+            </Card>
+          </div>
+        </div>
+      </div>
+
+      {/* Interest Modal */}
+      {showInterestModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-md p-6">
+            <h3 className="text-lg font-semibold text-[#2b2b2b] mb-4">Show Interest</h3>
+            <p className="text-[#4b4b4b] mb-4">
+              Let the coordinator know you're interested in this event.
+            </p>
+            
+            <div className="space-y-3 mb-6">
+              <label className="flex items-center gap-3">
+                <input
+                  type="radio"
+                  name="interest"
+                  value="INTERESTED"
+                  checked={interestStatus === 'INTERESTED'}
+                  onChange={(e) => setInterestStatus(e.target.value as 'INTERESTED' | 'GOING')}
+                  className="text-[#7F232E]"
+                />
+                <span className="text-[#4b4b4b]">I'm interested</span>
+              </label>
+              <label className="flex items-center gap-3">
+                <input
+                  type="radio"
+                  name="interest"
+                  value="GOING"
+                  checked={interestStatus === 'GOING'}
+                  onChange={(e) => setInterestStatus(e.target.value as 'INTERESTED' | 'GOING')}
+                  className="text-[#7F232E]"
+                />
+                <span className="text-[#4b4b4b]">I'm going</span>
+              </label>
+            </div>
+            
+            <div className="flex gap-3">
+              <Button
+                variant="secondary"
+                className="flex-1"
+                onClick={() => setShowInterestModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                className="flex-1"
+                onClick={() => interestMutation.mutate(interestStatus)}
+                disabled={interestMutation.isPending}
+              >
+                {interestMutation.isPending ? 'Submitting...' : 'Submit'}
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Review Modal */}
+      {showReviewModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-md p-6">
+            <h3 className="text-lg font-semibold text-[#2b2b2b] mb-4">Write a Review</h3>
+            
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-[#4b4b4b] mb-2">Rating</label>
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map(rating => (
+                  <button
+                    key={rating}
+                    onClick={() => setReviewRating(rating)}
+                    className="focus:outline-none"
+                    title={`Rate ${rating} star${rating > 1 ? 's' : ''}`}
+                  >
+                    <Star
+                      className={`h-6 w-6 ${
+                        rating <= reviewRating
+                          ? 'fill-yellow-400 text-yellow-400'
+                          : 'text-gray-300'
+                      }`}
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+            
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-[#4b4b4b] mb-2">Review</label>
+              <textarea
+                value={reviewBody}
+                onChange={(e) => setReviewBody(e.target.value)}
+                placeholder="Share your experience..."
+                rows={4}
+                className="w-full px-3 py-2 rounded-lg border border-[#7F232E]/20 bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#7F232E]/30"
+              />
+            </div>
+            
+            <div className="flex gap-3">
+              <Button
+                variant="secondary"
+                className="flex-1"
+                onClick={() => setShowReviewModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                className="flex-1"
+                onClick={() => reviewMutation.mutate()}
+                disabled={reviewMutation.isPending}
+              >
+                {reviewMutation.isPending ? 'Submitting...' : 'Submit Review'}
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Question Modal */}
+      {showQuestionModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-md p-6">
+            <h3 className="text-lg font-semibold text-[#2b2b2b] mb-4">Ask a Question</h3>
+            <p className="text-[#4b4b4b] mb-4">
+              Send a message to the event coordinator.
+            </p>
+            
+            <div className="mb-6">
+              <textarea
+                value={questionMessage}
+                onChange={(e) => setQuestionMessage(e.target.value)}
+                placeholder="What would you like to know?"
+                rows={4}
+                className="w-full px-3 py-2 rounded-lg border border-[#7F232E]/20 bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#7F232E]/30"
+              />
+            </div>
+            
+            <div className="flex gap-3">
+              <Button
+                variant="secondary"
+                className="flex-1"
+                onClick={() => setShowQuestionModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                className="flex-1"
+                onClick={() => questionMutation.mutate()}
+                disabled={questionMutation.isPending || !questionMessage.trim()}
+              >
+                {questionMutation.isPending ? 'Sending...' : 'Send Message'}
+              </Button>
+            </div>
+          </Card>
+        </div>
+      )}
+      </div>
+    </>
   );
-} 
+}

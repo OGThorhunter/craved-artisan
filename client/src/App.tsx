@@ -30,6 +30,7 @@ import VendorOrdersPage from './pages/VendorOrdersPage';
 import VendorPromotionsPage from './pages/VendorPromotionsPage';
 import LabelProfilesPage from './pages/LabelProfilesPage';
 import TemplateEditorPage from './pages/labels/TemplateEditorPage';
+import VendorLabelManagementPage from './pages/VendorLabelManagementPage';
 import VendorRecipeCreatePage from './pages/VendorRecipeCreatePage';
 import VendorRecipeEditPage from './pages/VendorRecipeEditPage';
 import RecipeVersionHistoryPage from './pages/RecipeVersionHistoryPage';
@@ -48,9 +49,14 @@ import KnowledgeBasePage from './pages/KnowledgeBasePage';
 import RecipeToolPage from './pages/RecipeToolPage';
 import EventDetailPage from './pages/EventDetailPage';
 import CommunityPage from './pages/CommunityPage';
-import MarketplacePage from './pages/MarketplacePage';
-import AboutPage from './pages/AboutPage';
+import MarketplaceHomePage from './pages/MarketplaceHomePage';
+import MarketplaceSearchPage from './pages/MarketplaceSearchPage';
+import MarketplaceVendorPage from './pages/MarketplaceVendorPage';
 import ContactPage from './pages/ContactPage';
+import AboutPage from './pages/AboutPage';
+import EventsSearchPage from './pages/EventsSearchPage';
+import EventsHomePage from './pages/EventsHomePage';
+import EventsCoordinatorConsole from './pages/EventsCoordinatorConsole';
 import VendorWatchlistPage from './pages/VendorWatchlistPage';
 import VendorSalesWindowsPage from './pages/VendorSalesWindowsPage';
 import VendorDeliveryBatchingPage from './pages/VendorDeliveryBatchingPage';
@@ -107,12 +113,16 @@ function App() {
             <Route path="/checkout/success" component={CheckoutSuccessPage} />
             
             {/* Public Pages */}
-            <Route path="/marketplace" component={MarketplacePage} />
+            <Route path="/marketplace" component={MarketplaceHomePage} />
+            <Route path="/marketplace/search" component={MarketplaceSearchPage} />
+            <Route path="/marketplace/vendor/:slug" component={MarketplaceVendorPage} />
             <Route path="/about" component={AboutPage} />
             <Route path="/contact" component={ContactPage} />
             <Route path="/community" component={CommunityPage} />
-            <Route path="/events" component={EventDetailPage} />
-            <Route path="/events/:eventId" component={EventDetailPage} />
+            <Route path="/events" component={EventsHomePage} />
+            <Route path="/events/search" component={EventsSearchPage} />
+            <Route path="/events/:slug" component={EventDetailPage} />
+            <Route path="/events/coordinator" component={EventsCoordinatorConsole} />
             <Route path="/search" component={AdvancedSearchPage} />
             <Route path="/help" component={KnowledgeBasePage} />
             <Route path="/recipes" component={RecipeToolPage} />
@@ -195,6 +205,11 @@ function App() {
             <Route path="/dashboard/vendor/orders">
               <ProtectedRoute role="VENDOR">
                 <VendorOrdersPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/dashboard/vendor/labels">
+              <ProtectedRoute role="VENDOR">
+                <VendorLabelManagementPage />
               </ProtectedRoute>
             </Route>
             <Route path="/dashboard/vendor/promotions">

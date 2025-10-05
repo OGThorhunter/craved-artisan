@@ -8,7 +8,7 @@ import { pulseRouter } from './routes/pulse.router';
 import { vendorRouter } from './routes/vendor.router';
 import { ingredientsRouter } from './routes/ingredients.router';
 // import { inventoryRouter } from './routes/inventory.router'; // Temporarily disabled
-import { aiInsightsRouter } from './routes/ai-insights.router';
+import aiInsightsRouter from './routes/ai-insights.router';
 import { b2bNetworkRouter } from './routes/b2b-network.router';
 import { aiReceiptParserRouter } from './routes/ai-receipt-parser.router';
 import { unitConverterRouter } from './routes/unit-converter.router';
@@ -29,8 +29,34 @@ import inventoryExportRouter from './routes/inventory-export.router';
 import systemMessagesRouter from './routes/system-messages.router';
 // AI Routes
 import aiReceiptRouter from './routes/ai-receipt.router';
-import aiInsightsRouter from './routes/ai-insights.router';
 import aiSystemMessagesRouter from './routes/ai-system-messages.router';
+
+// Orders Management Routes
+import ordersManagementRouter from './routes/orders-management.router';
+import ordersViewsRouter from './routes/orders-views.router';
+import ordersPrintingRouter from './routes/orders-printing.router';
+import ordersCustomFieldsRouter from './routes/orders-custom-fields.router';
+import aiOrdersInsightsRouter from './routes/ai-orders-insights.router';
+
+// Label Management Routes
+import labelsManagementRouter from './routes/labels-management.router';
+import labelsSmartQueueRouter from './routes/labels-smart-queue.router';
+
+// Marketplace Routes
+import marketplaceSearchRouter from './routes/marketplace-search.router';
+import marketplaceFavoritesRouter from './routes/marketplace-favorites.router';
+import marketplaceSavedSearchesRouter from './routes/marketplace-saved-searches.router';
+import marketplaceTrackingRouter from './routes/marketplace-tracking.router';
+import marketplaceEmbeddingsRouter from './routes/marketplace-embeddings.router';
+
+// Contact Routes
+import contactRouter from './routes/contact.router';
+
+// Events Routes
+import eventsSearchRouter from './routes/events-search.router';
+import eventsDetailRouter from './routes/events-detail.router';
+import eventsManagementRouter from './routes/events-management.router';
+import eventsCoordinatorRouter from './routes/events-coordinator.router';
 
 const app = express();
 const PORT = Number(process.env.PORT || 3001);
@@ -119,6 +145,33 @@ app.use('/api/vendor/system-messages', systemMessagesRouter);
 app.use('/api/ai/receipt', aiReceiptRouter);
 app.use('/api/ai/insights', aiInsightsRouter);
 app.use('/api/ai/system-messages', aiSystemMessagesRouter);
+
+// Orders Management Routes
+app.use('/api/vendor/orders', ordersManagementRouter);
+app.use('/api/vendor/orders', ordersViewsRouter);
+app.use('/api/vendor/orders', ordersPrintingRouter);
+app.use('/api/vendor/order-field-defs', ordersCustomFieldsRouter);
+app.use('/api/ai/insights', aiOrdersInsightsRouter);
+
+// Label Management Routes
+app.use('/api/vendor/labels', labelsManagementRouter);
+app.use('/api/vendor/labels', labelsSmartQueueRouter);
+
+// Marketplace Routes
+app.use('/api/market', marketplaceSearchRouter);
+app.use('/api/user/favorites', marketplaceFavoritesRouter);
+app.use('/api/market/saved-search', marketplaceSavedSearchesRouter);
+app.use('/api/market/track', marketplaceTrackingRouter);
+app.use('/api/market/embeddings', marketplaceEmbeddingsRouter);
+
+// Contact Routes
+app.use('/', contactRouter);
+
+// Events Routes
+app.use('/api/events', eventsSearchRouter);
+app.use('/api/events', eventsDetailRouter);
+app.use('/api/events', eventsManagementRouter);
+app.use('/api/events', eventsCoordinatorRouter);
 
 // Start server
 app.listen(PORT, () => {

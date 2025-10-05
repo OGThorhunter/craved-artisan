@@ -28,6 +28,7 @@
     "test:client": "cd client && npm run test",
     "db:generate": "cd server && npx prisma generate",
     "db:migrate": "cd server && npx prisma migrate dev",
+    "db:seed": "tsx scripts/seed-vendor-dashboard.ts",
     "db:studio": "cd server && npx prisma studio",
     "db:reset": "cd server && npx prisma migrate reset",
     "snapshot": "tsx scripts/projectSnapshot.ts > snapshot.json",
@@ -36,6 +37,7 @@
     "gen:validators": "tsx scripts/generateValidators.ts"
   },
   "devDependencies": {
+    "@faker-js/faker": "^10.0.0",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.23",
     "@types/express-rate-limit": "^6.0.0",
@@ -64,7 +66,6 @@
   "license": "MIT",
   "main": "index.js",
   "dependencies": {
-    "@faker-js/faker": "^9.9.0",
     "@prisma/client": "^6.15.0",
     "@prisma/instrumentation": "^6.15.0",
     "@types/bcryptjs": "^2.4.6",

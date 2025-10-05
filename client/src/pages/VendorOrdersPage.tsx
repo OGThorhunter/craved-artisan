@@ -1,462 +1,200 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useLocation } from 'wouter';
-import { toast } from 'react-hot-toast';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, 
   Search, 
-  Filter, 
   Download, 
-  Printer, 
+  Bell, 
   Eye, 
   Edit, 
-  Trash2, 
-  Calendar,
   Clock,
-  User,
+  CheckCircle,
   Package,
   Truck,
-  CheckCircle,
-  AlertCircle,
-  XCircle,
-  MoreHorizontal,
-  BarChart3,
-  FileText,
-  Tag,
-  CreditCard
+  Calendar,
+  Grid,
+  List,
+  Kanban,
+  ChefHat,
+  Layers
 } from 'lucide-react';
-import { Link } from 'wouter';
-import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
-import OrderTracker from '../components/orders/OrderTracker';
-import OrderKanbanBoard from '../components/orders/OrderKanbanBoard';
-import OrderAnalytics from '../components/orders/OrderAnalytics';
-import SimpleLabelPrintModal from '../components/labels/SimpleLabelPrintModal';
-import PrintLabelModal from '../components/labels/PrintLabelModal';
-import OrderListPrintModal from '../components/orders/OrderListPrintModal';
-import OrderDetailModal from '../components/orders/OrderDetailModal';
+import VendorDashboardLayout from '../layouts/VendorDashboardLayout';
+import Button from '../components/ui/Button';
+import Card from '../components/ui/Card';
+import { Badge } from '../components/ui/Badge';
+import { Input } from '../components/ui/Input';
+import { toast } from 'react-hot-toast';
+import SystemMessagesDrawer from '../components/inventory/SystemMessagesDrawer';
+import AIInsightsDrawer from '../components/inventory/AIInsightsDrawer';
 
 // Types
 interface Order {
   id: string;
   orderNumber: string;
-  customerId: string;
   customerName: string;
-  customerEmail: string;
-  customerPhone?: string;
-  status: 'pending' | 'confirmed' | 'in_production' | 'ready_for_pickup' | 'shipped' | 'delivered' | 'cancelled';
-  priority: 'low' | 'medium' | 'high' | 'urgent';
-  totalAmount: number;
-  items: OrderItem[];
-  shippingAddress: Address;
-  billingAddress: Address;
-  notes?: string;
+  customerEmail?: string;
+  phone?: string;
+  status: string;
+  priority: string;
+  source?: string;
+  salesWindowId?: string;
   createdAt: string;
-  updatedAt: string;
-  expectedDeliveryDate: string;
-  actualDeliveryDate?: string;
-  productionStartDate?: string;
-  productionEndDate?: string;
-  assignedTo?: string;
-  tags: string[];
+  expectedAt?: string;
+  dueAt?: string;
+  paymentStatus?: string;
+  notes?: string;
+  customFields?: Record<string, unknown>;
+  station?: string;
+  tags?: string[];
+  total: number;
+  orderItems: OrderItem[];
+  salesWindow?: {
+    id: string;
+    name: string;
+  };
+  timeline?: OrderTimeline[];
 }
 
 interface OrderItem {
   id: string;
   productId: string;
   productName: string;
+  variantName?: string;
   quantity: number;
   unitPrice: number;
-  totalPrice: number;
-  specifications?: string;
-  status: 'pending' | 'in_production' | 'completed' | 'cancelled';
+  total: number;
+  notes?: string;
+  status: string;
+  madeQty: number;
+  product: {
+    id: string;
+    name: string;
+    imageUrl?: string;
+  };
 }
 
-interface Address {
-  street: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  country: string;
+interface OrderTimeline {
+  id: string;
+  type: string;
+  data?: Record<string, unknown>;
+  createdAt: string;
 }
 
-// Dummy data
-const dummyOrders: Order[] = [
-  {
-    id: 'order-1',
-    orderNumber: 'ORD-2025-001',
-    customerId: 'cust-1',
-    customerName: 'Sarah Johnson',
-    customerEmail: 'sarah.johnson@restaurantgroup.com',
-    customerPhone: '(555) 123-4567',
-    status: 'in_production',
-    priority: 'high',
-    totalAmount: 1250.00,
-    items: [
-      {
-        id: 'item-1',
-        productId: 'prod-1',
-        productName: 'Custom Logo Aprons',
-        quantity: 50,
-        unitPrice: 15.00,
-        totalPrice: 750.00,
-        specifications: 'Red aprons with white logo, size M-L',
-        status: 'in_production'
-      },
-      {
-        id: 'item-2',
-        productId: 'prod-2',
-        productName: 'Chef Hats',
-        quantity: 25,
-        unitPrice: 20.00,
-        totalPrice: 500.00,
-        specifications: 'White chef hats with embroidered logo',
-        status: 'pending'
-      }
-    ],
-    shippingAddress: {
-      street: '123 Main St',
-      city: 'New York',
-      state: 'NY',
-      zipCode: '10001',
-      country: 'USA'
-    },
-    billingAddress: {
-      street: '123 Main St',
-      city: 'New York',
-      state: 'NY',
-      zipCode: '10001',
-      country: 'USA'
-    },
-    notes: 'Rush order for grand opening event',
-    createdAt: '2025-01-15T10:00:00Z',
-    updatedAt: '2025-01-20T14:30:00Z',
-    expectedDeliveryDate: '2025-02-01',
-    productionStartDate: '2025-01-18T09:00:00Z',
-    assignedTo: 'Production Team A',
-    tags: ['rush', 'restaurant', 'grand-opening']
-  },
-  {
-    id: 'order-2',
-    orderNumber: 'ORD-2025-002',
-    customerId: 'cust-2',
-    customerName: 'Michael Chen',
-    customerEmail: 'michael.chen@deliveryapp.com',
-    customerPhone: '(555) 987-6543',
-    status: 'confirmed',
-    priority: 'medium',
-    totalAmount: 850.00,
-    items: [
-      {
-        id: 'item-3',
-        productId: 'prod-3',
-        productName: 'Delivery Bags',
-        quantity: 100,
-        unitPrice: 8.50,
-        totalPrice: 850.00,
-        specifications: 'Insulated delivery bags with company logo',
-        status: 'pending'
-      }
-    ],
-    shippingAddress: {
-      street: '456 Oak Ave',
-      city: 'San Francisco',
-      state: 'CA',
-      zipCode: '94102',
-      country: 'USA'
-    },
-    billingAddress: {
-      street: '456 Oak Ave',
-      city: 'San Francisco',
-      state: 'CA',
-      zipCode: '94102',
-      country: 'USA'
-    },
-    notes: 'Standard delivery timeline',
-    createdAt: '2025-01-18T14:20:00Z',
-    updatedAt: '2025-01-18T14:20:00Z',
-    expectedDeliveryDate: '2025-02-15',
-    assignedTo: 'Production Team B',
-    tags: ['delivery', 'bags', 'standard']
-  },
-  {
-    id: 'order-3',
-    orderNumber: 'ORD-2025-003',
-    customerId: 'cust-3',
-    customerName: 'Emma Rodriguez',
-    customerEmail: 'emma@boutiquestyle.com',
-    customerPhone: '(555) 456-7890',
-    status: 'ready_for_pickup',
-    priority: 'low',
-    totalAmount: 320.00,
-    items: [
-      {
-        id: 'item-4',
-        productId: 'prod-4',
-        productName: 'Custom T-Shirts',
-        quantity: 20,
-        unitPrice: 16.00,
-        totalPrice: 320.00,
-        specifications: 'Black t-shirts with pink logo, sizes S-XL',
-        status: 'completed'
-      }
-    ],
-    shippingAddress: {
-      street: '789 Pine St',
-      city: 'Miami',
-      state: 'FL',
-      zipCode: '33101',
-      country: 'USA'
-    },
-    billingAddress: {
-      street: '789 Pine St',
-      city: 'Miami',
-      state: 'FL',
-      zipCode: '33101',
-      country: 'USA'
-    },
-    notes: 'Customer prefers pickup over shipping',
-    createdAt: '2025-01-10T09:15:00Z',
-    updatedAt: '2025-01-22T16:45:00Z',
-    expectedDeliveryDate: '2025-01-25',
-    actualDeliveryDate: '2025-01-22T16:45:00Z',
-    productionStartDate: '2025-01-12T08:00:00Z',
-    productionEndDate: '2025-01-20T17:00:00Z',
-    assignedTo: 'Production Team A',
-    tags: ['t-shirts', 'pickup', 'completed']
-  }
-];
+
+
+type ViewMode = 'list' | 'tracker' | 'board' | 'calendar' | 'kds' | 'batching';
 
 const VendorOrdersPage: React.FC = () => {
-  const [, setLocation] = useLocation();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [priorityFilter, setPriorityFilter] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<'createdAt' | 'expectedDeliveryDate' | 'totalAmount' | 'status'>('createdAt');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [priorityFilter, setPriorityFilter] = useState<string>('');
+  const [showSystemMessages, setShowSystemMessages] = useState(false);
+  const [showAIInsights, setShowAIInsights] = useState(false);
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
-  const [viewMode, setViewMode] = useState<'list' | 'tracker' | 'kanban' | 'analytics'>('tracker');
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [showLabelPrinting, setShowLabelPrinting] = useState(false);
-  const [showLabelTemplateManager, setShowLabelTemplateManager] = useState(false);
-  const [showPrintLabelModal, setShowPrintLabelModal] = useState(false);
-  const [selectedOrderForLabel, setSelectedOrderForLabel] = useState<Order | null>(null);
-  const [showNewOrderModal, setShowNewOrderModal] = useState(false);
-  const [newOrderForm, setNewOrderForm] = useState({
-    customerName: '',
-    customerEmail: '',
-    customerPhone: '',
-    orderDate: new Date().toISOString().split('T')[0],
-    expectedDeliveryDate: '',
-    status: 'pending' as const,
-    priority: 'medium' as const,
-    salesWindowId: '',
-    items: [] as Array<{productId: string; productName: string; quantity: number; unitPrice: number; specifications: string}>,
-    specialInstructions: ''
-  });
-  const [showOrderListPrinting, setShowOrderListPrinting] = useState(false);
-  const [selectedOrdersForLabels, setSelectedOrdersForLabels] = useState<string[]>([]);
-  const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | '1y' | 'all'>('30d');
-
-  // Fetch orders from API
-  const { data: ordersResponse, isLoading } = useQuery({
-    queryKey: ['orders'],
-    queryFn: async () => {
-      const response = await fetch('/api/orders', {
-        credentials: 'include',
-      });
-      if (!response.ok) {
-        throw new Error('Failed to fetch orders');
-      }
-      return response.json();
-    },
-  });
-
-  const orders = ordersResponse?.data || [];
-
-  // Fetch products for order creation
-  const { data: productsResponse } = useQuery({
-    queryKey: ['vendor-products'],
-    queryFn: async () => {
-      const response = await fetch('/api/vendor/products', {
-        credentials: 'include',
-      });
-      if (!response.ok) {
-        throw new Error('Failed to fetch products');
-      }
-      return response.json();
-    },
-  });
-
-  const products = productsResponse || [];
-
-  // Fetch sales windows for order creation
-  const { data: salesWindowsResponse } = useQuery({
-    queryKey: ['sales-windows'],
-    queryFn: async () => {
-      const response = await fetch('/api/sales-windows', {
-        credentials: 'include',
-      });
-      if (!response.ok) {
-        throw new Error('Failed to fetch sales windows');
-      }
-      return response.json();
-    },
-  });
-
-  const salesWindows = salesWindowsResponse?.data || [];
 
   const queryClient = useQueryClient();
 
-  // Create new order function
-  const createOrderMutation = useMutation({
-    mutationFn: async (orderData: typeof newOrderForm) => {
-      const response = await fetch('/api/orders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(orderData),
+  // Fetch orders
+  const { data: ordersData, isLoading: isLoadingOrders } = useQuery({
+    queryKey: ['orders', { searchQuery, statusFilter, priorityFilter, viewMode }],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (searchQuery) params.append('q', searchQuery);
+      if (statusFilter) params.append('status', statusFilter);
+      if (priorityFilter) params.append('priority', priorityFilter);
+      params.append('view', viewMode);
+
+      const response = await fetch(`/api/vendor/orders?${params}`, {
+        credentials: 'include'
       });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to create order');
-      }
-
+      if (!response.ok) throw new Error('Failed to fetch orders');
       return response.json();
-    },
-    onSuccess: (data) => {
-      console.log('Order created successfully:', data);
-      toast.success('Order created successfully!');
-      setShowNewOrderModal(false);
-      
-      // Add the new order to the cache
-      queryClient.setQueryData(['orders'], (oldData: any) => {
-        if (!oldData) return { success: true, data: [data.data] };
-        return {
-          ...oldData,
-          data: [...oldData.data, data.data]
-        };
-      });
-      
-      // Reset form
-      setNewOrderForm({
-        customerName: '',
-        customerEmail: '',
-        customerPhone: '',
-        orderDate: new Date().toISOString().split('T')[0],
-        expectedDeliveryDate: '',
-        status: 'pending' as const,
-        priority: 'medium' as const,
-        salesWindowId: '',
-        items: [],
-        specialInstructions: ''
-      });
-    },
-    onError: (error: Error) => {
-      toast.error(`Failed to create order: ${error.message}`);
     },
   });
 
-  // Form helper functions
-  const updateFormField = (field: string, value: any) => {
-    setNewOrderForm(prev => ({ ...prev, [field]: value }));
+  // Fetch AI insights
+  const { data: aiInsights, isLoading: isLoadingInsights } = useQuery({
+    queryKey: ['ai-orders-insights'],
+    queryFn: async () => {
+      const response = await fetch('/api/ai/insights/orders?range=7d', {
+        credentials: 'include'
+      });
+      if (!response.ok) throw new Error('Failed to fetch AI insights');
+      return response.json();
+    },
+    refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
+  });
+
+  // Bulk status update mutation
+  const bulkStatusMutation = useMutation({
+    mutationFn: async ({ orderIds, status }: { orderIds: string[]; status: string }) => {
+      const response = await fetch('/api/vendor/orders/bulk-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ ids: orderIds, status }),
+      });
+      if (!response.ok) throw new Error('Failed to update orders');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      toast.success('Orders updated successfully');
+      setSelectedOrders([]);
+    },
+    onError: () => {
+      toast.error('Failed to update orders');
+    },
+  });
+
+  const orders = ordersData?.orders || [];
+  const stats = ordersData?.stats || {};
+
+  // Calculate summary stats
+  const summaryStats = {
+    total: orders.length,
+    dueToday: orders.filter(order => {
+      if (!order.dueAt) return false;
+      const today = new Date().toDateString();
+      return new Date(order.dueAt).toDateString() === today;
+    }).length,
+    delivered: stats.DELIVERED?.count || 0,
+    finished: (stats.DELIVERED?.count || 0) + (stats.PICKED_UP?.count || 0),
+    revenue: Number(Object.values(stats).reduce((sum: number, stat: { total?: number }) => sum + (stat.total || 0), 0)),
   };
 
-  const addOrderItem = () => {
-    setNewOrderForm(prev => ({
-      ...prev,
-      items: [...prev.items, { productId: '', productName: '', quantity: 1, unitPrice: 0, specifications: '' }]
-    }));
+  const getStatusColor = (status: string) => {
+    const colors = {
+      PENDING: 'bg-yellow-100 text-yellow-800',
+      CONFIRMED: 'bg-blue-100 text-blue-800',
+      IN_PRODUCTION: 'bg-orange-100 text-orange-800',
+      READY: 'bg-green-100 text-green-800',
+      OUT_FOR_DELIVERY: 'bg-purple-100 text-purple-800',
+      DELIVERED: 'bg-gray-100 text-gray-800',
+      PICKED_UP: 'bg-gray-100 text-gray-800',
+      CANCELLED: 'bg-red-100 text-red-800',
+    };
+    return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
 
-  const updateOrderItem = (index: number, field: string, value: any) => {
-    setNewOrderForm(prev => ({
-      ...prev,
-      items: prev.items.map((item, i) => 
-        i === index ? { ...item, [field]: value } : item
-      )
-    }));
+  const getPriorityColor = (priority: string) => {
+    const colors = {
+      LOW: 'bg-gray-100 text-gray-800',
+      MEDIUM: 'bg-blue-100 text-blue-800',
+      HIGH: 'bg-orange-100 text-orange-800',
+      RUSH: 'bg-red-100 text-red-800',
+    };
+    return colors[priority as keyof typeof colors] || 'bg-gray-100 text-gray-800';
   };
 
-  const removeOrderItem = (index: number) => {
-    setNewOrderForm(prev => ({
-      ...prev,
-      items: prev.items.filter((_, i) => i !== index)
-    }));
-  };
-
-  const handleCreateOrder = () => {
-    if (!newOrderForm.customerName || !newOrderForm.customerEmail || newOrderForm.items.length === 0) {
-      toast.error('Please fill in all required fields and add at least one item');
+  const handleBulkStatusUpdate = (status: string) => {
+    if (selectedOrders.length === 0) {
+      toast.error('Please select orders to update');
       return;
     }
-
-    // Validate items
-    const hasValidItems = newOrderForm.items.every(item => 
-      item.productName && item.quantity > 0 && item.unitPrice > 0
-    );
-
-    if (!hasValidItems) {
-      toast.error('Please ensure all items have valid product name, quantity, and price');
-      return;
-    }
-
-    createOrderMutation.mutate(newOrderForm);
-  };
-
-  // Filter and sort orders
-  const filteredOrders = orders
-    .filter(order => {
-      const matchesSearch = order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           order.customerEmail.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
-      const matchesPriority = priorityFilter === 'all' || order.priority === priorityFilter;
-      return matchesSearch && matchesStatus && matchesPriority;
-    })
-    .sort((a, b) => {
-      let aValue: any = a[sortBy];
-      let bValue: any = b[sortBy];
-      
-      if (sortBy === 'createdAt' || sortBy === 'expectedDeliveryDate') {
-        aValue = new Date(aValue).getTime();
-        bValue = new Date(bValue).getTime();
-      }
-      
-      if (sortOrder === 'asc') {
-        return aValue > bValue ? 1 : -1;
-      } else {
-        return aValue < bValue ? 1 : -1;
-      }
-    });
-
-  // Customizable order status configuration
-  // This would typically come from vendor settings/preferences
-  // Vendors can customize their order workflow to match their business process
-  // Example: "Start" → "Middle" → "End" → "Finished"
-  const vendorOrderStatuses = [
-    { id: 'pending', label: 'Start', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
-    { id: 'confirmed', label: 'Middle', color: 'bg-blue-100 text-blue-800', icon: CheckCircle },
-    { id: 'in_production', label: 'End', color: 'bg-orange-100 text-orange-800', icon: Package },
-    { id: 'ready_for_pickup', label: 'Finished', color: 'bg-green-100 text-green-800', icon: CheckCircle },
-    { id: 'shipped', label: 'Shipped', color: 'bg-indigo-100 text-indigo-800', icon: Truck },
-    { id: 'delivered', label: 'Delivered', color: 'bg-purple-100 text-purple-800', icon: Truck },
-    { id: 'cancelled', label: 'Cancelled', color: 'bg-red-100 text-red-800', icon: XCircle },
-  ];
-
-  // Convert array to object for backward compatibility
-  const statusConfig = vendorOrderStatuses.reduce((acc, status) => {
-    acc[status.id] = { label: status.label, color: status.color, icon: status.icon };
-    return acc;
-  }, {} as Record<string, { label: string; color: string; icon: any }>);
-
-  const priorityConfig = {
-    low: { label: 'Low', color: 'bg-gray-100 text-gray-800' },
-    medium: { label: 'Medium', color: 'bg-blue-100 text-blue-800' },
-    high: { label: 'High', color: 'bg-orange-100 text-orange-800' },
-    urgent: { label: 'Urgent', color: 'bg-red-100 text-red-800' },
+    bulkStatusMutation.mutate({ orderIds: selectedOrders, status });
   };
 
   const handleSelectOrder = (orderId: string) => {
@@ -468,473 +206,277 @@ const VendorOrdersPage: React.FC = () => {
   };
 
   const handleSelectAll = () => {
-    if (selectedOrders.length === filteredOrders.length) {
+    if (selectedOrders.length === orders.length) {
       setSelectedOrders([]);
     } else {
-      setSelectedOrders(filteredOrders.map(order => order.id));
+      setSelectedOrders(orders.map(order => order.id));
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
-
-  const handleOrderClick = (order: Order) => {
-    setSelectedOrder(order);
-  };
-
-  const handlePrintLabels = () => {
-    if (selectedOrders.length > 0) {
-      setSelectedOrdersForLabels(selectedOrders);
-    setShowLabelPrinting(true);
-    } else {
-      // If no orders selected, show all orders
-      setSelectedOrdersForLabels(filteredOrders.map(order => order.id));
-      setShowLabelPrinting(true);
-    }
-  };
-
-  const handleManageTemplates = () => {
-    alert('Label template management will be available in a future update. For now, you can use the basic label printing feature.');
-  };
-
-  const handlePrintSelectedLabels = (orderIds: string[]) => {
-    setSelectedOrdersForLabels(orderIds);
-    setShowLabelPrinting(true);
-  };
-
-  const handlePrintOrderLabel = (order: Order) => {
-    setSelectedOrderForLabel(order);
-    setShowPrintLabelModal(true);
-  };
-
-  const handlePrintOrderList = () => {
-    setShowOrderListPrinting(true);
-  };
-
-  const handleStatusUpdate = (orderId: string, status: string) => {
-    // In a real app, this would update the backend
-    console.log(`Updating order ${orderId} status to ${status}`);
-    
-    // Update the order status in the query cache
-    queryClient.setQueryData(['orders'], (oldData: any) => {
-      if (!oldData) return oldData;
-      const updatedOrders = oldData.data.map((order: any) => 
-        order.id === orderId 
-          ? { ...order, status: status as any, updatedAt: new Date().toISOString() }
-          : order
-      );
-      console.log('Updated orders:', updatedOrders.find((o: any) => o.id === orderId));
-      return { ...oldData, data: updatedOrders };
-    });
-  };
-
-  const handleAssign = (orderId: string, assignedTo: string) => {
-    // In a real app, this would update the backend
-    console.log(`Assigning order ${orderId} to ${assignedTo}`);
-  };
-
-  const handleOrderEdit = (order: Order) => {
-    setSelectedOrder(order);
-  };
-
-  const handleNewOrder = () => {
-    // Create a new empty order object for editing
-    const newOrder: Order = {
-      id: 'new',
-      orderNumber: '',
-      customerId: '',
-      customerName: '',
-      customerEmail: '',
-      customerPhone: '',
-      status: 'pending',
-      priority: 'medium',
-      totalAmount: 0,
-      items: [],
-      shippingAddress: {
-        street: '',
-        city: '',
-        state: '',
-        zipCode: '',
-        country: ''
-      },
-      billingAddress: {
-        street: '',
-        city: '',
-        state: '',
-        zipCode: '',
-        country: ''
-      },
-      notes: '',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      expectedDeliveryDate: '',
-      productionStartDate: '',
-      assignedTo: '',
-      tags: []
-    };
-    setSelectedOrder(newOrder);
-  };
-
-  const handleOrderSave = (order: Order) => {
-    // In a real app, this would save to the backend
-    console.log('Saving new order:', order);
-    // For now, just close the modal
-    setSelectedOrder(null);
-  };
-
-  const handleOrderDuplicate = (order: Order) => {
-    // Create a duplicate order with a new ID and order number
-    const duplicatedOrder: Order = {
-      ...order,
-      id: `order-${Date.now()}`,
-      orderNumber: `ORD-${String(Date.now()).slice(-6)}`,
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      // Clear delivery dates for the duplicate
-      expectedDeliveryDate: '',
-      actualDeliveryDate: undefined,
-      productionStartDate: undefined,
-      productionEndDate: undefined,
-    };
-    
-    // Open the modal with the duplicated order for editing
-    setSelectedOrder(duplicatedOrder);
-    console.log('Duplicating order:', duplicatedOrder);
-  };
-
-  const handleOrderDelete = (orderId: string) => {
-    // In a real app, this would delete from the backend
-    console.log(`Deleting order ${orderId}`);
-  };
-
-  if (isLoading) {
     return (
-      <VendorDashboardLayout>
-      <div className="min-h-screen bg-white">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        </div>
-      </div>
-      </VendorDashboardLayout>
-    );
-  }
-
-  return (
     <VendorDashboardLayout>
-      <div className="min-h-screen bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Header */}
-          <div className="mb-8">
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <div className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
+              <div className="flex items-center space-x-4">
+                <h1 className="text-2xl font-bold text-gray-900">Orders Management</h1>
+                <Badge variant="default" className="bg-blue-100 text-blue-800">
+                  {summaryStats.total} Total
+                </Badge>
+              </div>
+              
+              <div className="flex items-center space-x-4">
+                <Button
+                  variant="secondary"
+                  onClick={() => setShowSystemMessages(true)}
+                  className="relative text-xs px-2 py-1"
+                >
+                  <Bell className="h-4 w-4" />
+                  {aiInsights?.summary?.rushCount > 0 && (
+                    <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full"></span>
+                  )}
+                </Button>
+                
+                <Button
+                  variant="secondary"
+                  onClick={() => setShowAIInsights(true)}
+                  className="text-xs px-2 py-1"
+                >
+                  <Eye className="h-4 w-4" />
+                  AI Insights
+                </Button>
+                
+                <Button className="text-xs px-2 py-1">
+                  <Plus className="h-4 w-4" />
+                  New Order
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      {/* KPI Tiles */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+          <Card className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Order Management</h1>
-                <p className="text-gray-600 mt-2">
-                  {viewMode === 'gantt' 
-                    ? 'Visual timeline showing order progress from creation to delivery' 
-                    : 'Track and manage customer orders from production to delivery'
-                  }
-                </p>
-              </div>
-              <div className="flex items-center space-x-2">
-                <button 
-                  onClick={() => {
-                    // Open new order creation form for vendor to sell
-                    setShowNewOrderModal(true);
-                    toast.success('Opening new order creation form...');
-                  }}
-                  className="px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
-                >
-                  New Order
-                </button>
-                <Link href="/dashboard/vendor/labels">
-                  <button 
-                    className="px-3 py-1.5 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors text-sm font-medium"
-                    title="Go to label management page"
-                  >
-                    Print Labels
-                  </button>
-                </Link>
-                <button 
-                  onClick={() => {
-                    // Print current order list
-                    setShowOrderListPrinting(true);
-                    toast.success('Opening order list printing...');
-                  }}
-                  className="px-3 py-1.5 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors text-sm font-medium"
-                >
-                  Print List
-                </button>
-                <button 
-                  onClick={() => {
-                    try {
-                      // Export orders to CSV
-                      const csvContent = "data:text/csv;charset=utf-8," + 
-                        "Order ID,Customer,Status,Total,Date\n" +
-                        orders.map(order => 
-                          `${order.id},${order.customerName},${order.status},$${order.totalAmount.toFixed(2)},${new Date(order.createdAt).toLocaleDateString()}`
-                        ).join("\n");
-                      
-                      const encodedUri = encodeURI(csvContent);
-                      const link = document.createElement("a");
-                      link.setAttribute("href", encodedUri);
-                      link.setAttribute("download", `orders_export_${new Date().toISOString().split('T')[0]}.csv`);
-                      document.body.appendChild(link);
-                      link.click();
-                      document.body.removeChild(link);
-                      toast.success('Orders exported successfully!');
-                    } catch (error) {
-                      console.error('Export error:', error);
-                      toast.error('Failed to export orders. Please try again.');
-                    }
-                  }}
-                  className="px-3 py-1.5 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors text-sm font-medium"
-                >
-                  Export
-                </button>
-                <Link href="/dashboard/vendor/promotions">
-                  <button 
-                    className="px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm font-medium"
-                    title="Go to promotions and credits management"
-                  >
-                    Credits
-                  </button>
-                </Link>
-              </div>
-            </div>
-          </div>
-
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-[#F7F2EC] rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200 p-6 border border-gray-200">
-              <div className="flex items-center">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Package className="h-6 w-6 text-blue-600" />
-                </div>
-                <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Total Orders</p>
-                  <p className="text-2xl font-bold text-gray-900">{orders.length}</p>
+                <p className="text-2xl font-bold text-gray-900">{summaryStats.total}</p>
                 </div>
+              <Package className="h-8 w-8 text-blue-600" />
               </div>
-            </div>
-
-            <div className="bg-[#F7F2EC] rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200 p-6 border border-gray-200">
-              <div className="flex items-center">
-                <div className="p-2 bg-orange-100 rounded-lg">
-                  <Clock className="h-6 w-6 text-orange-600" />
+          </Card>
+          
+          <Card className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Due Today</p>
+                <p className="text-2xl font-bold text-gray-900">{summaryStats.dueToday}</p>
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">{statusConfig.in_production.label}</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {orders.filter(o => o.status === 'in_production').length}
-                  </p>
+              <Clock className="h-8 w-8 text-orange-600" />
                 </div>
+          </Card>
+          
+          <Card className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Delivered</p>
+                <p className="text-2xl font-bold text-gray-900">{summaryStats.delivered}</p>
               </div>
+              <Truck className="h-8 w-8 text-green-600" />
             </div>
-
-            <div className="bg-[#F7F2EC] rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200 p-6 border border-gray-200">
-              <div className="flex items-center">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <CheckCircle className="h-6 w-6 text-green-600" />
+          </Card>
+          
+          <Card className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Finished</p>
+                <p className="text-2xl font-bold text-gray-900">{summaryStats.finished}</p>
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">{statusConfig.delivered.label}</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {orders.filter(o => o.status === 'delivered').length}
-                  </p>
+              <CheckCircle className="h-8 w-8 text-gray-600" />
                 </div>
-              </div>
-            </div>
-
-            <div className="bg-[#F7F2EC] rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200 p-6 border border-gray-200">
-              <div className="flex items-center">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <Truck className="h-6 w-6 text-purple-600" />
+          </Card>
+          
+          <Card className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Revenue</p>
+                <p className="text-2xl font-bold text-gray-900">${summaryStats.revenue.toFixed(2)}</p>
                 </div>
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">{statusConfig.ready_for_pickup.label}</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {orders.filter(o => o.status === 'ready_for_pickup').length}
-                  </p>
+              <Package className="h-8 w-8 text-green-600" />
                 </div>
-              </div>
-            </div>
+          </Card>
           </div>
 
-        {/* Filters and Controls */}
-        <div className="bg-[#F7F2EC] rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200 p-6 mb-6 border border-gray-200">
+        {/* Toolbar */}
+        <div className="bg-white rounded-lg shadow-sm border p-4 mb-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-            <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-              {/* Search */}
+            <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input
-                  type="text"
+                <Input
                   placeholder="Search orders..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:w-64"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 w-64"
                 />
               </div>
 
-              {/* Status Filter */}
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="px-3 py-2 border border-gray-300 rounded-md text-sm"
                 title="Filter by status"
               >
-                <option value="all">All Status</option>
-                {vendorOrderStatuses.map((status) => (
-                  <option key={status.id} value={status.id}>
-                    {status.label}
-                  </option>
-                ))}
+                <option value="">All Status</option>
+                <option value="PENDING">Pending</option>
+                <option value="CONFIRMED">Confirmed</option>
+                <option value="IN_PRODUCTION">In Production</option>
+                <option value="READY">Ready</option>
+                <option value="OUT_FOR_DELIVERY">Out for Delivery</option>
+                <option value="DELIVERED">Delivered</option>
+                <option value="PICKED_UP">Picked Up</option>
+                <option value="CANCELLED">Cancelled</option>
               </select>
 
-              {/* Priority Filter */}
               <select
                 value={priorityFilter}
                 onChange={(e) => setPriorityFilter(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="px-3 py-2 border border-gray-300 rounded-md text-sm"
                 title="Filter by priority"
               >
-                <option value="all">All Priority</option>
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="urgent">Urgent</option>
+                <option value="">All Priority</option>
+                <option value="LOW">Low</option>
+                <option value="MEDIUM">Medium</option>
+                <option value="HIGH">High</option>
+                <option value="RUSH">Rush</option>
               </select>
                       </div>
                       
-            <div className="flex items-center space-x-4">
-              {/* View Mode Toggle */}
               <div className="flex items-center space-x-2">
-                <span className="text-sm font-medium text-gray-700 mr-2">View:</span>
-                      <button
+              <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                <Button
+                  variant={viewMode === 'list' ? 'primary' : 'secondary'}
                   onClick={() => setViewMode('list')}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${viewMode === 'list' ? 'bg-[#5B6E02] text-white shadow-md' : 'text-gray-600 hover:text-[#5B6E02] hover:bg-gray-100'}`}
-                  title="List view"
+                  className="text-xs px-2 py-1"
                 >
-                  <FileText className="h-4 w-4 inline mr-1" />
-                  List
-                      </button>
-                      <button
+                  <List className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'tracker' ? 'primary' : 'secondary'}
                   onClick={() => setViewMode('tracker')}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${viewMode === 'tracker' ? 'bg-[#5B6E02] text-white shadow-md' : 'text-gray-600 hover:text-[#5B6E02] hover:bg-gray-100'}`}
-                  title="Customizable order tracker - Drag and drop workflow management"
+                  className="text-xs px-2 py-1"
                 >
-                  <BarChart3 className="h-4 w-4 inline mr-1" />
-                  Tracker
-                      </button>
-                <button
-                  onClick={() => setViewMode('kanban')}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${viewMode === 'kanban' ? 'bg-[#5B6E02] text-white shadow-md' : 'text-gray-600 hover:text-[#5B6E02] hover:bg-gray-100'}`}
-                  title="Kanban board view"
+                  <Grid className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'board' ? 'primary' : 'secondary'}
+                  onClick={() => setViewMode('board')}
+                  className="text-xs px-2 py-1"
                 >
-                  <BarChart3 className="h-4 w-4 inline mr-1" />
-                  Board
-                </button>
-                <button
-                  onClick={() => setViewMode('analytics')}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${viewMode === 'analytics' ? 'bg-[#5B6E02] text-white shadow-md' : 'text-gray-600 hover:text-[#5B6E02] hover:bg-gray-100'}`}
-                  title="Analytics view"
+                  <Kanban className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'calendar' ? 'primary' : 'secondary'}
+                  onClick={() => setViewMode('calendar')}
+                  className="text-xs px-2 py-1"
                 >
-                  <Package className="h-4 w-4 inline mr-1" />
-                  Analytics
-                </button>
+                  <Calendar className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'kds' ? 'primary' : 'secondary'}
+                  onClick={() => setViewMode('kds')}
+                  className="text-xs px-2 py-1"
+                >
+                  <ChefHat className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'batching' ? 'primary' : 'secondary'}
+                  onClick={() => setViewMode('batching')}
+                  className="text-xs px-2 py-1"
+                >
+                  <Layers className="h-4 w-4" />
+                </Button>
               </div>
-
-              {/* Sort Controls */}
-              <div className="flex items-center space-x-2">
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as any)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                  title="Sort by field"
-                >
-                  <option value="createdAt">Created Date</option>
-                  <option value="expectedDeliveryDate">Delivery Date</option>
-                  <option value="totalAmount">Total Amount</option>
-                  <option value="status">Status</option>
-                </select>
-                <button
-                  onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                  className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-                >
-                  {sortOrder === 'asc' ? '↑' : '↓'}
-                </button>
-              </div>
+              
+              <Button variant="secondary" className="text-xs px-2 py-1">
+                <Download className="h-4 w-4" />
+                Export
+              </Button>
             </div>
           </div>
         </div>
 
-        {/* View Mode Content */}
-        {viewMode === 'tracker' ? (
-          <OrderTracker
-            orders={filteredOrders}
-            onOrderClick={handleOrderClick}
-            onOrderEdit={handleOrderEdit}
-            onOrderDuplicate={handleOrderDuplicate}
-            onOrderPrint={handlePrintOrderLabel}
-            onStatusUpdate={handleStatusUpdate}
-          />
-        ) : viewMode === 'kanban' ? (
-          <OrderKanbanBoard
-            orders={filteredOrders}
-            onOrderClick={handleOrderClick}
-            onStatusUpdate={handleStatusUpdate}
-            onOrderEdit={handleOrderEdit}
-            onOrderDelete={handleOrderDelete}
-          />
-        ) : viewMode === 'analytics' ? (
-          <OrderAnalytics
-            orders={orders}
-            timeRange={timeRange}
-            onTimeRangeChange={setTimeRange}
-          />
-        ) : (
-          /* Orders List */
-          <div className="bg-[#F7F2EC] rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-200 border border-gray-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
+        {/* Bulk Actions */}
+        {selectedOrders.length > 0 && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-medium text-gray-900">
-                Orders ({filteredOrders.length})
-              </h3>
+              <p className="text-sm text-blue-800">
+                {selectedOrders.length} order{selectedOrders.length !== 1 ? 's' : ''} selected
+              </p>
               <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  checked={selectedOrders.length === filteredOrders.length && filteredOrders.length > 0}
-                  onChange={handleSelectAll}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  title="Select all orders"
-                />
-                <span className="text-sm text-gray-600">Select All</span>
+                <Button
+                  variant="secondary"
+                  onClick={() => handleBulkStatusUpdate('CONFIRMED')}
+                  className="text-xs px-2 py-1"
+                >
+                  Confirm
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => handleBulkStatusUpdate('IN_PRODUCTION')}
+                  className="text-xs px-2 py-1"
+                >
+                  Start Production
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => handleBulkStatusUpdate('READY')}
+                  className="text-xs px-2 py-1"
+                >
+                  Mark Ready
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => setSelectedOrders([])}
+                  className="text-xs px-2 py-1"
+                >
+                  Clear
+                </Button>
               </div>
             </div>
               </div>
+        )}
 
+        {/* Content */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={viewMode}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.2 }}
+          >
+            {viewMode === 'list' && (
+              <div className="bg-white rounded-lg shadow-sm border">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    <input type="checkbox" className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" title="Select all orders" />
+                              <input
+                                type="checkbox"
+                                checked={selectedOrders.length === orders.length && orders.length > 0}
+                                onChange={handleSelectAll}
+                                className="rounded border-gray-300"
+                                title="Select all orders"
+                              />
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Order #
+                          Order
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Customer
@@ -946,13 +488,13 @@ const VendorOrdersPage: React.FC = () => {
                     Priority
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Total
+                          Due
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Expected Delivery
+                          Items
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Assigned To
+                          Amount
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
@@ -960,408 +502,146 @@ const VendorOrdersPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredOrders.map((order) => {
-                  const StatusIcon = statusConfig[order.status].icon;
-                  return (
+                      {isLoadingOrders ? (
+                        <tr>
+                          <td colSpan={9} className="px-6 py-4 text-center text-gray-500">
+                            Loading orders...
+                          </td>
+                        </tr>
+                      ) : orders.length === 0 ? (
+                        <tr>
+                          <td colSpan={9} className="px-6 py-4 text-center text-gray-500">
+                            No orders found
+                          </td>
+                        </tr>
+                      ) : (
+                        orders.map((order: Order) => (
                     <tr key={order.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                                  <input
                           type="checkbox"
                           checked={selectedOrders.includes(order.id)}
                           onChange={() => handleSelectOrder(order.id)}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                          title={`Select order ${order.orderNumber}`}
+                                className="rounded border-gray-300"
+                                title="Select order"
                         />
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{order.orderNumber}</div>
-                        <div className="text-sm text-gray-500">{formatDate(order.createdAt)}</div>
+                              <div>
+                                <div className="text-sm font-medium text-gray-900">
+                                  {order.orderNumber}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                  {new Date(order.createdAt).toLocaleDateString()}
+                                </div>
+                              </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{order.customerName}</div>
-                        <div className="text-sm text-gray-500">{order.customerEmail}</div>
+                              <div>
+                                <div className="text-sm font-medium text-gray-900">
+                                  {order.customerName}
+                                </div>
+                                <div className="text-sm text-gray-500">
+                                  {order.customerEmail}
+                                </div>
+                              </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusConfig[order.status].color}`}>
-                          <StatusIcon className="h-3 w-3 mr-1" />
-                          {statusConfig[order.status].label}
-                        </span>
+                              <Badge className={getStatusColor(order.status)}>
+                                {order.status.replace('_', ' ')}
+                              </Badge>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${priorityConfig[order.priority].color}`}>
-                          {priorityConfig[order.priority].label}
-                        </span>
+                              <Badge className={getPriorityColor(order.priority)}>
+                                {order.priority}
+                              </Badge>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">
+                                {order.dueAt ? new Date(order.dueAt).toLocaleDateString() : 'N/A'}
+                              </div>
+                              {order.dueAt && new Date(order.dueAt) < new Date() && (
+                                <div className="text-xs text-red-600">Overdue</div>
+                              )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatCurrency(order.totalAmount)}
+                              {order.orderItems.length} items
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {formatDate(order.expectedDeliveryDate)}
+                              ${order.total.toFixed(2)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {order.assignedTo || 'Unassigned'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        -
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                              <div className="flex items-center space-x-2">
+                                <Button variant="secondary" className="text-xs px-2 py-1">
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button variant="secondary" className="text-xs px-2 py-1">
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              </div>
                       </td>
                     </tr>
-                  );
-                })}
+                        ))
+                      )}
               </tbody>
             </table>
             </div>
+              </div>
+            )}
 
-
+            {viewMode === 'tracker' && (
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Order Tracker</h3>
+                <p className="text-gray-500">Tracker view coming soon...</p>
         </div>
       )}
 
+            {viewMode === 'board' && (
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Kanban Board</h3>
+                <p className="text-gray-500">Board view coming soon...</p>
+              </div>
+            )}
 
-        {/* Modals */}
-        {selectedOrder && (
-          <OrderDetailModal
-            order={selectedOrder}
-            onClose={() => setSelectedOrder(null)}
-            onSave={handleOrderSave}
-            onStatusUpdate={handleStatusUpdate}
-            onAssign={handleAssign}
-          />
-        )}
+            {viewMode === 'calendar' && (
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Calendar View</h3>
+                <p className="text-gray-500">Calendar view coming soon...</p>
+              </div>
+            )}
 
-        {/* {showLabelPrinting && (
-          <LabelPrinting
-            orders={orders.filter(order => selectedOrders.includes(order.id))}
-            onClose={() => setShowLabelPrinting(false)}
-          />
-        )} */}
-
-
-        {/* Label Print Modal */}
-        <SimpleLabelPrintModal
-          isOpen={showLabelPrinting}
-          onClose={() => setShowLabelPrinting(false)}
-          orders={orders.filter(order => selectedOrdersForLabels.includes(order.id))}
-        />
-
-        {/* Individual Order Print Label Modal */}
-        {selectedOrderForLabel && (
-          <PrintLabelModal
-            isOpen={showPrintLabelModal}
-            onClose={() => {
-              setShowPrintLabelModal(false);
-              setSelectedOrderForLabel(null);
-            }}
-            source="order"
-            sourceId={selectedOrderForLabel.id}
-            sourceName={`${selectedOrderForLabel.orderNumber} - ${selectedOrderForLabel.customerName}`}
-          />
-        )}
-
-        {/* Label Template Manager Modal */}
-        {/* <LabelTemplateManager
-          isOpen={showLabelTemplateManager}
-          onClose={() => setShowLabelTemplateManager(false)}
-          onSelectTemplate={(template) => {
-            setShowLabelTemplateManager(false);
-            // Could open print modal with selected template
-          }}
-        /> */}
-
-        {/* Order List Print Modal */}
-        <OrderListPrintModal
-          isOpen={showOrderListPrinting}
-          onClose={() => setShowOrderListPrinting(false)}
-          orders={orders}
-          selectedOrderIds={selectedOrders}
-        />
+            {viewMode === 'kds' && (
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Kitchen Display System</h3>
+                <p className="text-gray-500">KDS view coming soon...</p>
       </div>
-    </div>
+            )}
 
-    {/* New Order Modal */}
-    {showNewOrderModal && (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-          <h3 className="text-lg font-semibold mb-4">Create New Order</h3>
-          <form className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Customer Name
-                </label>
-                <input
-                  type="text"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter customer name"
-                  value={newOrderForm.customerName}
-                  onChange={(e) => updateFormField('customerName', e.target.value)}
-                />
+            {viewMode === 'batching' && (
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Batching View</h3>
+                <p className="text-gray-500">Batching view coming soon...</p>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Customer Email
-                </label>
-                <input
-                  type="email"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="customer@example.com"
-                  value={newOrderForm.customerEmail}
-                  onChange={(e) => updateFormField('customerEmail', e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Order Date
-                </label>
-                <input
-                  type="date"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  value={newOrderForm.orderDate}
-                  onChange={(e) => updateFormField('orderDate', e.target.value)}
-                  aria-label="Order Date"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Expected Delivery
-                </label>
-                <input
-                  type="date"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  value={newOrderForm.expectedDeliveryDate}
-                  onChange={(e) => updateFormField('expectedDeliveryDate', e.target.value)}
-                  aria-label="Expected Delivery Date"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Order Status
-                </label>
-                <select 
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  value={newOrderForm.status}
-                  onChange={(e) => updateFormField('status', e.target.value)}
-                  aria-label="Order Status"
-                >
-                  {vendorOrderStatuses.filter(status => status.id !== 'cancelled').map((status) => (
-                    <option key={status.id} value={status.id}>
-                      {status.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Priority
-                </label>
-                <select 
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  value={newOrderForm.priority}
-                  onChange={(e) => updateFormField('priority', e.target.value)}
-                  aria-label="Order Priority"
-                >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                  <option value="urgent">Urgent</option>
-                </select>
-              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
             </div>
             
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Order Items
-              </label>
-              <div className="space-y-4">
-                {newOrderForm.items.map((item, index) => (
-                  <div key={index} className="border border-gray-200 rounded-lg p-4 space-y-3">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Product
-                        </label>
-                        <select
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          value={item.productId}
-                          onChange={(e) => {
-                            if (e.target.value === 'custom') {
-                              // Handle custom product
-                              updateOrderItem(index, 'productId', 'custom');
-                              updateOrderItem(index, 'productName', '');
-                              updateOrderItem(index, 'unitPrice', 0);
-                            } else {
-                              const selectedProduct = products.find(p => p.id === e.target.value);
-                              updateOrderItem(index, 'productId', e.target.value);
-                              updateOrderItem(index, 'productName', selectedProduct?.name || '');
-                              updateOrderItem(index, 'unitPrice', selectedProduct?.price || 0);
-                            }
-                          }}
-                          aria-label="Select product"
-                        >
-                          <option value="">Select a product</option>
-                          {products.map((product) => (
-                            <option key={product.id} value={product.id}>
-                              {product.name} - ${product.price}
-                            </option>
-                          ))}
-                          <option value="custom">+ Add Custom Order</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Product Name
-                        </label>
-                        <input
-                          type="text"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder={item.productId === 'custom' ? 'Enter custom product name' : 'Product name'}
-                          value={item.productName}
-                          onChange={(e) => updateOrderItem(index, 'productName', e.target.value)}
-                          disabled={item.productId !== 'custom' && item.productId !== ''}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Quantity
-                        </label>
-                        <input
-                          type="number"
-                          min="1"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="1"
-                          value={item.quantity}
-                          onChange={(e) => updateOrderItem(index, 'quantity', parseInt(e.target.value) || 1)}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Unit Price ($)
-                        </label>
-                        <input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          placeholder="0.00"
-                          value={item.unitPrice}
-                          onChange={(e) => updateOrderItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
-                          disabled={item.productId !== 'custom' && item.productId !== ''}
-                        />
-                      </div>
-                    </div>
-                    <div className="flex justify-end">
-                      <button
-                        type="button"
-                        onClick={() => removeOrderItem(index)}
-                        className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
-                      >
-                        Remove Product
-                      </button>
-                    </div>
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={addOrderItem}
-                  className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
-                >
-                  + Add Product
-                </button>
-              </div>
-            </div>
+        {/* System Messages Drawer */}
+        <SystemMessagesDrawer
+          isOpen={showSystemMessages}
+          onClose={() => setShowSystemMessages(false)}
+          scope="orders"
+        />
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Sales Window
-              </label>
-              <select
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                value={newOrderForm.salesWindowId}
-                onChange={(e) => updateFormField('salesWindowId', e.target.value)}
-                aria-label="Select sales window"
-              >
-                <option value="">No sales window</option>
-                {salesWindows.filter(window => window.status === 'active').map((window) => (
-                  <option key={window.id} value={window.id}>
-                    {window.name} ({window.startDate} - {window.endDate})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Special Instructions
-              </label>
-              <textarea
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Any special instructions for this order..."
-                value={newOrderForm.specialInstructions}
-                onChange={(e) => updateFormField('specialInstructions', e.target.value)}
-              />
-            </div>
-
-            <div className="flex justify-end space-x-3 pt-4">
-              <button
-                type="button"
-                onClick={() => setShowNewOrderModal(false)}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleCreateOrder}
-                disabled={createOrderMutation.isPending}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {createOrderMutation.isPending ? 'Creating...' : 'Create Order'}
-              </button>
-            </div>
-          </form>
-        </div>
+        {/* AI Insights Drawer */}
+        <AIInsightsDrawer
+          isOpen={showAIInsights}
+          onClose={() => setShowAIInsights(false)}
+          insights={aiInsights || { rush: [], batching: [], shortages: [], prepPlan: [] }}
+          isLoading={isLoadingInsights}
+        />
       </div>
-    )}
-
-
-    {/* Label Template Manager Modal */}
-    {showLabelTemplateManager && (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-          <h3 className="text-lg font-semibold mb-4">Label Templates</h3>
-          <p className="text-gray-600 mb-4">
-            Manage your label printing templates for orders and products.
-          </p>
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
-                <h4 className="font-medium text-gray-900">Order Labels</h4>
-                <p className="text-sm text-gray-600">Standard order shipping labels</p>
-              </button>
-              <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
-                <h4 className="font-medium text-gray-900">Product Labels</h4>
-                <p className="text-sm text-gray-600">Individual product labels</p>
-              </button>
-              <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
-                <h4 className="font-medium text-gray-900">Custom Labels</h4>
-                <p className="text-sm text-gray-600">Create custom label templates</p>
-              </button>
-              <button className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left">
-                <h4 className="font-medium text-gray-900">Bulk Labels</h4>
-                <p className="text-sm text-gray-600">Print multiple labels at once</p>
-              </button>
-            </div>
-          </div>
-          <div className="flex justify-end mt-6">
-            <button
-              onClick={() => setShowLabelTemplateManager(false)}
-              className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      </div>
-    )}
     </VendorDashboardLayout>
   );
 };

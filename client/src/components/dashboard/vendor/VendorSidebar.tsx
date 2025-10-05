@@ -6,6 +6,7 @@ const navItems = [
   { label: 'Products', href: '/dashboard/vendor/enhanced-products' },
   { label: 'Inventory', href: '/dashboard/vendor/inventory' },
   { label: 'Orders', href: '/dashboard/vendor/orders' },
+  { label: 'Labels', href: '/dashboard/vendor/labels' },
   { label: 'CRM', href: '/dashboard/vendor/crm' },
   { label: 'Customer Service', href: '/dashboard/vendor/support' },
   { label: 'Site Management', href: '/dashboard/vendor/site' },
