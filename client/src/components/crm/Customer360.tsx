@@ -343,7 +343,8 @@ const Customer360: React.FC<Customer360Props> = ({
           // Handle insight click actions
           switch (insight.id) {
             case 'high-value-customers':
-              setStatusFilter('vip');
+              // Navigate to VIP program page
+              window.location.href = '/dashboard/vendor/vip-program';
               break;
             case 'low-engagement':
               setStatusFilter('customer');

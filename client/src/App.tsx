@@ -70,6 +70,7 @@ import VendorAnalyticsPage from './pages/VendorAnalyticsPage';
 import VendorAnalyticsCRMPage from './pages/VendorAnalyticsCRMPage';
 import { VendorFinancialPage } from './pages/VendorFinancialPage';
 import VendorOnboardingPage from './pages/VendorOnboardingPage';
+import VIPProgramPage from './pages/VIPProgramPage';
 import TestDataPage from './pages/TestDataPage';
 import { NotFound } from './components/NotFound';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -286,6 +287,11 @@ function App() {
             <Route path="/dashboard/vendor/analytics-crm">
               <ProtectedRoute role="VENDOR">
                 <VendorAnalyticsCRMPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/dashboard/vendor/vip-program">
+              <ProtectedRoute role="VENDOR">
+                <VIPProgramPage />
               </ProtectedRoute>
             </Route>
 

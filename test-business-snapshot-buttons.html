@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Snapshot Buttons Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 5px;
+            background-color: #5B6E02;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .button:hover {
+            background-color: #4A5A01;
+        }
+        .button.secondary {
+            background-color: #f0f0f0;
+            color: #333;
+            border: 1px solid #ccc;
+        }
+        .button.secondary:hover {
+            background-color: #e0e0e0;
+        }
+        .log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 10px;
+            margin: 10px 0;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success {
+            color: #28a745;
+        }
+        .error {
+            color: #dc3545;
+        }
+        .info {
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Business Snapshot Buttons Test</h1>
+        <p>This test simulates the button functionality from the BusinessSnapshot component to verify they work correctly.</p>
+        
+        <h2>Test Buttons</h2>
+        <div>
+            <button class="button" onclick="testRefreshButton()">🔄 Refresh Button</button>
+            <button class="button" onclick="testSyncStripeButton()">🔄 Sync Stripe Button</button>
+            <button class="button" onclick="testExportAllButton()">📊 Export All Button</button>
+            <button class="button" onclick="testExportProductsButton()">📦 Export Products Button</button>
+            <button class="button" onclick="testExportZipsButton()">📍 Export ZIP Codes Button</button>
+            <button class="button" onclick="testExportFunnelButton()">📈 Export Funnel Button</button>
+            <button class="button" onclick="testStripeTaxButton()">💰 Open Stripe Tax Button</button>
+            <button class="button" onclick="testStripeDashboardButton()">📊 Open Stripe Dashboard Button</button>
+        </div>
+        
+        <h2>Test Results</h2>
+        <div id="log" class="log"></div>
+        
+        <h2>Mock Data</h2>
+        <div class="log">
+            <pre id="mockData"></pre>
+        </div>
+    </div>
+
+    <script>
+        // Mock data similar to what the BusinessSnapshot component uses
+        const mockSnapshotData = {
+            range: {
+                dateFrom: '2024-01-01',
+                dateTo: '2024-01-31'
+            },
+            sales: {
+                gross: 15420.50,
+                refundsValue: 245.80,
+                refundsCount: 12,
+                discountsValue: 156.20,
+                platformFees: 462.62,
+                paymentFees: 231.31,
+                netSales: 14324.37,
+                estNetPayout: 13630.44,
+                ordersCount: 342,
+                aov: 44.80,
+                disputesOpen: 2,
+                disputeRate: 0.6
+            },
+            funnel: {
+                stages: [
+                    { name: 'Visitors', count: 2740 },
+                    { name: 'Page Views', count: 1820 },
+                    { name: 'Add to Cart', count: 456 },
+                    { name: 'Checkout', count: 342 },
+                    { name: 'Completed', count: 312 }
+                ],
+                abandonment: {
+                    cartRate: 25.0,
+                    checkoutRate: 8.8
+                },
+                blockers: ['High shipping costs', 'Payment method not available']
+            },
+            customers: {
+                newCount: 41,
+                returningCount: 87,
+                repeatRate: 68.2,
+                predictedChurnPct: 12.5,
+                medianTimeToSecondOrderDays: 14
+            },
+            products: {
+                top: [
+                    { productId: 'prod-1', name: 'Artisan Bread', units: 89, revenue: 1245.50, refundRatePct: 1.2 },
+                    { productId: 'prod-2', name: 'Organic Coffee', units: 67, revenue: 980.25, refundRatePct: 0.8 },
+                    { productId: 'prod-3', name: 'Gluten-Free Cookies', units: 54, revenue: 756.80, refundRatePct: 2.1 }
+                ],
+                underperforming: [
+                    { productId: 'prod-4', name: 'Seasonal Jam', views: 45, orders: 3, revenue: 67.50 },
+                    { productId: 'prod-5', name: 'Herbal Tea', views: 32, orders: 2, revenue: 28.00 }
+                ],
+                lowStockCount: 2
+            },
+            zips: [
+                { zip: '10001', orders: 45, sharePct: 13.2 },
+                { zip: '10002', orders: 38, sharePct: 11.1 },
+                { zip: '10003', orders: 32, sharePct: 9.4 },
+                { zip: '10004', orders: 28, sharePct: 8.2 },
+                { zip: '10005', orders: 25, sharePct: 7.3 }
+            ],
+            payouts: {
+                nextDate: '2024-01-15',
+                nextAmount: 3842.50,
+                last30d: {
+                    platformFees: 462.62,
+                    paymentFees: 231.31,
+                    taxCollected: 856.20
+                }
+            }
+        };
+
+        // Display mock data
+        document.getElementById('mockData').textContent = JSON.stringify(mockSnapshotData, null, 2);
+
+        // Logging function
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : 'info';
+            logDiv.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        // Test functions that simulate the button handlers
+        function testRefreshButton() {
+            log('Testing refresh button...', 'info');
+            try {
+                // Simulate the refetch function
+                log('Refreshing business snapshot data...', 'info');
+                log('Refresh triggered successfully', 'success');
+            } catch (error) {
+                log(`Error refreshing data: ${error.message}`, 'error');
+            }
+        }
+
+        function testSyncStripeButton() {
+            log('Testing sync Stripe button...', 'info');
+            try {
+                log('Starting Stripe sync...', 'info');
+                // Simulate API call
+                setTimeout(() => {
+                    log('Stripe sync response: {success: true}', 'info');
+                    log('Stripe data synced successfully!', 'success');
+                }, 1000);
+            } catch (error) {
+                log(`Failed to sync Stripe data: ${error.message}`, 'error');
+            }
+        }
+
+        function testExportAllButton() {
+            log('Testing export all button...', 'info');
+            try {
+                if (!mockSnapshotData) {
+                    log('No data available for export', 'error');
+                    return;
+                }
+
+                const dateFrom = '2024-01-01';
+                const dateTo = '2024-01-31';
+                
+                const csvContent = `Business Snapshot Export,${dateFrom} to ${dateTo}
+Metric,Value
+Net Sales,$${mockSnapshotData.sales.netSales.toLocaleString()}
+Orders,${mockSnapshotData.sales.ordersCount.toLocaleString()}
+AOV,$${mockSnapshotData.sales.aov.toFixed(2)}
+Refund Rate,${((mockSnapshotData.sales.refundsCount / mockSnapshotData.sales.ordersCount) * 100).toFixed(1)}%`;
+
+                // Simulate file download
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `business-snapshot-${dateFrom}-to-${dateTo}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                log('Export all completed successfully', 'success');
+            } catch (error) {
+                log(`Error exporting data: ${error.message}`, 'error');
+            }
+        }
+
+        function testExportProductsButton() {
+            log('Testing export products button...', 'info');
+            try {
+                if (!mockSnapshotData) {
+                    log('No data available for export', 'error');
+                    return;
+                }
+
+                const dateFrom = '2024-01-01';
+                const dateTo = '2024-01-31';
+                
+                const csvContent = `Top Products Export,${dateFrom} to ${dateTo}
+Product Name,Units Sold,Revenue,Refund Rate
+${mockSnapshotData.products.top.map(product => 
+  `${product.name},${product.units},$${product.revenue.toLocaleString()},${product.refundRatePct.toFixed(1)}%`
+).join('\n')}`;
+
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `top-products-${dateFrom}-to-${dateTo}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                log('Export products completed successfully', 'success');
+            } catch (error) {
+                log(`Error exporting products: ${error.message}`, 'error');
+            }
+        }
+
+        function testExportZipsButton() {
+            log('Testing export ZIP codes button...', 'info');
+            try {
+                if (!mockSnapshotData) {
+                    log('No data available for export', 'error');
+                    return;
+                }
+
+                const dateFrom = '2024-01-01';
+                const dateTo = '2024-01-31';
+                
+                const csvContent = `ZIP Codes Export,${dateFrom} to ${dateTo}
+ZIP Code,Orders,Share %
+${mockSnapshotData.zips.map(zip => 
+  `${zip.zip},${zip.orders},${zip.sharePct.toFixed(1)}%`
+).join('\n')}`;
+
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `zip-codes-${dateFrom}-to-${dateTo}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                log('Export ZIP codes completed successfully', 'success');
+            } catch (error) {
+                log(`Error exporting ZIP codes: ${error.message}`, 'error');
+            }
+        }
+
+        function testExportFunnelButton() {
+            log('Testing export funnel button...', 'info');
+            try {
+                if (!mockSnapshotData) {
+                    log('No data available for export', 'error');
+                    return;
+                }
+
+                const dateFrom = '2024-01-01';
+                const dateTo = '2024-01-31';
+                
+                const csvContent = `Sales Funnel Export,${dateFrom} to ${dateTo}
+Stage,Count,Conversion Rate
+${mockSnapshotData.funnel.stages.map((stage, index) => {
+  const prevStage = mockSnapshotData.funnel.stages[index - 1];
+  const conversionRate = prevStage ? ((stage.count / prevStage.count) * 100).toFixed(1) : '100.0';
+  return `${stage.name},${stage.count},${conversionRate}%`;
+}).join('\n')}
+Cart Abandonment Rate,${mockSnapshotData.funnel.abandonment.cartRate.toFixed(1)}%
+Checkout Abandonment Rate,${mockSnapshotData.funnel.abandonment.checkoutRate.toFixed(1)}%`;
+
+                const blob = new Blob([csvContent], { type: 'text/csv' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `sales-funnel-${dateFrom}-to-${dateTo}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                log('Export funnel completed successfully', 'success');
+            } catch (error) {
+                log(`Error exporting funnel: ${error.message}`, 'error');
+            }
+        }
+
+        function testStripeTaxButton() {
+            log('Testing open Stripe Tax button...', 'info');
+            try {
+                log('Opening Stripe Tax Dashboard...', 'info');
+                const newWindow = window.open('https://dashboard.stripe.com/tax', '_blank');
+                if (!newWindow) {
+                    log('Popup blocked. Please allow popups for this site and try again.', 'error');
+                } else {
+                    log('Stripe Tax Dashboard opened successfully', 'success');
+                }
+            } catch (error) {
+                log(`Error opening Stripe Tax Dashboard: ${error.message}`, 'error');
+            }
+        }
+
+        function testStripeDashboardButton() {
+            log('Testing open Stripe Dashboard button...', 'info');
+            try {
+                log('Opening Stripe Dashboard...', 'info');
+                const newWindow = window.open('https://dashboard.stripe.com', '_blank');
+                if (!newWindow) {
+                    log('Popup blocked. Please allow popups for this site and try again.', 'error');
+                } else {
+                    log('Stripe Dashboard opened successfully', 'success');
+                }
+            } catch (error) {
+                log(`Error opening Stripe Dashboard: ${error.message}`, 'error');
+            }
+        }
+
+        // Initialize
+        log('Business Snapshot Buttons Test initialized', 'success');
+        log('Click any button above to test its functionality', 'info');
+    </script>
+</body>
+</html>

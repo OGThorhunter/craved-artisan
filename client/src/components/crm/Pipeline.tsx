@@ -3,7 +3,6 @@ import {
   Target,
   Plus,
   Search,
-  Filter,
   DollarSign,
   Calendar,
   User,
@@ -12,19 +11,10 @@ import {
   Eye,
   Edit,
   Trash2,
-  ArrowRight,
-  ArrowLeft,
   CheckCircle,
   XCircle,
-  Clock,
   AlertCircle,
-  Star,
-  Phone,
-  Mail,
-  MessageSquare,
-  MoreVertical,
   X,
-  HelpCircle,
   List
 } from 'lucide-react';
 import AIInsights from './AIInsights';
@@ -82,6 +72,7 @@ const Pipeline: React.FC<PipelineProps> = ({
   const [showDetails, setShowDetails] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [viewMode, setViewMode] = useState<'card' | 'list'>('list');
+  const [activeInsightFilter, setActiveInsightFilter] = useState<string | null>(null);
   const [newOpportunity, setNewOpportunity] = useState({
     title: '',
     description: '',
@@ -114,9 +105,24 @@ const Pipeline: React.FC<PipelineProps> = ({
     const matchesValue = !valueRange || (
       valueRange === 'low' && opp.value < 10000 ||
       valueRange === 'medium' && opp.value >= 10000 && opp.value < 50000 ||
-      valueRange === 'high' && opp.value >= 50000
+      valueRange === 'high' && opp.value >= 50000 ||
+      valueRange === '50000+' && opp.value > 50000
     );
-    return matchesSearch && matchesAssigned && matchesValue;
+    
+    // Apply insight filters
+    let matchesInsight = true;
+    if (activeInsightFilter === 'stuck-opportunities') {
+      const daysSinceUpdate = Math.floor((Date.now() - new Date(opp.lastActivityAt).getTime()) / (1000 * 60 * 60 * 24));
+      matchesInsight = daysSinceUpdate > 14 && opp.stage !== 'closed_won' && opp.stage !== 'closed_lost';
+    } else if (activeInsightFilter === 'overdue-opportunities') {
+      const expectedClose = new Date(opp.expectedCloseDate);
+      const today = new Date();
+      matchesInsight = expectedClose < today && opp.stage !== 'closed_won' && opp.stage !== 'closed_lost';
+    } else if (activeInsightFilter === 'low-probability-deals') {
+      matchesInsight = opp.probability < 30 && opp.stage !== 'closed_won' && opp.stage !== 'closed_lost';
+    }
+    
+    return matchesSearch && matchesAssigned && matchesValue && matchesInsight;
   });
 
   // Group opportunities by stage
@@ -345,6 +351,25 @@ const Pipeline: React.FC<PipelineProps> = ({
             <option value="high">Over $50K</option>
           </select>
           
+          {/* Active Insight Filter Indicator */}
+          {activeInsightFilter && (
+            <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg">
+              <span className="text-sm font-medium text-blue-800">
+                {activeInsightFilter === 'stuck-opportunities' && '🔍 Stuck Deals (14+ days)'}
+                {activeInsightFilter === 'overdue-opportunities' && '⏰ Overdue Deals'}
+                {activeInsightFilter === 'high-value-deals' && '💰 High-Value Deals ($50k+)'}
+                {activeInsightFilter === 'low-probability-deals' && '📉 Low Probability Deals (<30%)'}
+              </span>
+              <button
+                onClick={() => setActiveInsightFilter(null)}
+                className="text-blue-600 hover:text-blue-800"
+                title="Clear insight filter"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+          
           <button
             onClick={() => {
               setNewOpportunity({
@@ -378,24 +403,6 @@ const Pipeline: React.FC<PipelineProps> = ({
         isLoading={isLoading}
         maxInsights={4}
         showCategories={true}
-        onInsightClick={(insight) => {
-          console.log('Pipeline AI Insight clicked:', insight);
-          // Handle insight click actions
-          switch (insight.id) {
-            case 'stuck-opportunities':
-              // Could filter to show stuck opportunities
-              break;
-            case 'high-value-deals':
-              // Could filter to show high-value deals
-              break;
-            case 'overdue-opportunities':
-              // Could filter to show overdue opportunities
-              break;
-            case 'low-conversion-rate':
-              // Could show conversion analytics
-              break;
-          }
-        }}
       />
 
       {/* Pipeline Metrics */}
@@ -562,6 +569,16 @@ const Pipeline: React.FC<PipelineProps> = ({
                             >
                               <Eye className="h-3 w-3" />
                             </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onOpportunityDelete(opportunity.id);
+                              }}
+                              className="p-1 text-gray-500 hover:text-red-600 transition-colors"
+                              title="Delete"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
                           </div>
                         </div>
                       ) : (
@@ -661,6 +678,16 @@ const Pipeline: React.FC<PipelineProps> = ({
                                 title="View Details"
                               >
                                 <Eye className="h-3 w-3" />
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onOpportunityDelete(opportunity.id);
+                                }}
+                                className="p-1 text-gray-500 hover:text-red-600 transition-colors"
+                                title="Delete"
+                              >
+                                <Trash2 className="h-3 w-3" />
                               </button>
                             </div>
                           </div>
@@ -772,6 +799,16 @@ const Pipeline: React.FC<PipelineProps> = ({
                   >
                     <Edit className="h-4 w-4" />
                     Edit Opportunity
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowDetails(false);
+                      onOpportunityDelete(selectedOpportunity.id);
+                    }}
+                    className="flex items-center gap-2 px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors text-sm font-medium"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete Opportunity
                   </button>
                 </div>
               </div>

@@ -2,7 +2,6 @@ import React from 'react';
 import { 
   Brain, 
   TrendingUp, 
-  TrendingDown, 
   AlertTriangle, 
   CheckCircle, 
   Lightbulb,
@@ -27,7 +26,6 @@ interface AIInsight {
 interface AIInsightsProps {
   insights: AIInsight[];
   isLoading?: boolean;
-  onInsightClick?: (insight: AIInsight) => void;
   maxInsights?: number;
   showCategories?: boolean;
 }
@@ -35,11 +33,10 @@ interface AIInsightsProps {
 const AIInsights: React.FC<AIInsightsProps> = ({
   insights,
   isLoading = false,
-  onInsightClick,
   maxInsights = 5,
   showCategories = false
 }) => {
-  const getInsightIcon = (type: string, category: string) => {
+  const getInsightIcon = (type: string) => {
     switch (type) {
       case 'success':
         return <CheckCircle className="h-4 w-4 text-green-500" />;
@@ -152,12 +149,11 @@ const AIInsights: React.FC<AIInsightsProps> = ({
         {sortedInsights.map((insight) => (
           <div
             key={insight.id}
-            className={`border-l-4 p-3 rounded-r-lg cursor-pointer transition-all hover:shadow-md ${getInsightColor(insight.type)}`}
-            onClick={() => onInsightClick?.(insight)}
+            className={`border-l-4 p-3 rounded-r-lg ${getInsightColor(insight.type)}`}
           >
             <div className="flex items-start justify-between mb-2">
               <div className="flex items-center gap-2">
-                {getInsightIcon(insight.type, insight.category)}
+                {getInsightIcon(insight.type)}
                 <h4 className="font-medium text-sm text-gray-900">{insight.title}</h4>
               </div>
               <div className="flex items-center gap-2">
@@ -187,8 +183,8 @@ const AIInsights: React.FC<AIInsightsProps> = ({
               </div>
               
               {insight.action && (
-                <span className="text-xs text-purple-600 font-medium hover:text-purple-700">
-                  {insight.action} →
+                <span className="text-xs text-gray-600 font-medium">
+                  {insight.action}
                 </span>
               )}
             </div>

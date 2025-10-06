@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Insight Tooltip Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .ai-insight-card {
+            background: #F7F2EC;
+            border: 1px solid #5B6E02;
+            border-radius: 8px;
+            padding: 24px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: box-shadow 0.3s ease;
+        }
+        .ai-insight-card:hover {
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .ai-insight-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .ai-insight-icon {
+            padding: 8px;
+            background: rgba(91, 110, 2, 0.1);
+            border-radius: 8px;
+            color: #5B6E02;
+            font-weight: bold;
+        }
+        .ai-insight-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        .hover-indicator {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            color: #5B6E02;
+            background: rgba(91, 110, 2, 0.1);
+            padding: 4px 8px;
+            border-radius: 12px;
+        }
+        .ai-insight-content {
+            color: #374151;
+            font-weight: 500;
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+        .ai-insight-footer {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #5B6E02;
+        }
+        .tooltip {
+            position: absolute;
+            z-index: 1000;
+            background: #F7F2EC;
+            border: 1px solid #5B6E02;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            padding: 16px;
+            max-width: 512px;
+            white-space: normal;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+        .tooltip.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .tooltip-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .tooltip-icon {
+            padding: 6px;
+            background: rgba(91, 110, 2, 0.1);
+            border-radius: 6px;
+            color: #5B6E02;
+            font-size: 16px;
+        }
+        .tooltip-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        .tooltip-live {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            color: #5B6E02;
+        }
+        .tooltip-content {
+            font-size: 14px;
+            color: #374151;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+        .tooltip-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #6b7280;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 8px;
+        }
+        .tooltip-arrow {
+            position: absolute;
+            width: 0;
+            height: 0;
+            border: 8px solid transparent;
+            border-top-color: #5B6E02;
+            top: -16px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #1f2937;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧠 AI Insight Tooltip Test</h1>
+        <p>This test demonstrates the AI Insight tooltip functionality. Hover over the AI Insight cards below to see the detailed tooltips.</p>
+
+        <div class="test-section">
+            <h3>Business Snapshot AI Insight</h3>
+            <div class="ai-insight-card" onmouseover="showTooltip(event, 'business-snapshot')" onmouseout="hideTooltip(event)">
+                <div class="ai-insight-header">
+                    <div class="ai-insight-icon">🧠</div>
+                    <div class="ai-insight-title">AI Insight</div>
+                    <div class="hover-indicator">
+                        ✨ Hover for details
+                    </div>
+                </div>
+                <div class="ai-insight-content">
+                    Your business metrics show strong growth. Consider focusing on high-margin products to increase profitability.
+                </div>
+                <div class="ai-insight-footer">
+                    ✨ Updated 2 hours ago
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Customer 360 AI Insight</h3>
+            <div class="ai-insight-card" onmouseover="showTooltip(event, 'customer-360')" onmouseout="hideTooltip(event)">
+                <div class="ai-insight-header">
+                    <div class="ai-insight-icon">🧠</div>
+                    <div class="ai-insight-title">AI Insight</div>
+                    <div class="hover-indicator">
+                        ✨ Hover for details
+                    </div>
+                </div>
+                <div class="ai-insight-content">
+                    Customer engagement is up 15% this month. Your VIP customers are showing increased loyalty and spending patterns.
+                </div>
+                <div class="ai-insight-footer">
+                    ✨ Updated 2 hours ago
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Pipeline AI Insight</h3>
+            <div class="ai-insight-card" onmouseover="showTooltip(event, 'pipeline')" onmouseout="hideTooltip(event)">
+                <div class="ai-insight-header">
+                    <div class="ai-insight-icon">🧠</div>
+                    <div class="ai-insight-title">AI Insight</div>
+                    <div class="hover-indicator">
+                        ✨ Hover for details
+                    </div>
+                </div>
+                <div class="ai-insight-content">
+                    Sales pipeline shows 3 high-value opportunities closing this quarter. Focus on proposal follow-ups.
+                </div>
+                <div class="ai-insight-footer">
+                    ✨ Updated 2 hours ago
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>VIP Program AI Insight</h3>
+            <div class="ai-insight-card" onmouseover="showTooltip(event, 'vip-program')" onmouseout="hideTooltip(event)">
+                <div class="ai-insight-header">
+                    <div class="ai-insight-icon">🧠</div>
+                    <div class="ai-insight-title">AI Insight</div>
+                    <div class="hover-indicator">
+                        ✨ Hover for details
+                    </div>
+                </div>
+                <div class="ai-insight-content">
+                    VIP program members generate 3x higher revenue. Expand exclusive offerings to increase retention.
+                </div>
+                <div class="ai-insight-footer">
+                    ✨ Updated 2 hours ago
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tooltip -->
+    <div id="tooltip" class="tooltip">
+        <div class="tooltip-arrow"></div>
+        <div class="tooltip-header">
+            <div class="tooltip-icon">🧠</div>
+            <div class="tooltip-title">AI Insight</div>
+            <div class="tooltip-live">
+                ✨ Live
+            </div>
+        </div>
+        <div class="tooltip-content" id="tooltip-content">
+            <!-- Content will be inserted here -->
+        </div>
+        <div class="tooltip-footer">
+            <span>Hover for full insight</span>
+            <span>Updated 2 hours ago</span>
+        </div>
+    </div>
+
+    <script>
+        // AI Insight content data
+        const aiInsights = {
+            'business-snapshot': `Your business metrics show strong growth with a 23% increase in net sales this month. Revenue is trending upward, but there's room for optimization. 
+
+Key findings:
+• Gross margin is healthy at 68.5%, above industry average
+• Average order value increased by $4.20 this month
+• Cart abandonment rate is 25% - consider implementing exit-intent offers
+• Top 3 products account for 45% of total revenue
+
+Recommendations:
+• Focus on high-margin products to increase profitability
+• Implement bundle deals to increase AOV
+• Optimize checkout flow to reduce abandonment
+• Consider dynamic pricing for seasonal items
+
+The data suggests your business is in a strong growth phase with opportunities for margin optimization.`,
+
+            'customer-360': `Customer engagement analysis reveals strong loyalty patterns and growth opportunities. Your customer base is becoming more valuable over time.
+
+Engagement metrics:
+• Customer engagement up 15% this month
+• VIP customers showing 3x higher retention rates
+• New customer acquisition cost decreased by 12%
+• Customer lifetime value increased to $350 average
+
+Customer insights:
+• 68% of customers are returning buyers
+• Top 20% of customers generate 60% of revenue
+• Average time to second purchase: 14 days
+• Customer satisfaction score: 4.7/5.0
+
+Growth opportunities:
+• Implement referral program for existing customers
+• Create tiered loyalty rewards
+• Develop personalized product recommendations
+• Expand customer communication channels
+
+Your customer relationships are a key competitive advantage.`,
+
+            'pipeline': `Sales pipeline analysis shows strong momentum with several high-value opportunities closing this quarter. Your sales process is well-structured.
+
+Pipeline overview:
+• 3 high-value opportunities ($50K+ each)
+• Average deal size: $27,500
+• Pipeline velocity: 45 days average
+• Win rate: 67% (above industry average)
+
+Current opportunities:
+• Enterprise Software License: $50K, 75% probability
+• SMB Package Deal: $5K, 60% probability
+• Custom Integration: $35K, 80% probability
+
+Sales insights:
+• Proposal stage has highest conversion rate
+• Follow-up timing is critical for success
+• Technical demos increase close rate by 40%
+• Reference customers accelerate deals
+
+Action items:
+• Schedule technical demos for all qualified prospects
+• Prepare case studies for enterprise opportunities
+• Implement automated follow-up sequences
+• Create urgency around quarter-end deadlines
+
+Your pipeline is well-positioned for a strong quarter finish.`,
+
+            'vip-program': `VIP program analysis reveals exceptional member value and growth potential. Your premium customer strategy is highly effective.
+
+VIP metrics:
+• VIP members generate 3x higher revenue
+• Member retention rate: 94% (excellent)
+• Average VIP order value: $127 (vs $44 general)
+• Member satisfaction: 4.9/5.0
+
+Program insights:
+• 78 VIP members (growing 15% monthly)
+• Exclusive products drive 40% of VIP revenue
+• Early access features highly valued
+• Referral rate: 2.3 referrals per member
+
+Growth opportunities:
+• Expand exclusive product offerings
+• Create tiered VIP levels
+• Implement member referral rewards
+• Develop VIP-only experiences
+
+Strategic recommendations:
+• Increase VIP member acquisition budget
+• Create seasonal VIP exclusives
+• Implement member feedback loop
+• Develop VIP community features
+
+Your VIP program is a significant competitive advantage and growth driver.`
+        };
+
+        function showTooltip(event, insightType) {
+            const tooltip = document.getElementById('tooltip');
+            const content = document.getElementById('tooltip-content');
+            
+            if (aiInsights[insightType]) {
+                content.textContent = aiInsights[insightType];
+                
+                // Position tooltip above the card
+                const rect = event.currentTarget.getBoundingClientRect();
+                tooltip.style.left = (rect.left + rect.width / 2) + 'px';
+                tooltip.style.top = (rect.top - 10) + 'px';
+                tooltip.style.transform = 'translateX(-50%)';
+                
+                // Show tooltip
+                tooltip.classList.add('show');
+            }
+        }
+
+        function hideTooltip(event) {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.classList.remove('show');
+        }
+
+        // Initialize
+        console.log('AI Insight Tooltip Test initialized');
+        console.log('Hover over the AI Insight cards to see detailed tooltips');
+    </script>
+</body>
+</html>

@@ -5,7 +5,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { 
   TrendingUp, 
   Brain,
-  Sparkles,
   ChevronRight,
   TrendingDown,
   Minus,
@@ -126,6 +125,50 @@ const pulseData = {
     ]
   }
 };
+
+// Mock AI insights for pulse page
+const pulseInsights = [
+  {
+    id: 'pulse-1',
+    type: 'recommendation' as const,
+    title: 'Sales Performance Optimization',
+    description: 'Sales are up 12% vs last week, but average basket size is down. Recommend promoting bundles to increase order value.',
+    confidence: 85,
+    action: 'Create bundle promotions for high-margin items',
+    priority: 'high' as const,
+    category: 'sales-opportunity' as const
+  },
+  {
+    id: 'pulse-2',
+    type: 'warning' as const,
+    title: 'Inventory Alert',
+    description: 'Low stock detected on 3 popular items. Consider restocking before next sales window.',
+    confidence: 92,
+    action: 'Review inventory levels and place restock orders',
+    priority: 'high' as const,
+    category: 'customer-health' as const
+  },
+  {
+    id: 'pulse-3',
+    type: 'success' as const,
+    title: 'Customer Engagement Up',
+    description: 'Customer engagement increased 18% this week. Your social media strategy is working well.',
+    confidence: 78,
+    action: 'Continue current social media approach',
+    priority: 'medium' as const,
+    category: 'customer-health' as const
+  },
+  {
+    id: 'pulse-4',
+    type: 'info' as const,
+    title: 'Peak Hours Analysis',
+    description: 'Your busiest sales hours are 2-4 PM. Consider scheduling more staff during these times.',
+    confidence: 88,
+    action: 'Adjust staffing schedule for peak hours',
+    priority: 'medium' as const,
+    category: 'sales-opportunity' as const
+  }
+];
 
 export default function PulsePage() {
   const { user } = useAuth();
@@ -443,6 +486,50 @@ export default function PulsePage() {
     return <Minus className="w-4 h-4 text-gray-600" />;
   };
 
+  // Helper functions for AI insights styling
+  const getInsightIcon = (type: string) => {
+    switch (type) {
+      case 'success':
+        return <TrendingUp className="h-3 w-3 text-green-500" />;
+      case 'warning':
+        return <TrendingDown className="h-3 w-3 text-yellow-500" />;
+      case 'info':
+        return <Brain className="h-3 w-3 text-blue-500" />;
+      case 'recommendation':
+        return <Brain className="h-3 w-3 text-purple-500" />;
+      default:
+        return <Brain className="h-3 w-3 text-gray-500" />;
+    }
+  };
+
+  const getInsightColor = (type: string) => {
+    switch (type) {
+      case 'success':
+        return 'border-l-green-500 bg-green-50';
+      case 'warning':
+        return 'border-l-yellow-500 bg-yellow-50';
+      case 'info':
+        return 'border-l-blue-500 bg-blue-50';
+      case 'recommendation':
+        return 'border-l-purple-500 bg-purple-50';
+      default:
+        return 'border-l-gray-500 bg-gray-50';
+    }
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'high':
+        return 'bg-red-100 text-red-800';
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'low':
+        return 'bg-green-100 text-green-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   return (
     <VendorDashboardLayout>
       <div className="space-y-6">
@@ -516,7 +603,7 @@ export default function PulsePage() {
         </div>
 
         {/* Must-Have Top-Level Metrics */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Pending Orders */}
           <div className="bg-[#F7F2EC] rounded-lg p-6 shadow-lg hover:shadow-xl transition-shadow duration-200">
             <div className="flex items-center justify-between mb-4">
@@ -572,22 +659,56 @@ export default function PulsePage() {
               <p className="text-lg font-medium text-gray-900">{filteredData.salesWindows.totalTraffic}</p>
             </div>
           </div>
+        </div>
 
-          {/* AI Insight Card */}
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg p-6 border border-blue-200 shadow-sm">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Brain className="w-5 h-5 text-blue-600" />
+        {/* AI Insights - Horizontal Layout */}
+        <div className="bg-[#F7F2EC] rounded-lg p-4 shadow-lg border border-gray-200">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <Brain className="w-5 h-5 text-blue-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900">AI Insights</h3>
+            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+              {pulseInsights.length}
+            </span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {pulseInsights.map((insight) => (
+              <div
+                key={insight.id}
+                className={`border-l-4 p-3 rounded-r-lg ${getInsightColor(insight.type)}`}
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    {getInsightIcon(insight.type)}
+                    <h4 className="font-medium text-sm text-gray-900">{insight.title}</h4>
+                  </div>
+                  <span className={`text-xs px-2 py-1 rounded-full ${getPriorityColor(insight.priority)}`}>
+                    {insight.priority}
+                  </span>
+                </div>
+                
+                <p className="text-xs text-gray-600 mb-2 line-clamp-2">{insight.description}</p>
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-12 bg-gray-200 rounded-full h-1">
+                      <div 
+                        className="bg-blue-600 h-1 rounded-full" 
+                        style={{ width: `${insight.confidence}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-xs text-gray-500">{insight.confidence}%</span>
+                  </div>
+                  
+                  {insight.action && (
+                    <span className="text-xs text-gray-600 font-medium">
+                      {insight.action}
+                    </span>
+                  )}
+                </div>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">AI Insight</h3>
-            </div>
-            <p className="text-gray-800 font-medium mb-3">
-              Sales are up 12% vs last week, but average basket size is down. Recommend promoting bundles.
-            </p>
-            <div className="flex items-center gap-2 text-sm text-blue-600">
-              <Sparkles className="w-4 h-4" />
-              <span>Updated 2 hours ago</span>
-            </div>
+            ))}
           </div>
         </div>
 
