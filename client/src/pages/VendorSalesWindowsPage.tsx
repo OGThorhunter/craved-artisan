@@ -28,6 +28,7 @@ import MotivationalQuote from '@/components/dashboard/MotivationalQuote';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { getQuoteByCategory } from '@/data/motivationalQuotes';
 import CreateEditSalesWindowDrawer from '@/components/sales-windows/CreateEditSalesWindowDrawer';
+import CreateSalesWindowWizard from '@/components/sales-windows/CreateSalesWindowWizard';
 import BulkOperationsBar from '@/components/sales-windows/BulkOperationsBar';
 import type { 
   SalesWindow, 
@@ -51,6 +52,7 @@ const VendorSalesWindowsPage = () => {
   const [dateRange, setDateRange] = useState<{ start: string; end: string }>({ start: '', end: '' });
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingWindow, setEditingWindow] = useState<SalesWindow | undefined>(undefined);
+  const [showSalesWizard, setShowSalesWizard] = useState(false);
   const [selectedWindows, setSelectedWindows] = useState<string[]>([]);
   const [showBatchOrderModal, setShowBatchOrderModal] = useState(false);
   const [batchOrderProducts, setBatchOrderProducts] = useState<Array<{product: any, quantity: number}>>([]);
@@ -322,8 +324,39 @@ const VendorSalesWindowsPage = () => {
   };
 
   const handleCreateWindow = () => {
-    setEditingWindow(undefined);
-    setIsDrawerOpen(true);
+    setShowSalesWizard(true);
+  };
+
+  const handleWizardComplete = (salesWindowData: Partial<SalesWindow>) => {
+    // Create a new sales window with the wizard data
+    const newSalesWindow: SalesWindow = {
+      id: `window-${Date.now()}`,
+      name: salesWindowData.name || 'New Sales Window',
+      description: salesWindowData.description || '',
+      status: 'DRAFT',
+      isEvergreen: salesWindowData.isEvergreen || false,
+      startDate: salesWindowData.startDate || '',
+      endDate: salesWindowData.endDate || '',
+      timezone: salesWindowData.timezone || 'America/New_York',
+      channels: salesWindowData.channels || [],
+      products: salesWindowData.products || [],
+      settings: salesWindowData.settings || {
+        allowPreorders: true,
+        showInStorefront: true,
+        autoCloseWhenSoldOut: false,
+        capacity: 100,
+        tags: []
+      },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    // Add to the sales windows list (mock implementation)
+    // In a real app, you would make an API call here
+    console.log('Creating sales window:', newSalesWindow);
+    
+    // Show success message
+    toast.success('Sales window created successfully!');
   };
 
   const handleEditWindow = (window: SalesWindow) => {
@@ -662,10 +695,10 @@ const VendorSalesWindowsPage = () => {
                 <div className="flex flex-col gap-2">
                   <button
                     onClick={handleCreateWindow}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                    className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
                   >
                     <Plus className="w-4 h-4" />
-                    New Sales Window
+                    Create Sales Window Wizard
                   </button>
                   <span className="text-xs text-gray-600 text-center">New windows start as drafts</span>
                 </div>
@@ -848,7 +881,7 @@ const VendorSalesWindowsPage = () => {
                   </p>
                   <button
                     onClick={handleCreateWindow}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2 mx-auto"
+                    className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2 mx-auto"
                   >
                     <Plus className="w-4 h-4" />
                     Create Your First Sales Window
@@ -1087,6 +1120,13 @@ const VendorSalesWindowsPage = () => {
               </div>
             </div>
           )}
+
+          {/* Create Sales Window Wizard */}
+          <CreateSalesWindowWizard
+            isOpen={showSalesWizard}
+            onClose={() => setShowSalesWizard(false)}
+            onComplete={handleWizardComplete}
+          />
         </VendorDashboardLayout>
       );
     };

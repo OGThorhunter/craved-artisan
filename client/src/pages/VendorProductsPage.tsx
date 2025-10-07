@@ -5,6 +5,7 @@ import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import MotivationalQuote from '@/components/dashboard/MotivationalQuote';
 import { getQuoteByCategory } from '@/data/motivationalQuotes';
 import EnhancedProductModal from '@/components/products/EnhancedProductModal';
+import AddProductWizard from '@/components/products/AddProductWizard';
 import { 
   Plus, 
   Search,
@@ -401,6 +402,7 @@ const VendorProductsPage: React.FC = () => {
   const [editingParsedProduct, setEditingParsedProduct] = useState<Product | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [showProductWizard, setShowProductWizard] = useState(false);
   
   // Mock inventory items for ingredient selection
   const mockInventoryItems = [
@@ -552,13 +554,14 @@ const VendorProductsPage: React.FC = () => {
 
   const handleSaveEnhancedProduct = async (productData: EnhancedProductData) => {
     try {
-      // In a real app, you would make an API call here
+    // In a real app, you would make an API call here
       console.log('Creating/updating product:', productData);
       
       // For now, add to the products list (mock save)
       const newProduct: Product = {
         id: productData.id || `product-${Date.now()}`,
         name: productData.name,
+        slug: productData.name.toLowerCase().replace(/\s+/g, '-'),
         description: productData.description || '',
         type: productData.type,
         price: productData.price,
@@ -624,9 +627,66 @@ const VendorProductsPage: React.FC = () => {
     }
   };
 
-  // Document import handlers
-  const handleDocumentImport = () => {
-    setShowDocumentImportModal(true);
+  // Document import handlers - removed as replaced by wizard
+
+  const handleWizardComplete = (productData: {
+    name?: string;
+    description?: string;
+    type?: string;
+    price?: number;
+    baseCost?: number;
+    laborCost?: number;
+    materialsCost?: number;
+  }) => {
+    // Convert wizard data to product format
+    const newProduct: Product = {
+      id: `product-${Date.now()}`,
+      name: productData.name || 'New Product',
+      slug: (productData.name || 'new-product').toLowerCase().replace(/\s+/g, '-'),
+      type: (productData.type as ProductType) || 'FOOD',
+      description: productData.description || '',
+      price: productData.price || 0,
+      baseCost: productData.baseCost || 0,
+      laborCost: productData.laborCost || 0,
+      imageUrl: '',
+      active: true,
+      sku: `WIZ-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
+      category: { name: 'General' },
+      subcategory: { name: 'General' },
+      tags: [],
+      allergenFlags: [],
+      batchSize: 1,
+      creationTimeMinutes: 30,
+      leadTimeDays: 0,
+      instructions: '',
+      sops: '',
+      nutritionInfo: null,
+      ingredients: [],
+      images: [],
+      documents: [],
+      costRollup: {
+        materialsCost: productData.materialsCost || 0,
+        laborCost: productData.laborCost || 0,
+        baseCost: productData.baseCost || 0,
+        totalCost: (productData.materialsCost || 0) + (productData.laborCost || 0) + (productData.baseCost || 0),
+        marginAtPrice: productData.price || 0,
+        marginPct: parseFloat((((productData.price || 0) - ((productData.materialsCost || 0) + (productData.laborCost || 0) + (productData.baseCost || 0))) / (productData.price || 1) * 100).toFixed(1)) || 0
+      },
+      availableSeats: undefined,
+      costPerSeat: undefined,
+      duration: undefined,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      vendorProfileId: 'vendor-1'
+    };
+
+    // Add to products list
+    queryClient.setQueryData(['products', { searchQuery, selectedCategory, selectedType, sortBy, sortOrder }], (oldData: Product[] = []) => {
+      return [...oldData, newProduct];
+    });
+
+    // Show success message
+    alert('Product created successfully!');
   };
 
   const handleDocumentUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -647,7 +707,7 @@ const VendorProductsPage: React.FC = () => {
           name: 'Artisan Sourdough Bread',
           slug: 'artisan-sourdough-bread',
           description: 'Traditional sourdough bread made with organic flour and natural fermentation',
-          type: 'FOOD',
+        type: 'FOOD',
           price: 8.50,
           baseCost: 3.20,
           laborCost: 2.50,
@@ -898,6 +958,7 @@ const VendorProductsPage: React.FC = () => {
       images: [],
       documents: []
     };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setSelectedProduct(enhancedProduct as any);
     setShowEnhancedModal(true);
   };
@@ -971,12 +1032,12 @@ const VendorProductsPage: React.FC = () => {
           {/* Content */}
           <div className="flex flex-col h-full">
             <div className="space-y-2 flex-1">
-              <h3 className="font-semibold text-gray-900 line-clamp-1">{product.name}</h3>
-              {product.description && (
-                <p className="text-sm text-gray-600 line-clamp-2">{product.description}</p>
-              )}
-              
-              {/* Price and Margin */}
+            <h3 className="font-semibold text-gray-900 line-clamp-1">{product.name}</h3>
+            {product.description && (
+              <p className="text-sm text-gray-600 line-clamp-2">{product.description}</p>
+            )}
+            
+            {/* Price and Margin */}
               <div className="flex items-center justify-between">
                 <span className="text-lg font-bold text-gray-900">
                   {product.type === 'CLASSES' 
@@ -984,10 +1045,10 @@ const VendorProductsPage: React.FC = () => {
                     : `$${product.price.toFixed(2)}`
                   }
                 </span>
-                <span className={`text-sm font-medium ${getMarginColor(product.costRollup.marginPct)}`}>
-                  {product.costRollup.marginPct.toFixed(1)}% margin
-                </span>
-              </div>
+              <span className={`text-sm font-medium ${getMarginColor(product.costRollup.marginPct)}`}>
+                {product.costRollup.marginPct.toFixed(1)}% margin
+              </span>
+            </div>
 
               {/* Classes-specific information */}
               {product.type === 'CLASSES' && (
@@ -1007,37 +1068,37 @@ const VendorProductsPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Cost Breakdown */}
-              <div className="text-xs text-gray-500 space-y-1">
-                <div className="flex justify-between">
-                  <span>Materials:</span>
-                  <span>${product.costRollup.materialsCost.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Labor:</span>
-                  <span>${product.costRollup.laborCost.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between font-medium">
-                  <span>Total Cost:</span>
-                  <span>${product.costRollup.totalCost.toFixed(2)}</span>
-                </div>
-              </div>
+            {/* Cost Breakdown */}
+            <div className="text-xs text-gray-500 space-y-1">
+              <div className="flex justify-between">
+                <span>Materials:</span>
+                <span>${product.costRollup.materialsCost.toFixed(2)}</span>
+                      </div>
+              <div className="flex justify-between">
+                <span>Labor:</span>
+                <span>${product.costRollup.laborCost.toFixed(2)}</span>
+                  </div>
+              <div className="flex justify-between font-medium">
+                <span>Total Cost:</span>
+                <span>${product.costRollup.totalCost.toFixed(2)}</span>
+            </div>
+          </div>
 
-              {/* Tags */}
-              {product.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1">
-                  {product.tags.slice(0, 3).map(tag => (
-                    <span key={tag} className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
-                      {tag}
-                    </span>
-                  ))}
-                  {product.tags.length > 3 && (
-                    <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
-                      +{product.tags.length - 3}
-                    </span>
-                  )}
-                </div>
-              )}
+            {/* Tags */}
+            {product.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {product.tags.slice(0, 3).map(tag => (
+                  <span key={tag} className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
+                    {tag}
+                  </span>
+                ))}
+                {product.tags.length > 3 && (
+                  <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
+                    +{product.tags.length - 3}
+                  </span>
+                )}
+                 </div>
+            )}
             </div>
 
             {/* Actions - Always at bottom */}
@@ -1058,8 +1119,8 @@ const VendorProductsPage: React.FC = () => {
                 <Edit className="w-3 h-3 mr-1" />
                 Edit
               </Button>
-            </div>
-          </div>
+                </div>
+              </div>
             </div>
       </Card>
     );
@@ -1184,32 +1245,23 @@ const VendorProductsPage: React.FC = () => {
               {/* Left side - Actions */}
               <div className="flex items-center gap-3">
                 <Button
-                  onClick={handleCreateProduct}
-                  className="flex items-center gap-2"
+                  onClick={() => setShowProductWizard(true)}
+                  className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
                 >
                   <Plus className="w-4 h-4" />
-                  Add Product
+                  Add Product Wizard
                 </Button>
                 
+                {selectedProducts.length > 0 && !showEnhancedModal && (
                 <Button
-                  onClick={handleDocumentImport}
                   variant="secondary"
                   className="flex items-center gap-2"
-                >
-                  <FileText className="w-4 h-4" />
-                  Import Document
-                </Button>
-
-                {selectedProducts.length > 0 && !showEnhancedModal && (
-                  <Button 
-                    variant="secondary" 
-                    className="flex items-center gap-2"
                     onClick={handleBulkExport}
                   >
                     <Download className="w-4 h-4" />
                     Export ({selectedProducts.length})
                   </Button>
-                )}
+                      )}
                     </div>
 
               {/* Right side - AI Insights */}
@@ -1447,6 +1499,7 @@ const VendorProductsPage: React.FC = () => {
           isOpen={showEnhancedModal}
           onClose={() => setShowEnhancedModal(false)}
           onSave={handleSaveEnhancedProduct}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           product={selectedProduct as any}
           categories={categories}
           inventoryItems={mockInventoryItems}
@@ -1481,7 +1534,7 @@ const VendorProductsPage: React.FC = () => {
                 </div>
                 
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 mb-4">
-                  <input
+                    <input
                     type="file"
                     accept=".pdf,.doc,.docx,.txt,.csv"
                     onChange={handleDocumentUpload}
@@ -1498,7 +1551,7 @@ const VendorProductsPage: React.FC = () => {
                         <div className="flex flex-col items-center">
                           <Loader2 className="w-8 h-8 animate-spin text-blue-600 mb-2" />
                           <span className="text-sm text-gray-600">Parsing document...</span>
-                        </div>
+                  </div>
                       ) : (
                         <div className="flex flex-col items-center">
                           <Upload className="w-8 h-8 text-gray-400 mb-2" />
@@ -1513,7 +1566,7 @@ const VendorProductsPage: React.FC = () => {
                 <div className="text-xs text-gray-500 mb-4">
                   Supported formats: PDF, DOC, DOCX, TXT, CSV. Max file size: 10MB
                 </div>
-
+                
                 <div className="bg-blue-50 p-4 rounded-lg text-left">
                   <h4 className="font-medium text-blue-900 mb-2">What gets extracted:</h4>
                   <ul className="text-sm text-blue-800 space-y-1">
@@ -1535,7 +1588,7 @@ const VendorProductsPage: React.FC = () => {
                 >
                   Cancel
                 </Button>
-              </div>
+                  </div>
             </div>
           </div>
         )}
@@ -1618,36 +1671,36 @@ const VendorProductsPage: React.FC = () => {
                         </div>
                         
                         <div className="grid grid-cols-2 gap-4 text-sm">
-                          <div>
+                  <div>
                             <span className="font-medium text-gray-700">Type:</span>
                             <span className="ml-2 text-gray-900">{product.type}</span>
-                          </div>
-                          <div>
+                  </div>
+                  <div>
                             <span className="font-medium text-gray-700">Price:</span>
                             <span className="ml-2 text-gray-900">${product.price}</span>
-                          </div>
+                  </div>
                           <div>
                             <span className="font-medium text-gray-700">Base Cost:</span>
                             <span className="ml-2 text-gray-900">${product.baseCost}</span>
-                          </div>
-                          <div>
+                </div>
+                  <div>
                             <span className="font-medium text-gray-700">Margin:</span>
                             <span className="ml-2 text-gray-900">{product.costRollup.marginPct.toFixed(1)}%</span>
-                          </div>
+                  </div>
                           {product.type === 'CLASSES' && (
                             <>
-                              <div>
+                  <div>
                                 <span className="font-medium text-gray-700">Seats:</span>
                                 <span className="ml-2 text-gray-900">{product.availableSeats}</span>
-                              </div>
+                  </div>
                               <div>
                                 <span className="font-medium text-gray-700">Duration:</span>
                                 <span className="ml-2 text-gray-900">{product.duration}</span>
                               </div>
                             </>
                           )}
-                        </div>
-                        
+                </div>
+                
                         <div className="mt-3">
                           <span className="font-medium text-gray-700">Tags:</span>
                           <div className="flex flex-wrap gap-1 mt-1">
@@ -1663,26 +1716,26 @@ const VendorProductsPage: React.FC = () => {
                   </div>
                 </div>
               </div>
-
+              
               <div className="flex justify-between items-center mt-6 pt-6 border-t border-gray-200">
                 <div className="text-sm text-gray-600">
                   Review and edit the parsed data before creating products
                 </div>
                 <div className="flex gap-3">
-                  <Button
-                    variant="secondary"
+                <Button
+                  variant="secondary"
                     onClick={handleCancelParseReview}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
+                >
+                  Cancel
+                </Button>
+                <Button
                     onClick={handleSaveParsedProducts}
                     disabled={parsedProducts.length === 0}
                     className="flex items-center gap-2"
-                  >
+                >
                     <CheckCircle className="w-4 h-4" />
                     Create {parsedProducts.length} Products
-                  </Button>
+                </Button>
                 </div>
               </div>
             </div>
@@ -1702,7 +1755,7 @@ const VendorProductsPage: React.FC = () => {
                   <X className="w-6 h-6" />
                 </button>
               </div>
-
+              
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
@@ -1712,7 +1765,7 @@ const VendorProductsPage: React.FC = () => {
                     onChange={(e) => setEditingParsedProduct({...editingParsedProduct, name: e.target.value})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
-                </div>
+                  </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
@@ -1723,18 +1776,18 @@ const VendorProductsPage: React.FC = () => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
-
+                
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>
-                    <input
+                  <input
                       type="number"
                       step="0.01"
                       value={editingParsedProduct.price}
                       onChange={(e) => setEditingParsedProduct({...editingParsedProduct, price: parseFloat(e.target.value)})}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
-                  </div>
+                        </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Base Cost</label>
                     <input
@@ -1744,8 +1797,8 @@ const VendorProductsPage: React.FC = () => {
                       onChange={(e) => setEditingParsedProduct({...editingParsedProduct, baseCost: parseFloat(e.target.value)})}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
-                  </div>
-                </div>
+                        </div>
+                    </div>
 
                 {editingParsedProduct.type === 'CLASSES' && (
                   <div className="grid grid-cols-2 gap-4">
@@ -1757,7 +1810,7 @@ const VendorProductsPage: React.FC = () => {
                         onChange={(e) => setEditingParsedProduct({...editingParsedProduct, availableSeats: parseInt(e.target.value)})}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
-                    </div>
+                </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Duration</label>
                       <input
@@ -1781,7 +1834,7 @@ const VendorProductsPage: React.FC = () => {
                   />
                 </div>
               </div>
-
+              
               <div className="flex justify-end gap-3 mt-6">
                 <Button
                   variant="secondary"
@@ -1937,6 +1990,12 @@ const VendorProductsPage: React.FC = () => {
           </div>
         )}
 
+        {/* Add Product Wizard */}
+        <AddProductWizard
+          isOpen={showProductWizard}
+          onClose={() => setShowProductWizard(false)}
+          onComplete={handleWizardComplete}
+        />
 
           </div>
     </VendorDashboardLayout>

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Database, Brain, Bell, Camera, Calculator, FlaskConical, Shield } from 'lucide-react';
+import { Database, Brain, Bell, Calculator, FlaskConical, Shield, Wand2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import VendorDashboardLayout from '../layouts/VendorDashboardLayout';
 import DashboardHeader from '../components/dashboard/DashboardHeader';
@@ -12,7 +12,7 @@ import InventoryItemsList from '../components/inventory/InventoryItemsList';
 import InventoryModals from '../components/inventory/InventoryModals';
 import AIInsightsDrawer from '../components/inventory/AIInsightsDrawer';
 import SystemMessagesDrawer from '../components/inventory/SystemMessagesDrawer';
-import ReceiptParserModal from '../components/inventory/ReceiptParserModal';
+import InventoryWizard from '../components/inventory/InventoryWizard';
 import BulkingCalculatorTab from './dashboard/vendor/inventory/tabs/BulkingCalculatorTab';
 import SDStarterManager from '../components/inventory/SDStarterManager';
 import BackupSupplyManager from '../components/inventory/BackupSupplyManager';
@@ -44,7 +44,7 @@ const VendorInventoryPage: React.FC = () => {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showAIInsights, setShowAIInsights] = useState(false);
   const [showSystemMessages, setShowSystemMessages] = useState(false);
-  const [showReceiptParser, setShowReceiptParser] = useState(false);
+  const [showWizard, setShowWizard] = useState(false);
 
   // Data fetching
   const { data: inventoryItems = [], isLoading, error } = useInventoryItems();
@@ -258,11 +258,11 @@ const VendorInventoryPage: React.FC = () => {
         {/* Action Buttons */}
         <div className="flex gap-4 justify-end">
           <button
-            onClick={() => setShowReceiptParser(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            onClick={() => setShowWizard(true)}
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-105"
           >
-            <Camera className="h-4 w-4" />
-            Scan Receipt
+            <Wand2 className="h-5 w-5" />
+            <span className="font-semibold">AI Inventory Assistant</span>
           </button>
           <button
             onClick={() => setShowAIInsights(true)}
@@ -402,14 +402,11 @@ const VendorInventoryPage: React.FC = () => {
           scope="inventory"
         />
 
-        {/* Receipt Parser Modal */}
-        <ReceiptParserModal
-          isOpen={showReceiptParser}
-          onClose={() => setShowReceiptParser(false)}
-          onSuccess={() => {
-            // Refresh inventory data when items are added
-            window.location.reload();
-          }}
+        {/* Inventory Wizard */}
+        <InventoryWizard
+          isOpen={showWizard}
+          onClose={() => setShowWizard(false)}
+          onSave={handleSave}
         />
       </div>
     </VendorDashboardLayout>
