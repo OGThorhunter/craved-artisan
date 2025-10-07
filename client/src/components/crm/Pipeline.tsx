@@ -32,7 +32,7 @@ interface Opportunity {
   source?: string;
   assignedTo?: string;
   tags: string[];
-  customFields: Record<string, any>;
+  customFields: Record<string, unknown>;
   status: 'active' | 'on_hold' | 'cancelled';
   createdAt: string;
   updatedAt: string;
@@ -62,7 +62,6 @@ const Pipeline: React.FC<PipelineProps> = ({
   onOpportunityUpdate,
   onOpportunityDelete,
   onStageChange,
-  onForecastUpdate,
   isLoading
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -71,13 +70,15 @@ const Pipeline: React.FC<PipelineProps> = ({
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingOpportunity, setEditingOpportunity] = useState<Opportunity | null>(null);
   const [viewMode, setViewMode] = useState<'card' | 'list'>('list');
   const [activeInsightFilter, setActiveInsightFilter] = useState<string | null>(null);
   const [newOpportunity, setNewOpportunity] = useState({
     title: '',
     description: '',
     customerId: '',
-    stage: 'lead' as const,
+    stage: 'lead' as 'lead' | 'qualification' | 'proposal' | 'negotiation' | 'closed_won' | 'closed_lost',
     value: 0,
     probability: 25,
     expectedCloseDate: '',
@@ -551,7 +552,8 @@ const Pipeline: React.FC<PipelineProps> = ({
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                onOpportunityUpdate(opportunity);
+                                setEditingOpportunity(opportunity);
+                                setShowEditModal(true);
                               }}
                               className="p-1 text-gray-500 hover:text-blue-600 transition-colors"
                               title="Edit"
@@ -661,7 +663,8 @@ const Pipeline: React.FC<PipelineProps> = ({
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  onOpportunityUpdate(opportunity);
+                                  setEditingOpportunity(opportunity);
+                                  setShowEditModal(true);
                                 }}
                                 className="p-1 text-gray-500 hover:text-blue-600 transition-colors"
                                 title="Edit"
@@ -794,7 +797,11 @@ const Pipeline: React.FC<PipelineProps> = ({
                     Mark as Lost
                   </button>
                   <button
-                    onClick={() => onOpportunityUpdate(selectedOpportunity)}
+                    onClick={() => {
+                      setShowDetails(false);
+                      setEditingOpportunity(selectedOpportunity);
+                      setShowEditModal(true);
+                    }}
                     className="flex items-center gap-2 px-3 py-2 bg-brand-green text-white rounded-md hover:bg-brand-green/80 transition-colors text-sm font-medium"
                   >
                     <Edit className="h-4 w-4" />
@@ -948,7 +955,7 @@ const Pipeline: React.FC<PipelineProps> = ({
                     </label>
                     <select
                       value={newOpportunity.stage}
-                      onChange={(e) => setNewOpportunity({...newOpportunity, stage: e.target.value as any})}
+                      onChange={(e) => setNewOpportunity({...newOpportunity, stage: e.target.value as 'lead' | 'qualification' | 'proposal' | 'negotiation' | 'closed_won' | 'closed_lost'})}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       title="Select opportunity stage"
                       aria-label="Select opportunity stage"
@@ -1081,6 +1088,258 @@ const Pipeline: React.FC<PipelineProps> = ({
                   className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
                 >
                   Create Opportunity
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Opportunity Modal */}
+      {showEditModal && editingOpportunity && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-[#F7F2EC] rounded-lg shadow-xl border border-gray-200 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900">Edit Opportunity</h2>
+                <button
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditingOpportunity(null);
+                  }}
+                  className="text-gray-500 hover:text-gray-700"
+                  title="Close modal"
+                  aria-label="Close edit opportunity modal"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Basic Information */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Opportunity Title *
+                    </label>
+                    <input
+                      type="text"
+                      value={editingOpportunity.title}
+                      onChange={(e) => setEditingOpportunity({...editingOpportunity, title: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter opportunity title"
+                      title="Enter opportunity title"
+                      aria-label="Enter opportunity title"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Customer ID
+                    </label>
+                    <input
+                      type="text"
+                      value={editingOpportunity.customerId}
+                      onChange={(e) => setEditingOpportunity({...editingOpportunity, customerId: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter customer ID"
+                      title="Enter customer ID"
+                      aria-label="Enter customer ID"
+                    />
+                  </div>
+                  
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Deal Value *
+                      </label>
+                      <div className="group relative">
+                        <div className="w-4 h-4 bg-blue-100 rounded-full flex items-center justify-center cursor-help">
+                          <span className="text-blue-600 text-xs font-bold">?</span>
+                        </div>
+                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                          <div className="max-w-xs">
+                            <div className="font-semibold mb-1">Deal Value Guide:</div>
+                            <div className="text-xs space-y-1">
+                              <div>• <span className="text-green-300">Under $10K:</span> Small deals</div>
+                              <div>• <span className="text-yellow-300">$10K - $50K:</span> Medium deals</div>
+                              <div>• <span className="text-orange-300">$50K - $100K:</span> Large deals</div>
+                              <div>• <span className="text-red-300">Over $100K:</span> Enterprise deals</div>
+                            </div>
+                          </div>
+                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                        </div>
+                      </div>
+                    </div>
+                    <input
+                      type="number"
+                      min="0"
+                      value={editingOpportunity.value}
+                      onChange={(e) => setEditingOpportunity({...editingOpportunity, value: parseInt(e.target.value) || 0})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Enter deal value"
+                      title="Enter deal value in dollars"
+                      aria-label="Enter deal value in dollars"
+                    />
+                  </div>
+                  
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <label className="block text-sm font-medium text-gray-700">
+                        Probability (%)
+                      </label>
+                      <div className="group relative">
+                        <div className="w-4 h-4 bg-blue-100 rounded-full flex items-center justify-center cursor-help">
+                          <span className="text-blue-600 text-xs font-bold">?</span>
+                        </div>
+                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                          <div className="max-w-xs">
+                            <div className="font-semibold mb-1">Probability Guide:</div>
+                            <div className="text-xs space-y-1">
+                              <div>• <span className="text-green-300">76-100%:</span> Very likely to close</div>
+                              <div>• <span className="text-yellow-300">51-75%:</span> Likely to close</div>
+                              <div>• <span className="text-orange-300">26-50%:</span> Moderate chance</div>
+                              <div>• <span className="text-red-300">0-25%:</span> Low probability</div>
+                            </div>
+                          </div>
+                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                        </div>
+                      </div>
+                    </div>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={editingOpportunity.probability}
+                      onChange={(e) => setEditingOpportunity({...editingOpportunity, probability: parseInt(e.target.value) || 0})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      title="Enter probability percentage"
+                      aria-label="Enter probability percentage"
+                    />
+                  </div>
+                </div>
+                
+                {/* Additional Information */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Stage *
+                    </label>
+                    <select
+                      value={editingOpportunity.stage}
+                      onChange={(e) => setEditingOpportunity({...editingOpportunity, stage: e.target.value as 'lead' | 'qualification' | 'proposal' | 'negotiation' | 'closed_won' | 'closed_lost'})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      title="Select opportunity stage"
+                      aria-label="Select opportunity stage"
+                    >
+                      <option value="lead">Lead</option>
+                      <option value="qualification">Qualification</option>
+                      <option value="proposal">Proposal</option>
+                      <option value="negotiation">Negotiation</option>
+                      <option value="closed_won">Closed Won</option>
+                      <option value="closed_lost">Closed Lost</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Expected Close Date *
+                    </label>
+                    <input
+                      type="date"
+                      value={editingOpportunity.expectedCloseDate}
+                      onChange={(e) => setEditingOpportunity({...editingOpportunity, expectedCloseDate: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      title="Select expected close date"
+                      aria-label="Select expected close date"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Source
+                    </label>
+                    <select
+                      value={editingOpportunity.source || 'Website'}
+                      onChange={(e) => setEditingOpportunity({...editingOpportunity, source: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      title="Select opportunity source"
+                      aria-label="Select opportunity source"
+                    >
+                      <option value="Website">Website</option>
+                      <option value="Referral">Referral</option>
+                      <option value="Cold Call">Cold Call</option>
+                      <option value="Email">Email</option>
+                      <option value="Social Media">Social Media</option>
+                      <option value="Trade Show">Trade Show</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Assigned To
+                    </label>
+                    <select
+                      value={editingOpportunity.assignedTo || ''}
+                      onChange={(e) => setEditingOpportunity({...editingOpportunity, assignedTo: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      title="Select assignee"
+                      aria-label="Select assignee"
+                    >
+                      <option value="">Select Assignee</option>
+                      <option value="sales@company.com">Sales Team</option>
+                      <option value="manager@company.com">Manager</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Description */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Description
+                </label>
+                <textarea
+                  value={editingOpportunity.description || ''}
+                  onChange={(e) => setEditingOpportunity({...editingOpportunity, description: e.target.value})}
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter opportunity description..."
+                  title="Enter opportunity description"
+                  aria-label="Enter opportunity description"
+                />
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+                <button
+                  onClick={() => {
+                    setShowEditModal(false);
+                    setEditingOpportunity(null);
+                  }}
+                  className="px-3 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    // Update the opportunity
+                    onOpportunityUpdate({
+                      ...editingOpportunity,
+                      updatedAt: new Date().toISOString(),
+                      lastActivityAt: new Date().toISOString()
+                    });
+                    
+                    // Close modal and reset state
+                    setShowEditModal(false);
+                    setEditingOpportunity(null);
+                  }}
+                  disabled={!editingOpportunity.title || !editingOpportunity.expectedCloseDate}
+                  className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                >
+                  Save Changes
                 </button>
               </div>
             </div>

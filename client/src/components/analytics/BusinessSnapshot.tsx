@@ -180,11 +180,11 @@ export const BusinessSnapshot: React.FC<BusinessSnapshotProps> = ({
           lowStockCount: Math.round(2 * rangeMultiplier)
         },
         salesChannels: [
-          { channel: 'Direct Website', sales: Math.round(1250 * rangeMultiplier), sharePct: 35.2 },
-          { channel: 'Social Media', sales: Math.round(890 * rangeMultiplier), sharePct: 25.1 },
-          { channel: 'Email Marketing', sales: Math.round(680 * rangeMultiplier), sharePct: 19.2 },
-          { channel: 'Referral Program', sales: Math.round(420 * rangeMultiplier), sharePct: 11.8 },
-          { channel: 'Paid Ads', sales: Math.round(310 * rangeMultiplier), sharePct: 8.7 }
+          { channel: 'Downtown Farmers Market', sales: Math.round(1250 * rangeMultiplier), sharePct: 35.2 },
+          { channel: 'Etsy Shop', sales: Math.round(890 * rangeMultiplier), sharePct: 25.1 },
+          { channel: 'Instagram Shop', sales: Math.round(680 * rangeMultiplier), sharePct: 19.2 },
+          { channel: 'Facebook Marketplace', sales: Math.round(420 * rangeMultiplier), sharePct: 11.8 },
+          { channel: 'Local Pop-up Event', sales: Math.round(310 * rangeMultiplier), sharePct: 8.7 }
         ],
         payouts: {
           nextDate: '2024-01-15',
@@ -445,17 +445,17 @@ Highest Revenue: $${snapshotData.products.top[0]?.revenue.toLocaleString() || '0
     try {
       if (format === 'csv') {
         // Create CSV content from current data with better formatting
-        const csvContent = `Sales Channels Performance Report
+        const csvContent = `Sales Windows Performance Report
 Generated: ${new Date().toLocaleDateString()}
 Date Range: ${dateFrom} to ${dateTo}
 
-Channel Name,Sales Amount,Market Share
+Sales Window,Sales Amount,Market Share
 ${snapshotData.salesChannels.map(channel => 
   `"${channel.channel}","$${channel.sales.toLocaleString()}","${channel.sharePct.toFixed(1)}%"`
 ).join('\n')}
 
 Summary:
-Total Channels: ${snapshotData.salesChannels.length}
+Total Sales Windows: ${snapshotData.salesChannels.length}
 Top Performer: ${snapshotData.salesChannels[0]?.channel || 'N/A'}
 Highest Sales: $${snapshotData.salesChannels[0]?.sales.toLocaleString() || '0'}`;
 
@@ -464,7 +464,7 @@ Highest Sales: $${snapshotData.salesChannels[0]?.sales.toLocaleString() || '0'}`
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `sales-channels-report-${dateFrom}-to-${dateTo}.csv`;
+        a.download = `sales-windows-report-${dateFrom}-to-${dateTo}.csv`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -1380,13 +1380,13 @@ const ProductsLocationsSection: React.FC<{ data: BusinessSnapshotData; onExportP
         <div className="mb-6 flex items-center justify-between">
           <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
             <TrendingUp className="w-5 h-5" />
-            Top Sales Channels
+            Top Sales Windows
           </h3>
           <div className="relative" ref={dropdownRef}>
             <Button 
               variant="secondary" 
               onClick={() => setShowExportDropdown(!showExportDropdown)}
-              title="Export sales channels data"
+              title="Export sales windows data"
             >
               <Download className="w-4 h-4 mr-2" />
               Export
@@ -1430,27 +1430,16 @@ const ProductsLocationsSection: React.FC<{ data: BusinessSnapshotData; onExportP
           </div>
         </div>
         <div>
-          <div className="space-y-3">
-            {/* Top 5 Sales Channel chips */}
-            <div className="flex flex-wrap gap-2 mb-4">
-              {data.salesChannels.slice(0, 5).map((channel) => (
-                <span key={channel.channel} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 cursor-pointer hover:bg-gray-200">
-                  {channel.channel}
-                </span>
-              ))}
-            </div>
-            
+          <div className="space-y-2">
             {/* Sales Channels Table */}
-            <div className="space-y-2">
-              {data.salesChannels.slice(0, 5).map((channel) => (
-                <div key={channel.channel} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                  <div className="font-medium text-gray-900">{channel.channel}</div>
-                  <div className="text-sm text-gray-600">
-                    ${channel.sales.toLocaleString()} ({channel.sharePct.toFixed(1)}%)
-                  </div>
+            {data.salesChannels.slice(0, 5).map((channel) => (
+              <div key={channel.channel} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                <div className="font-medium text-gray-900">{channel.channel}</div>
+                <div className="text-sm text-gray-600">
+                  ${channel.sales.toLocaleString()} ({channel.sharePct.toFixed(1)}%)
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         </div>
       </Card>

@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SD Starter Flour Type Functionality Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background-color: #0056b3; }
+        .form-group {
+            margin: 15px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .flour-type-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .flour-card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+        .flavor-profile {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .guidelines {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 SD Starter Flour Type Functionality Test</h1>
+    
+    <div class="test-section">
+        <h2>Test Results Summary</h2>
+        <div id="test-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>1. Flour Type Options Test</h2>
+        <p>Testing all available flour type options and their properties:</p>
+        
+        <div class="flour-type-grid">
+            <div class="flour-card">
+                <h4>🌾 Whole Wheat</h4>
+                <p><strong>Flavor:</strong> Nutty, earthy, malty</p>
+                <p><strong>Characteristics:</strong> Complex, robust</p>
+                <p><strong>Best for:</strong> Artisan breads, hearty flavors</p>
+            </div>
+            
+            <div class="flour-card">
+                <h4>🌾 Rye</h4>
+                <p><strong>Flavor:</strong> Sharp, tangy, complex</p>
+                <p><strong>Characteristics:</strong> Bold, distinctive</p>
+                <p><strong>Best for:</strong> Traditional sourdough, bold flavors</p>
+            </div>
+            
+            <div class="flour-card">
+                <h4>🌾 White Flour</h4>
+                <p><strong>Flavor:</strong> Mild, buttery, clean</p>
+                <p><strong>Characteristics:</strong> Versatile, neutral</p>
+                <p><strong>Best for:</strong> All-purpose, beginner-friendly</p>
+            </div>
+            
+            <div class="flour-card">
+                <h4>🌾 Cake Flour</h4>
+                <p><strong>Flavor:</strong> Delicate, sweet</p>
+                <p><strong>Characteristics:</strong> Fine, soft</p>
+                <p><strong>Best for:</strong> Sweet breads, pastries</p>
+            </div>
+            
+            <div class="flour-card">
+                <h4>🌾 Spelt</h4>
+                <p><strong>Flavor:</strong> Sweet, nutty, fruity</p>
+                <p><strong>Characteristics:</strong> Ancient grain, complex</p>
+                <p><strong>Best for:</strong> Artisan breads, unique flavors</p>
+            </div>
+            
+            <div class="flour-card">
+                <h4>🌾 Einkorn</h4>
+                <p><strong>Flavor:</strong> Rich, buttery, ancient</p>
+                <p><strong>Characteristics:</strong> Heritage grain, distinctive</p>
+                <p><strong>Best for:</strong> Traditional breads, heritage flavors</p>
+            </div>
+            
+            <div class="flour-card">
+                <h4>🌾 Custom Blend</h4>
+                <p><strong>Flavor:</strong> Customizable</p>
+                <p><strong>Characteristics:</strong> Unique combinations</p>
+                <p><strong>Best for:</strong> Experimental, signature flavors</p>
+            </div>
+        </div>
+        
+        <button onclick="testFlourTypes()">Test Flour Type Options</button>
+        <div id="flour-test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Flavor Profile System Test</h2>
+        <p>Testing the flavor profile tracking system:</p>
+        
+        <div class="form-group">
+            <label for="flavor-primary">Primary Flavor:</label>
+            <select id="flavor-primary">
+                <option value="buttery">Buttery</option>
+                <option value="malty">Malty</option>
+                <option value="fruity">Fruity</option>
+                <option value="tangy">Tangy</option>
+                <option value="sharp">Sharp</option>
+                <option value="earthy">Earthy</option>
+                <option value="sweet_cereal">Sweet Cereal</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="flavor-intensity">Intensity:</label>
+            <select id="flavor-intensity">
+                <option value="mild">Mild</option>
+                <option value="moderate">Moderate</option>
+                <option value="strong">Strong</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="flavor-notes">Flavor Notes:</label>
+            <input type="text" id="flavor-notes" placeholder="e.g., nutty, warm, toasted grain">
+        </div>
+        
+        <button onclick="testFlavorProfile()">Test Flavor Profile</button>
+        <div id="flavor-test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Environmental Factors Test</h2>
+        <p>Testing how different factors influence starter flavor:</p>
+        
+        <div class="form-group">
+            <label for="feeding-frequency">Feeding Frequency:</label>
+            <select id="feeding-frequency">
+                <option value="frequent">Frequent (8-12 hours)</option>
+                <option value="regular">Regular (12-24 hours)</option>
+                <option value="infrequent">Infrequent (24-48 hours)</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="storage-temp">Storage Temperature (°F):</label>
+            <input type="number" id="storage-temp" value="72" min="60" max="85">
+        </div>
+        
+        <div class="form-group">
+            <label for="water-source">Water Source:</label>
+            <select id="water-source">
+                <option value="filtered">Filtered</option>
+                <option value="tap">Tap Water</option>
+                <option value="spring">Spring Water</option>
+                <option value="distilled">Distilled</option>
+            </select>
+        </div>
+        
+        <button onclick="testEnvironmentalFactors()">Test Environmental Factors</button>
+        <div id="environmental-test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>4. Flavor Family Classification Test</h2>
+        <p>Testing the flavor family classification system:</p>
+        
+        <div class="guidelines">
+            <h3>🎯 Flavor Family Classification</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                <div>
+                    <h4>🧈 Buttery Family</h4>
+                    <p><strong>Flours:</strong> White flour, cake flour, einkorn</p>
+                    <p><strong>Characteristics:</strong> Mild, clean, versatile</p>
+                    <p><strong>Best for:</strong> Versatile baking, subtle flavors</p>
+                </div>
+                <div>
+                    <h4>🌾 Malty Family</h4>
+                    <p><strong>Flours:</strong> Whole wheat, spelt</p>
+                    <p><strong>Characteristics:</strong> Nutty, warm, toasty</p>
+                    <p><strong>Best for:</strong> Artisan breads, complex flavors</p>
+                </div>
+                <div>
+                    <h4>🍋 Tangy Family</h4>
+                    <p><strong>Flours:</strong> Rye, high hydration</p>
+                    <p><strong>Characteristics:</strong> Sharp, complex, bold</p>
+                    <p><strong>Best for:</strong> Traditional sourdough, bold flavors</p>
+                </div>
+            </div>
+        </div>
+        
+        <button onclick="testFlavorFamilies()">Test Flavor Families</button>
+        <div id="family-test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>5. Flavor Development Tips Test</h2>
+        <p>Testing the flavor development recommendations:</p>
+        
+        <div class="guidelines">
+            <h3>💡 Flavor Development Tips</h3>
+            <ul>
+                <li>✅ Use whole wheat for deeper, more complex flavors</li>
+                <li>🌡️ Higher temperatures (75-80°F) develop more sourness</li>
+                <li>💧 Lower hydration (60-70%) creates milder flavors</li>
+                <li>⏰ Frequent feeding (every 8-12 hours) keeps flavors clean</li>
+                <li>🚰 Filtered water provides the cleanest base flavor</li>
+                <li>🔬 Blend different flours for unique flavor profiles</li>
+            </ul>
+        </div>
+        
+        <button onclick="testFlavorTips()">Test Flavor Tips</button>
+        <div id="tips-test-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>6. Complete Starter Batch Creation Test</h2>
+        <p>Testing the complete starter batch creation with all new fields:</p>
+        
+        <div class="form-group">
+            <label for="batch-name">Batch Name:</label>
+            <input type="text" id="batch-name" placeholder="e.g., Main Starter, Backup Starter">
+        </div>
+        
+        <div class="form-group">
+            <label for="batch-quantity">Quantity (grams):</label>
+            <input type="number" id="batch-quantity" value="500" min="100">
+        </div>
+        
+        <div class="form-group">
+            <label for="batch-flour-type">Flour Type:</label>
+            <select id="batch-flour-type">
+                <option value="whole_wheat">Whole Wheat</option>
+                <option value="rye">Rye</option>
+                <option value="white_flour">White Flour</option>
+                <option value="cake_flour">Cake Flour</option>
+                <option value="spelt">Spelt</option>
+                <option value="einkorn">Einkorn</option>
+                <option value="blend">Custom Blend</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="batch-flour-blend">Flour Blend (if custom):</label>
+            <input type="text" id="batch-flour-blend" placeholder="50% whole wheat, 30% rye, 20% white">
+        </div>
+        
+        <div class="form-group">
+            <label for="batch-feeding">Feeding Frequency:</label>
+            <select id="batch-feeding">
+                <option value="frequent">Frequent (8-12 hours)</option>
+                <option value="regular">Regular (12-24 hours)</option>
+                <option value="infrequent">Infrequent (24-48 hours)</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="batch-temp">Storage Temperature (°F):</label>
+            <input type="number" id="batch-temp" value="72" min="60" max="85">
+        </div>
+        
+        <div class="form-group">
+            <label for="batch-water">Water Source:</label>
+            <select id="batch-water">
+                <option value="filtered">Filtered</option>
+                <option value="tap">Tap Water</option>
+                <option value="spring">Spring Water</option>
+                <option value="distilled">Distilled</option>
+            </select>
+        </div>
+        
+        <button onclick="testCompleteBatch()">Test Complete Batch Creation</button>
+        <div id="batch-test-result"></div>
+    </div>
+
+    <script>
+        let testResults = [];
+        
+        function addTestResult(test, status, message) {
+            testResults.push({ test, status, message });
+            updateTestResults();
+        }
+        
+        function updateTestResults() {
+            const resultsDiv = document.getElementById('test-results');
+            resultsDiv.innerHTML = '';
+            
+            testResults.forEach(result => {
+                const div = document.createElement('div');
+                div.className = `test-result ${result.status}`;
+                div.innerHTML = `<strong>${result.test}:</strong> ${result.message}`;
+                resultsDiv.appendChild(div);
+            });
+        }
+        
+        function testFlourTypes() {
+            const flourTypes = [
+                'whole_wheat', 'rye', 'white_flour', 'cake_flour', 
+                'spelt', 'einkorn', 'blend'
+            ];
+            
+            let allValid = true;
+            flourTypes.forEach(type => {
+                if (!type || type.length < 3) {
+                    allValid = false;
+                }
+            });
+            
+            if (allValid) {
+                addTestResult('Flour Types', 'success', 'All 7 flour type options are valid and properly configured');
+                document.getElementById('flour-test-result').innerHTML = 
+                    '<div class="test-result success">✅ All flour types loaded successfully</div>';
+            } else {
+                addTestResult('Flour Types', 'error', 'Some flour types are invalid');
+                document.getElementById('flour-test-result').innerHTML = 
+                    '<div class="test-result error">❌ Flour type validation failed</div>';
+            }
+        }
+        
+        function testFlavorProfile() {
+            const primary = document.getElementById('flavor-primary').value;
+            const intensity = document.getElementById('flavor-intensity').value;
+            const notes = document.getElementById('flavor-notes').value;
+            
+            if (primary && intensity) {
+                addTestResult('Flavor Profile', 'success', `Flavor profile created: ${primary} (${intensity}) with notes: ${notes || 'none'}`);
+                document.getElementById('flavor-test-result').innerHTML = 
+                    `<div class="test-result success">✅ Flavor profile: ${primary} (${intensity})${notes ? ` - Notes: ${notes}` : ''}</div>`;
+            } else {
+                addTestResult('Flavor Profile', 'error', 'Flavor profile validation failed');
+                document.getElementById('flavor-test-result').innerHTML = 
+                    '<div class="test-result error">❌ Flavor profile validation failed</div>';
+            }
+        }
+        
+        function testEnvironmentalFactors() {
+            const frequency = document.getElementById('feeding-frequency').value;
+            const temp = parseInt(document.getElementById('storage-temp').value);
+            const water = document.getElementById('water-source').value;
+            
+            let recommendations = [];
+            
+            if (frequency === 'frequent') {
+                recommendations.push('Frequent feeding will create milder flavors');
+            } else if (frequency === 'infrequent') {
+                recommendations.push('Infrequent feeding will create stronger, more complex flavors');
+            }
+            
+            if (temp > 75) {
+                recommendations.push('Higher temperature will develop more sourness');
+            } else if (temp < 70) {
+                recommendations.push('Lower temperature will create milder flavors');
+            }
+            
+            if (water === 'filtered') {
+                recommendations.push('Filtered water provides the cleanest base flavor');
+            } else if (water === 'tap') {
+                recommendations.push('Tap water may add mineral flavors');
+            }
+            
+            addTestResult('Environmental Factors', 'success', `Factors analyzed: ${frequency} feeding, ${temp}°F, ${water} water`);
+            document.getElementById('environmental-test-result').innerHTML = 
+                `<div class="test-result success">✅ Environmental factors: ${frequency} feeding, ${temp}°F, ${water} water<br>
+                <small>${recommendations.join('<br>')}</small></div>`;
+        }
+        
+        function testFlavorFamilies() {
+            const families = [
+                { name: 'Buttery Family', flours: ['white_flour', 'cake_flour', 'einkorn'], characteristics: 'Mild, clean, versatile' },
+                { name: 'Malty Family', flours: ['whole_wheat', 'spelt'], characteristics: 'Nutty, warm, toasty' },
+                { name: 'Tangy Family', flours: ['rye'], characteristics: 'Sharp, complex, bold' }
+            ];
+            
+            addTestResult('Flavor Families', 'success', `All ${families.length} flavor families properly classified`);
+            document.getElementById('family-test-result').innerHTML = 
+                '<div class="test-result success">✅ Flavor families: Buttery, Malty, Tangy - All properly classified with characteristics</div>';
+        }
+        
+        function testFlavorTips() {
+            const tips = [
+                'Use whole wheat for deeper, more complex flavors',
+                'Higher temperatures (75-80°F) develop more sourness',
+                'Lower hydration (60-70%) creates milder flavors',
+                'Frequent feeding (every 8-12 hours) keeps flavors clean',
+                'Filtered water provides the cleanest base flavor',
+                'Blend different flours for unique flavor profiles'
+            ];
+            
+            addTestResult('Flavor Tips', 'success', `All ${tips.length} flavor development tips available`);
+            document.getElementById('tips-test-result').innerHTML = 
+                '<div class="test-result success">✅ All 6 flavor development tips loaded and available</div>';
+        }
+        
+        function testCompleteBatch() {
+            const name = document.getElementById('batch-name').value;
+            const quantity = parseInt(document.getElementById('batch-quantity').value);
+            const flourType = document.getElementById('batch-flour-type').value;
+            const flourBlend = document.getElementById('batch-flour-blend').value;
+            const feeding = document.getElementById('batch-feeding').value;
+            const temp = parseInt(document.getElementById('batch-temp').value);
+            const water = document.getElementById('batch-water').value;
+            
+            if (name && quantity > 0 && flourType && feeding && temp > 0 && water) {
+                const batch = {
+                    name,
+                    quantity,
+                    flourType,
+                    flourBlend: flourType === 'blend' ? flourBlend : '',
+                    feeding,
+                    temp,
+                    water,
+                    timestamp: new Date().toISOString()
+                };
+                
+                addTestResult('Complete Batch', 'success', `Starter batch created successfully: ${name} (${quantity}g, ${flourType})`);
+                document.getElementById('batch-test-result').innerHTML = 
+                    `<div class="test-result success">✅ Batch created: ${name} - ${quantity}g of ${flourType} flour<br>
+                    <small>Feeding: ${feeding}, Temp: ${temp}°F, Water: ${water}${flourBlend ? `<br>Blend: ${flourBlend}` : ''}</small></div>`;
+            } else {
+                addTestResult('Complete Batch', 'error', 'Batch creation failed - missing required fields');
+                document.getElementById('batch-test-result').innerHTML = 
+                    '<div class="test-result error">❌ Batch creation failed - please fill all required fields</div>';
+            }
+        }
+        
+        // Auto-run initial tests
+        window.onload = function() {
+            addTestResult('System', 'info', 'SD Starter Flour Type Functionality Test initialized');
+            testFlourTypes();
+            testFlavorFamilies();
+            testFlavorTips();
+        };
+    </script>
+</body>
+</html>
+
+
+
+

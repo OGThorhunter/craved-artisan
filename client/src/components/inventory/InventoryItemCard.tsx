@@ -42,7 +42,7 @@ const InventoryItemCard: React.FC<InventoryItemCardProps> = ({
   };
 
   return (
-    <div className={`border border-gray-200 rounded-lg p-6 flex flex-col transition-all shadow-lg hover:shadow-xl duration-200 ${
+    <div className={`border border-gray-200 rounded-lg p-6 flex flex-col transition-all duration-200 shadow-md ${
       isDeleting ? 'opacity-50' : ''
     }`} style={{ backgroundColor: '#F7F2EC' }}>
       {/* Header */}

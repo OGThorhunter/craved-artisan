@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Database, Brain, Bell, Camera } from 'lucide-react';
+import { Database, Brain, Bell, Camera, Calculator, FlaskConical, Shield } from 'lucide-react';
 import VendorDashboardLayout from '../layouts/VendorDashboardLayout';
 import DashboardHeader from '../components/dashboard/DashboardHeader';
 import MotivationalQuote from '../components/dashboard/MotivationalQuote';
@@ -12,6 +12,9 @@ import InventoryModals from '../components/inventory/InventoryModals';
 import AIInsightsDrawer from '../components/inventory/AIInsightsDrawer';
 import SystemMessagesDrawer from '../components/inventory/SystemMessagesDrawer';
 import ReceiptParserModal from '../components/inventory/ReceiptParserModal';
+import BulkingCalculatorTab from './dashboard/vendor/inventory/tabs/BulkingCalculatorTab';
+import SDStarterManager from '../components/inventory/SDStarterManager';
+import BackupSupplyManager from '../components/inventory/BackupSupplyManager';
 import { 
   useInventoryItems, 
   useCreateInventoryItem, 
@@ -24,8 +27,11 @@ import type {
   UpdateInventoryItemData
 } from '../hooks/useInventory';
 
+type TabType = 'inventory' | 'bulking' | 'starter' | 'backup';
+
 const VendorInventoryPage: React.FC = () => {
   // State
+  const [activeTab, setActiveTab] = useState<TabType>('inventory');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -110,6 +116,34 @@ const VendorInventoryPage: React.FC = () => {
     setViewingItem(null);
   };
 
+  // Tab configuration
+  const tabs = [
+    {
+      id: 'inventory' as TabType,
+      label: 'Inventory',
+      icon: Database,
+      description: 'Manage your inventory items'
+    },
+    {
+      id: 'bulking' as TabType,
+      label: 'Bulking Calculator',
+      icon: Calculator,
+      description: 'Calculate bulk purchase savings'
+    },
+    {
+      id: 'starter' as TabType,
+      label: 'SD Starter',
+      icon: FlaskConical,
+      description: 'Sourdough starter management'
+    },
+    {
+      id: 'backup' as TabType,
+      label: 'Backup Supply',
+      icon: Shield,
+      description: 'Emergency supply management'
+    }
+  ];
+
   // Loading state
   if (isLoading) {
     return (
@@ -139,24 +173,6 @@ const VendorInventoryPage: React.FC = () => {
               <div className="h-10 bg-gray-200 rounded"></div>
             </div>
           </div>
-          
-          {viewMode === 'grid' ? (
-            <InventoryItemsGrid
-              items={[]}
-              isLoading={true}
-              onView={handleView}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
-          ) : (
-            <InventoryItemsList
-              items={[]}
-              isLoading={true}
-              onView={handleView}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
-          )}
         </div>
       </VendorDashboardLayout>
     );
@@ -192,6 +208,7 @@ const VendorInventoryPage: React.FC = () => {
       </VendorDashboardLayout>
     );
   }
+
 
   return (
     <VendorDashboardLayout>
@@ -242,36 +259,82 @@ const VendorInventoryPage: React.FC = () => {
         {/* Overview Cards */}
         <InventoryOverviewCards items={inventoryItems} />
 
-        {/* Search and Filters */}
-        <InventorySearchAndFilters
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          selectedCategory={selectedCategory}
-          onCategoryChange={setSelectedCategory}
-          onAddNew={handleAddNew}
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-          isLoading={isLoading}
-        />
+        {/* Tab Navigation */}
+        <div>
+          <div className="bg-[#F7F2EC] rounded-lg shadow-sm border border-gray-200 mb-6">
+            <div className="border-b border-gray-200">
+              <nav className="flex space-x-8 px-6" aria-label="Tabs">
+                {tabs.map((tab) => {
+                  const Icon = tab.icon;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`${
+                        activeTab === tab.id
+                          ? 'border-black text-black'
+                          : 'border-transparent text-black hover:text-black hover:border-gray-400'
+                      } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition-colors`}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {tab.label}
+                    </button>
+                  );
+                })}
+              </nav>
+            </div>
+          </div>
 
-        {/* Items Display */}
-        {viewMode === 'grid' ? (
-          <InventoryItemsGrid
-            items={filteredItems}
-            onView={handleView}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            deletingId={deletingId || undefined}
-          />
-        ) : (
-          <InventoryItemsList
-            items={filteredItems}
-            onView={handleView}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            deletingId={deletingId || undefined}
-          />
-        )}
+          {/* Tab Content */}
+          <div>
+            {activeTab === 'inventory' && (
+              <div className="space-y-6">
+                {/* Search and Filters */}
+                <InventorySearchAndFilters
+                  searchTerm={searchTerm}
+                  onSearchChange={setSearchTerm}
+                  selectedCategory={selectedCategory}
+                  onCategoryChange={setSelectedCategory}
+                  onAddNew={handleAddNew}
+                  viewMode={viewMode}
+                  onViewModeChange={setViewMode}
+                  isLoading={isLoading}
+                />
+
+                {/* Items Display */}
+                {viewMode === 'grid' ? (
+                  <InventoryItemsGrid
+                    items={filteredItems}
+                    onView={handleView}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    deletingId={deletingId || undefined}
+                  />
+                ) : (
+                  <InventoryItemsList
+                    items={filteredItems}
+                    onView={handleView}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    deletingId={deletingId || undefined}
+                  />
+                )}
+              </div>
+            )}
+
+            {activeTab === 'bulking' && (
+              <BulkingCalculatorTab />
+            )}
+
+            {activeTab === 'starter' && (
+              <SDStarterManager />
+            )}
+
+            {activeTab === 'backup' && (
+              <BackupSupplyManager />
+            )}
+          </div>
+        </div>
 
         {/* Modals */}
         <InventoryModals

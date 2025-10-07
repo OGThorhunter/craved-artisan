@@ -117,6 +117,22 @@ const VIPProgramPage: React.FC = () => {
     totalValue: vipCustomers.reduce((sum, c) => sum + c.lifetimeValue, 0)
   };
 
+  const handleEditCustomer = (customerId: string) => {
+    console.log('Edit customer:', customerId);
+    // TODO: Implement edit customer functionality
+    // This could open a modal or navigate to an edit page
+    alert(`Edit customer functionality for ID: ${customerId} - Coming soon!`);
+  };
+
+  const handleDeleteCustomer = (customerId: string) => {
+    console.log('Delete customer:', customerId);
+    // TODO: Implement delete customer functionality
+    // This should show a confirmation dialog before deleting
+    if (confirm('Are you sure you want to remove this customer from the VIP program?')) {
+      alert(`Delete customer functionality for ID: ${customerId} - Coming soon!`);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -296,13 +312,15 @@ const VIPProgramPage: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex gap-2">
                         <button 
-                          className="text-indigo-600 hover:text-indigo-900"
+                          onClick={() => handleEditCustomer(customer.id)}
+                          className="text-indigo-600 hover:text-indigo-900 transition-colors"
                           title="Edit customer"
                         >
                           <Edit className="w-4 h-4" />
                         </button>
                         <button 
-                          className="text-red-600 hover:text-red-900"
+                          onClick={() => handleDeleteCustomer(customer.id)}
+                          className="text-red-600 hover:text-red-900 transition-colors"
                           title="Delete customer"
                         >
                           <Trash2 className="w-4 h-4" />

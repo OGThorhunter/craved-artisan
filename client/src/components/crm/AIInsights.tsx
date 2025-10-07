@@ -28,14 +28,17 @@ interface AIInsightsProps {
   isLoading?: boolean;
   maxInsights?: number;
   showCategories?: boolean;
+  onInsightClick?: (insight: AIInsight) => void;
 }
 
 const AIInsights: React.FC<AIInsightsProps> = ({
   insights,
   isLoading = false,
   maxInsights = 5,
-  showCategories = false
+  showCategories = false,
+  onInsightClick
 }) => {
+
   const getInsightIcon = (type: string) => {
     switch (type) {
       case 'success':
@@ -147,47 +150,50 @@ const AIInsights: React.FC<AIInsightsProps> = ({
       
       <div className="space-y-3">
         {sortedInsights.map((insight) => (
-          <div
-            key={insight.id}
-            className={`border-l-4 p-3 rounded-r-lg ${getInsightColor(insight.type)}`}
-          >
-            <div className="flex items-start justify-between mb-2">
-              <div className="flex items-center gap-2">
-                {getInsightIcon(insight.type)}
-                <h4 className="font-medium text-sm text-gray-900">{insight.title}</h4>
+          <div key={insight.id} className="relative">
+            <div
+              className={`border-l-4 p-3 rounded-r-lg cursor-pointer hover:shadow-md transition-shadow duration-200 ${getInsightColor(insight.type)}`}
+              onClick={() => onInsightClick?.(insight)}
+            >
+              <div className="flex items-start justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  {getInsightIcon(insight.type)}
+                  <h4 className="font-medium text-sm text-gray-900">{insight.title}</h4>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`text-xs px-2 py-1 rounded-full ${getPriorityColor(insight.priority)}`}>
+                    {insight.priority}
+                  </span>
+                  {showCategories && (
+                    <div className="flex items-center gap-1 text-xs text-gray-500">
+                      {getCategoryIcon(insight.category)}
+                      <span className="capitalize">{insight.category.replace('-', ' ')}</span>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className={`text-xs px-2 py-1 rounded-full ${getPriorityColor(insight.priority)}`}>
-                  {insight.priority}
-                </span>
-                {showCategories && (
-                  <div className="flex items-center gap-1 text-xs text-gray-500">
-                    {getCategoryIcon(insight.category)}
-                    <span className="capitalize">{insight.category.replace('-', ' ')}</span>
+              
+              <p className="text-xs text-gray-600 mb-2">{insight.description}</p>
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-16 bg-gray-200 rounded-full h-1.5">
+                    <div 
+                      className="bg-purple-600 h-1.5 rounded-full" 
+                      style={{ width: `${insight.confidence}%` }}
+                    ></div>
                   </div>
+                  <span className="text-xs text-gray-500">{insight.confidence}% confidence</span>
+                </div>
+                
+                {insight.action && (
+                  <span className="text-xs text-gray-600 font-medium">
+                    {insight.action}
+                  </span>
                 )}
               </div>
             </div>
-            
-            <p className="text-xs text-gray-600 mb-2">{insight.description}</p>
-            
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-16 bg-gray-200 rounded-full h-1.5">
-                  <div 
-                    className="bg-purple-600 h-1.5 rounded-full" 
-                    style={{ width: `${insight.confidence}%` }}
-                  ></div>
-                </div>
-                <span className="text-xs text-gray-500">{insight.confidence}% confidence</span>
-              </div>
-              
-              {insight.action && (
-                <span className="text-xs text-gray-600 font-medium">
-                  {insight.action}
-                </span>
-              )}
-            </div>
+
           </div>
         ))}
       </div>

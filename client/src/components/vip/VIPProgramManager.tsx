@@ -70,9 +70,9 @@ const VIPProgramManager: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'customers' | 'tiers' | 'settings'>('overview');
   const [searchTerm, setSearchTerm] = useState('');
   const [tierFilter, setTierFilter] = useState<string>('all');
-  // const [showTierModal, setShowTierModal] = useState(false);
-  // const [showSettingsModal, setShowSettingsModal] = useState(false);
-  // const [editingTier, setEditingTier] = useState<VIPTier | null>(null);
+  const [showTierModal, setShowTierModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [editingTier, setEditingTier] = useState<VIPTier | null>(null);
 
   // Program settings state
   const [programSettings, setProgramSettings] = useState<VIPProgramSettings>({
@@ -210,18 +210,32 @@ const VIPProgramManager: React.FC = () => {
   const handleSaveSettings = () => {
     // Save program settings
     console.log('Saving program settings:', programSettings);
-    // setShowSettingsModal(false);
+    setShowSettingsModal(false);
+    // Here you would typically make an API call to save settings
+    alert('Program settings saved successfully!');
   };
 
-  // const handleSaveTier = (tier: VIPTier) => {
-  //   if (editingTier) {
-  //     setVipTiers(prev => prev.map(t => t.id === tier.id ? tier : t));
-  //   } else {
-  //     setVipTiers(prev => [...prev, { ...tier, id: Date.now().toString() }]);
-  //   }
-  //   setShowTierModal(false);
-  //   setEditingTier(null);
-  // };
+  const handleSaveTier = (tier: VIPTier) => {
+    if (editingTier) {
+      // Update existing tier - in a real app, you'd update the state
+      console.log('Updating tier:', tier);
+    } else {
+      // Add new tier - in a real app, you'd add to the state
+      console.log('Adding new tier:', tier);
+    }
+    setShowTierModal(false);
+    setEditingTier(null);
+    alert('Tier saved successfully!');
+  };
+
+  const handleCustomizeProgram = () => {
+    setShowSettingsModal(true);
+  };
+
+  const handleAddTier = () => {
+    setEditingTier(null);
+    setShowTierModal(true);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -239,14 +253,14 @@ const VIPProgramManager: React.FC = () => {
             <div className="flex gap-3">
               <Button 
                 variant="secondary"
-                onClick={() => console.log('Customize Program clicked')}
+                onClick={handleCustomizeProgram}
               >
                 <Settings className="w-4 h-4 mr-2" />
                 Customize Program
               </Button>
               <Button 
                 variant="primary"
-                onClick={() => console.log('Add Tier clicked')}
+                onClick={handleAddTier}
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Add Tier
@@ -492,7 +506,7 @@ const VIPProgramManager: React.FC = () => {
               <h3 className="text-lg font-semibold text-gray-900">VIP Tiers</h3>
               <Button 
                 variant="primary"
-                onClick={() => console.log('Add New Tier clicked')}
+                onClick={handleAddTier}
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Add New Tier
@@ -513,7 +527,10 @@ const VIPProgramManager: React.FC = () => {
                     <div className="flex gap-2">
                       <button 
                         className="text-indigo-600 hover:text-indigo-900"
-                        onClick={() => console.log('Edit tier clicked')}
+                        onClick={() => {
+                          setEditingTier(tier);
+                          setShowTierModal(true);
+                        }}
                         title="Edit tier"
                       >
                         <Edit className="w-4 h-4" />
@@ -658,6 +675,210 @@ const VIPProgramManager: React.FC = () => {
                 <Save className="w-4 h-4 mr-2" />
                 Save Settings
               </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Settings Modal */}
+        {showSettingsModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-gray-900">Customize Program</h2>
+                <button
+                  onClick={() => setShowSettingsModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <span className="sr-only">Close</span>
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="modal-program-name" className="block text-sm font-medium text-gray-700 mb-2">Program Name</label>
+                  <input
+                    id="modal-program-name"
+                    type="text"
+                    value={programSettings.programName}
+                    onChange={(e) => setProgramSettings(prev => ({ ...prev, programName: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="modal-program-description" className="block text-sm font-medium text-gray-700 mb-2">Program Description</label>
+                  <textarea
+                    id="modal-program-description"
+                    value={programSettings.programDescription}
+                    onChange={(e) => setProgramSettings(prev => ({ ...prev, programDescription: e.target.value }))}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
+                </div>
+                <div className="flex items-center gap-4">
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={programSettings.isPublic}
+                      onChange={(e) => setProgramSettings(prev => ({ ...prev, isPublic: e.target.checked }))}
+                      className="mr-2"
+                    />
+                    <span className="text-sm text-gray-700">Public program (visible to customers)</span>
+                  </label>
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={programSettings.autoEnrollment}
+                      onChange={(e) => setProgramSettings(prev => ({ ...prev, autoEnrollment: e.target.checked }))}
+                      className="mr-2"
+                    />
+                    <span className="text-sm text-gray-700">Auto-enrollment</span>
+                  </label>
+                </div>
+              </div>
+              
+              <div className="flex justify-end gap-3 mt-6">
+                <Button
+                  variant="secondary"
+                  onClick={() => setShowSettingsModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={handleSaveSettings}
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  Save Changes
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Add/Edit Tier Modal */}
+        {showTierModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-gray-900">
+                  {editingTier ? 'Edit Tier' : 'Add New Tier'}
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowTierModal(false);
+                    setEditingTier(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <span className="sr-only">Close</span>
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Tier Name</label>
+                  <input
+                    type="text"
+                    placeholder="e.g., Bronze, Silver, Gold"
+                    defaultValue={editingTier?.name || ''}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="modal-tier-color" className="block text-sm font-medium text-gray-700 mb-2">Tier Color</label>
+                  <input
+                    id="modal-tier-color"
+                    type="color"
+                    defaultValue={editingTier?.color || "#8B5CF6"}
+                    className="w-full h-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Minimum Spent ($)</label>
+                  <input
+                    type="number"
+                    placeholder="1000"
+                    defaultValue={editingTier?.requirements.minSpent || ''}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Minimum Orders</label>
+                  <input
+                    type="number"
+                    placeholder="5"
+                    defaultValue={editingTier?.requirements.minOrders || ''}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Minimum Lifetime Value ($)</label>
+                  <input
+                    type="number"
+                    placeholder="1000"
+                    defaultValue={editingTier?.requirements.minLifetimeValue || ''}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Benefits (one per line)</label>
+                  <textarea
+                    rows={4}
+                    placeholder="Free shipping&#10;15% discount&#10;Priority support"
+                    defaultValue={editingTier?.benefits.join('\n') || ''}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex justify-end gap-3 mt-6">
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    setShowTierModal(false);
+                    setEditingTier(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={() => {
+                    // Collect form data from the modal inputs
+                    const modal = document.querySelector('.fixed.inset-0') as HTMLElement;
+                    const nameInput = modal?.querySelector('input[type="text"]') as HTMLInputElement;
+                    const colorInput = modal?.querySelector('input[type="color"]') as HTMLInputElement;
+                    const numberInputs = modal?.querySelectorAll('input[type="number"]') as NodeListOf<HTMLInputElement>;
+                    const benefitsTextarea = modal?.querySelector('textarea') as HTMLTextAreaElement;
+                    
+                    const updatedTier: VIPTier = {
+                      id: editingTier?.id || 'new',
+                      name: nameInput?.value || editingTier?.name || 'New Tier',
+                      color: colorInput?.value || editingTier?.color || '#8B5CF6',
+                      icon: editingTier?.icon || '⭐',
+                      requirements: {
+                        minSpent: Number(numberInputs?.[0]?.value) || editingTier?.requirements.minSpent || 1000,
+                        minOrders: Number(numberInputs?.[1]?.value) || editingTier?.requirements.minOrders || 5,
+                        minLifetimeValue: Number(numberInputs?.[2]?.value) || editingTier?.requirements.minLifetimeValue || 1000
+                      },
+                      benefits: benefitsTextarea?.value ? benefitsTextarea.value.split('\n').filter(b => b.trim()) : editingTier?.benefits || ['Free shipping', '15% discount'],
+                      isActive: editingTier?.isActive ?? true,
+                      isDefault: editingTier?.isDefault ?? false
+                    };
+                    
+                    handleSaveTier(updatedTier);
+                  }}
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  {editingTier ? 'Update Tier' : 'Add Tier'}
+                </Button>
+              </div>
             </div>
           </div>
         )}

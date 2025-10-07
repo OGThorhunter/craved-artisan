@@ -38,6 +38,7 @@ import BatchPricingPage from './pages/BatchPricingPage';
 import VendorEventsPage from './pages/vendor/VendorEventsPage';
 import VendorFinancialsPage from './pages/vendor/VendorFinancialsPage';
 import PulsePage from './pages/dashboard/vendor/PulsePage';
+import SettingsPage from './pages/SettingsPage';
 
 import DemoStorefrontPage from './pages/vendor/DemoStorefrontPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
@@ -307,6 +308,13 @@ function App() {
             <Route path="/dashboard/vendor/pulse">
               <ProtectedRoute role="VENDOR">
                 <PulsePage />
+              </ProtectedRoute>
+            </Route>
+
+            {/* Settings Route */}
+            <Route path="/settings">
+              <ProtectedRoute>
+                <SettingsPage />
               </ProtectedRoute>
             </Route>
 

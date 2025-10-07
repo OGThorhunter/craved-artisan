@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { X, History, Download, Filter } from 'lucide-react';
-import { Button } from '../ui/Button';
+import Button from '../ui/Button';
 import { Select } from '../ui/Select';
 import { Badge } from '../ui/Badge';
 

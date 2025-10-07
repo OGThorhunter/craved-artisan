@@ -24,7 +24,7 @@ const InventoryItemsGrid: React.FC<InventoryItemsGridProps> = ({
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {[1, 2, 3, 4, 5, 6].map((i) => (
-          <div key={i} className="border border-gray-200 rounded-lg p-6 shadow-lg animate-pulse" style={{ backgroundColor: '#F7F2EC' }}>
+          <div key={i} className="border border-gray-200 rounded-lg p-6 animate-pulse shadow-md" style={{ backgroundColor: '#F7F2EC' }}>
             <div className="space-y-4">
               <div className="flex items-start justify-between">
                 <div className="space-y-2 flex-1">

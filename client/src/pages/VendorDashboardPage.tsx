@@ -3,6 +3,7 @@ import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import MotivationalQuote from '@/components/dashboard/MotivationalQuote';
 import { getQuoteByCategory } from '@/data/motivationalQuotes';
+import AIInsights from '@/components/crm/AIInsights';
 import { 
   TrendingUp, 
   DollarSign, 
@@ -12,7 +13,6 @@ import {
   Calendar,
   Activity,
   Brain,
-  Sparkles,
   ChevronRight,
   TrendingDown,
   Minus,
@@ -76,6 +76,30 @@ const pulseData = {
     revenue: 15420.00
   }
 };
+
+// Mock AI insights for dashboard
+const dashboardInsights = [
+  {
+    id: 'dashboard-1',
+    type: 'recommendation' as const,
+    title: 'Optimize Bundle Offerings',
+    description: 'Sales are up 12% vs last week, but average basket size is down. Bundle high-margin items to increase order value.',
+    confidence: 85,
+    action: 'Create product bundles',
+    priority: 'high' as const,
+    category: 'sales-opportunity' as const
+  },
+  {
+    id: 'dashboard-2',
+    type: 'warning' as const,
+    title: 'Low Stock Alert',
+    description: 'Three popular items are running low. Restock before your next sales window to avoid lost revenue.',
+    confidence: 92,
+    action: 'Review inventory and reorder',
+    priority: 'high' as const,
+    category: 'customer-health' as const
+  }
+];
 
 const VendorDashboardPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('pulse');
@@ -244,21 +268,20 @@ const VendorDashboardPage: React.FC = () => {
                 </div>
               </div>
 
-              {/* AI Insight Card */}
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg p-6 border border-blue-200 shadow-sm">
+              {/* AI Insights */}
+              <div className="bg-white rounded-lg p-6 border border-gray-200 shadow-sm">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="p-2 bg-blue-100 rounded-lg">
                     <Brain className="w-5 h-5 text-blue-600" />
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900">AI Insight</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">AI Insights</h3>
                 </div>
-                <p className="text-gray-800 font-medium mb-3">
-                  Sales are up 12% vs last week, but average basket size is down. Recommend promoting bundles.
-                </p>
-                <div className="flex items-center gap-2 text-sm text-blue-600">
-                  <Sparkles className="w-4 h-4" />
-                  <span>Updated 2 hours ago</span>
-                </div>
+                <AIInsights 
+                  insights={dashboardInsights}
+                  isLoading={false}
+                  maxInsights={2}
+                  showCategories={true}
+                />
               </div>
             </div>
 

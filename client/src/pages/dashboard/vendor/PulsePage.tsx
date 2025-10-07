@@ -11,7 +11,6 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Store,
-  Settings,
   ExternalLink,
   Copy,
   Check,
@@ -181,6 +180,7 @@ export default function PulsePage() {
   });
   const [showCustomDateRange, setShowCustomDateRange] = useState(false);
   const [selectedMetric, setSelectedMetric] = useState('sales');
+  const [hoveredInsight, setHoveredInsight] = useState<string | null>(null);
 
   // Fetch vendor profile to get the vendor slug for storefront URL
   useEffect(() => {
@@ -530,6 +530,26 @@ export default function PulsePage() {
     }
   };
 
+  // Function to get detailed AI insight content
+  const getDetailedInsightContent = (insightId: string): string => {
+    switch (insightId) {
+      case 'pulse-1':
+        return `Your sales are up 12% vs last week, but average basket size is down. Recommend promoting bundles to increase order value. This strategy could potentially increase your average order value by 15-20%, translating to an additional $800-1,200 in weekly revenue.`;
+
+      case 'pulse-2':
+        return `Low stock detected on 3 popular items. Consider restocking before next sales window. Proactive restocking now could prevent an estimated $400+ in lost revenue. Review production schedules and prepare customer communication for potential delays.`;
+
+      case 'pulse-3':
+        return `Customer engagement increased 18% this week. Your social media strategy is working well. Continue current posting frequency and expand user-generated content features. This engagement boost is translating to a 12% increase in repeat purchases.`;
+
+      case 'pulse-4':
+        return `Your busiest sales hours are 2-4 PM. Consider scheduling more staff during these times. This optimization could increase your daily capacity by 30-35% during peak hours and improve customer satisfaction.`;
+
+      default:
+        return 'Detailed analysis not available for this insight.';
+    }
+  };
+
   return (
     <VendorDashboardLayout>
       <div className="space-y-6">
@@ -590,12 +610,8 @@ export default function PulsePage() {
                     className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm text-sm font-medium cursor-pointer"
                   >
                     <ExternalLink className="w-4 h-4" />
-                    Visit Storefront
+                    Visit / Edit Storefront
                   </a>
-                  <Link href="/dashboard/vendor/site-settings" className="flex items-center gap-2 px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shadow-sm text-sm font-medium cursor-pointer">
-                    <Settings className="w-4 h-4" />
-                    Storefront Settings
-                  </Link>
                 </div>
               </div>
             </div>
@@ -671,42 +687,61 @@ export default function PulsePage() {
             <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
               {pulseInsights.length}
             </span>
+            <div className="flex items-center gap-1 text-xs text-blue-600 ml-auto bg-blue-100 px-2 py-1 rounded-full">
+              <Brain className="w-3 h-3" />
+              <span>Hover for details</span>
+            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {pulseInsights.map((insight) => (
-              <div
-                key={insight.id}
-                className={`border-l-4 p-3 rounded-r-lg ${getInsightColor(insight.type)}`}
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    {getInsightIcon(insight.type)}
-                    <h4 className="font-medium text-sm text-gray-900">{insight.title}</h4>
-                  </div>
-                  <span className={`text-xs px-2 py-1 rounded-full ${getPriorityColor(insight.priority)}`}>
-                    {insight.priority}
-                  </span>
-                </div>
-                
-                <p className="text-xs text-gray-600 mb-2 line-clamp-2">{insight.description}</p>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-12 bg-gray-200 rounded-full h-1">
-                      <div 
-                        className="bg-blue-600 h-1 rounded-full" 
-                        style={{ width: `${insight.confidence}%` }}
-                      ></div>
+              <div key={insight.id} className="relative">
+                <div
+                  className={`border-l-4 p-3 rounded-r-lg cursor-pointer hover:shadow-md transition-shadow duration-200 ${getInsightColor(insight.type)}`}
+                  onMouseEnter={() => setHoveredInsight(insight.id)}
+                  onMouseLeave={() => setHoveredInsight(null)}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      {getInsightIcon(insight.type)}
+                      <h4 className="font-medium text-sm text-gray-900">{insight.title}</h4>
                     </div>
-                    <span className="text-xs text-gray-500">{insight.confidence}%</span>
+                    <span className={`text-xs px-2 py-1 rounded-full ${getPriorityColor(insight.priority)}`}>
+                      {insight.priority}
+                    </span>
                   </div>
                   
-                  {insight.action && (
-                    <span className="text-xs text-gray-600 font-medium">
-                      {insight.action}
-                    </span>
-                  )}
+                  <p className="text-xs text-gray-600 mb-2 line-clamp-2">{insight.description}</p>
+                  
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-12 bg-gray-200 rounded-full h-1">
+                        <div 
+                          className="bg-blue-600 h-1 rounded-full" 
+                          style={{ width: `${insight.confidence}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-xs text-gray-500">{insight.confidence}%</span>
+                    </div>
+                    
+                    {insight.action && (
+                      <span className="text-xs text-gray-600 font-medium">
+                        {insight.action}
+                      </span>
+                    )}
+                  </div>
                 </div>
+
+                {/* Detailed Insight Popup */}
+                {hoveredInsight === insight.id && (
+                  <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg p-3 max-w-sm">
+                    <div className="text-xs text-gray-700 leading-relaxed">
+                      {getDetailedInsightContent(insight.id)}
+                    </div>
+                    
+                    {/* Arrow */}
+                    <div className="absolute -top-1 left-3 w-0 h-0 border-l-4 border-r-4 border-b-4 border-l-transparent border-r-transparent border-b-gray-300"></div>
+                  </div>
+                )}
               </div>
             ))}
           </div>

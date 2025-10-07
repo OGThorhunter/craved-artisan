@@ -29,6 +29,7 @@
     "db:generate": "cd server && npx prisma generate",
     "db:migrate": "cd server && npx prisma migrate dev",
     "db:seed": "tsx scripts/seed-vendor-dashboard.ts",
+    "db:seed:settings": "tsx server/src/scripts/seed-settings-demo.ts",
     "db:studio": "cd server && npx prisma studio",
     "db:reset": "cd server && npx prisma migrate reset",
     "snapshot": "tsx scripts/projectSnapshot.ts > snapshot.json",

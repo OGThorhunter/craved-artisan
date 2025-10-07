@@ -26,7 +26,6 @@ import Pipeline from '@/components/crm/Pipeline';
 import TaskManagement from '@/components/crm/TaskManagement';
 
 // Import UI components
-import { AIInsightTooltip } from '@/components/ui/AIInsightTooltip';
 import VIPProgramManager from '@/components/vip/VIPProgramManager';
 
 type AnalyticsTabType = 'business-snapshot' | 'taxes' | 'customer-360' | 'pipeline' | 'tasks' | 'customer-health' | 'vip-program';
@@ -61,205 +60,6 @@ const VendorAnalyticsCRMPage: React.FC<VendorAnalyticsCRMPageProps> = ({
     }
   };
 
-  const getAIInsightContent = (tab: AnalyticsTabType): string => {
-    console.log('getAIInsightContent called with tab:', tab);
-    switch (tab) {
-      case 'business-snapshot':
-        return `Your business metrics show strong growth with a 23% increase in net sales this month. Revenue is trending upward, but there's room for optimization. 
-
-Key findings:
-• Gross margin is healthy at 68.5%, above industry average
-• Average order value increased by $4.20 this month
-• Cart abandonment rate is 25% - consider implementing exit-intent offers
-• Top 3 products account for 45% of total revenue
-
-Recommendations:
-• Focus on high-margin products to increase profitability
-• Implement bundle deals to increase AOV
-• Optimize checkout flow to reduce abandonment
-• Consider dynamic pricing for seasonal items
-
-The data suggests your business is in a strong growth phase with opportunities for margin optimization.`;
-
-      case 'taxes':
-        return `Tax compliance analysis shows excellent record-keeping and timely submissions. Your tax strategy is well-optimized for your business model.
-
-Current status:
-• All quarterly taxes submitted on time
-• Tax collected: $856.20 (last 30 days)
-• Effective tax rate: 5.6% (within optimal range)
-• No outstanding tax issues or penalties
-
-Optimization opportunities:
-• Consider tax-loss harvesting for end-of-year
-• Review deductible business expenses
-• Evaluate quarterly vs annual tax payment strategy
-• Monitor sales tax nexus requirements as you expand
-
-Your tax management is exemplary and positions you well for continued growth.`;
-
-      case 'customer-360':
-        return `Customer engagement analysis reveals strong loyalty patterns and growth opportunities. Your customer base is becoming more valuable over time.
-
-Engagement metrics:
-• Customer engagement up 15% this month
-• VIP customers showing 3x higher retention rates
-• New customer acquisition cost decreased by 12%
-• Customer lifetime value increased to $350 average
-
-Customer insights:
-• 68% of customers are returning buyers
-• Top 20% of customers generate 60% of revenue
-• Average time to second purchase: 14 days
-• Customer satisfaction score: 4.7/5.0
-
-Growth opportunities:
-• Implement referral program for existing customers
-• Create tiered loyalty rewards
-• Develop personalized product recommendations
-• Expand customer communication channels
-
-Your customer relationships are a key competitive advantage.`;
-
-      case 'customer-health':
-        return `Customer health scoring shows excellent overall metrics with strategic opportunities for improvement. Your customer base is stable and growing.
-
-Health metrics:
-• Customer health score: 8.2/10 (excellent)
-• Churn rate: 12.5% (below industry average)
-• Net promoter score: 67 (very good)
-• Customer satisfaction: 4.7/5.0
-
-Risk factors:
-• 12% of customers at risk of churn
-• High-value customers showing increased engagement
-• Support ticket volume decreased 18%
-• Product return rate: 2.1% (low risk)
-
-Strategic recommendations:
-• Implement proactive outreach to at-risk customers
-• Create exclusive offers for high-value segments
-• Develop customer success check-ins
-• Monitor customer feedback trends closely
-
-Your customer health is strong with room for strategic improvements.`;
-
-      case 'pipeline':
-        return `Sales pipeline analysis shows strong momentum with several high-value opportunities closing this quarter. Your sales process is well-structured.
-
-Pipeline overview:
-• 3 high-value opportunities ($50K+ each)
-• Average deal size: $27,500
-• Pipeline velocity: 45 days average
-• Win rate: 67% (above industry average)
-
-Current opportunities:
-• Enterprise Software License: $50K, 75% probability
-• SMB Package Deal: $5K, 60% probability
-• Custom Integration: $35K, 80% probability
-
-Sales insights:
-• Proposal stage has highest conversion rate
-• Follow-up timing is critical for success
-• Technical demos increase close rate by 40%
-• Reference customers accelerate deals
-
-Action items:
-• Schedule technical demos for all qualified prospects
-• Prepare case studies for enterprise opportunities
-• Implement automated follow-up sequences
-• Create urgency around quarter-end deadlines
-
-Your pipeline is well-positioned for a strong quarter finish.`;
-
-      case 'tasks':
-        return `Task management analysis shows improved productivity and team coordination. Your workflow optimization is paying dividends.
-
-Productivity metrics:
-• Task completion rate: 87% (up 20% this week)
-• Average task completion time: 2.3 days
-• Team collaboration score: 8.5/10
-• Automation rate: 35% of routine tasks
-
-Task insights:
-• Follow-up tasks have highest completion rate
-• Administrative tasks taking longer than expected
-• Team workload is well-balanced
-• Customer-facing tasks prioritized effectively
-
-Optimization opportunities:
-• Automate routine follow-up communications
-• Implement task templates for common workflows
-• Create escalation rules for overdue tasks
-• Develop task batching strategies
-
-Recommendations:
-• Focus on automating repetitive tasks
-• Implement deadline alerts for critical tasks
-• Create task dependencies for complex projects
-• Regular team check-ins for task prioritization
-
-Your task management system is working well with room for automation improvements.`;
-
-      case 'vip-program':
-        return `VIP program analysis reveals exceptional member value and growth potential. Your premium customer strategy is highly effective.
-
-VIP metrics:
-• VIP members generate 3x higher revenue
-• Member retention rate: 94% (excellent)
-• Average VIP order value: $127 (vs $44 general)
-• Member satisfaction: 4.9/5.0
-
-Program insights:
-• 78 VIP members (growing 15% monthly)
-• Exclusive products drive 40% of VIP revenue
-• Early access features highly valued
-• Referral rate: 2.3 referrals per member
-
-Growth opportunities:
-• Expand exclusive product offerings
-• Create tiered VIP levels
-• Implement member referral rewards
-• Develop VIP-only experiences
-
-Strategic recommendations:
-• Increase VIP member acquisition budget
-• Create seasonal VIP exclusives
-• Implement member feedback loop
-• Develop VIP community features
-
-Your VIP program is a significant competitive advantage and growth driver.`;
-
-      default:
-        return `Comprehensive AI analysis across all business metrics reveals strong performance with strategic optimization opportunities. Your business is well-positioned for continued growth with several key areas for enhancement.
-
-Overall performance:
-• Revenue growth: 23% month-over-month
-• Customer satisfaction: 4.7/5.0
-• Operational efficiency: 87% task completion
-• Market position: Strong competitive advantage
-
-Key strengths:
-• Excellent customer relationships
-• Strong financial metrics
-• Effective task management
-• Successful VIP program
-
-Optimization areas:
-• Cart abandonment reduction
-• Process automation
-• Customer acquisition
-• Revenue diversification
-
-Strategic focus:
-• Leverage AI insights for data-driven decisions
-• Maintain customer experience excellence
-• Optimize operational efficiency
-• Scale successful programs
-
-Your business shows excellent fundamentals with clear paths for continued growth and optimization.`;
-    }
-  };
   const [opportunities, setOpportunities] = useState<Array<{
     id: string;
     customerId: string;
@@ -284,6 +84,68 @@ Your business shows excellent fundamentals with clear paths for continued growth
       email: string;
       company?: string;
     };
+  }>>([]);
+
+  const [tasks, setTasks] = useState<Array<{
+    id: string;
+    title: string;
+    type: 'call' | 'email' | 'meeting' | 'follow_up' | 'proposal' | 'demo' | 'research' | 'documentation' | 'other';
+    priority: 'low' | 'medium' | 'high' | 'urgent';
+    status: 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'on_hold';
+    dueDate?: string;
+    customerId?: string;
+    assignedTo?: string;
+    assignedBy?: string;
+    createdAt: string;
+    updatedAt?: string;
+    description?: string;
+    tags?: string[];
+    estimatedHours?: number;
+    actualHours?: number;
+    customer?: {
+      id: string;
+      firstName: string;
+      lastName: string;
+      email: string;
+      phone?: string;
+    };
+    assignedUser?: {
+      id: string;
+      name: string;
+      email: string;
+      avatar?: string;
+    };
+    subtasks?: Array<{
+      id: string;
+      title: string;
+      type: 'call' | 'email' | 'meeting' | 'follow_up' | 'proposal' | 'demo' | 'research' | 'documentation' | 'other';
+      priority: 'low' | 'medium' | 'high' | 'urgent';
+      status: 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'on_hold';
+      dueDate?: string;
+      customerId?: string;
+      assignedTo?: string;
+      assignedBy?: string;
+      createdAt: string;
+      updatedAt?: string;
+      description?: string;
+      tags?: string[];
+      estimatedHours?: number;
+      actualHours?: number;
+    }>;
+    dependencies?: string[];
+    attachments?: string[];
+  }>>([]);
+
+  const [teamMembers, setTeamMembers] = useState<Array<{
+    id: string;
+    name: string;
+    email: string;
+    phone?: string;
+    role: 'admin' | 'manager' | 'sales_rep' | 'support' | 'marketing' | 'other';
+    avatar?: string;
+    isActive: boolean;
+    tasksAssigned: number;
+    tasksCompleted: number;
   }>>([]);
 
   // Handle URL query parameters for tab selection
@@ -376,6 +238,74 @@ Your business shows excellent fundamentals with clear paths for continued growth
       }
     ];
     setOpportunities(mockOpportunities);
+
+    // Initialize tasks with mock data
+    const mockTasks = [
+      {
+        id: '1',
+        title: 'Follow up with Acme Corp',
+        type: 'follow_up' as const,
+        priority: 'high' as const,
+        status: 'pending' as const,
+        dueDate: '2024-02-01',
+        customerId: '1',
+        assignedTo: '1',
+        assignedBy: '1',
+        createdAt: '2024-01-15',
+        description: 'Follow up on the proposal sent last week',
+        estimatedHours: 1,
+        assignedUser: {
+          id: '1',
+          name: 'John Sales',
+          email: 'john.sales@company.com'
+        }
+      },
+      {
+        id: '2',
+        title: 'Prepare demo for SmallBiz Inc',
+        type: 'demo' as const,
+        priority: 'medium' as const,
+        status: 'in_progress' as const,
+        dueDate: '2024-02-05',
+        customerId: '2',
+        assignedTo: '2',
+        assignedBy: '1',
+        createdAt: '2024-01-20',
+        description: 'Prepare product demo for the SmallBiz Inc meeting',
+        estimatedHours: 2,
+        assignedUser: {
+          id: '2',
+          name: 'Jane Manager',
+          email: 'jane.manager@company.com'
+        }
+      }
+    ];
+    setTasks(mockTasks);
+
+    // Initialize team members with mock data
+    const mockTeamMembers = [
+      {
+        id: '1',
+        name: 'John Sales',
+        email: 'john.sales@company.com',
+        phone: '+1-555-0123',
+        role: 'sales_rep' as const,
+        isActive: true,
+        tasksAssigned: 5,
+        tasksCompleted: 3
+      },
+      {
+        id: '2',
+        name: 'Jane Manager',
+        email: 'jane.manager@company.com',
+        phone: '+1-555-0124',
+        role: 'manager' as const,
+        isActive: true,
+        tasksAssigned: 3,
+        tasksCompleted: 2
+      }
+    ];
+    setTeamMembers(mockTeamMembers);
   }, []);
 
   const tabs = [
@@ -445,7 +375,6 @@ Your business shows excellent fundamentals with clear paths for continued growth
         isVip: true
       }
     ];
-    const mockTasks = [];
 
     switch (activeTab) {
       case 'business-snapshot':
@@ -533,18 +462,73 @@ Your business shows excellent fundamentals with clear paths for continued growth
       case 'tasks':
         return (
           <TaskManagement
-            tasks={mockTasks}
-            teamMembers={[]}
-            onTaskCreate={() => {}}
-            onTaskUpdate={() => {}}
-            onTaskComplete={() => {}}
-            onTaskDelete={() => {}}
-            onTaskAssign={() => {}}
-            onTaskReassign={() => {}}
-            onSubtaskCreate={() => {}}
-            onTeamMemberCreate={() => {}}
-            onTeamMemberUpdate={() => {}}
-            onTeamMemberDelete={() => {}}
+            tasks={tasks}
+            teamMembers={teamMembers}
+            onTaskCreate={(task) => {
+              console.log('Creating task:', task);
+              const newTask = {
+                ...task,
+                id: Date.now().toString(),
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                assignedUser: teamMembers.find(member => member.id === task.assignedTo) ? {
+                  id: task.assignedTo || '',
+                  name: teamMembers.find(member => member.id === task.assignedTo)?.name || '',
+                  email: teamMembers.find(member => member.id === task.assignedTo)?.email || ''
+                } : undefined
+              } as typeof tasks[0];
+              setTasks(prev => [...prev, newTask]);
+              alert(`Created task: ${task.title}`);
+            }}
+            onTaskUpdate={(task) => {
+              console.log('Updating task:', task);
+              setTasks(prev => 
+                prev.map(t => 
+                  t.id === task.id 
+                    ? { ...t, ...task, updatedAt: new Date().toISOString() }
+                    : t
+                )
+              );
+              alert(`Updated task: ${task.title}`);
+            }}
+            onTaskComplete={(id) => {
+              console.log('Completing task:', id);
+              setTasks(prev => 
+                prev.map(t => 
+                  t.id === id 
+                    ? { ...t, status: 'completed' as const, updatedAt: new Date().toISOString() }
+                    : t
+                )
+              );
+              alert(`Completed task with ID: ${id}`);
+            }}
+            onTaskDelete={(id) => {
+              console.log('Deleting task:', id);
+              if (confirm('Are you sure you want to delete this task?')) {
+                setTasks(prev => prev.filter(t => t.id !== id));
+                alert(`Deleted task with ID: ${id}`);
+              }
+            }}
+            onTeamMemberCreate={(member) => {
+              console.log('Creating team member:', member);
+              const newMember = {
+                ...member,
+                id: Date.now().toString(),
+                tasksAssigned: 0,
+                tasksCompleted: 0
+              } as typeof teamMembers[0];
+              setTeamMembers(prev => [...prev, newMember]);
+              alert(`Created team member: ${member.name}`);
+            }}
+            onTeamMemberUpdate={(member) => {
+              console.log('Updating team member:', member);
+              setTeamMembers(prev => 
+                prev.map(m => 
+                  m.id === member.id ? member : m
+                )
+              );
+              alert(`Updated team member: ${member.name}`);
+            }}
             isLoading={false}
           />
         );
@@ -553,7 +537,7 @@ Your business shows excellent fundamentals with clear paths for continued growth
           <CustomerHealthOverview
             customers={mockCustomers}
             opportunities={opportunities}
-            tasks={mockTasks}
+            tasks={tasks}
             isLoading={false}
           />
         );
@@ -563,7 +547,6 @@ Your business shows excellent fundamentals with clear paths for continued growth
         return <BusinessSnapshot vendorId={vendorId} />;
     }
   };
-
 
   return (
     <VendorDashboardLayout>
@@ -611,21 +594,15 @@ Your business shows excellent fundamentals with clear paths for continued growth
         </div>
 
         {/* AI Insight Card */}
-        <AIInsightTooltip
-          content={getAIInsightContent(activeTab)}
-          position="top"
-          maxWidth="max-w-lg"
-        >
-          <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm cursor-pointer hover:shadow-md transition-shadow">
+        <div className="relative">
+          <div 
+            className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm"
+          >
             <div className="flex items-center gap-3 mb-4">
               <div className="p-2 bg-[#5B6E02]/10 rounded-lg">
                 <Brain className="w-5 h-5 text-[#5B6E02]" />
               </div>
               <h3 className="text-lg font-semibold text-gray-900">AI Insight</h3>
-              <div className="flex items-center gap-1 text-xs text-[#5B6E02] ml-auto bg-[#5B6E02]/10 px-2 py-1 rounded-full">
-                <Sparkles className="w-3 h-3" />
-                <span>Hover for details</span>
-              </div>
             </div>
             <p className="text-gray-800 font-medium mb-3">
               {getShortAIInsight(activeTab)}
@@ -635,7 +612,7 @@ Your business shows excellent fundamentals with clear paths for continued growth
               <span>Updated 2 hours ago</span>
             </div>
           </div>
-        </AIInsightTooltip>
+        </div>
 
         {/* Content Area */}
         <div className="space-y-6">

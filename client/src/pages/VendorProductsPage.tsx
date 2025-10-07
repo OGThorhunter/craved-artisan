@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import MotivationalQuote from '@/components/dashboard/MotivationalQuote';
 import { getQuoteByCategory } from '@/data/motivationalQuotes';
+import EnhancedProductModal from '@/components/products/EnhancedProductModal';
 import { 
   Plus, 
   Search,
@@ -19,14 +20,14 @@ import {
   Package,
   Users,
   Brain,
-  ChevronDown,
   X,
   Loader2,
+  FileText,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 
-type ProductType = 'FOOD' | 'NON_FOOD' | 'SERVICE';
+type ProductType = 'FOOD' | 'NON_FOOD' | 'SERVICE' | 'CLASSES';
 
 // Types
 interface Product {
@@ -63,6 +64,19 @@ interface Product {
     priceDelta: number;
     isDefault: boolean;
   }>;
+  // Classes/Training specific fields
+  availableSeats?: number;
+  costPerSeat?: number;
+  duration?: string; // e.g., "3 hours", "2 days"
+  // Additional product fields
+  batchSize?: number;
+  creationTimeMinutes?: number;
+  leadTimeDays?: number;
+  instructions?: string;
+  sops?: string;
+  allergenFlags?: string[];
+  categoryId?: string;
+  vendorProfileId?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -87,6 +101,43 @@ interface AIInsight {
   projectedMargin: number;
   imageUrl?: string;
   type: ProductType;
+}
+
+interface EnhancedProductData {
+  id?: string;
+  name: string;
+  description: string;
+  type: ProductType;
+  price: number;
+  baseCost: number;
+  laborCost: number;
+  sku?: string;
+  batchSize?: number;
+  creationTimeMinutes?: number;
+  leadTimeDays?: number;
+  instructions?: string;
+  sops?: string;
+  categoryId?: string;
+  tags?: string[];
+  allergenFlags?: string[];
+  active?: boolean;
+  images?: Array<{ imageUrl: string }>;
+  availableSeats?: number;
+  costPerSeat?: number;
+  duration?: string;
+  ingredients?: Array<{
+    name: string;
+    amount: number;
+    unit: string;
+    cost: number;
+    inventoryItemId?: string;
+    quantity?: number;
+    notes?: string;
+    isOptional?: boolean;
+    inventoryItem?: {
+      avg_cost?: number;
+    };
+  }>;
 }
 
 // Mock data for development
@@ -151,6 +202,132 @@ const mockProducts: Product[] = [
     createdAt: '2024-01-10T09:00:00Z',
     updatedAt: '2024-01-18T16:45:00Z',
   },
+  {
+    id: '3',
+    name: 'Artisan Sourdough Bread Making Class',
+    slug: 'artisan-sourdough-bread-making-class',
+    type: 'CLASSES',
+    description: 'Learn the art of traditional sourdough bread making in this hands-on 3-hour workshop. Perfect for beginners and those looking to improve their technique.',
+    price: 75.00,
+    baseCost: 25.00,
+    laborCost: 50.00,
+    imageUrl: '/images/sourdough-class.jpg',
+    active: true,
+    sku: 'CLASS-001',
+    category: { name: 'Classes / Training' },
+    subcategory: { name: 'Bread Making' },
+    tags: ['sourdough', 'bread-making', 'hands-on', 'workshop'],
+    availableSeats: 25,
+    costPerSeat: 75.00,
+    duration: '3 hours',
+    costRollup: {
+      materialsCost: 15.00,
+      laborCost: 50.00,
+      baseCost: 25.00,
+      totalCost: 25.00,
+      marginAtPrice: 50.00,
+      marginPct: 66.7,
+    },
+    materials: [
+      {
+        qty: 25,
+        unit: 'portion',
+        inventoryItem: { name: 'Flour', currentQty: 100, reorderPoint: 20 },
+      },
+      {
+        qty: 25,
+        unit: 'portion',
+        inventoryItem: { name: 'Salt', currentQty: 50, reorderPoint: 10 },
+      },
+    ],
+    variants: [],
+    createdAt: '2024-01-20T10:00:00Z',
+    updatedAt: '2024-01-20T10:00:00Z',
+  },
+  {
+    id: '4',
+    name: 'Advanced Pastry Techniques Workshop',
+    slug: 'advanced-pastry-techniques-workshop',
+    type: 'CLASSES',
+    description: 'Master advanced pastry techniques including laminated doughs, chocolate work, and decorative piping. This intensive 2-day workshop is designed for experienced bakers.',
+    price: 250.00,
+    baseCost: 75.00,
+    laborCost: 175.00,
+    imageUrl: '/images/pastry-workshop.jpg',
+    active: true,
+    sku: 'CLASS-002',
+    category: { name: 'Classes / Training' },
+    subcategory: { name: 'Pastry Techniques' },
+    tags: ['pastry', 'advanced', 'chocolate', 'decorating', 'workshop'],
+    availableSeats: 12,
+    costPerSeat: 250.00,
+    duration: '2 days',
+    costRollup: {
+      materialsCost: 45.00,
+      laborCost: 175.00,
+      baseCost: 75.00,
+      totalCost: 75.00,
+      marginAtPrice: 175.00,
+      marginPct: 70.0,
+    },
+    materials: [
+      {
+        qty: 12,
+        unit: 'kit',
+        inventoryItem: { name: 'Premium Chocolate', currentQty: 30, reorderPoint: 5 },
+      },
+      {
+        qty: 12,
+        unit: 'kit',
+        inventoryItem: { name: 'Butter', currentQty: 80, reorderPoint: 15 },
+      },
+    ],
+    variants: [],
+    createdAt: '2024-01-25T10:00:00Z',
+    updatedAt: '2024-01-25T10:00:00Z',
+  },
+  {
+    id: '5',
+    name: 'Cake Decorating Fundamentals',
+    slug: 'cake-decorating-fundamentals',
+    type: 'CLASSES',
+    description: 'Learn the basics of cake decorating including buttercream techniques, fondant work, and simple piping designs. Great for beginners and hobbyists.',
+    price: 95.00,
+    baseCost: 35.00,
+    laborCost: 60.00,
+    imageUrl: '/images/cake-decorating-class.jpg',
+    active: true,
+    sku: 'CLASS-003',
+    category: { name: 'Classes / Training' },
+    subcategory: { name: 'Cake Decorating' },
+    tags: ['cake-decorating', 'buttercream', 'fondant', 'beginner', 'fundamentals'],
+    availableSeats: 20,
+    costPerSeat: 95.00,
+    duration: '4 hours',
+    costRollup: {
+      materialsCost: 20.00,
+      laborCost: 60.00,
+      baseCost: 35.00,
+      totalCost: 35.00,
+      marginAtPrice: 60.00,
+      marginPct: 63.2,
+    },
+    materials: [
+      {
+        qty: 20,
+        unit: 'kit',
+        inventoryItem: { name: 'Fondant', currentQty: 25, reorderPoint: 8 },
+      },
+      {
+        qty: 20,
+        unit: 'kit',
+        inventoryItem: { name: 'Food Coloring', currentQty: 40, reorderPoint: 10 },
+      },
+    ],
+    variants: [],
+    createdAt: '2024-01-30T10:00:00Z',
+    updatedAt: '2024-01-30T10:00:00Z',
+  },
 ];
 
 const mockCategories: Category[] = [
@@ -171,6 +348,17 @@ const mockCategories: Category[] = [
     subcategories: [
       { id: '2-1', name: 'Decorating' },
       { id: '2-2', name: 'Consultation' },
+    ],
+    _count: { products: 1 },
+  },
+  {
+    id: '3',
+    name: 'Classes / Training',
+    children: [],
+    subcategories: [
+      { id: '3-1', name: 'Bread Making' },
+      { id: '3-2', name: 'Pastry Techniques' },
+      { id: '3-3', name: 'Cake Decorating' },
     ],
     _count: { products: 3 },
   },
@@ -193,6 +381,9 @@ const mockAIInsights: AIInsight[] = [
 ];
 
 const VendorProductsPage: React.FC = () => {
+  // Query client
+  const queryClient = useQueryClient();
+  
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
@@ -201,6 +392,24 @@ const VendorProductsPage: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [showAIInsights, setShowAIInsights] = useState(false);
+  const [showEnhancedModal, setShowEnhancedModal] = useState(false);
+  const [showDocumentImportModal, setShowDocumentImportModal] = useState(false);
+  const [isDocumentUploading, setIsDocumentUploading] = useState(false);
+  const [showParseReview, setShowParseReview] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [parsedProducts, setParsedProducts] = useState<Product[]>([]);
+  const [editingParsedProduct, setEditingParsedProduct] = useState<Product | null>(null);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  
+  // Mock inventory items for ingredient selection
+  const mockInventoryItems = [
+    { id: '1', name: 'Organic Flour', category: 'FOOD_GRADE', unit: 'kg', current_qty: 50, reorder_point: 10, avg_cost: 2.50 },
+    { id: '2', name: 'Sea Salt', category: 'FOOD_GRADE', unit: 'g', current_qty: 1000, reorder_point: 200, avg_cost: 0.05 },
+    { id: '3', name: 'Active Yeast', category: 'FOOD_GRADE', unit: 'g', current_qty: 500, reorder_point: 100, avg_cost: 0.15 },
+    { id: '4', name: 'Olive Oil', category: 'FOOD_GRADE', unit: 'ml', current_qty: 2000, reorder_point: 500, avg_cost: 0.08 },
+    { id: '5', name: 'Sugar', category: 'FOOD_GRADE', unit: 'kg', current_qty: 25, reorder_point: 5, avg_cost: 1.20 },
+  ];
   
   // Mock queries - replace with actual API calls
   const { data: products = mockProducts, isLoading: productsLoading } = useQuery({
@@ -286,6 +495,7 @@ const VendorProductsPage: React.FC = () => {
     switch (type) {
       case 'FOOD': return Package;
       case 'SERVICE': return Users;
+      case 'CLASSES': return Users; // Using Users icon for classes/training
       case 'NON_FOOD': return Package;
       default: return Package;
     }
@@ -295,7 +505,8 @@ const VendorProductsPage: React.FC = () => {
     switch (type) {
       case 'FOOD': return 'bg-green-100 text-green-800';
       case 'SERVICE': return 'bg-blue-100 text-blue-800';
-      case 'NON_FOOD': return 'bg-purple-100 text-purple-800';
+      case 'CLASSES': return 'bg-purple-100 text-purple-800';
+      case 'NON_FOOD': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -333,14 +544,372 @@ const VendorProductsPage: React.FC = () => {
     }
   };
 
+  // Product creation handlers
+  const handleCreateProduct = () => {
+    setSelectedProduct(null);
+    setShowEnhancedModal(true);
+  };
+
+  const handleSaveEnhancedProduct = async (productData: EnhancedProductData) => {
+    try {
+      // In a real app, you would make an API call here
+      console.log('Creating/updating product:', productData);
+      
+      // For now, add to the products list (mock save)
+      const newProduct: Product = {
+        id: productData.id || `product-${Date.now()}`,
+        name: productData.name,
+        description: productData.description || '',
+        type: productData.type,
+        price: productData.price,
+        baseCost: productData.baseCost || 0,
+        laborCost: productData.laborCost || 0,
+        sku: productData.sku,
+        batchSize: productData.batchSize,
+        creationTimeMinutes: productData.creationTimeMinutes,
+        leadTimeDays: productData.leadTimeDays,
+        instructions: productData.instructions || '',
+        sops: productData.sops || '',
+        categoryId: productData.categoryId,
+        tags: productData.tags || [],
+        allergenFlags: productData.allergenFlags || [],
+        active: productData.active !== false,
+        imageUrl: productData.images?.[0]?.imageUrl || '',
+        materials: productData.ingredients?.map((ing) => ({
+          qty: ing.quantity || ing.amount,
+          unit: ing.unit,
+          inventoryItem: {
+            name: ing.name,
+            currentQty: 100,
+            reorderPoint: 20
+          }
+        })) || [],
+        costRollup: {
+          materialsCost: productData.ingredients?.reduce((sum: number, ing) => 
+            sum + (ing.cost || 0), 0) || 0,
+          laborCost: productData.laborCost || 0,
+          baseCost: productData.baseCost || 0,
+          totalCost: (productData.ingredients?.reduce((sum: number, ing) => 
+            sum + (ing.cost || 0), 0) || 0) + (productData.laborCost || 0),
+          marginAtPrice: productData.price || 0,
+          marginPct: productData.price > 0 ? 
+            (((productData.price - ((productData.ingredients?.reduce((sum: number, ing) => 
+              sum + (ing.cost || 0), 0) || 0) + (productData.laborCost || 0))) / productData.price) * 100) : 0
+        },
+        variants: [],
+        availableSeats: productData.availableSeats,
+        costPerSeat: productData.costPerSeat,
+        duration: productData.duration,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        vendorProfileId: 'vendor-1'
+      };
+
+      // Update products list in cache
+      queryClient.setQueryData(['products', { searchQuery, selectedCategory, selectedType, sortBy, sortOrder }], (oldData: Product[] = []) => {
+        if (productData.id) {
+          // Update existing product
+          return oldData.map(p => p.id === productData.id ? newProduct : p);
+        } else {
+          // Add new product
+          return [...oldData, newProduct];
+        }
+      });
+
+      alert('Product saved successfully!');
+      setShowEnhancedModal(false);
+    } catch (error) {
+      console.error('Error saving product:', error);
+      alert('Failed to save product. Please try again.');
+    }
+  };
+
+  // Document import handlers
+  const handleDocumentImport = () => {
+    setShowDocumentImportModal(true);
+  };
+
+  const handleDocumentUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploadedFile(file);
+    setIsDocumentUploading(true);
+    
+    try {
+      // Simulate document parsing with AI analysis
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      // Mock parsed products from document - these will be shown for review
+      const mockParsedProducts: Product[] = [
+        {
+          id: `parsed-product-${Date.now()}-1`,
+          name: 'Artisan Sourdough Bread',
+          slug: 'artisan-sourdough-bread',
+          description: 'Traditional sourdough bread made with organic flour and natural fermentation',
+          type: 'FOOD',
+          price: 8.50,
+          baseCost: 3.20,
+          laborCost: 2.50,
+          sku: `FD-ARTS-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
+          batchSize: 4,
+          creationTimeMinutes: 480,
+          leadTimeDays: 1,
+          instructions: 'Mix starter, flour, water, and salt. Ferment overnight. Shape and proof. Bake at 450°F for 30 minutes.',
+          sops: 'Standard sourdough bread making procedure',
+          categoryId: 'cat-1',
+          tags: ['sourdough', 'artisan', 'organic'],
+          allergenFlags: ['gluten', 'wheat'],
+          active: true,
+          imageUrl: '',
+          materials: [],
+          variants: [],
+          costRollup: {
+            materialsCost: 3.20,
+            laborCost: 2.50,
+            baseCost: 3.20,
+            totalCost: 5.70,
+            marginAtPrice: 8.50,
+            marginPct: 32.9
+          },
+          availableSeats: undefined,
+          costPerSeat: undefined,
+          duration: undefined,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          vendorProfileId: 'vendor-1'
+        },
+        {
+          id: `parsed-product-${Date.now()}-2`,
+          name: 'Chocolate Chip Cookies',
+          slug: 'chocolate-chip-cookies',
+          description: 'Soft and chewy chocolate chip cookies with premium dark chocolate',
+          type: 'FOOD',
+          price: 3.75,
+          baseCost: 1.80,
+          laborCost: 1.20,
+          sku: `FD-COOK-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
+          batchSize: 24,
+          creationTimeMinutes: 45,
+          leadTimeDays: 0,
+          instructions: 'Mix butter, sugars, eggs, and vanilla. Add flour and chocolate chips. Bake at 375°F for 10-12 minutes.',
+          sops: 'Cookie production standard operating procedure',
+          categoryId: 'cat-1',
+          tags: ['cookies', 'chocolate', 'dessert'],
+          allergenFlags: ['gluten', 'wheat', 'eggs', 'dairy'],
+          active: true,
+          imageUrl: '',
+          materials: [],
+          variants: [],
+          costRollup: {
+            materialsCost: 1.80,
+            laborCost: 1.20,
+            baseCost: 1.80,
+            totalCost: 3.00,
+            marginAtPrice: 3.75,
+            marginPct: 20.0
+          },
+          availableSeats: undefined,
+          costPerSeat: undefined,
+          duration: undefined,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          vendorProfileId: 'vendor-1'
+        },
+        {
+          id: `parsed-product-${Date.now()}-3`,
+          name: 'Sourdough Baking Class',
+          slug: 'sourdough-baking-class',
+          description: 'Learn the art of sourdough bread making in this hands-on workshop',
+          type: 'CLASSES',
+          price: 85.00,
+          baseCost: 15.00,
+          laborCost: 45.00,
+          sku: `CL-SOUR-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
+          batchSize: undefined,
+          creationTimeMinutes: undefined,
+          leadTimeDays: 0,
+          instructions: '3-hour hands-on class covering starter maintenance, mixing, shaping, and baking techniques',
+          sops: 'Class instruction and safety procedures',
+          categoryId: 'cat-2',
+          tags: ['class', 'education', 'sourdough', 'baking'],
+          allergenFlags: [],
+          active: true,
+          imageUrl: '',
+          materials: [],
+          variants: [],
+          costRollup: {
+            materialsCost: 15.00,
+            laborCost: 45.00,
+            baseCost: 15.00,
+            totalCost: 60.00,
+            marginAtPrice: 85.00,
+            marginPct: 29.4
+          },
+          availableSeats: 8,
+          costPerSeat: 10.63,
+          duration: '3 hours',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          vendorProfileId: 'vendor-1'
+        }
+      ];
+
+      setParsedProducts(mockParsedProducts);
+      setShowDocumentImportModal(false);
+      setShowParseReview(true);
+    } catch (error) {
+      console.error('Document parsing error:', error);
+      alert('Failed to parse document. Please try again.');
+    } finally {
+      setIsDocumentUploading(false);
+    }
+  };
+
+  // Parse review handlers
+  const handleSaveParsedProducts = () => {
+    // Add parsed products to the products list
+    queryClient.setQueryData(['products', { searchQuery, selectedCategory, selectedType, sortBy, sortOrder }], (oldData: Product[] = []) => {
+      return [...oldData, ...parsedProducts];
+    });
+
+    alert(`Successfully created ${parsedProducts.length} products from document!`);
+    setShowParseReview(false);
+    setParsedProducts([]);
+    setUploadedFile(null);
+  };
+
+  const handleEditParsedProduct = (product: Product) => {
+    setEditingParsedProduct(product);
+  };
+
+  const handleUpdateParsedProduct = (updatedProduct: Product) => {
+    setParsedProducts(prev => 
+      prev.map(p => p.id === updatedProduct.id ? updatedProduct : p)
+    );
+    setEditingParsedProduct(null);
+  };
+
+  const handleRemoveParsedProduct = (productId: string) => {
+    setParsedProducts(prev => prev.filter(p => p.id !== productId));
+  };
+
+  const handleCancelParseReview = () => {
+    setShowParseReview(false);
+    setParsedProducts([]);
+    setUploadedFile(null);
+    setEditingParsedProduct(null);
+  };
+
+  // Export handlers
+  const handleIndividualExport = (product: Product, format: 'json' | 'csv' = 'csv') => {
+    if (format === 'json') {
+      const exportData = {
+        ...product,
+        exportedAt: new Date().toISOString(),
+        exportType: 'individual'
+      };
+      
+      const dataStr = JSON.stringify(exportData, null, 2);
+      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+      
+      const exportFileDefaultName = `${product.name.replace(/[^a-zA-Z0-9]/g, '_')}_product.json`;
+      
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', exportFileDefaultName);
+      linkElement.click();
+    } else {
+      // CSV export
+      const csvData = {
+        'Product Name': product.name,
+        'SKU': product.sku || '',
+        'Type': product.type,
+        'Price': product.price,
+        'Base Cost': product.baseCost,
+        'Labor Cost': product.laborCost,
+        'Total Cost': product.costRollup.totalCost,
+        'Margin %': product.costRollup.marginPct,
+        'Description': product.description,
+        'Instructions': product.instructions,
+        'SOPs': product.sops,
+        'Batch Size': product.batchSize || '',
+        'Creation Time (minutes)': product.creationTimeMinutes || '',
+        'Lead Time (days)': product.leadTimeDays || '',
+        'Tags': product.tags.join(', '),
+        'Allergens': product.allergenFlags.join(', '),
+        'Active': product.active,
+        'Created': product.createdAt,
+        'Updated': product.updatedAt
+      };
+      
+      const headers = Object.keys(csvData);
+      const values = Object.values(csvData);
+      
+      const csvContent = [
+        headers.join(','),
+        values.map(val => typeof val === 'string' && val.includes(',') ? `"${val}"` : val).join(',')
+      ].join('\n');
+      
+      const dataUri = 'data:text/csv;charset=utf-8,'+ encodeURIComponent(csvContent);
+      const exportFileDefaultName = `${product.name.replace(/[^a-zA-Z0-9]/g, '_')}_product.csv`;
+      
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', exportFileDefaultName);
+      linkElement.click();
+    }
+  };
+
+  const handleBulkExport = () => {
+    const selectedProductsData = products.filter(p => selectedProducts.includes(p.id));
+    const exportData = {
+      products: selectedProductsData,
+      exportedAt: new Date().toISOString(),
+      exportType: 'bulk',
+      totalProducts: selectedProductsData.length
+    };
+    
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    
+    const exportFileDefaultName = `products_bulk_export_${new Date().toISOString().split('T')[0]}.json`;
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+  };
+
+
+  // Product view and edit handlers
+  const handleViewProduct = (product: Product) => {
+    setSelectedProduct(product);
+    setShowViewModal(true);
+  };
+
+  const handleEditProduct = (product: Product) => {
+    // Convert Product to EnhancedProduct format
+    const enhancedProduct = {
+      ...product,
+      autoGenerateSku: false,
+      allergenFlags: [],
+      ingredients: [],
+      images: [],
+      documents: []
+    };
+    setSelectedProduct(enhancedProduct as any);
+    setShowEnhancedModal(true);
+  };
+
   // Product Card Component
   const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
     const TypeIcon = getTypeIcon(product.type);
     const stockStatus = getStockStatus(product.materials);
 
   return (
-      <Card className="bg-[#F7F2EC] shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-        <div className="p-4">
+      <Card className="bg-[#F7F2EC] shadow-sm border border-gray-200 hover:shadow-md transition-shadow h-full flex flex-col">
+        <div className="p-4 flex flex-col h-full">
           {/* Header */}
           <div className="flex items-start justify-between mb-3">
             <div className="flex items-center gap-2">
@@ -355,6 +924,35 @@ const VendorProductsPage: React.FC = () => {
                   <AlertTriangle className="w-4 h-4 text-red-500" />
                 </div>
               )}
+              <div className="relative group">
+                <button 
+                  className="p-1 hover:bg-gray-100 rounded" 
+                  aria-label="Export product"
+                  title="Export product"
+                >
+                  <Download className="w-4 h-4 text-gray-500" />
+                </button>
+                <div className="absolute right-0 top-6 bg-white border border-gray-200 rounded-md shadow-lg py-1 z-10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 min-w-[120px]">
+                  <button
+                    className="w-full text-left px-3 py-1 text-sm text-gray-700 hover:bg-gray-100"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleIndividualExport(product, 'csv');
+                    }}
+                  >
+                    Export as CSV
+                  </button>
+                  <button
+                    className="w-full text-left px-3 py-1 text-sm text-gray-700 hover:bg-gray-100"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleIndividualExport(product, 'json');
+                    }}
+                  >
+                    Export as JSON
+                  </button>
+                </div>
+              </div>
               <button className="p-1 hover:bg-gray-100 rounded" aria-label="More actions">
                 <MoreVertical className="w-4 h-4 text-gray-500" />
                 </button>
@@ -371,64 +969,97 @@ const VendorProductsPage: React.FC = () => {
           </div>
 
           {/* Content */}
-          <div className="space-y-2">
-            <h3 className="font-semibold text-gray-900 line-clamp-1">{product.name}</h3>
-            {product.description && (
-              <p className="text-sm text-gray-600 line-clamp-2">{product.description}</p>
-            )}
-            
-            {/* Price and Margin */}
+          <div className="flex flex-col h-full">
+            <div className="space-y-2 flex-1">
+              <h3 className="font-semibold text-gray-900 line-clamp-1">{product.name}</h3>
+              {product.description && (
+                <p className="text-sm text-gray-600 line-clamp-2">{product.description}</p>
+              )}
+              
+              {/* Price and Margin */}
               <div className="flex items-center justify-between">
-              <span className="text-lg font-bold text-gray-900">${product.price.toFixed(2)}</span>
-              <span className={`text-sm font-medium ${getMarginColor(product.costRollup.marginPct)}`}>
-                {product.costRollup.marginPct.toFixed(1)}% margin
-              </span>
-            </div>
+                <span className="text-lg font-bold text-gray-900">
+                  {product.type === 'CLASSES' 
+                    ? `$${product.costPerSeat?.toFixed(2) || '0.00'}/seat`
+                    : `$${product.price.toFixed(2)}`
+                  }
+                </span>
+                <span className={`text-sm font-medium ${getMarginColor(product.costRollup.marginPct)}`}>
+                  {product.costRollup.marginPct.toFixed(1)}% margin
+                </span>
+              </div>
 
-            {/* Cost Breakdown */}
-            <div className="text-xs text-gray-500 space-y-1">
-              <div className="flex justify-between">
-                <span>Materials:</span>
-                <span>${product.costRollup.materialsCost.toFixed(2)}</span>
-                      </div>
-              <div className="flex justify-between">
-                <span>Labor:</span>
-                <span>${product.costRollup.laborCost.toFixed(2)}</span>
+              {/* Classes-specific information */}
+              {product.type === 'CLASSES' && (
+                <div className="text-xs text-gray-500 space-y-1 bg-purple-50 p-2 rounded">
+                  <div className="flex justify-between">
+                    <span>Available Seats:</span>
+                    <span className="font-medium text-purple-700">{product.availableSeats || 0}</span>
                   </div>
-              <div className="flex justify-between font-medium">
-                <span>Total Cost:</span>
-                <span>${product.costRollup.totalCost.toFixed(2)}</span>
+                  <div className="flex justify-between">
+                    <span>Duration:</span>
+                    <span className="font-medium text-purple-700">{product.duration || 'Not specified'}</span>
+                  </div>
+                  <div className="flex justify-between font-medium text-purple-800">
+                    <span>Total Revenue:</span>
+                    <span>${product.price.toFixed(2)}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Cost Breakdown */}
+              <div className="text-xs text-gray-500 space-y-1">
+                <div className="flex justify-between">
+                  <span>Materials:</span>
+                  <span>${product.costRollup.materialsCost.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Labor:</span>
+                  <span>${product.costRollup.laborCost.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between font-medium">
+                  <span>Total Cost:</span>
+                  <span>${product.costRollup.totalCost.toFixed(2)}</span>
+                </div>
+              </div>
+
+              {/* Tags */}
+              {product.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  {product.tags.slice(0, 3).map(tag => (
+                    <span key={tag} className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
+                      {tag}
+                    </span>
+                  ))}
+                  {product.tags.length > 3 && (
+                    <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
+                      +{product.tags.length - 3}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
-          </div>
 
-            {/* Tags */}
-            {product.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1">
-                {product.tags.slice(0, 3).map(tag => (
-                  <span key={tag} className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
-                    {tag}
-                  </span>
-                ))}
-                {product.tags.length > 3 && (
-                  <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
-                    +{product.tags.length - 3}
-                  </span>
-                )}
-                 </div>
-            )}
-
-            {/* Actions */}
-            <div className="flex gap-2 pt-2">
-              <Button variant="secondary" className="flex-1 text-sm">
+            {/* Actions - Always at bottom */}
+            <div className="flex gap-2 pt-4 mt-auto">
+              <Button 
+                variant="secondary" 
+                className="flex-1 text-sm"
+                onClick={() => handleViewProduct(product)}
+              >
                 <Eye className="w-3 h-3 mr-1" />
                 View
               </Button>
-              <Button variant="secondary" className="flex-1 text-sm">
+              <Button 
+                variant="secondary" 
+                className="flex-1 text-sm"
+                onClick={() => handleEditProduct(product)}
+              >
                 <Edit className="w-3 h-3 mr-1" />
                 Edit
               </Button>
-                </div>
-              </div>
+            </div>
+          </div>
             </div>
       </Card>
     );
@@ -553,24 +1184,32 @@ const VendorProductsPage: React.FC = () => {
               {/* Left side - Actions */}
               <div className="flex items-center gap-3">
                 <Button
+                  onClick={handleCreateProduct}
                   className="flex items-center gap-2"
                 >
                   <Plus className="w-4 h-4" />
-                        Add Product
-                        <ChevronDown className="w-4 h-4" />
+                  Add Product
                 </Button>
                 
-                <Button variant="secondary" className="flex items-center gap-2">
-                            <Upload className="w-4 h-4" />
-                            Import CSV
+                <Button
+                  onClick={handleDocumentImport}
+                  variant="secondary"
+                  className="flex items-center gap-2"
+                >
+                  <FileText className="w-4 h-4" />
+                  Import Document
                 </Button>
 
-                {selectedProducts.length > 0 && (
-                  <Button variant="secondary" className="flex items-center gap-2">
+                {selectedProducts.length > 0 && !showEnhancedModal && (
+                  <Button 
+                    variant="secondary" 
+                    className="flex items-center gap-2"
+                    onClick={handleBulkExport}
+                  >
                     <Download className="w-4 h-4" />
                     Export ({selectedProducts.length})
                   </Button>
-                      )}
+                )}
                     </div>
 
               {/* Right side - AI Insights */}
@@ -795,13 +1434,510 @@ const VendorProductsPage: React.FC = () => {
                   ? 'Try adjusting your filters to see more products.'
                   : 'Get started by creating your first product.'}
               </p>
-              <Button>
+              <Button onClick={handleCreateProduct}>
                 <Plus className="w-4 h-4 mr-2" />
                 Add Product
               </Button>
                </div>
           </Card>
          )}
+
+        {/* Enhanced Product Modal */}
+        <EnhancedProductModal
+          isOpen={showEnhancedModal}
+          onClose={() => setShowEnhancedModal(false)}
+          onSave={handleSaveEnhancedProduct}
+          product={selectedProduct as any}
+          categories={categories}
+          inventoryItems={mockInventoryItems}
+        />
+
+        {/* Document Import Modal */}
+        {showDocumentImportModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-lg w-full mx-4">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-blue-600" />
+                  Import Products from Document
+                </h2>
+                <button
+                  onClick={() => setShowDocumentImportModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              
+              <div className="text-center">
+                <div className="mb-6">
+                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <FileText className="w-8 h-8 text-blue-600" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Upload Product Document</h3>
+                  <p className="text-gray-600">
+                    Upload a document with product information and our AI will parse it for your review before creating products.
+                  </p>
+                </div>
+                
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 mb-4">
+                  <input
+                    type="file"
+                    accept=".pdf,.doc,.docx,.txt,.csv"
+                    onChange={handleDocumentUpload}
+                    disabled={isDocumentUploading}
+                    className="hidden"
+                    id="document-upload"
+                  />
+                  <label
+                    htmlFor="document-upload"
+                    className={`cursor-pointer ${isDocumentUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    <div className="text-center">
+                      {isDocumentUploading ? (
+                        <div className="flex flex-col items-center">
+                          <Loader2 className="w-8 h-8 animate-spin text-blue-600 mb-2" />
+                          <span className="text-sm text-gray-600">Parsing document...</span>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center">
+                          <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                          <span className="text-sm text-gray-600">Click to upload document</span>
+                          <span className="text-xs text-gray-500 mt-1">PDF, DOC, DOCX, TXT, CSV up to 10MB</span>
+                        </div>
+                      )}
+                    </div>
+                  </label>
+                </div>
+                
+                <div className="text-xs text-gray-500 mb-4">
+                  Supported formats: PDF, DOC, DOCX, TXT, CSV. Max file size: 10MB
+                </div>
+
+                <div className="bg-blue-50 p-4 rounded-lg text-left">
+                  <h4 className="font-medium text-blue-900 mb-2">What gets extracted:</h4>
+                  <ul className="text-sm text-blue-800 space-y-1">
+                    <li>• Product names and descriptions</li>
+                    <li>• Pricing and cost information</li>
+                    <li>• Product types and categories</li>
+                    <li>• Creation instructions and SOPs</li>
+                    <li>• Batch sizes and timing</li>
+                    <li>• Class details (seats, duration)</li>
+                  </ul>
+                </div>
+              </div>
+              
+              <div className="flex justify-end gap-3 mt-6">
+                <Button
+                  variant="secondary"
+                  onClick={() => setShowDocumentImportModal(false)}
+                  disabled={isDocumentUploading}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* AI Parse Review Modal */}
+        {showParseReview && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-7xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                  <Brain className="w-5 h-5 text-purple-600" />
+                  AI Parse Review - {uploadedFile?.name}
+                </h2>
+                <button
+                  onClick={handleCancelParseReview}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Left side - Uploaded Document */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium text-gray-900">Uploaded Document</h3>
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                    {uploadedFile && (
+                      <div className="space-y-2">
+                        <FileText className="w-12 h-12 text-blue-600 mx-auto" />
+                        <p className="font-medium text-gray-900">{uploadedFile.name}</p>
+                        <p className="text-sm text-gray-500">
+                          {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          Type: {uploadedFile.type || 'Unknown'}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <h4 className="font-medium text-blue-900 mb-2">AI Analysis Summary:</h4>
+                    <ul className="text-sm text-blue-800 space-y-1">
+                      <li>• Found {parsedProducts.length} products</li>
+                      <li>• Extracted pricing, ingredients, and instructions</li>
+                      <li>• Identified product types and categories</li>
+                      <li>• Calculated cost breakdowns</li>
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Right side - Parsed Products */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-medium text-gray-900">Parsed Products</h3>
+                    <span className="text-sm text-gray-500">{parsedProducts.length} products found</span>
+                  </div>
+                  
+                  <div className="space-y-4 max-h-96 overflow-y-auto">
+                    {parsedProducts.map((product) => (
+                      <div key={product.id} className="border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1">
+                            <h4 className="font-medium text-gray-900">{product.name}</h4>
+                            <p className="text-sm text-gray-600 mt-1">{product.description}</p>
+                          </div>
+                          <div className="flex gap-2 ml-4">
+                            <button
+                              onClick={() => handleEditParsedProduct(product)}
+                              className="text-blue-600 hover:text-blue-900 text-sm"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleRemoveParsedProduct(product.id)}
+                              className="text-red-600 hover:text-red-900 text-sm"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="font-medium text-gray-700">Type:</span>
+                            <span className="ml-2 text-gray-900">{product.type}</span>
+                          </div>
+                          <div>
+                            <span className="font-medium text-gray-700">Price:</span>
+                            <span className="ml-2 text-gray-900">${product.price}</span>
+                          </div>
+                          <div>
+                            <span className="font-medium text-gray-700">Base Cost:</span>
+                            <span className="ml-2 text-gray-900">${product.baseCost}</span>
+                          </div>
+                          <div>
+                            <span className="font-medium text-gray-700">Margin:</span>
+                            <span className="ml-2 text-gray-900">{product.costRollup.marginPct.toFixed(1)}%</span>
+                          </div>
+                          {product.type === 'CLASSES' && (
+                            <>
+                              <div>
+                                <span className="font-medium text-gray-700">Seats:</span>
+                                <span className="ml-2 text-gray-900">{product.availableSeats}</span>
+                              </div>
+                              <div>
+                                <span className="font-medium text-gray-700">Duration:</span>
+                                <span className="ml-2 text-gray-900">{product.duration}</span>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                        
+                        <div className="mt-3">
+                          <span className="font-medium text-gray-700">Tags:</span>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {product.tags.map((tag, tagIndex) => (
+                              <span key={tagIndex} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center mt-6 pt-6 border-t border-gray-200">
+                <div className="text-sm text-gray-600">
+                  Review and edit the parsed data before creating products
+                </div>
+                <div className="flex gap-3">
+                  <Button
+                    variant="secondary"
+                    onClick={handleCancelParseReview}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleSaveParsedProducts}
+                    disabled={parsedProducts.length === 0}
+                    className="flex items-center gap-2"
+                  >
+                    <CheckCircle className="w-4 h-4" />
+                    Create {parsedProducts.length} Products
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Parsed Product Modal */}
+        {editingParsedProduct && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-gray-900">Edit Parsed Product</h2>
+                <button
+                  onClick={() => setEditingParsedProduct(null)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
+                  <input
+                    type="text"
+                    value={editingParsedProduct.name}
+                    onChange={(e) => setEditingParsedProduct({...editingParsedProduct, name: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <textarea
+                    value={editingParsedProduct.description || ''}
+                    onChange={(e) => setEditingParsedProduct({...editingParsedProduct, description: e.target.value})}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editingParsedProduct.price}
+                      onChange={(e) => setEditingParsedProduct({...editingParsedProduct, price: parseFloat(e.target.value)})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Base Cost</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={editingParsedProduct.baseCost}
+                      onChange={(e) => setEditingParsedProduct({...editingParsedProduct, baseCost: parseFloat(e.target.value)})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+
+                {editingParsedProduct.type === 'CLASSES' && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Available Seats</label>
+                      <input
+                        type="number"
+                        value={editingParsedProduct.availableSeats || ''}
+                        onChange={(e) => setEditingParsedProduct({...editingParsedProduct, availableSeats: parseInt(e.target.value)})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Duration</label>
+                      <input
+                        type="text"
+                        value={editingParsedProduct.duration || ''}
+                        onChange={(e) => setEditingParsedProduct({...editingParsedProduct, duration: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="e.g., 3 hours"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Instructions</label>
+                  <textarea
+                    value={editingParsedProduct.instructions || ''}
+                    onChange={(e) => setEditingParsedProduct({...editingParsedProduct, instructions: e.target.value})}
+                    rows={4}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 mt-6">
+                <Button
+                  variant="secondary"
+                  onClick={() => setEditingParsedProduct(null)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => handleUpdateParsedProduct(editingParsedProduct)}
+                  className="flex items-center gap-2"
+                >
+                  <CheckCircle className="w-4 h-4" />
+                  Update Product
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* View Product Modal */}
+        {showViewModal && selectedProduct && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-semibold text-gray-900">Product Details</h2>
+                <button
+                  onClick={() => setShowViewModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-4">{selectedProduct.name}</h3>
+                    {selectedProduct.imageUrl && (
+                      <img 
+                        src={selectedProduct.imageUrl} 
+                        alt={selectedProduct.name}
+                        className="w-full h-48 object-cover rounded-lg mb-4"
+                      />
+                    )}
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTypeColor(selectedProduct.type)}`}>
+                        {selectedProduct.type}
+                      </span>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        {selectedProduct.type === 'CLASSES' ? 'Cost per Seat' : 'Price'}
+                      </label>
+                      <p className="text-lg font-semibold text-gray-900">
+                        {selectedProduct.type === 'CLASSES' 
+                          ? `$${selectedProduct.costPerSeat?.toFixed(2) || '0.00'}/seat`
+                          : `$${selectedProduct.price.toFixed(2)}`
+                        }
+                      </p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Margin</label>
+                      <p className="text-sm text-gray-900">{selectedProduct.costRollup.marginPct.toFixed(1)}%</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        selectedProduct.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      }`}>
+                        {selectedProduct.active ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                {selectedProduct.description && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                    <p className="text-gray-900">{selectedProduct.description}</p>
+                  </div>
+                )}
+                
+                {/* Classes-specific information */}
+                {selectedProduct.type === 'CLASSES' && (
+                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                    <h4 className="text-sm font-medium text-purple-900 mb-3">Class Details</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-purple-700 mb-1">Available Seats</label>
+                        <p className="text-lg font-semibold text-purple-900">{selectedProduct.availableSeats || 0}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-purple-700 mb-1">Duration</label>
+                        <p className="text-lg font-semibold text-purple-900">{selectedProduct.duration || 'Not specified'}</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-purple-700 mb-1">Total Revenue</label>
+                        <p className="text-lg font-semibold text-purple-900">${selectedProduct.price.toFixed(2)}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Materials Cost</label>
+                    <p className="text-gray-900">${selectedProduct.costRollup.materialsCost.toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Labor Cost</label>
+                    <p className="text-gray-900">${selectedProduct.costRollup.laborCost.toFixed(2)}</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Total Cost</label>
+                    <p className="text-gray-900">${selectedProduct.costRollup.totalCost.toFixed(2)}</p>
+                  </div>
+                </div>
+                
+                {selectedProduct.tags.length > 0 && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Tags</label>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedProduct.tags.map((tag, index) => (
+                        <span key={index} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex justify-end gap-3 mt-6">
+                <Button
+                  variant="secondary"
+                  onClick={() => setShowViewModal(false)}
+                >
+                  Close
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowViewModal(false);
+                    handleEditProduct(selectedProduct);
+                  }}
+                >
+                  Edit Product
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+
           </div>
     </VendorDashboardLayout>
   );

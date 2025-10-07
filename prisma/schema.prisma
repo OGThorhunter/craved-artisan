@@ -17,8 +17,10 @@ model User {
   phone           String?
   zip_code        String?
   loyalty_member  Boolean          @default(false)
+  avatarUrl       String?
   created_at      DateTime         @default(now())
   updated_at      DateTime         @updatedAt
+  deletedAt       DateTime?
   analyticsEvents AnalyticsEvent[]
   orders          Order[]
   vendorProfile   VendorProfile?
@@ -31,6 +33,12 @@ model User {
   eventInterests  EventInterest[]
   eventFavorites  EventFavorite[]
   eventReviews    EventReview[]
+
+  // Settings & Account Hub relations
+  accounts        AccountUser[]
+  sessions        Session[]
+  auditLogs       AuditLog[]
+  ownedAccounts   Account[]        @relation("AccountOwner")
 
   @@index([zip_code])
 }
@@ -82,6 +90,8 @@ model VendorProfile {
   orderFieldDefs        OrderFieldDef[]
   // Label Management
   assets                Asset[]
+  // Product Import Jobs
+  productImportJobs     ProductImportJob[]
   
   // Marketplace fields
   avatarUrl             String?
@@ -124,14 +134,26 @@ model Product {
   sku                   String?          @unique
   barcode               String?
   taxCode               String?
+  
+  // Enhanced Product Management Fields
+  autoGenerateSku       Boolean          @default(true)
+  batchSize             Int?             // How many units made per batch
+  creationTimeMinutes   Int?             // Approximate time to create
+  leadTimeDays          Int?             // Days needed before starting creation process
+  instructions          String?          // Step-by-step creation instructions
+  sops                  String?          // Standard Operating Procedures (JSON)
+  nutritionInfo         String?          // Detailed nutrition information (JSON)
+  
   // Food-specific fields
   allergenFlags         String?          // JSON array stored as string
   nutritionNotes        String?
+  
   // Service-specific fields
   serviceDurationMin    Int?
   serviceCapacityPerDay Int?
   serviceLeadTimeDays   Int?
   requiresDeposit       Boolean          @default(false)
+  
   // Legacy fields for backward compatibility
   cost                  Float?
   stock                 Int              @default(0)
@@ -165,11 +187,16 @@ model Product {
   searchVec             String?                  // Search vector as string for SQLite
   favoriteProducts      FavoriteProduct[]
   priceHistory          ProductPriceHistory[]    // AI: Price change history
+  
   // New relations
   category              Category?                @relation(fields: [categoryId], references: [id])
   subcategory           Subcategory?             @relation(fields: [subcategoryId], references: [id])
   variants              ProductVariant[]
   materials             ProductMaterial[]
+  productIngredients    ProductIngredient[]      // Enhanced ingredient management
+  productImages         ProductImage[]           // Multiple images support
+  productDocuments      ProductDocument[]        // SOPs, instructions, etc.
+  productImports        ProductImport[]          // Import tracking
 
   @@index([vendorProfileId, active, name])
   @@index([categoryId])
@@ -290,6 +317,114 @@ model InventoryTx {
   @@index([vendorProfileId, ingredientId, type, createdAt])
 }
 
+// Enhanced Product Management Models
+
+model ProductIngredient {
+  id              String    @id @default(cuid())
+  productId       String
+  inventoryItemId String
+  quantity        Decimal   // Amount needed
+  unit            String    // Measurement unit (cups, grams, etc.)
+  notes           String?   // Special preparation notes
+  isOptional      Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relations
+  product         Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+  
+  @@unique([productId, inventoryItemId])
+  @@index([productId])
+  @@index([inventoryItemId])
+}
+
+model ProductImage {
+  id          String   @id @default(cuid())
+  productId   String
+  imageUrl    String
+  altText     String?
+  isPrimary   Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  uploadedAt  DateTime @default(now())
+  
+  // Relations
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@index([productId])
+  @@index([isPrimary])
+}
+
+model ProductDocument {
+  id          String   @id @default(cuid())
+  productId   String
+  title       String
+  documentUrl String
+  type        String   // SOP, INSTRUCTION, NUTRITION, ALLERGEN, etc.
+  description String?
+  uploadedAt  DateTime @default(now())
+  
+  // Relations
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@index([productId])
+  @@index([type])
+}
+
+model ProductImportJob {
+  id            String                @id @default(cuid())
+  vendorProfileId String
+  fileName      String
+  fileUrl       String
+  status        ProductImportStatus   @default(PENDING)
+  totalProducts Int                   @default(0)
+  processedProducts Int               @default(0)
+  failedProducts Int                  @default(0)
+  errors        String?               // JSON array of errors
+  startedAt     DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime              @default(now())
+  
+  // Relations
+  vendor        VendorProfile         @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  importedProducts ProductImport[]    // Track which products were created
+  
+  @@index([vendorProfileId])
+  @@index([status])
+}
+
+model ProductImport {
+  id            String           @id @default(cuid())
+  importJobId   String
+  productId     String?          // null if import failed
+  rowNumber     Int
+  originalData  String           // JSON of original row data
+  status        ImportRowStatus  @default(PENDING)
+  errors        String?          // JSON array of validation errors
+  createdAt     DateTime         @default(now())
+  
+  // Relations
+  importJob     ProductImportJob @relation(fields: [importJobId], references: [id], onDelete: Cascade)
+  product       Product?         @relation(fields: [productId], references: [id], onDelete: SetNull)
+  
+  @@index([importJobId])
+  @@index([status])
+}
+
+enum ProductImportStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum ImportRowStatus {
+  PENDING
+  PROCESSING
+  SUCCESS
+  FAILED
+}
+
 // AI: Enhanced inventory item model for supplies/ingredients
 model InventoryItem {
   id              String    @id @default(cuid())
@@ -315,6 +450,7 @@ model InventoryItem {
   movements       InventoryMovement[]
   priceWatches    PriceWatch[]
   productMaterials ProductMaterial[]
+  productIngredients ProductIngredient[]
   supplierOffers  InventorySupplierOffer[]
   purchaseOrderLines InventoryPurchaseOrderLine[]
   
@@ -1238,9 +1374,10 @@ enum WholesaleTerms {
 
 enum InvoiceStatus {
   DRAFT
-  SENT
+  OPEN
   PAID
   VOID
+  UNCOLLECTIBLE
 }
 
 enum QrKind {
@@ -1918,4 +2055,188 @@ model VendorSegment {
   updatedAt   DateTime @updatedAt
 
   @@map("vendor_segments")
+}
+
+// Settings & Account Hub Models
+model Account {
+  id              String   @id @default(cuid())
+  name            String
+  slug            String   @unique
+  logoUrl         String?
+  primaryEmail    String
+  primaryPhone    String?
+  taxId           String?
+  addressId       String?
+  address         Address? @relation(fields: [addressId], references: [id])
+  ownerId         String
+  owner           User     @relation("AccountOwner", fields: [ownerId], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  deletedAt       DateTime?
+  users           AccountUser[]
+  socials         SocialLink[]
+  documents       Document[]
+  auditLogs       AuditLog[]
+  billingProfile  BillingProfile?
+  subscriptions   Subscription[]
+  invoices        Invoice[]
+}
+
+
+model AccountUser {
+  id         String   @id @default(cuid())
+  accountId  String
+  userId     String
+  role       AccountRole
+  status     EmploymentStatus @default(ACTIVE)
+  title      String?
+  workEmail  String?
+  workPhone  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  deletedAt  DateTime?
+  account    Account  @relation(fields: [accountId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+  @@unique([accountId, userId])
+}
+
+enum AccountRole { 
+  OWNER 
+  ADMIN 
+  STAFF 
+  VIEWER 
+}
+
+enum EmploymentStatus { 
+  ACTIVE 
+  ON_LEAVE 
+  TERMINATED 
+}
+
+model Address {
+  id        String   @id @default(cuid())
+  name      String?
+  line1     String
+  line2     String?
+  city      String
+  state     String
+  postal    String
+  country   String   @default("US")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  accounts  Account[]
+}
+
+model SocialLink {
+  id         String   @id @default(cuid())
+  accountId  String
+  platform   SocialPlatform
+  url        String
+  handle     String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  account    Account  @relation(fields: [accountId], references: [id])
+}
+
+enum SocialPlatform { 
+  FACEBOOK 
+  INSTAGRAM 
+  TIKTOK 
+  YOUTUBE 
+  PINTEREST 
+  X 
+  THREADS 
+  WEBSITE 
+  OTHER 
+}
+
+model Document {
+  id          String   @id @default(cuid())
+  accountId   String
+  title       String
+  category    DocCategory
+  storageKey  String
+  mimeType    String
+  sizeBytes   Int
+  uploadedBy  String
+  signedAt    DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  account     Account  @relation(fields: [accountId], references: [id])
+}
+
+enum DocCategory { 
+  CONTRACT 
+  POLICY 
+  LICENSE 
+  INSURANCE 
+  MISC 
+}
+
+model BillingProfile {
+  id                String   @id @default(cuid())
+  accountId         String   @unique
+  stripeCustomerId  String?
+  currency          String   @default("USD")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  account           Account  @relation(fields: [accountId], references: [id])
+}
+
+model Subscription {
+  id               String   @id @default(cuid())
+  accountId        String
+  stripeSubId      String   @unique
+  status           SubStatus
+  planName         String
+  currentPeriodEnd DateTime
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  account          Account  @relation(fields: [accountId], references: [id])
+}
+
+enum SubStatus { 
+  ACTIVE 
+  PAST_DUE 
+  CANCELED 
+  TRIALING 
+  INCOMPLETE 
+}
+
+model Invoice {
+  id              String   @id @default(cuid())
+  accountId       String
+  stripeInvoiceId String   @unique
+  amountDueCents  Int
+  amountPaidCents Int
+  status          InvoiceStatus
+  hostedUrl       String?
+  createdAt       DateTime @default(now())
+  account         Account  @relation(fields: [accountId], references: [id])
+}
+
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  accountId   String
+  actorUserId String
+  action      String
+  entityType  String
+  entityId    String
+  diffJson    Json?
+  ip          String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  account     Account  @relation(fields: [accountId], references: [id])
+  actor       User     @relation(fields: [actorUserId], references: [id])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  ip        String?
+  userAgent String?
+  user      User     @relation(fields: [userId], references: [id])
 }

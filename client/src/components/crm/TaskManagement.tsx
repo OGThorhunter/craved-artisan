@@ -3,38 +3,21 @@ import {
   Calendar,
   Plus,
   Search,
-  Filter,
   CheckCircle,
   Clock,
   AlertCircle,
-  User,
   Edit,
   Trash2,
   Eye,
-  Settings,
-  Target,
-  BarChart3,
-  Users,
-  TrendingUp,
-  Star,
   Bell,
   FileText,
-  MoreVertical,
   X,
   UserPlus,
-  Flag,
-  CalendarDays,
-  Tag,
-  ArrowRight,
-  Filter as FilterIcon,
   SortAsc,
   SortDesc,
-  Activity,
   List,
   Grid3X3,
-  Calendar as CalendarIcon,
-  Timer,
-  CheckSquare
+  Calendar as CalendarIcon
 } from 'lucide-react';
 import AIInsights from './AIInsights';
 
@@ -77,7 +60,7 @@ interface TeamMember {
   name: string;
   email: string;
   phone?: string;
-  role: 'admin' | 'manager' | 'sales_rep' | 'support';
+  role: 'admin' | 'manager' | 'sales_rep' | 'support' | 'marketing' | 'other';
   avatar?: string;
   isActive: boolean;
   tasksAssigned: number;
@@ -91,12 +74,8 @@ interface TaskManagementProps {
   onTaskUpdate: (task: Task) => void;
   onTaskComplete: (id: string) => void;
   onTaskDelete: (id: string) => void;
-  onTaskAssign: (taskId: string, userId: string) => void;
-  onTaskReassign: (taskId: string, fromUserId: string, toUserId: string) => void;
-  onSubtaskCreate: (parentTaskId: string, subtask: Partial<Task>) => void;
   onTeamMemberCreate: (member: Partial<TeamMember>) => void;
   onTeamMemberUpdate: (member: TeamMember) => void;
-  onTeamMemberDelete: (id: string) => void;
   isLoading: boolean;
 }
 
@@ -107,12 +86,8 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
   onTaskUpdate,
   onTaskComplete,
   onTaskDelete,
-  onTaskAssign,
-  onTaskReassign,
-  onSubtaskCreate,
   onTeamMemberCreate,
   onTeamMemberUpdate,
-  onTeamMemberDelete,
   isLoading
 }) => {
   const [activeView, setActiveView] = useState<'list' | 'kanban' | 'calendar'>('list');
@@ -291,10 +266,11 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
       case 'dueDate':
         comparison = new Date(a.dueDate || '9999-12-31').getTime() - new Date(b.dueDate || '9999-12-31').getTime();
         break;
-      case 'priority':
+      case 'priority': {
         const priorityOrder = { urgent: 4, high: 3, medium: 2, low: 1 };
         comparison = priorityOrder[b.priority] - priorityOrder[a.priority];
         break;
+      }
       case 'createdAt':
         comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
         break;
@@ -424,7 +400,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
 
           <select
             value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as any)}
+            onChange={(e) => setSortBy(e.target.value as 'dueDate' | 'priority' | 'createdAt' | 'title')}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             title="Sort by"
             aria-label="Sort tasks"
@@ -814,6 +790,22 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                           >
                             <Edit className="h-3 w-3" />
                           </button>
+                          {task.status !== 'completed' && (
+                            <button
+                              onClick={() => onTaskComplete(task.id)}
+                              className="text-gray-400 hover:text-green-600"
+                              title="Mark complete"
+                            >
+                              <CheckCircle className="h-3 w-3" />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => onTaskDelete(task.id)}
+                            className="text-gray-400 hover:text-red-600"
+                            title="Delete task"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -826,11 +818,131 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
 
       {/* Calendar View */}
       {activeView === 'calendar' && (
-        <div className="rounded-lg shadow-lg p-6" style={{ backgroundColor: '#F7F2EC' }}>
-          <div className="text-center py-12">
-            <CalendarIcon className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Calendar View</h3>
-            <p className="text-gray-600">Calendar view will be implemented in the next update</p>
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Task Calendar</h3>
+            <p className="text-sm text-gray-600">View and manage tasks by date</p>
+          </div>
+          
+          <div className="grid grid-cols-7 gap-1 mb-4">
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+              <div key={day} className="p-2 text-center text-sm font-medium text-gray-500 bg-gray-50 rounded">
+                {day}
+              </div>
+            ))}
+          </div>
+          
+          <div className="grid grid-cols-7 gap-1">
+            {Array.from({ length: 35 }, (_, i) => {
+              const date = new Date();
+              const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+              const startDate = new Date(firstDay);
+              startDate.setDate(startDate.getDate() - firstDay.getDay());
+              startDate.setDate(startDate.getDate() + i);
+              
+              const isCurrentMonth = startDate.getMonth() === date.getMonth();
+              const isToday = startDate.toDateString() === new Date().toDateString();
+              
+              // Get tasks for this date
+              const dayTasks = sortedTasks.filter(task => {
+                if (!task.dueDate) return false;
+                const taskDate = new Date(task.dueDate);
+                return taskDate.toDateString() === startDate.toDateString();
+              });
+              
+              return (
+                <div
+                  key={i}
+                  className={`min-h-[100px] p-2 border border-gray-200 rounded ${
+                    isCurrentMonth ? 'bg-white' : 'bg-gray-50'
+                  } ${isToday ? 'ring-2 ring-blue-500' : ''}`}
+                >
+                  <div className={`text-sm font-medium mb-1 ${
+                    isCurrentMonth ? 'text-gray-900' : 'text-gray-400'
+                  } ${isToday ? 'text-blue-600' : ''}`}>
+                    {startDate.getDate()}
+                  </div>
+                  
+                  <div className="space-y-1">
+                    {dayTasks.slice(0, 3).map((task) => (
+                      <div
+                        key={task.id}
+                        className={`text-xs p-1 rounded cursor-pointer hover:opacity-80 transition-opacity ${
+                          task.status === 'completed' 
+                            ? 'bg-green-100 text-green-800 line-through' 
+                            : task.priority === 'urgent'
+                            ? 'bg-red-100 text-red-800'
+                            : task.priority === 'high'
+                            ? 'bg-orange-100 text-orange-800'
+                            : task.priority === 'medium'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-blue-100 text-blue-800'
+                        }`}
+                        onClick={() => {
+                          setSelectedTask(task);
+                          setShowTaskDetails(true);
+                        }}
+                        title={`${task.title} - ${task.priority} priority`}
+                      >
+                        <div className="truncate">{task.title}</div>
+                        {task.assignedUser && (
+                          <div className="text-xs opacity-75">
+                            {task.assignedUser.name}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    
+                    {dayTasks.length > 3 && (
+                      <div className="text-xs text-gray-500 text-center">
+                        +{dayTasks.length - 3} more
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Add task button */}
+                  <button
+                    onClick={() => {
+                        const tomorrow = new Date(startDate);
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    setNewTask({
+                      ...newTask,
+                      dueDate: tomorrow.toISOString().split('T')[0]
+                    });
+                    setShowTaskCreate(true);
+                  }}
+                    className="w-full mt-1 p-1 text-xs text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                    title="Add task for this date"
+                  >
+                    <Plus className="h-3 w-3 mx-auto" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+          
+          {/* Calendar Legend */}
+          <div className="mt-6 flex flex-wrap gap-4 text-xs">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-red-100 rounded"></div>
+              <span>Urgent</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-orange-100 rounded"></div>
+              <span>High</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-yellow-100 rounded"></div>
+              <span>Medium</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-blue-100 rounded"></div>
+              <span>Low</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 bg-green-100 rounded"></div>
+              <span>Completed</span>
+            </div>
           </div>
         </div>
       )}
@@ -902,7 +1014,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                   </label>
                   <select
                     value={newTask.type || 'follow_up'}
-                    onChange={(e) => setNewTask({...newTask, type: e.target.value as any})}
+                    onChange={(e) => setNewTask({...newTask, type: e.target.value as 'call' | 'email' | 'meeting' | 'follow_up' | 'proposal' | 'demo' | 'research' | 'documentation' | 'other'})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     title="Select task type"
                     aria-label="Select task type"
@@ -925,7 +1037,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                   </label>
                   <select
                     value={newTask.priority || 'medium'}
-                    onChange={(e) => setNewTask({...newTask, priority: e.target.value as any})}
+                    onChange={(e) => setNewTask({...newTask, priority: e.target.value as 'low' | 'medium' | 'high' | 'urgent'})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     title="Select priority"
                     aria-label="Select priority"
@@ -1043,6 +1155,310 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
         </div>
       )}
 
+      {/* Task Details Modal */}
+      {showTaskDetails && selectedTask && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-[#F7F2EC] rounded-lg shadow-xl border border-gray-200 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900">{selectedTask.title}</h2>
+                <button
+                  onClick={() => setShowTaskDetails(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                  title="Close modal"
+                  aria-label="Close task details modal"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              {/* Task Details */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Task Information</h3>
+                  <div className="space-y-2">
+                    <p><span className="font-medium">Type:</span> {selectedTask.type}</p>
+                    <p><span className="font-medium">Priority:</span> 
+                      <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(selectedTask.priority)}`}>
+                        {selectedTask.priority}
+                      </span>
+                    </p>
+                    <p><span className="font-medium">Status:</span> 
+                      <span className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(selectedTask.status)}`}>
+                        {selectedTask.status}
+                      </span>
+                    </p>
+                    <p><span className="font-medium">Due Date:</span> {selectedTask.dueDate ? new Date(selectedTask.dueDate).toLocaleDateString() : 'No due date'}</p>
+                    <p><span className="font-medium">Estimated Hours:</span> {selectedTask.estimatedHours || 'Not specified'}</p>
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Assignment</h3>
+                  {selectedTask.assignedUser ? (
+                    <div className="space-y-2">
+                      <p><span className="font-medium">Assigned To:</span> {selectedTask.assignedUser.name}</p>
+                      <p><span className="font-medium">Email:</span> {selectedTask.assignedUser.email}</p>
+                    </div>
+                  ) : (
+                    <p className="text-gray-500">Unassigned</p>
+                  )}
+                </div>
+              </div>
+              
+              {/* Description */}
+              {selectedTask.description && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Description</h3>
+                  <p className="text-gray-700">{selectedTask.description}</p>
+                </div>
+              )}
+              
+              {/* Tags */}
+              {selectedTask.tags && selectedTask.tags.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Tags</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedTask.tags.map((tag, index) => (
+                      <span key={index} className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Quick Actions */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+                <div className="flex items-center gap-3">
+                  {selectedTask.status !== 'completed' && (
+                    <button
+                      onClick={() => {
+                        onTaskComplete(selectedTask.id);
+                        setShowTaskDetails(false);
+                      }}
+                      className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm font-medium"
+                    >
+                      <CheckCircle className="h-4 w-4" />
+                      Mark Complete
+                    </button>
+                  )}
+                  <button
+                    onClick={() => {
+                      setShowTaskDetails(false);
+                      setEditingTask(selectedTask);
+                      setShowTaskEdit(true);
+                    }}
+                    className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm font-medium"
+                  >
+                    <Edit className="h-4 w-4" />
+                    Edit Task
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowTaskDetails(false);
+                      onTaskDelete(selectedTask.id);
+                    }}
+                    className="flex items-center gap-2 px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors text-sm font-medium"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete Task
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Task Modal */}
+      {showTaskEdit && editingTask && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-[#F7F2EC] rounded-lg shadow-xl border border-gray-200 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900">Edit Task</h2>
+                <button
+                  onClick={() => {
+                    setShowTaskEdit(false);
+                    setEditingTask(null);
+                  }}
+                  className="text-gray-500 hover:text-gray-700"
+                  title="Close modal"
+                  aria-label="Close edit task modal"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Task Title *
+                  </label>
+                  <input
+                    type="text"
+                    value={editingTask.title}
+                    onChange={(e) => setEditingTask({...editingTask, title: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Enter task title"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Task Type
+                  </label>
+                  <select
+                    value={editingTask.type}
+                    onChange={(e) => setEditingTask({...editingTask, type: e.target.value as 'call' | 'email' | 'meeting' | 'follow_up' | 'proposal' | 'demo' | 'research' | 'documentation' | 'other'})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    title="Select task type"
+                    aria-label="Select task type"
+                  >
+                    <option value="call">Call</option>
+                    <option value="email">Email</option>
+                    <option value="meeting">Meeting</option>
+                    <option value="follow_up">Follow Up</option>
+                    <option value="proposal">Proposal</option>
+                    <option value="demo">Demo</option>
+                    <option value="research">Research</option>
+                    <option value="documentation">Documentation</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Priority
+                  </label>
+                  <select
+                    value={editingTask.priority}
+                    onChange={(e) => setEditingTask({...editingTask, priority: e.target.value as 'low' | 'medium' | 'high' | 'urgent'})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    title="Select priority"
+                    aria-label="Select priority"
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="urgent">Urgent</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Status
+                  </label>
+                  <select
+                    value={editingTask.status}
+                    onChange={(e) => setEditingTask({...editingTask, status: e.target.value as 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'on_hold'})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    title="Select status"
+                    aria-label="Select status"
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="in_progress">In Progress</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                    <option value="on_hold">On Hold</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Due Date
+                  </label>
+                  <input
+                    type="date"
+                    value={editingTask.dueDate || ''}
+                    onChange={(e) => setEditingTask({...editingTask, dueDate: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    title="Due date"
+                    aria-label="Due date for this task"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Estimated Hours
+                  </label>
+                  <input
+                    type="number"
+                    min="0.5"
+                    step="0.5"
+                    value={editingTask.estimatedHours || 1}
+                    onChange={(e) => setEditingTask({...editingTask, estimatedHours: parseFloat(e.target.value)})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    title="Estimated hours"
+                    aria-label="Estimated hours for this task"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Assign To
+                  </label>
+                  <select
+                    value={editingTask.assignedTo || ''}
+                    onChange={(e) => setEditingTask({...editingTask, assignedTo: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    title="Select assignee"
+                    aria-label="Select assignee"
+                  >
+                    <option value="">Unassigned</option>
+                    {teamMembers.map(member => (
+                      <option key={member.id} value={member.id}>{member.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              
+              <div className="mt-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Description
+                </label>
+                <textarea
+                  value={editingTask.description || ''}
+                  onChange={(e) => setEditingTask({...editingTask, description: e.target.value})}
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Describe the task..."
+                />
+              </div>
+              
+              <div className="flex items-center justify-end gap-3 pt-6 border-t border-gray-200 mt-6">
+                <button
+                  onClick={() => {
+                    setShowTaskEdit(false);
+                    setEditingTask(null);
+                  }}
+                  className="px-3 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    onTaskUpdate(editingTask);
+                    setShowTaskEdit(false);
+                    setEditingTask(null);
+                  }}
+                  disabled={!editingTask.title}
+                  className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Create Team Member Modal */}
       {showTeamMemberCreate && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -1119,7 +1535,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                   </label>
                   <select
                     value={newTeamMember.role || 'sales_rep'}
-                    onChange={(e) => setNewTeamMember({...newTeamMember, role: e.target.value as any})}
+                    onChange={(e) => setNewTeamMember({...newTeamMember, role: e.target.value as 'manager' | 'sales_rep' | 'support' | 'marketing' | 'admin' | 'other'})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     title="Select role"
                     aria-label="Select team member role"
@@ -1260,7 +1676,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                   </label>
                   <select
                     value={editingTeamMember.role}
-                    onChange={(e) => setEditingTeamMember({...editingTeamMember, role: e.target.value as any})}
+                    onChange={(e) => setEditingTeamMember({...editingTeamMember, role: e.target.value as 'manager' | 'sales_rep' | 'support' | 'marketing' | 'admin' | 'other'})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     title="Select role"
                     aria-label="Select team member role"

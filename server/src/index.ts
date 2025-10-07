@@ -32,6 +32,10 @@ import systemMessagesRouter from './routes/system-messages.router';
 import aiReceiptRouter from './routes/ai-receipt.router';
 import aiSystemMessagesRouter from './routes/ai-system-messages.router';
 
+// Settings & Account Hub Routes
+import settingsRouter from './routes/settings';
+import stripeWebhooksRouter from './routes/webhooks/stripe';
+
 // Orders Management Routes
 import ordersManagementRouter from './routes/orders-management.router';
 import ordersViewsRouter from './routes/orders-views.router';
@@ -195,6 +199,10 @@ app.use('/api/admin', adminMarketplaceRouter);
 app.use('/api/admin', adminTrustSafetyRouter);
 app.use('/api/admin', adminGrowthSocialRouter);
 app.use('/api/admin', adminSecurityComplianceRouter);
+
+// Settings & Account Hub routes
+app.use('/api/settings', settingsRouter);
+app.use('/webhooks/stripe', stripeWebhooksRouter);
 
 // Start server
 app.listen(PORT, () => {
