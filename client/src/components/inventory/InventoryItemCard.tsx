@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Edit, Trash2, Eye, AlertTriangle, Calendar, MapPin, Tag, Plus, Minus } from 'lucide-react';
+import { Edit, Trash2, Eye, AlertTriangle, Calendar, MapPin, Tag, Plus, Minus, Users } from 'lucide-react';
 import type { InventoryItem } from '../../hooks/useInventory';
+import DuplicateIndicator from './DuplicateIndicator';
 
 interface InventoryItemCardProps {
   item: InventoryItem;
@@ -8,7 +9,12 @@ interface InventoryItemCardProps {
   onEdit: (item: InventoryItem) => void;
   onDelete: (id: string) => void;
   onQuickUpdate?: (id: string, newStock: number) => void;
+  onCombineDuplicates?: (item: InventoryItem) => void;
   isDeleting?: boolean;
+  duplicateInfo?: {
+    count: number;
+    confidence: number;
+  };
 }
 
 const InventoryItemCard: React.FC<InventoryItemCardProps> = ({
@@ -17,7 +23,9 @@ const InventoryItemCard: React.FC<InventoryItemCardProps> = ({
   onEdit,
   onDelete,
   onQuickUpdate,
-  isDeleting = false
+  onCombineDuplicates,
+  isDeleting = false,
+  duplicateInfo
 }) => {
   const [showQuickUpdate, setShowQuickUpdate] = useState(false);
   const [quickAmount, setQuickAmount] = useState(1);
@@ -91,10 +99,20 @@ const InventoryItemCard: React.FC<InventoryItemCardProps> = ({
       </div>
 
       {/* Category Badge */}
-      <div className="mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(item.category)}`}>
           {item.category.replace('_', ' ').toUpperCase()}
         </span>
+        
+        {/* Duplicate Indicator */}
+        {duplicateInfo && duplicateInfo.count > 0 && (
+          <DuplicateIndicator
+            confidence={duplicateInfo.confidence}
+            duplicateCount={duplicateInfo.count}
+            onClick={() => onCombineDuplicates?.(item)}
+            compact={true}
+          />
+        )}
       </div>
 
       {/* Stock Information */}
@@ -223,6 +241,18 @@ const InventoryItemCard: React.FC<InventoryItemCardProps> = ({
 
       {/* Actions */}
       <div className="flex justify-end gap-2 mt-auto pt-4 border-t border-gray-100">
+        {duplicateInfo && duplicateInfo.count > 0 && onCombineDuplicates && (
+          <button
+            onClick={() => onCombineDuplicates(item)}
+            className="flex items-center gap-1 px-3 py-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-colors"
+            disabled={isDeleting}
+            title={`Combine with ${duplicateInfo.count} duplicate${duplicateInfo.count > 1 ? 's' : ''}`}
+          >
+            <Users className="h-4 w-4" />
+            <span className="text-sm font-medium">Combine</span>
+          </button>
+        )}
+        
         <button
           onClick={() => onView(item)}
           className="flex items-center gap-1 px-3 py-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"

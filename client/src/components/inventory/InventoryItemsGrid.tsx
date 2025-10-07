@@ -1,5 +1,5 @@
 import React from 'react';
-import { Package, Search } from 'lucide-react';
+import { Package } from 'lucide-react';
 import type { InventoryItem } from '../../hooks/useInventory';
 import InventoryItemCard from './InventoryItemCard';
 
@@ -10,7 +10,9 @@ interface InventoryItemsGridProps {
   onEdit: (item: InventoryItem) => void;
   onDelete: (id: string) => void;
   onQuickUpdate?: (id: string, newStock: number) => void;
+  onCombineDuplicates?: (item: InventoryItem) => void;
   deletingId?: string;
+  getDuplicateInfo?: (item: InventoryItem) => { count: number; confidence: number } | null;
 }
 
 const InventoryItemsGrid: React.FC<InventoryItemsGridProps> = ({
@@ -20,7 +22,9 @@ const InventoryItemsGrid: React.FC<InventoryItemsGridProps> = ({
   onEdit,
   onDelete,
   onQuickUpdate,
-  deletingId
+  onCombineDuplicates,
+  deletingId,
+  getDuplicateInfo
 }) => {
   if (isLoading) {
     return (
@@ -87,7 +91,9 @@ const InventoryItemsGrid: React.FC<InventoryItemsGridProps> = ({
           onEdit={onEdit}
           onDelete={onDelete}
           onQuickUpdate={onQuickUpdate}
+          onCombineDuplicates={onCombineDuplicates}
           isDeleting={deletingId === item.id}
+          duplicateInfo={getDuplicateInfo?.(item) || undefined}
         />
       ))}
     </div>

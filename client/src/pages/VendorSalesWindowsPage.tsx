@@ -28,7 +28,7 @@ import MotivationalQuote from '@/components/dashboard/MotivationalQuote';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import { getQuoteByCategory } from '@/data/motivationalQuotes';
 import CreateEditSalesWindowDrawer from '@/components/sales-windows/CreateEditSalesWindowDrawer';
-import CreateSalesWindowWizard from '@/components/sales-windows/CreateSalesWindowWizard';
+import SalesWindowWizard from '@/components/sales-windows/SalesWindowWizard';
 import BulkOperationsBar from '@/components/sales-windows/BulkOperationsBar';
 import type { 
   SalesWindow, 
@@ -52,7 +52,7 @@ const VendorSalesWindowsPage = () => {
   const [dateRange, setDateRange] = useState<{ start: string; end: string }>({ start: '', end: '' });
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [editingWindow, setEditingWindow] = useState<SalesWindow | undefined>(undefined);
-  const [showSalesWizard, setShowSalesWizard] = useState(false);
+  const [showWizard, setShowWizard] = useState(false);
   const [selectedWindows, setSelectedWindows] = useState<string[]>([]);
   const [showBatchOrderModal, setShowBatchOrderModal] = useState(false);
   const [batchOrderProducts, setBatchOrderProducts] = useState<Array<{product: any, quantity: number}>>([]);
@@ -324,7 +324,7 @@ const VendorSalesWindowsPage = () => {
   };
 
   const handleCreateWindow = () => {
-    setShowSalesWizard(true);
+    setShowWizard(true);
   };
 
   const handleWizardComplete = (salesWindowData: Partial<SalesWindow>) => {
@@ -352,12 +352,11 @@ const VendorSalesWindowsPage = () => {
     };
 
     // Add to the sales windows list (mock implementation)
-    // In a real app, you would make an API call here
-    console.log('Creating sales window:', newSalesWindow);
-    
-    // Show success message
+    setMockSalesWindows(prev => [newSalesWindow, ...prev]);
+    setShowWizard(false);
     toast.success('Sales window created successfully!');
   };
+
 
   const handleEditWindow = (window: SalesWindow) => {
     setEditingWindow(window);
@@ -698,7 +697,7 @@ const VendorSalesWindowsPage = () => {
                     className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
                   >
                     <Plus className="w-4 h-4" />
-                    Create Sales Window Wizard
+                    🎯 Create Sales Window Wizard 🎯
                   </button>
                   <span className="text-xs text-gray-600 text-center">New windows start as drafts</span>
                 </div>
@@ -1051,6 +1050,14 @@ const VendorSalesWindowsPage = () => {
             onCreateBatchOrders={handleCreateBatchOrders}
           />
 
+          {/* Sales Window Wizard */}
+          <SalesWindowWizard
+            isOpen={showWizard}
+            onClose={() => setShowWizard(false)}
+            onComplete={handleWizardComplete}
+          />
+          
+
           {/* Batch Order Confirmation Modal */}
           {showBatchOrderModal && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -1121,12 +1128,6 @@ const VendorSalesWindowsPage = () => {
             </div>
           )}
 
-          {/* Create Sales Window Wizard */}
-          <CreateSalesWindowWizard
-            isOpen={showSalesWizard}
-            onClose={() => setShowSalesWizard(false)}
-            onComplete={handleWizardComplete}
-          />
         </VendorDashboardLayout>
       );
     };

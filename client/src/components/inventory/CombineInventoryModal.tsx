@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
   X, 
-  ArrowRight, 
   Plus, 
   Minus, 
   AlertTriangle,
@@ -217,6 +216,7 @@ const CombineInventoryModal: React.FC<CombineInventoryModalProps> = ({
                             <button
                               onClick={() => setCombinedStock(Math.max(0, combinedStock - 1))}
                               className="p-1 rounded border border-blue-300 text-blue-600 hover:bg-blue-100"
+                              title="Decrease quantity"
                             >
                               <Minus className="w-4 h-4" />
                             </button>
@@ -226,10 +226,12 @@ const CombineInventoryModal: React.FC<CombineInventoryModalProps> = ({
                               onChange={(e) => setCombinedStock(Math.max(0, parseInt(e.target.value) || 0))}
                               className="w-20 px-2 py-1 border border-blue-300 rounded text-center"
                               min="0"
+                              title="Final stock quantity"
                             />
                             <button
                               onClick={() => setCombinedStock(combinedStock + 1)}
                               className="p-1 rounded border border-blue-300 text-blue-600 hover:bg-blue-100"
+                              title="Increase quantity"
                             >
                               <Plus className="w-4 h-4" />
                             </button>
@@ -250,6 +252,7 @@ const CombineInventoryModal: React.FC<CombineInventoryModalProps> = ({
                               onChange={(e) => setCombinedValue(Math.max(0, parseFloat(e.target.value) || 0))}
                               className="flex-1 px-2 py-1 border border-blue-300 rounded"
                               min="0"
+                              title="Final value"
                             />
                           </div>
                         </div>

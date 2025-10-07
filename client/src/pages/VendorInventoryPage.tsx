@@ -13,6 +13,7 @@ import InventoryModals from '../components/inventory/InventoryModals';
 import AIInsightsDrawer from '../components/inventory/AIInsightsDrawer';
 import SystemMessagesDrawer from '../components/inventory/SystemMessagesDrawer';
 import InventoryWizard from '../components/inventory/InventoryWizard';
+import CombineInventoryModal from '../components/inventory/CombineInventoryModal';
 import BulkingCalculatorTab from './dashboard/vendor/inventory/tabs/BulkingCalculatorTab';
 import SDStarterManager from '../components/inventory/SDStarterManager';
 import BackupSupplyManager from '../components/inventory/BackupSupplyManager';
@@ -27,6 +28,7 @@ import type {
   CreateInventoryItemData,
   UpdateInventoryItemData
 } from '../hooks/useInventory';
+import { findDuplicateGroups, getDuplicateSuggestions } from '../utils/inventoryDuplicates';
 
 type TabType = 'inventory' | 'bulking' | 'starter' | 'backup';
 
@@ -45,9 +47,31 @@ const VendorInventoryPage: React.FC = () => {
   const [showAIInsights, setShowAIInsights] = useState(false);
   const [showSystemMessages, setShowSystemMessages] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
+  const [showCombineModal, setShowCombineModal] = useState(false);
+  const [combineItem, setCombineItem] = useState<InventoryItem | null>(null);
 
   // Data fetching
   const { data: inventoryItems = [], isLoading, error } = useInventoryItems();
+  
+  // Duplicate detection
+  const duplicateGroups = useMemo(() => findDuplicateGroups(inventoryItems), [inventoryItems]);
+  
+  const getDuplicateInfoForItem = (item: InventoryItem) => {
+    const suggestions = getDuplicateSuggestions(item, inventoryItems);
+    if (suggestions.length === 0) return null;
+    
+    // Find the group this item belongs to
+    const group = duplicateGroups.find(group => 
+      group.items.some(groupItem => groupItem.id === item.id)
+    );
+    
+    if (!group) return null;
+    
+    return {
+      count: suggestions.length,
+      confidence: group.confidence
+    };
+  };
   
   // Mutations
   const createMutation = useCreateInventoryItem();
@@ -93,6 +117,33 @@ const VendorInventoryPage: React.FC = () => {
       } finally {
         setDeletingId(null);
       }
+    }
+  };
+
+  const handleCombineDuplicates = (item: InventoryItem) => {
+    setCombineItem(item);
+    setShowCombineModal(true);
+  };
+
+  const handleCombine = async (primaryItemId: string, duplicateItemIds: string[], combinedData: Partial<InventoryItem>) => {
+    try {
+      // Update the primary item with combined data
+      await updateMutation.mutateAsync({
+        id: primaryItemId,
+        ...combinedData
+      });
+
+      // Delete the duplicate items
+      for (const duplicateId of duplicateItemIds) {
+        await deleteMutation.mutateAsync(duplicateId);
+      }
+
+      toast.success(`Successfully combined ${duplicateItemIds.length + 1} inventory items`);
+      setShowCombineModal(false);
+      setCombineItem(null);
+    } catch (error) {
+      toast.error('Failed to combine inventory items');
+      console.error('Combine error:', error);
     }
   };
 
@@ -341,7 +392,9 @@ const VendorInventoryPage: React.FC = () => {
                     onEdit={handleEdit}
                     onDelete={handleDelete}
                     onQuickUpdate={handleQuickUpdate}
+                    onCombineDuplicates={handleCombineDuplicates}
                     deletingId={deletingId || undefined}
+                    getDuplicateInfo={getDuplicateInfoForItem}
                   />
                 ) : (
                   <InventoryItemsList
@@ -349,7 +402,9 @@ const VendorInventoryPage: React.FC = () => {
                     onView={handleView}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
+                    onCombineDuplicates={handleCombineDuplicates}
                     deletingId={deletingId || undefined}
+                    getDuplicateInfo={getDuplicateInfoForItem}
                   />
                 )}
               </div>
@@ -408,6 +463,20 @@ const VendorInventoryPage: React.FC = () => {
           onClose={() => setShowWizard(false)}
           onSave={handleSave}
         />
+
+        {/* Combine Duplicates Modal */}
+        {showCombineModal && combineItem && (
+          <CombineInventoryModal
+            isOpen={showCombineModal}
+            onClose={() => {
+              setShowCombineModal(false);
+              setCombineItem(null);
+            }}
+            primaryItem={combineItem}
+            duplicateItems={getDuplicateSuggestions(combineItem, inventoryItems)}
+            onCombine={handleCombine}
+          />
+        )}
       </div>
     </VendorDashboardLayout>
   );

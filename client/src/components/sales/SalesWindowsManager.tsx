@@ -100,7 +100,7 @@ export function SalesWindowsManager({
           className="flex items-center gap-2 px-4 py-2 bg-brand-green text-white rounded-lg hover:bg-brand-green/90 transition-colors"
         >
           <Plus className="w-4 h-4" />
-          Create Sales Window
+          Create Sale
         </button>
       </div>
 
@@ -116,7 +116,7 @@ export function SalesWindowsManager({
             onClick={handleCreateWindow}
             className="bg-brand-green text-white px-6 py-3 rounded-lg font-medium hover:bg-brand-green/90 transition-colors"
           >
-            Create Sales Window
+            Create Sale
           </button>
         </div>
       ) : (

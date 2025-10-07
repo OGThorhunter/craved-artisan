@@ -1,14 +1,17 @@
 import React from 'react';
 import { Edit, Trash2, Eye, AlertTriangle, Calendar, MapPin, Tag, Package } from 'lucide-react';
 import type { InventoryItem } from '../../hooks/useInventory';
+import DuplicateIndicator from './DuplicateIndicator';
 
 interface InventoryItemsListProps {
   items: InventoryItem[];
   onView: (item: InventoryItem) => void;
   onEdit: (item: InventoryItem) => void;
   onDelete: (id: string) => void;
+  onCombineDuplicates?: (item: InventoryItem) => void;
   deletingId?: string;
   isLoading?: boolean;
+  getDuplicateInfo?: (item: InventoryItem) => { count: number; confidence: number } | null;
 }
 
 const InventoryItemsList: React.FC<InventoryItemsListProps> = ({
@@ -16,8 +19,10 @@ const InventoryItemsList: React.FC<InventoryItemsListProps> = ({
   onView,
   onEdit,
   onDelete,
+  onCombineDuplicates,
   deletingId,
-  isLoading = false
+  isLoading = false,
+  getDuplicateInfo
 }) => {
   if (isLoading) {
     return (
@@ -163,6 +168,16 @@ const InventoryItemsList: React.FC<InventoryItemsListProps> = ({
                 {/* Actions */}
                 <div className="col-span-2">
                   <div className="flex items-center space-x-2">
+                    {/* Duplicate Indicator */}
+                    {getDuplicateInfo && getDuplicateInfo(item) && (
+                      <DuplicateIndicator
+                        confidence={getDuplicateInfo(item)!.confidence}
+                        duplicateCount={getDuplicateInfo(item)!.count}
+                        onClick={() => onCombineDuplicates?.(item)}
+                        compact={true}
+                      />
+                    )}
+                    
                     <button
                       onClick={() => onView(item)}
                       className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
