@@ -9,6 +9,7 @@ interface InventoryItemsGridProps {
   onView: (item: InventoryItem) => void;
   onEdit: (item: InventoryItem) => void;
   onDelete: (id: string) => void;
+  onQuickUpdate?: (id: string, newStock: number) => void;
   deletingId?: string;
 }
 
@@ -18,6 +19,7 @@ const InventoryItemsGrid: React.FC<InventoryItemsGridProps> = ({
   onView,
   onEdit,
   onDelete,
+  onQuickUpdate,
   deletingId
 }) => {
   if (isLoading) {
@@ -84,6 +86,7 @@ const InventoryItemsGrid: React.FC<InventoryItemsGridProps> = ({
           onView={onView}
           onEdit={onEdit}
           onDelete={onDelete}
+          onQuickUpdate={onQuickUpdate}
           isDeleting={deletingId === item.id}
         />
       ))}

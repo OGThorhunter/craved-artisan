@@ -325,7 +325,10 @@ const ReceiptParserModal: React.FC<ReceiptParserModalProps> = ({
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Upload {sourceType === 'IMAGE' ? 'Image' : 'PDF'} File
                     </label>
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                    <div 
+                      className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 hover:bg-blue-50 cursor-pointer transition-colors"
+                      onClick={() => fileInputRef.current?.click()}
+                    >
                       <input
                         ref={fileInputRef}
                         type="file"

@@ -6,6 +6,8 @@ import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { Plus, Search, Calendar, MapPin, Package, TrendingUp, Clock, ExternalLink, QrCode, Copy, Edit2 } from 'lucide-react';
 import { Link } from 'wouter';
+import CreateEditSalesWindowDrawer from '../components/sales-windows/CreateEditSalesWindowDrawer';
+import toast from 'react-hot-toast';
 
 // Mock data for demonstration
 const mockSalesWindows = [
@@ -133,25 +135,25 @@ interface SalesWindow {
   name: string;
   description: string | null;
   status: string;
-  location_name: string | null;
-  address_text: string | null;
+  location_name?: string | null;
+  address_text?: string | null;
   static_map_mode: string;
   static_map_image_url: string | null;
   static_map_tile_url_template: string | null;
   vendor_vehicle_image_url: string | null;
   vendor_vehicle_plate: string | null;
-  epicenter_address: string | null;
-  radius_miles: number | null;
-  delivery_fee_mode: string | null;
+  epicenter_address?: string | null;
+  radius_miles?: number | null;
+  delivery_fee_mode?: string | null;
   preorder_open_at: Date | null;
   preorder_close_at: Date | null;
   fulfill_start_at: Date | null;
   fulfill_end_at: Date | null;
   is_always_on: boolean;
-  scheduling_mode: string | null;
+  scheduling_mode?: string | null;
   max_items_total: number | null;
   auto_close_when_full: boolean;
-  porch_instructions: string | null;
+  porch_instructions?: string | null;
   createdAt: Date;
   updatedAt: Date;
   products: Array<{ id: string; productId: string; salesWindowId: string; active: boolean }>;
@@ -161,10 +163,102 @@ interface SalesWindow {
 const SalesWindowsIndexPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'all' | 'open' | 'upcoming' | 'drafts' | 'closed' | 'always-on'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [editingWindow, setEditingWindow] = useState<SalesWindow | undefined>(undefined);
+  const [salesWindows, setSalesWindows] = useState<SalesWindow[]>(mockSalesWindows);
 
   // Using mock data for now
-  const windows: SalesWindow[] = mockSalesWindows;
+  const windows: SalesWindow[] = salesWindows;
   const isLoading = false;
+
+  // Handler functions
+  const handleCreateSale = () => {
+    setEditingWindow(undefined);
+    setIsDrawerOpen(true);
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleSaveWindow = (windowData: any) => {
+    if (editingWindow) {
+      // Update existing window
+      const updatedWindows = salesWindows.map(w => 
+        w.id === editingWindow.id ? { ...w, ...windowData, id: editingWindow.id } as SalesWindow : w
+      );
+      setSalesWindows(updatedWindows);
+      toast.success(`Updated window: ${windowData.name}`);
+    } else {
+      // Create new window - convert from new format to old format
+      const newWindow: SalesWindow = {
+        id: `sw-${Date.now()}`,
+        vendorId: 'vendor-user-id',
+        type: windowData.channels?.[0]?.type === 'MEETUP_PICKUP' ? 'PARK_PICKUP' : 
+              windowData.channels?.[0]?.type === 'DELIVERY' ? 'DELIVERY' : 'MARKET',
+        name: windowData.name || 'Untitled Window',
+        description: windowData.description || null,
+        status: windowData.status || 'DRAFT',
+        location_name: null,
+        address_text: null,
+        static_map_mode: 'NONE',
+        static_map_image_url: null,
+        static_map_tile_url_template: null,
+        vendor_vehicle_image_url: null,
+        vendor_vehicle_plate: null,
+        epicenter_address: null,
+        radius_miles: null,
+        delivery_fee_mode: null,
+        preorder_open_at: windowData.startDate ? new Date(windowData.startDate) : null,
+        preorder_close_at: windowData.endDate ? new Date(windowData.endDate) : null,
+        fulfill_start_at: windowData.startDate ? new Date(windowData.startDate) : null,
+        fulfill_end_at: windowData.endDate ? new Date(windowData.endDate) : null,
+        is_always_on: windowData.isEvergreen || false,
+        scheduling_mode: null,
+        max_items_total: windowData.settings?.capacity || null,
+        auto_close_when_full: windowData.settings?.autoCloseWhenSoldOut || false,
+        porch_instructions: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        products: [],
+        metrics: { 
+          id: `m-${Date.now()}`, 
+          salesWindowId: `sw-${Date.now()}`, 
+          orders_count: 0, 
+          items_count: 0, 
+          gross: 0, 
+          refunds: 0, 
+          net: 0 
+        },
+      };
+      setSalesWindows(prev => [newWindow, ...prev]);
+      toast.success(`Created window: ${windowData.name}`);
+    }
+    setIsDrawerOpen(false);
+    setEditingWindow(undefined);
+  };
+
+  const handleCloseDrawer = () => {
+    setIsDrawerOpen(false);
+    setEditingWindow(undefined);
+  };
+
+  const handleDuplicate = (window: SalesWindow) => {
+    // TODO: Implement duplicate functionality
+    alert(`Duplicate functionality for "${window.name}" will be implemented soon.`);
+  };
+
+  const handleQRCode = (window: SalesWindow) => {
+    // TODO: Implement QR code generation/display
+    alert(`QR Code for "${window.name}" will be implemented soon.`);
+  };
+
+  const handlePublicLink = (salesWindow: SalesWindow) => {
+    // TODO: Implement public link functionality
+    const publicUrl = `${globalThis.location.origin}/sales-window/${salesWindow.id}`;
+    navigator.clipboard.writeText(publicUrl).then(() => {
+      alert(`Public link copied to clipboard:\n${publicUrl}`);
+    }).catch(() => {
+      alert(`Public link:\n${publicUrl}`);
+    });
+  };
 
   const getTypeColor = (type: string) => {
     const colors: Record<string, string> = {
@@ -233,7 +327,7 @@ const SalesWindowsIndexPage: React.FC = () => {
 
         {/* KPI Tiles */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="bg-[#E8CBAE] shadow-sm border border-gray-200">
+          <Card className="bg-offwhite shadow-sm border border-gray-200">
             <div className="p-6">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-gray-600">Active Windows</span>
@@ -245,7 +339,7 @@ const SalesWindowsIndexPage: React.FC = () => {
             </div>
           </Card>
 
-          <Card className="bg-[#E8CBAE] shadow-sm border border-gray-200">
+          <Card className="bg-offwhite shadow-sm border border-gray-200">
             <div className="p-6">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-gray-600">Total Orders</span>
@@ -257,7 +351,7 @@ const SalesWindowsIndexPage: React.FC = () => {
             </div>
           </Card>
 
-          <Card className="bg-[#E8CBAE] shadow-sm border border-gray-200">
+          <Card className="bg-offwhite shadow-sm border border-gray-200">
             <div className="p-6">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-gray-600">Total Revenue</span>
@@ -269,7 +363,7 @@ const SalesWindowsIndexPage: React.FC = () => {
             </div>
           </Card>
 
-          <Card className="bg-[#E8CBAE] shadow-sm border border-gray-200">
+          <Card className="bg-offwhite shadow-sm border border-gray-200">
             <div className="p-6">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-gray-600">Always-On Services</span>
@@ -296,12 +390,13 @@ const SalesWindowsIndexPage: React.FC = () => {
               />
             </div>
           </div>
-          <Link href="/dashboard/vendor/sales-windows/create">
-            <Button className="bg-[#7F232E] hover:bg-[#7F232E]/90 text-white">
-              <Plus className="h-5 w-5 mr-2" />
-              Create Window
-            </Button>
-          </Link>
+          <Button 
+            className="bg-[#7F232E] hover:bg-[#7F232E]/90 text-white"
+            onClick={handleCreateSale}
+          >
+            <Plus className="h-5 w-5 mr-2" />
+            Create Sale
+          </Button>
         </div>
 
         {/* Tabs */}
@@ -334,7 +429,7 @@ const SalesWindowsIndexPage: React.FC = () => {
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map((i) => (
-              <Card key={i} className="bg-[#E8CBAE] shadow-sm border border-gray-200 animate-pulse">
+              <Card key={i} className="bg-offwhite shadow-sm border border-gray-200 animate-pulse">
                 <div className="h-48 bg-gray-300 rounded-t-lg" />
                 <div className="p-6 space-y-4">
                   <div className="h-6 bg-gray-300 rounded" />
@@ -345,25 +440,26 @@ const SalesWindowsIndexPage: React.FC = () => {
             ))}
           </div>
         ) : windows.length === 0 ? (
-          <Card className="bg-[#E8CBAE] shadow-sm border border-gray-200">
+          <Card className="bg-offwhite shadow-sm border border-gray-200">
             <div className="p-12 text-center">
               <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">No sales windows found</h3>
               <p className="text-gray-600 mb-6">
                 Create your first sales window to start selling
               </p>
-              <Link href="/dashboard/vendor/sales-windows/create">
-                <Button className="bg-[#7F232E] hover:bg-[#7F232E]/90 text-white">
-                  <Plus className="h-5 w-5 mr-2" />
-                  Create Window
-                </Button>
-              </Link>
+              <Button 
+                className="bg-[#7F232E] hover:bg-[#7F232E]/90 text-white"
+                onClick={handleCreateSale}
+              >
+                <Plus className="h-5 w-5 mr-2" />
+                Create Sale
+              </Button>
             </div>
           </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {windows.map((window) => (
-              <Card key={window.id} className="bg-[#E8CBAE] shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+              <Card key={window.id} className="bg-offwhite shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
                 {/* Static Map Thumbnail */}
                 {(window.static_map_image_url || window.static_map_tile_url_template) && (
                   <div className="h-32 bg-gray-200 rounded-t-lg overflow-hidden">
@@ -465,19 +561,34 @@ const SalesWindowsIndexPage: React.FC = () => {
                   {/* Actions */}
                   <div className="flex items-center gap-2">
                     <Link href={`/dashboard/vendor/sales-windows/${window.id}/edit`} className="flex-1">
-                      <Button variant="secondary" className="w-full" title="Edit window">
-                        <Edit2 className="h-4 w-4 mr-2" />
+                      <Button variant="secondary" className="w-full flex items-center justify-center" title="Edit window">
+                        <Edit2 className="h-4 w-4 mr-1" />
                         Edit
                       </Button>
                     </Link>
-                    <Button variant="secondary" className="flex-1" title="Duplicate window">
-                      <Copy className="h-4 w-4 mr-2" />
+                    <Button 
+                      variant="secondary" 
+                      className="flex-1 flex items-center justify-center" 
+                      title="Duplicate window"
+                      onClick={() => handleDuplicate(window)}
+                    >
+                      <Copy className="h-4 w-4 mr-1" />
                       Duplicate
                     </Button>
-                    <Button variant="secondary" title="View QR codes">
+                    <Button 
+                      variant="secondary" 
+                      className="px-3" 
+                      title="View QR codes"
+                      onClick={() => handleQRCode(window)}
+                    >
                       <QrCode className="h-4 w-4" />
                     </Button>
-                    <Button variant="secondary" title="Public link">
+                    <Button 
+                      variant="secondary" 
+                      className="px-3" 
+                      title="Copy public link"
+                      onClick={() => handlePublicLink(window)}
+                    >
                       <ExternalLink className="h-4 w-4" />
                     </Button>
                   </div>
@@ -487,6 +598,14 @@ const SalesWindowsIndexPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Create/Edit Sales Window Drawer */}
+      <CreateEditSalesWindowDrawer
+        isOpen={isDrawerOpen}
+        onClose={handleCloseDrawer}
+        window={undefined}
+        onSave={handleSaveWindow}
+      />
     </VendorDashboardLayout>
   );
 };

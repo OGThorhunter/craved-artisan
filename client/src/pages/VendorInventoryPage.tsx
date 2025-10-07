@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Database, Brain, Bell, Camera, Calculator, FlaskConical, Shield } from 'lucide-react';
+import toast from 'react-hot-toast';
 import VendorDashboardLayout from '../layouts/VendorDashboardLayout';
 import DashboardHeader from '../components/dashboard/DashboardHeader';
 import MotivationalQuote from '../components/dashboard/MotivationalQuote';
@@ -95,9 +96,40 @@ const VendorInventoryPage: React.FC = () => {
     }
   };
 
+  const handleQuickUpdate = async (id: string, newStock: number) => {
+    const item = inventoryItems.find(i => i.id === id);
+    if (!item) return;
+
+    try {
+      await updateMutation.mutateAsync({
+        id,
+        currentStock: newStock
+      });
+    } catch {
+      // Error handling is done in the mutation hooks
+    }
+  };
+
+  const checkDuplicate = (name: string, excludeId?: string): boolean => {
+    const normalizedName = name.toLowerCase().trim();
+    return inventoryItems.some(item => 
+      item.id !== excludeId && 
+      item.name.toLowerCase().trim() === normalizedName
+    );
+  };
+
   const handleSave = async (data: CreateInventoryItemData | UpdateInventoryItemData) => {
     try {
-      if ('id' in data) {
+      // Check for duplicates when creating or updating
+      const isUpdate = 'id' in data;
+      const excludeId = isUpdate ? data.id : undefined;
+      
+      if (checkDuplicate(data.name || '', excludeId)) {
+        toast.error(`An item named "${data.name}" already exists. Please use a different name.`);
+        return;
+      }
+
+      if (isUpdate) {
         await updateMutation.mutateAsync(data);
       } else {
         await createMutation.mutateAsync(data);
@@ -308,6 +340,7 @@ const VendorInventoryPage: React.FC = () => {
                     onView={handleView}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
+                    onQuickUpdate={handleQuickUpdate}
                     deletingId={deletingId || undefined}
                   />
                 ) : (

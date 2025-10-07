@@ -1,5 +1,5 @@
-import React from 'react';
-import { Edit, Trash2, Eye, AlertTriangle, Calendar, MapPin, Tag } from 'lucide-react';
+import React, { useState } from 'react';
+import { Edit, Trash2, Eye, AlertTriangle, Calendar, MapPin, Tag, Plus, Minus } from 'lucide-react';
 import type { InventoryItem } from '../../hooks/useInventory';
 
 interface InventoryItemCardProps {
@@ -7,6 +7,7 @@ interface InventoryItemCardProps {
   onView: (item: InventoryItem) => void;
   onEdit: (item: InventoryItem) => void;
   onDelete: (id: string) => void;
+  onQuickUpdate?: (id: string, newStock: number) => void;
   isDeleting?: boolean;
 }
 
@@ -15,10 +16,30 @@ const InventoryItemCard: React.FC<InventoryItemCardProps> = ({
   onView,
   onEdit,
   onDelete,
+  onQuickUpdate,
   isDeleting = false
 }) => {
+  const [showQuickUpdate, setShowQuickUpdate] = useState(false);
+  const [quickAmount, setQuickAmount] = useState(1);
   const isLowStock = item.currentStock <= item.reorderPoint;
   const isExpired = item.isExpired;
+
+  const handleQuickAdd = () => {
+    if (onQuickUpdate) {
+      onQuickUpdate(item.id, item.currentStock + quickAmount);
+      setShowQuickUpdate(false);
+      setQuickAmount(1);
+    }
+  };
+
+  const handleQuickSubtract = () => {
+    if (onQuickUpdate) {
+      const newStock = Math.max(0, item.currentStock - quickAmount);
+      onQuickUpdate(item.id, newStock);
+      setShowQuickUpdate(false);
+      setQuickAmount(1);
+    }
+  };
 
   const getCategoryColor = (category: string) => {
     switch (category) {
@@ -80,9 +101,57 @@ const InventoryItemCard: React.FC<InventoryItemCardProps> = ({
       <div className="space-y-2 mb-4">
         <div className="flex items-center justify-between text-sm">
           <span className="text-gray-600">Stock:</span>
-          <span className={`font-medium ${getStockStatusColor()}`}>
-            {item.currentStock} {item.unit}
-          </span>
+          {showQuickUpdate ? (
+            <div className="flex items-center gap-1">
+              <input
+                type="number"
+                value={quickAmount}
+                onChange={(e) => setQuickAmount(Math.max(1, parseInt(e.target.value) || 1))}
+                className="w-16 px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                min="1"
+                aria-label="Quantity to add or remove"
+                title="Quantity to add or remove"
+              />
+              <button
+                onClick={handleQuickSubtract}
+                className="p-1 bg-red-100 hover:bg-red-200 text-red-600 rounded transition-colors"
+                title="Remove stock"
+              >
+                <Minus className="h-3 w-3" />
+              </button>
+              <button
+                onClick={handleQuickAdd}
+                className="p-1 bg-green-100 hover:bg-green-200 text-green-600 rounded transition-colors"
+                title="Add stock"
+              >
+                <Plus className="h-3 w-3" />
+              </button>
+              <button
+                onClick={() => {
+                  setShowQuickUpdate(false);
+                  setQuickAmount(1);
+                }}
+                className="p-1 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded transition-colors text-xs"
+              >
+                ✕
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <span className={`font-medium ${getStockStatusColor()}`}>
+                {item.currentStock} {item.unit}
+              </span>
+              {onQuickUpdate && (
+                <button
+                  onClick={() => setShowQuickUpdate(true)}
+                  className="p-1 bg-blue-100 hover:bg-blue-200 text-blue-600 rounded transition-colors"
+                  title="Quick update stock"
+                >
+                  <Edit className="h-3 w-3" />
+                </button>
+              )}
+            </div>
+          )}
         </div>
         
         <div className="flex items-center justify-between text-sm">

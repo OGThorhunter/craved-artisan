@@ -3,18 +3,9 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  Calendar,
-  Clock,
-  MapPin,
-  Package,
-  Truck,
-  Store,
-  Settings,
-  Tag,
-  CheckCircle,
-  AlertCircle
+  CheckCircle
 } from 'lucide-react';
-import type { SalesWindow, SalesChannel, WindowProduct, WindowSettings } from '@/types/sales-windows';
+import type { SalesWindow, SalesChannel, WindowProduct } from '@/types/sales-windows';
 import ProductSelectionStep from './ProductSelectionStep';
 
 interface CreateEditSalesWindowDrawerProps {
@@ -97,15 +88,17 @@ const CreateEditSalesWindowDrawer: React.FC<CreateEditSalesWindowDrawerProps> = 
         }
       });
     }
-    // Reset to step 1 when window changes
+    // Reset to step 1 when window changes or when drawer opens
     setCurrentStep(1);
-  }, [window]);
+  }, [window, isOpen]);
 
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleSettingsChange = (field: string, value: any) => {
     setFormData(prev => ({
       ...prev,
@@ -155,11 +148,11 @@ const CreateEditSalesWindowDrawer: React.FC<CreateEditSalesWindowDrawerProps> = 
 
   const renderStepTitle = () => {
     const titles = [
-      'Basic Information',
-      'Sales Channels',
-      'Products',
-      'Settings',
-      'Review & Create'
+      'About Your Sale',
+      'Category & Schedule',
+      'Choose Products',
+      'Marketing & Tags',
+      'Review & Confirm'
     ];
     return (
       <h2 className="text-xl font-semibold text-gray-900 mb-4">
@@ -169,887 +162,665 @@ const CreateEditSalesWindowDrawer: React.FC<CreateEditSalesWindowDrawerProps> = 
   };
 
   const renderStep1Basics = () => (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      {/* Welcome Message */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <p className="text-blue-900 text-base leading-relaxed">
+          Welcome to the sales window wizard! This is where you come to setup your various sales and events. 
+          Let's start off by telling me about your sale.
+        </p>
+      </div>
+
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Window Name *
+        <label className="block text-sm font-medium text-gray-900 mb-2">
+          Name of Sale *
         </label>
         <input
           type="text"
           value={formData.name}
           onChange={(e) => handleInputChange('name', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          placeholder="e.g., Weekend Market Pickup"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
+          placeholder="e.g., Saturday Farmers Market, Holiday Bake Sale"
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-gray-900 mb-2">
           Description
         </label>
         <textarea
           value={formData.description}
           onChange={(e) => handleInputChange('description', e.target.value)}
           rows={3}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          placeholder="Describe your sales window..."
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
+          placeholder="Tell customers what makes this sale special..."
         />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-gray-900 mb-2">
           Status
         </label>
         <select
           value={formData.status}
           onChange={(e) => handleInputChange('status', e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base font-medium ${
+            formData.status === 'OPEN' ? 'bg-green-50 text-green-800 border-green-300' :
+            formData.status === 'SCHEDULED' ? 'bg-blue-50 text-blue-800 border-blue-300' :
+            'bg-gray-50 text-gray-800'
+          }`}
           aria-label="Status"
         >
-          <option value="DRAFT">Draft</option>
-          <option value="SCHEDULED">Scheduled</option>
-          <option value="OPEN">Open</option>
+          <option value="DRAFT">Draft - Not visible to customers</option>
+          <option value="SCHEDULED">Scheduled - Will open automatically</option>
+          <option value="OPEN">Open - Live and accepting orders</option>
         </select>
       </div>
-
-      <div className="flex items-center">
-        <input
-          type="checkbox"
-          id="isEvergreen"
-          checked={formData.isEvergreen}
-          onChange={(e) => handleInputChange('isEvergreen', e.target.checked)}
-          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-        />
-        <label htmlFor="isEvergreen" className="ml-2 text-sm text-gray-700">
-          This is an evergreen window (no specific dates)
-        </label>
-      </div>
-
-      {!formData.isEvergreen && (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-[#2C2C2C] mb-2">
-                Start Date *
-              </label>
-              <div className="space-y-2">
-                <input
-                  type="date"
-                  value={formData.startDate ? formData.startDate.split('T')[0] : ''}
-                  onChange={(e) => {
-                    const time = formData.startDate ? formData.startDate.split('T')[1] : '09:00';
-                    handleInputChange('startDate', `${e.target.value}T${time}`);
-                  }}
-                  className="w-full px-3 py-2 border border-[#E8CBAE] rounded-lg focus:ring-2 focus:ring-[#5B6E02] focus:border-transparent bg-white"
-                  aria-label="Start date"
-                />
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-[#777777]" />
-                  <select
-                    value={formData.startDate ? formData.startDate.split('T')[1] : '09:00'}
-                    onChange={(e) => {
-                      const date = formData.startDate ? formData.startDate.split('T')[0] : new Date().toISOString().split('T')[0];
-                      handleInputChange('startDate', `${date}T${e.target.value}`);
-                    }}
-                    className="px-3 py-2 border border-[#E8CBAE] rounded-lg focus:ring-2 focus:ring-[#5B6E02] focus:border-transparent bg-white text-sm"
-                    aria-label="Start time"
-                  >
-                    {Array.from({ length: 24 }, (_, i) => {
-                      const hour = i.toString().padStart(2, '0');
-                      return (
-                        <option key={`${hour}:00`} value={`${hour}:00`}>
-                          {hour}:00
-                        </option>
-                      );
-                    })}
-                  </select>
-                </div>
-              </div>
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-[#2C2C2C] mb-2">
-                End Date *
-              </label>
-              <div className="space-y-2">
-                <input
-                  type="date"
-                  value={formData.endDate ? formData.endDate.split('T')[0] : ''}
-                  onChange={(e) => {
-                    const time = formData.endDate ? formData.endDate.split('T')[1] : '17:00';
-                    handleInputChange('endDate', `${e.target.value}T${time}`);
-                  }}
-                  className="w-full px-3 py-2 border border-[#E8CBAE] rounded-lg focus:ring-2 focus:ring-[#5B6E02] focus:border-transparent bg-white"
-                  aria-label="End date"
-                />
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-[#777777]" />
-                  <select
-                    value={formData.endDate ? formData.endDate.split('T')[1] : '17:00'}
-                    onChange={(e) => {
-                      const date = formData.endDate ? formData.endDate.split('T')[0] : new Date().toISOString().split('T')[0];
-                      handleInputChange('endDate', `${date}T${e.target.value}`);
-                    }}
-                    className="px-3 py-2 border border-[#E8CBAE] rounded-lg focus:ring-2 focus:ring-[#5B6E02] focus:border-transparent bg-white text-sm"
-                    aria-label="End time"
-                  >
-                    {Array.from({ length: 24 }, (_, i) => {
-                      const hour = i.toString().padStart(2, '0');
-                      return (
-                        <option key={`${hour}:00`} value={`${hour}:00`}>
-                          {hour}:00
-                        </option>
-                      );
-                    })}
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Quick Date Presets */}
-          <div className="bg-[#F7F2EC] rounded-lg p-3">
-            <p className="text-sm font-medium text-[#2C2C2C] mb-2">Sales Window Duration:</p>
-            <div className="flex flex-wrap gap-2">
-              {[
-                { label: '1 Day', duration: 1 },
-                { label: '2 Days', duration: 2 },
-                { label: '3 Days', duration: 3 },
-                { label: '4 Days', duration: 4 },
-                { label: '5 Days', duration: 5 }
-              ].map((preset) => (
-                <button
-                  key={preset.label}
-                  type="button"
-                  onClick={() => {
-                    const startDate = new Date();
-                    startDate.setHours(9, 0, 0, 0);
-                    
-                    const endDate = new Date(startDate);
-                    endDate.setDate(endDate.getDate() + preset.duration - 1);
-                    endDate.setHours(17, 0, 0, 0);
-                    
-                    handleInputChange('startDate', startDate.toISOString().slice(0, 16));
-                    handleInputChange('endDate', endDate.toISOString().slice(0, 16));
-                  }}
-                  className="px-3 py-1 text-xs bg-white border border-[#E8CBAE] rounded-md hover:bg-[#5B6E02] hover:text-white transition-colors"
-                >
-                  {preset.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
 
       <div>
-        <label className="block text-sm font-medium text-[#2C2C2C] mb-2">
-          Timezone
+        <label className="block text-sm font-medium text-gray-900 mb-2">
+          What day(s) are you selling product? *
         </label>
-        <select
-          value={formData.timezone}
-          onChange={(e) => handleInputChange('timezone', e.target.value)}
-          className="w-full px-3 py-2 border border-[#E8CBAE] rounded-lg focus:ring-2 focus:ring-[#5B6E02] focus:border-transparent bg-white"
-          aria-label="Timezone"
-        >
-          <option value="America/New_York">Eastern Time (ET)</option>
-          <option value="America/Chicago">Central Time (CT)</option>
-          <option value="America/Denver">Mountain Time (MT)</option>
-          <option value="America/Los_Angeles">Pacific Time (PT)</option>
-        </select>
+        <input
+          type="date"
+          value={formData.startDate ? formData.startDate.split('T')[0] : ''}
+          onChange={(e) => {
+            const time = formData.startDate ? formData.startDate.split('T')[1] : '09:00';
+            handleInputChange('startDate', `${e.target.value}T${time}`);
+            // Auto-set end date to same day if not set
+            if (!formData.endDate) {
+              handleInputChange('endDate', `${e.target.value}T17:00`);
+            }
+          }}
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
+          aria-label="Sale date"
+        />
+        <p className="text-sm text-gray-500 mt-1">Select the primary day of your sale or event</p>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-900 mb-2">
+          What times will you be at this location selling this product? *
+        </label>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">Start Time</label>
+            <select
+              value={formData.startDate ? formData.startDate.split('T')[1] : '09:00'}
+              onChange={(e) => {
+                const date = formData.startDate ? formData.startDate.split('T')[0] : new Date().toISOString().split('T')[0];
+                handleInputChange('startDate', `${date}T${e.target.value}`);
+              }}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
+              aria-label="Start time"
+            >
+              {Array.from({ length: 24 }, (_, i) => {
+                const hour = i.toString().padStart(2, '0');
+                return (
+                  <option key={`${hour}:00`} value={`${hour}:00`}>
+                    {i === 0 ? '12:00 AM' : i < 12 ? `${i}:00 AM` : i === 12 ? '12:00 PM' : `${i-12}:00 PM`}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">End Time</label>
+            <select
+              value={formData.endDate ? formData.endDate.split('T')[1] : '17:00'}
+              onChange={(e) => {
+                const date = formData.endDate ? formData.endDate.split('T')[0] : formData.startDate ? formData.startDate.split('T')[0] : new Date().toISOString().split('T')[0];
+                handleInputChange('endDate', `${date}T${e.target.value}`);
+              }}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
+              aria-label="End time"
+            >
+              {Array.from({ length: 24 }, (_, i) => {
+                const hour = i.toString().padStart(2, '0');
+                return (
+                  <option key={`${hour}:00`} value={`${hour}:00`}>
+                    {i === 0 ? '12:00 AM' : i < 12 ? `${i}:00 AM` : i === 12 ? '12:00 PM' : `${i-12}:00 PM`}
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+        </div>
+        <p className="text-sm text-gray-500 mt-1">When will you be available for customers to pick up or receive their orders?</p>
       </div>
     </div>
   );
 
   const renderStep2Channels = () => (
-    <div className="space-y-4">
-      <p className="text-sm text-gray-600 mb-4">
-        Select the sales channels for this window. You can configure specific settings for each channel.
-      </p>
-      
-      {/* Channel Selection */}
-      <div className="grid grid-cols-2 gap-4">
-        {['MEETUP_PICKUP', 'DELIVERY', 'DROP_OFF_LOCATION', 'MARKET', 'CUSTOM'].map((channelType) => (
-          <div key={channelType} className="flex items-center">
-            <input
-              type="checkbox"
-              id={channelType}
-              checked={formData.channels?.some(c => c.type === channelType)}
-              onChange={(e) => {
-                if (e.target.checked) {
-                  const newChannel: SalesChannel = { type: channelType as any, config: {} };
-                  setFormData(prev => ({
-                    ...prev,
-                    channels: [...(prev.channels || []), newChannel]
-                  }));
-                } else {
-                  setFormData(prev => ({
-                    ...prev,
-                    channels: prev.channels?.filter(c => c.type !== channelType) || []
-                  }));
-                }
-              }}
-              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-            />
-            <label htmlFor={channelType} className="ml-2 text-sm text-gray-700">
-              {channelType === 'MEETUP_PICKUP' && 'Pickup'}
-              {channelType === 'DELIVERY' && 'Delivery'}
-              {channelType === 'DROP_OFF_LOCATION' && 'Drop-off'}
-              {channelType === 'MARKET' && 'Market'}
-              {channelType === 'CUSTOM' && 'Custom'}
-            </label>
-          </div>
-        ))}
+    <div className="space-y-6">
+      {/* Welcome Message */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <p className="text-blue-900 text-base leading-relaxed">
+          Now we need to give your sales window a category. This helps customers understand how they'll receive their order.
+        </p>
       </div>
 
-      {/* Channel Configuration */}
-      {formData.channels && formData.channels.length > 0 && (
-        <div className="space-y-4 mt-6">
-          <h4 className="font-medium text-gray-900">Channel Configuration</h4>
-          {formData.channels.map((channel, index) => (
-            <div key={index} className="border border-gray-200 rounded-lg p-4">
-              <h5 className="font-medium text-gray-900 mb-3">
-                {channel.type === 'MEETUP_PICKUP' && 'Pickup Configuration'}
-                {channel.type === 'DELIVERY' && 'Delivery Configuration'}
-                {channel.type === 'DROP_OFF_LOCATION' && 'Drop-off Configuration'}
-                {channel.type === 'MARKET' && 'Market Configuration'}
-                {channel.type === 'CUSTOM' && 'Custom Configuration'}
-              </h5>
-              
-              {/* Render channel-specific config fields */}
-                             {channel.type === 'MEETUP_PICKUP' && (
-                 <div className="space-y-3">
-                   <div className="grid grid-cols-2 gap-3">
-                     <div>
-                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                         Street Address
-                       </label>
-                       <input
-                         type="text"
-                         value={channel.config.streetAddress || ''}
-                         onChange={(e) => {
-                           const updatedChannels = [...(formData.channels || [])];
-                           updatedChannels[index].config.streetAddress = e.target.value;
-                           setFormData(prev => ({ ...prev, channels: updatedChannels }));
-                         }}
-                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                         placeholder="123 Main Street"
-                       />
-                     </div>
-                     <div>
-                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                         City
-                       </label>
-                       <input
-                         type="text"
-                         value={channel.config.city || ''}
-                         onChange={(e) => {
-                           const updatedChannels = [...(formData.channels || [])];
-                           updatedChannels[index].config.city = e.target.value;
-                           setFormData(prev => ({ ...prev, channels: updatedChannels }));
-                         }}
-                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                         placeholder="Anytown"
-                       />
-                     </div>
-                     <div>
-                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                         State
-                       </label>
-                       <input
-                         type="text"
-                         value={channel.config.state || ''}
-                         onChange={(e) => {
-                           const updatedChannels = [...(formData.channels || [])];
-                           updatedChannels[index].config.state = e.target.value;
-                           setFormData(prev => ({ ...prev, channels: updatedChannels }));
-                         }}
-                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                         placeholder="CA"
-                       />
-                     </div>
-                     <div>
-                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                         ZIP Code
-                       </label>
-                       <input
-                         type="text"
-                         value={channel.config.zipCode || ''}
-                         onChange={(e) => {
-                           const updatedChannels = [...(formData.channels || [])];
-                           updatedChannels[index].config.zipCode = e.target.value;
-                           setFormData(prev => ({ ...prev, channels: updatedChannels }));
-                         }}
-                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                         placeholder="12345"
-                       />
-                     </div>
-                   </div>
-                   <div>
-                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                       Pickup Instructions
-                     </label>
-                     <textarea
-                       value={channel.config.pickupInstructions || ''}
-                       onChange={(e) => {
-                         const updatedChannels = [...(formData.channels || [])];
-                         updatedChannels[index].config.pickupInstructions = e.target.value;
-                         setFormData(prev => ({ ...prev, channels: updatedChannels }));
-                       }}
-                       rows={2}
-                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                       placeholder="e.g., Meet in parking lot, call when you arrive, etc."
-                     />
-                   </div>
-                   <div>
-                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                       Pickup Time Slots
-                     </label>
-                     <div className="space-y-2">
-                       {['9:00 AM', '12:00 PM', '3:00 PM', '6:00 PM'].map((time) => (
-                         <div key={time} className="flex items-center">
-                           <input
-                             type="checkbox"
-                             id={`pickup-${time}-${index}`}
-                             checked={channel.config.pickupTimes?.includes(time) || false}
-                             onChange={(e) => {
-                               const updatedChannels = [...(formData.channels || [])];
-                               const currentTimes = updatedChannels[index].config.pickupTimes || [];
-                               if (e.target.checked) {
-                                 updatedChannels[index].config.pickupTimes = [...currentTimes, time];
-                               } else {
-                                 updatedChannels[index].config.pickupTimes = currentTimes.filter(t => t !== time);
-                               }
-                               setFormData(prev => ({ ...prev, channels: updatedChannels }));
-                             }}
-                             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                           />
-                           <label htmlFor={`pickup-${time}-${index}`} className="ml-2 text-sm text-gray-700">
-                             {time}
-                           </label>
-                         </div>
-                       ))}
-                     </div>
-                   </div>
-                   <div>
-                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                       Max Orders Per Time Slot
-                     </label>
-                     <input
-                       type="number"
-                       min="1"
-                       value={channel.config.maxOrdersPerSlot || ''}
-                       onChange={(e) => {
-                         const updatedChannels = [...(formData.channels || [])];
-                         updatedChannels[index].config.maxOrdersPerSlot = Number(e.target.value);
-                         setFormData(prev => ({ ...prev, channels: updatedChannels }));
-                       }}
-                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                       placeholder="10"
-                     />
-                   </div>
-                 </div>
-               )}
-
-                             {channel.type === 'DELIVERY' && (
-                 <div className="grid grid-cols-2 gap-3">
-                   <div>
-                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                       Service Radius (miles)
-                     </label>
-                     <input
-                       type="number"
-                       value={channel.config.serviceRadius || ''}
-                       onChange={(e) => {
-                         const updatedChannels = [...(formData.channels || [])];
-                         updatedChannels[index].config.serviceRadius = Number(e.target.value);
-                         setFormData(prev => ({ ...prev, channels: updatedChannels }));
-                       }}
-                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                       placeholder="25"
-                     />
-                   </div>
-                   <div>
-                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                       Base Fee ($)
-                     </label>
-                     <input
-                       type="number"
-                       step="0.01"
-                       value={channel.config.baseFee || ''}
-                       onChange={(e) => {
-                         const updatedChannels = [...(formData.channels || [])];
-                         updatedChannels[index].config.baseFee = Number(e.target.value);
-                         setFormData(prev => ({ ...prev, channels: updatedChannels }));
-                       }}
-                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                       placeholder="5.99"
-                     />
-                   </div>
-                   <div>
-                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                       Per Mile Fee ($)
-                     </label>
-                     <input
-                       type="number"
-                       step="0.01"
-                       value={channel.config.perDistanceFee || ''}
-                       onChange={(e) => {
-                         const updatedChannels = [...(formData.channels || [])];
-                         updatedChannels[index].config.perDistanceFee = Number(e.target.value);
-                         setFormData(prev => ({ ...prev, channels: updatedChannels }));
-                       }}
-                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                       placeholder="0.50"
-                     />
-                   </div>
-                   <div>
-                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                       Cutoff Hours
-                     </label>
-                     <input
-                       type="number"
-                       value={channel.config.cutoffHours || ''}
-                       onChange={(e) => {
-                         const updatedChannels = [...(formData.channels || [])];
-                         updatedChannels[index].config.cutoffHours = Number(e.target.value);
-                         setFormData(prev => ({ ...prev, channels: updatedChannels }));
-                       }}
-                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                       placeholder="24"
-                     />
-                   </div>
-                 </div>
-               )}
-
-                             {channel.type === 'DROP_OFF_LOCATION' && (
-                 <div className="space-y-3">
-                   <div className="grid grid-cols-2 gap-3">
-                     <div>
-                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                         Street Address
-                       </label>
-                       <input
-                         type="text"
-                         value={channel.config.streetAddress || ''}
-                         onChange={(e) => {
-                           const updatedChannels = [...(formData.channels || [])];
-                           updatedChannels[index].config.streetAddress = e.target.value;
-                           setFormData(prev => ({ ...prev, channels: updatedChannels }));
-                         }}
-                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                         placeholder="123 Main Street"
-                       />
-                     </div>
-                     <div>
-                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                         City
-                       </label>
-                       <input
-                         type="text"
-                         value={channel.config.city || ''}
-                         onChange={(e) => {
-                           const updatedChannels = [...(formData.channels || [])];
-                           updatedChannels[index].config.city = e.target.value;
-                           setFormData(prev => ({ ...prev, channels: updatedChannels }));
-                         }}
-                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                         placeholder="Anytown"
-                       />
-                     </div>
-                     <div>
-                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                         State
-                       </label>
-                       <input
-                         type="text"
-                         value={channel.config.state || ''}
-                         onChange={(e) => {
-                           const updatedChannels = [...(formData.channels || [])];
-                           updatedChannels[index].config.state = e.target.value;
-                           setFormData(prev => ({ ...prev, channels: updatedChannels }));
-                         }}
-                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                         placeholder="CA"
-                       />
-                     </div>
-                     <div>
-                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                         ZIP Code
-                       </label>
-                       <input
-                         type="text"
-                         value={channel.config.zipCode || ''}
-                         onChange={(e) => {
-                           const updatedChannels = [...(formData.channels || [])];
-                           updatedChannels[index].config.zipCode = e.target.value;
-                           setFormData(prev => ({ ...prev, channels: updatedChannels }));
-                         }}
-                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                         placeholder="12345"
-                       />
-                     </div>
-                   </div>
-                   <div>
-                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                       Business Name
-                     </label>
-                     <input
-                       type="text"
-                       value={channel.config.businessName || ''}
-                       onChange={(e) => {
-                         const updatedChannels = [...(formData.channels || [])];
-                         updatedChannels[index].config.businessName = e.target.value;
-                         setFormData(prev => ({ ...prev, channels: updatedChannels }));
-                       }}
-                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                       placeholder="e.g., ABC Coffee Shop"
-                     />
-                   </div>
-                   <div>
-                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                       Pickup Window
-                     </label>
-                     <input
-                       type="text"
-                       value={channel.config.pickupWindow || ''}
-                       onChange={(e) => {
-                         const updatedChannels = [...(formData.channels || [])];
-                         updatedChannels[index].config.pickupWindow = e.target.value;
-                         setFormData(prev => ({ ...prev, channels: updatedChannels }));
-                       }}
-                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                       placeholder="e.g., Mon-Fri 9AM-5PM"
-                     />
-                   </div>
-                   <div>
-                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                       Drop-off Instructions
-                     </label>
-                     <textarea
-                       value={channel.config.dropoffInstructions || ''}
-                       onChange={(e) => {
-                         const updatedChannels = [...(formData.channels || [])];
-                         updatedChannels[index].config.dropoffInstructions = e.target.value;
-                         setFormData(prev => ({ ...prev, channels: updatedChannels }));
-                       }}
-                       rows={2}
-                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                       placeholder="e.g., Leave package with front desk, call business when dropping off, etc."
-                     />
-                   </div>
-                 </div>
-               )}
-
-               {channel.type === 'MARKET' && (
-                 <div className="space-y-3">
-                   <div>
-                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                       Market Selection
-                     </label>
-                     <select
-                       value={channel.config.marketId || ''}
-                       onChange={(e) => {
-                         const updatedChannels = [...(formData.channels || [])];
-                         updatedChannels[index].config.marketId = e.target.value;
-                         setFormData(prev => ({ ...prev, channels: updatedChannels }));
-                       }}
-                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                       aria-label="Market Selection"
-                     >
-                       <option value="">Select a market...</option>
-                       <option value="market-1">Downtown Farmers Market</option>
-                       <option value="market-2">Weekend Artisan Market</option>
-                       <option value="market-3">Seasonal Food Festival</option>
-                       <option value="market-4">Holiday Craft Market</option>
-                     </select>
-                   </div>
-                   <div>
-                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                       Booth Information
-                     </label>
-                     <textarea
-                       value={channel.config.boothInfo || ''}
-                       onChange={(e) => {
-                         const updatedChannels = [...(formData.channels || [])];
-                         updatedChannels[index].config.boothInfo = e.target.value;
-                         setFormData(prev => ({ ...prev, channels: updatedChannels }));
-                       }}
-                       rows={2}
-                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                       placeholder="e.g., Booth #12, Main Hall"
-                     />
-                   </div>
-                   <div>
-                     <label htmlFor={`preorder-cutoff-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
-                       Preorder Cutoff
-                     </label>
-                     <input
-                       id={`preorder-cutoff-${index}`}
-                       type="datetime-local"
-                       value={channel.config.preorderCutoff || ''}
-                       onChange={(e) => {
-                         const updatedChannels = [...(formData.channels || [])];
-                         updatedChannels[index].config.preorderCutoff = e.target.value;
-                         setFormData(prev => ({ ...prev, channels: updatedChannels }));
-                       }}
-                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                     />
-                   </div>
-                   <div>
-                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                       Market Commission Rate (%)
-                     </label>
-                     <input
-                       type="number"
-                       min="0"
-                       max="100"
-                       step="0.1"
-                       value={channel.config.commissionRate || ''}
-                       onChange={(e) => {
-                         const updatedChannels = [...(formData.channels || [])];
-                         updatedChannels[index].config.commissionRate = Number(e.target.value);
-                         setFormData(prev => ({ ...prev, channels: updatedChannels }));
-                       }}
-                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                       placeholder="15.0"
-                     />
-                   </div>
-                 </div>
-               )}
-
-               {channel.type === 'CUSTOM' && (
-                 <div className="space-y-3">
-                   <div>
-                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                       Custom Label
-                     </label>
-                     <input
-                       type="text"
-                       value={channel.config.label || ''}
-                       onChange={(e) => {
-                         const updatedChannels = [...(formData.channels || [])];
-                         updatedChannels[index].config.label = e.target.value;
-                         setFormData(prev => ({ ...prev, channels: updatedChannels }));
-                       }}
-                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                       placeholder="e.g., Special Event"
-                     />
-                   </div>
-                   <div>
-                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                       Details
-                     </label>
-                     <textarea
-                       value={channel.config.details || ''}
-                       onChange={(e) => {
-                         const updatedChannels = [...(formData.channels || [])];
-                         updatedChannels[index].config.details = e.target.value;
-                         setFormData(prev => ({ ...prev, channels: updatedChannels }));
-                       }}
-                       rows={3}
-                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                       placeholder="Describe the custom channel..."
-                     />
-                   </div>
-                 </div>
-               )}
-            </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-900 mb-3">
+          Choose a Category *
+        </label>
+        <div className="grid grid-cols-1 gap-3">
+          {[
+            { type: 'MEETUP_PICKUP', label: 'Parking Lot Pickup', desc: 'Customers meet you at a specific location', icon: '🚗' },
+            { type: 'DROP_OFF_LOCATION', label: 'Kiosk', desc: 'Drop off at a partner location or kiosk', icon: '🏪' },
+            { type: 'DELIVERY', label: 'Delivery', desc: 'You deliver directly to customers', icon: '🚚' },
+            { type: 'MARKET', label: 'Farmers Market', desc: 'Selling at a farmers market or event', icon: '🌾' },
+            { type: 'CUSTOM', label: 'Find my product at local businesses', desc: 'Partner with local stores and shops', icon: '🏢' }
+          ].map((option) => (
+            <button
+              key={option.type}
+              type="button"
+              onClick={() => {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const newChannel: SalesChannel = { type: option.type as any, config: {} };
+                setFormData(prev => ({
+                  ...prev,
+                  channels: [newChannel]
+                }));
+              }}
+              className={`w-full p-4 border-2 rounded-lg text-left transition-all ${
+                formData.channels?.some(c => c.type === option.type)
+                  ? 'border-blue-500 bg-blue-50'
+                  : 'border-gray-300 hover:border-blue-300 bg-white'
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <span className="text-3xl">{option.icon}</span>
+                <div className="flex-1">
+                  <div className="font-semibold text-gray-900 mb-1">{option.label}</div>
+                  <div className="text-sm text-gray-600">{option.desc}</div>
+                </div>
+                {formData.channels?.some(c => c.type === option.type) && (
+                  <CheckCircle className="h-6 w-6 text-blue-500" />
+                )}
+              </div>
+            </button>
           ))}
         </div>
+      </div>
+
+      {/* Location and Dates */}
+      {/* eslint-disable @typescript-eslint/no-explicit-any */}
+      {formData.channels && formData.channels.length > 0 && (
+        <div className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-900 mb-2">
+              What is the location of this event? *
+            </label>
+            <input
+              type="text"
+              value={(formData.channels[0]?.config as any)?.locationAddress || ''}
+              onChange={(e) => {
+                const updatedChannels = [...(formData.channels || [])];
+                (updatedChannels[0].config as any).locationAddress = e.target.value;
+                setFormData(prev => ({ ...prev, channels: updatedChannels }));
+              }}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
+              placeholder="123 Main St, City, State ZIP"
+            />
+            <p className="text-sm text-gray-500 mt-1">Enter the full address where customers will meet you or receive their order</p>
+          </div>
+
+          <div>
+            <label htmlFor="salesOpenDate" className="block text-sm font-medium text-gray-900 mb-2">
+              When would you like sales to open? *
+            </label>
+            <input
+              id="salesOpenDate"
+              type="datetime-local"
+              value={(formData.channels[0]?.config as any)?.preorderOpenAt || ''}
+              onChange={(e) => {
+                const updatedChannels = [...(formData.channels || [])];
+                (updatedChannels[0].config as any).preorderOpenAt = e.target.value;
+                setFormData(prev => ({ ...prev, channels: updatedChannels }));
+              }}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
+            />
+            <p className="text-sm text-gray-500 mt-1">This is when your customers can see your sale and start ordering your products</p>
+          </div>
+
+          <div>
+            <label htmlFor="salesEndDate" className="block text-sm font-medium text-gray-900 mb-2">
+              When would you like your sale to end? *
+            </label>
+            <input
+              id="salesEndDate"
+              type="datetime-local"
+              value={(formData.channels[0]?.config as any)?.preorderCloseAt || ''}
+              onChange={(e) => {
+                const updatedChannels = [...(formData.channels || [])];
+                (updatedChannels[0].config as any).preorderCloseAt = e.target.value;
+                setFormData(prev => ({ ...prev, channels: updatedChannels }));
+              }}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
+            />
+            <p className="text-sm text-gray-500 mt-1">This is when sales will close out and no more sales will be allowed for this window</p>
+          </div>
+
+          <div>
+            <div className="flex items-center mb-3">
+              <input
+                type="checkbox"
+                id="isRecurring"
+                checked={(formData.channels[0]?.config as any)?.isRecurring || false}
+                onChange={(e) => {
+                  const updatedChannels = [...(formData.channels || [])];
+                  (updatedChannels[0].config as any).isRecurring = e.target.checked;
+                  setFormData(prev => ({ ...prev, channels: updatedChannels }));
+                }}
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 h-5 w-5"
+              />
+              <label htmlFor="isRecurring" className="ml-3 text-base font-medium text-gray-900">
+                Is this a recurring event?
+              </label>
+            </div>
+            
+            {(formData.channels[0]?.config as any)?.isRecurring && (
+              <div className="ml-8 space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Recurrence Pattern
+                  </label>
+                  <select
+                    value={(formData.channels[0]?.config as any)?.recurrencePattern || 'WEEKLY'}
+                    onChange={(e) => {
+                      const updatedChannels = [...(formData.channels || [])];
+                      (updatedChannels[0].config as any).recurrencePattern = e.target.value;
+                      setFormData(prev => ({ ...prev, channels: updatedChannels }));
+                    }}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    aria-label="Recurrence pattern"
+                  >
+                    <option value="DAILY">Daily</option>
+                    <option value="WEEKLY">Weekly</option>
+                    <option value="BIWEEKLY">Bi-weekly</option>
+                    <option value="MONTHLY">Monthly</option>
+                  </select>
+                </div>
+              </div>
+            )}
+          </div>
+
+        </div>
       )}
+      {/* eslint-enable @typescript-eslint/no-explicit-any */}
     </div>
   );
 
   const renderStep3Products = () => (
-    <ProductSelectionStep
-      selectedProducts={formData.products || []}
-      onProductsChange={(products) => handleInputChange('products', products)}
-      onCreateBatchOrders={onCreateBatchOrders}
-    />
+    <div className="space-y-6">
+      {/* Welcome Message */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <p className="text-blue-900 text-base leading-relaxed">
+          Choose products from your inventory to include in this sale. These products will be available during your pre-order window. 
+          You can set a limit to how many pre-orders are allowed per product to manage your capacity.
+        </p>
+      </div>
+      
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <p className="text-yellow-900 text-sm font-medium">
+          💡 Tip: Select products you have available or can prepare for this specific sale window. 
+          Your customers will only see these products during this sale period.
+        </p>
+      </div>
+      
+      <ProductSelectionStep
+        selectedProducts={formData.products || []}
+        onProductsChange={(products) => handleInputChange('products', products)}
+        onCreateBatchOrders={onCreateBatchOrders}
+      />
+    </div>
   );
 
   const renderStep4Settings = () => (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      {/* Welcome Message */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <p className="text-blue-900 text-base leading-relaxed">
+          Configure your sale settings and add tags to help customers discover your products!
+        </p>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-900 mb-2">
+          Product Tags (comma-separated)
+        </label>
+        <input
+          type="text"
+          value={formData.settings?.tags?.join(', ') || ''}
+          onChange={(e) => handleSettingsChange('tags', e.target.value.split(',').map(t => t.trim()).filter(Boolean))}
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
+          placeholder="e.g., bread, organic, local, weekend"
+        />
+        <p className="text-sm text-gray-500 mt-1">Add keywords to help customers find your sale (visible in search results)</p>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="flex items-center">
+        <div className="flex items-start">
           <input
             type="checkbox"
             id="allowPreorders"
             checked={formData.settings?.allowPreorders}
             onChange={(e) => handleSettingsChange('allowPreorders', e.target.checked)}
-            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mt-1 h-5 w-5"
           />
-          <label htmlFor="allowPreorders" className="ml-2 text-sm text-gray-700">
-            Allow Preorders
+          <label htmlFor="allowPreorders" className="ml-3">
+            <div className="text-base font-medium text-gray-900">Allow Preorders</div>
+            <div className="text-sm text-gray-500">Customers can order before the event</div>
           </label>
         </div>
 
-        <div className="flex items-center">
+        <div className="flex items-start">
           <input
             type="checkbox"
             id="showInStorefront"
             checked={formData.settings?.showInStorefront}
             onChange={(e) => handleSettingsChange('showInStorefront', e.target.checked)}
-            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mt-1 h-5 w-5"
           />
-          <label htmlFor="showInStorefront" className="ml-2 text-sm text-gray-700">
-            Show in Storefront
+          <label htmlFor="showInStorefront" className="ml-3">
+            <div className="text-base font-medium text-gray-900">Show in Storefront</div>
+            <div className="text-sm text-gray-500">Make this sale visible to customers</div>
           </label>
         </div>
 
-        <div className="flex items-center">
+        <div className="flex items-start">
           <input
             type="checkbox"
             id="autoCloseWhenSoldOut"
             checked={formData.settings?.autoCloseWhenSoldOut}
             onChange={(e) => handleSettingsChange('autoCloseWhenSoldOut', e.target.checked)}
-            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mt-1 h-5 w-5"
           />
-          <label htmlFor="autoCloseWhenSoldOut" className="ml-2 text-sm text-gray-700">
-            Auto-close when sold out
+          <label htmlFor="autoCloseWhenSoldOut" className="ml-3">
+            <div className="text-base font-medium text-gray-900">Auto-close when sold out</div>
+            <div className="text-sm text-gray-500">Close sales when products run out</div>
           </label>
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-medium text-gray-900 mb-2">
           Total Capacity
         </label>
         <input
           type="number"
           value={formData.settings?.capacity || ''}
           onChange={(e) => handleSettingsChange('capacity', Number(e.target.value))}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
           placeholder="100"
         />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Tags (comma-separated)
-        </label>
-        <input
-          type="text"
-          value={formData.settings?.tags?.join(', ') || ''}
-          onChange={(e) => handleSettingsChange('tags', e.target.value.split(',').map(t => t.trim()).filter(Boolean))}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          placeholder="e.g., bread, weekend, pickup"
-        />
+        <p className="text-sm text-gray-500 mt-1">Maximum number of orders or items for this sale</p>
       </div>
     </div>
   );
 
-  const renderStep5Review = () => (
-    <div className="space-y-4">
+  const renderStep5Review = () => {
+    // Generate shareable text for social media
+    const generateSocialMediaText = () => {
+      const saleName = formData.name || 'My Sale';
+      const saleDate = formData.startDate ? new Date(formData.startDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) : 'TBD';
+      const saleTime = formData.startDate && formData.endDate 
+        ? `${formData.startDate.split('T')[1].slice(0, 5)} - ${formData.endDate.split('T')[1].slice(0, 5)}`
+        : 'TBD';
+      const location = formData.channels?.[0] ? 
+        (formData.channels[0].type === 'MEETUP_PICKUP' ? 'Parking Lot Pickup' :
+         formData.channels[0].type === 'DROP_OFF_LOCATION' ? 'Kiosk' :
+         formData.channels[0].type === 'DELIVERY' ? 'Delivery Available' :
+         formData.channels[0].type === 'MARKET' ? 'Farmers Market' :
+         'Local Business') : 'TBD';
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const locationAddress = (formData.channels?.[0]?.config as any)?.locationAddress || '';
+      const productCount = formData.products?.length || 0;
+      
+      // Create compelling social media content
+      let socialText = '';
+      
+      // Eye-catching opening
+      socialText += `🔥 DON'T MISS OUT! 🔥\n\n`;
+      
+      // Sale name with excitement
+      socialText += `✨ ${saleName.toUpperCase()} ✨\n\n`;
+      
+      // Date and time with urgency
+      socialText += `📅 ${saleDate}\n`;
+      socialText += `⏰ ${saleTime}\n\n`;
+      
+      // Location info
+      if (locationAddress) {
+        socialText += `📍 ${location}\n`;
+        socialText += `🏠 ${locationAddress}\n\n`;
+      } else {
+        socialText += `📍 ${location}\n\n`;
+      }
+      
+      // Product highlights
+      if (productCount > 0) {
+        socialText += `🛍️ ${productCount} AMAZING PRODUCTS AVAILABLE!\n\n`;
+      }
+      
+      // Description or compelling call-to-action
+      if (formData.description) {
+        socialText += `${formData.description}\n\n`;
+      } else {
+        socialText += `🎯 Fresh, local, artisan products made with love!\n`;
+        socialText += `💯 Quality you can taste, prices you'll love!\n\n`;
+      }
+      
+      // Urgency and call-to-action
+      socialText += `⚡ LIMITED TIME OFFER ⚡\n`;
+      socialText += `🚀 Pre-orders now open!\n`;
+      socialText += `💝 Perfect for [your occasion/holiday/season]!\n\n`;
+      
+      // Social proof and community
+      socialText += `👥 Join our community of food lovers!\n`;
+      socialText += `❤️ Support local artisans\n\n`;
+      
+      // Hashtags with more variety
+      socialText += `#LocalFood #SupportLocal #Artisan #Fresh #Community #FoodLovers #MadeWithLove #LocalBusiness #FarmToTable #Handmade #Quality #Sustainable #TasteTheDifference #Foodie #LocalVendor #SmallBusiness #CommunityFirst #FreshFood #ArtisanMade #LocalLove`;
+      
+      return socialText;
+    };
+
+    const handleShareToSocialMedia = () => {
+      const text = generateSocialMediaText();
+      // Copy to clipboard
+      navigator.clipboard.writeText(text).then(() => {
+        alert('✅ Enhanced social media post copied to clipboard!\n\n🔥 Your eye-catching sales post is ready to paste into Facebook, Instagram, Twitter, or any other platform!\n\n💡 Pro tip: Add a photo of your products for maximum engagement!');
+      }).catch(() => {
+        // Fallback: show text in alert
+        alert(`Copy this text to share on social media:\n\n${text}`);
+      });
+    };
+
+    return (
+    <div className="space-y-6">
+      {/* Congratulations Message */}
+      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+        <p className="text-green-900 text-base leading-relaxed font-medium">
+          🎉 Congratulations for completing this sales window! Good luck!
+        </p>
+        <p className="text-green-800 text-sm mt-2">
+          Review all the details below to confirm before saving your sales window.
+        </p>
+      </div>
+
+      {/* Customer Notification Info */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div className="flex items-center">
-          <AlertCircle className="h-5 w-5 text-blue-500 mr-2" />
-          <span className="text-sm text-blue-700">
-            Review your sales window configuration before creating.
-          </span>
+        <p className="text-blue-900 text-sm font-medium flex items-center gap-2">
+          <span className="text-lg">👥</span>
+          Once created, this sale will automatically appear for all customers following your vendor profile!
+        </p>
+      </div>
+
+      {/* Social Media Share Button */}
+      <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1">
+            <p className="text-purple-900 text-sm font-medium mb-2">
+              📱 Share on Social Media
+            </p>
+            <p className="text-purple-800 text-xs">
+              Get the word out! Click to copy an eye-catching, sales-focused announcement with urgency and excitement for maximum engagement!
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleShareToSocialMedia}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium whitespace-nowrap"
+          >
+            🔥 Copy Sales Post
+          </button>
         </div>
       </div>
 
-      <div className="space-y-4">
-        <div className="border border-gray-200 rounded-lg p-4">
-          <h4 className="font-medium text-gray-900 mb-2">Basic Information</h4>
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="text-gray-600">Name:</span>
-              <span className="ml-2 font-medium">{formData.name || 'Not set'}</span>
-            </div>
-            <div>
-              <span className="text-gray-600">Status:</span>
-              <span className="ml-2 font-medium">{formData.status}</span>
-            </div>
-            <div>
-              <span className="text-gray-600">Evergreen:</span>
-              <span className="ml-2 font-medium">{formData.isEvergreen ? 'Yes' : 'No'}</span>
-            </div>
-            {!formData.isEvergreen && (
-              <>
-                <div>
-                  <span className="text-gray-600">Start Date:</span>
-                  <span className="ml-2 font-medium">{formData.startDate || 'Not set'}</span>
-                </div>
-                <div>
-                  <span className="text-gray-600">End Date:</span>
-                  <span className="ml-2 font-medium">{formData.endDate || 'Not set'}</span>
-                </div>
-              </>
-            )}
+      {/* Customer-Facing Summary - PDF-Style */}
+      <div className="border-2 border-gray-300 rounded-lg p-6 bg-white shadow-lg">
+        {/* Header */}
+        <div className="text-center border-b-2 border-gray-200 pb-4 mb-4">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">{formData.name || 'Sale Event'}</h2>
+          <div className={`inline-flex px-4 py-2 rounded-full text-sm font-bold ${
+            formData.status === 'OPEN' ? 'bg-green-100 text-green-800 border-2 border-green-300' :
+            formData.status === 'SCHEDULED' ? 'bg-blue-100 text-blue-800 border-2 border-blue-300' :
+            'bg-gray-100 text-gray-800 border-2 border-gray-300'
+          }`}>
+            {formData.status}
           </div>
         </div>
 
-        <div className="border border-gray-200 rounded-lg p-4">
-          <h4 className="font-medium text-gray-900 mb-2">Channels ({formData.channels?.length || 0})</h4>
-          {formData.channels && formData.channels.length > 0 ? (
+        {/* Main Info */}
+        <div className="space-y-4">
+          {formData.description && (
+            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <p className="text-gray-800 text-base leading-relaxed">{formData.description}</p>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-start gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <span className="text-2xl">📅</span>
+              <div>
+                <div className="text-xs font-semibold text-blue-900 uppercase">Date</div>
+                <div className="text-base font-medium text-gray-900">
+                  {formData.startDate ? new Date(formData.startDate).toLocaleDateString('en-US', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  }) : 'Not set'}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
+              <span className="text-2xl">⏰</span>
+              <div>
+                <div className="text-xs font-semibold text-green-900 uppercase">Time</div>
+                <div className="text-base font-medium text-gray-900">
+                  {formData.startDate && formData.endDate 
+                    ? `${formData.startDate.split('T')[1].slice(0, 5)} - ${formData.endDate.split('T')[1].slice(0, 5)}`
+                    : 'Not set'}
+                </div>
+              </div>
+            </div>
+          </div>
+
+        {/* Location */}
+        {/* eslint-disable @typescript-eslint/no-explicit-any */}
+        {formData.channels && formData.channels.length > 0 && (
+          <div className="flex items-start gap-3 p-3 bg-purple-50 rounded-lg border border-purple-200">
+            <span className="text-2xl">
+              {formData.channels[0].type === 'MEETUP_PICKUP' && '🚗'}
+              {formData.channels[0].type === 'DROP_OFF_LOCATION' && '🏪'}
+              {formData.channels[0].type === 'DELIVERY' && '🚚'}
+              {formData.channels[0].type === 'MARKET' && '🌾'}
+              {formData.channels[0].type === 'CUSTOM' && '🏢'}
+            </span>
+            <div>
+              <div className="text-xs font-semibold text-purple-900 uppercase">Location</div>
+              <div className="text-base font-medium text-gray-900">
+                {formData.channels[0].type === 'MEETUP_PICKUP' && 'Parking Lot Pickup'}
+                {formData.channels[0].type === 'DROP_OFF_LOCATION' && 'Kiosk'}
+                {formData.channels[0].type === 'DELIVERY' && 'Delivery'}
+                {formData.channels[0].type === 'MARKET' && 'Farmers Market'}
+                {formData.channels[0].type === 'CUSTOM' && 'Find at Local Businesses'}
+              </div>
+              {(formData.channels[0].config as any)?.locationAddress && (
+                <div className="text-sm text-gray-700 mt-1">
+                  📍 {(formData.channels[0].config as any)?.locationAddress}
+                </div>
+              )}
+              {(formData.channels[0].config as any)?.isRecurring && (
+                <div className="text-sm text-gray-700 mt-1">
+                  🔄 Recurring: {(formData.channels[0].config as any)?.recurrencePattern || 'Weekly'}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        {/* eslint-enable @typescript-eslint/no-explicit-any */}
+
+        {/* Products */}
+        {formData.products && formData.products.length > 0 && (
+          <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-2xl">🛍️</span>
+              <h4 className="font-semibold text-gray-900 text-lg">Available Products</h4>
+            </div>
             <div className="space-y-2">
-              {formData.channels.map((channel, index) => (
-                <div key={index} className="text-sm">
-                  <span className="text-gray-600">• {channel.type}:</span>
-                  <span className="ml-2 font-medium">
-                    {channel.type === 'MEETUP_PICKUP' && 'Pickup'}
-                    {channel.type === 'DELIVERY' && 'Delivery'}
-                    {channel.type === 'DROP_OFF_LOCATION' && 'Drop-off'}
-                    {channel.type === 'MARKET' && 'Market'}
-                    {channel.type === 'CUSTOM' && 'Custom'}
-                  </span>
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              {formData.products.slice(0, 5).map((product: any, index: number) => (
+                <div key={index} className="flex justify-between items-center bg-white p-2 rounded border border-orange-100">
+                  <span className="text-gray-900 font-medium">{product.name}</span>
+                  <span className="text-green-700 font-bold">${product.priceOverride?.toFixed(2) || product.price?.toFixed(2) || 'N/A'}</span>
                 </div>
               ))}
+              {formData.products.length > 5 && (
+                <p className="text-sm text-gray-600 text-center pt-2 border-t border-orange-200">
+                  + {formData.products.length - 5} more products available
+                </p>
+              )}
             </div>
-          ) : (
-            <p className="text-sm text-gray-500">No channels selected</p>
+          </div>
+        )}
+
+        {/* Additional Details */}
+        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <div className="text-xs font-semibold text-gray-600 uppercase mb-1">Capacity</div>
+              <div className="text-base font-medium text-gray-900">{formData.settings?.capacity || 'Unlimited'}</div>
+            </div>
+            <div>
+              <div className="text-xs font-semibold text-gray-600 uppercase mb-1">Preorders</div>
+              <div className="text-base font-medium text-gray-900">
+                {formData.settings?.allowPreorders ? '✅ Allowed' : '❌ Not Allowed'}
+              </div>
+            </div>
+          </div>
+          {formData.settings?.tags && formData.settings.tags.length > 0 && (
+            <div className="mt-3 pt-3 border-t border-gray-300">
+              <div className="text-xs font-semibold text-gray-600 uppercase mb-2">Tags</div>
+              <div className="flex flex-wrap gap-2">
+                {formData.settings.tags.map((tag, index) => (
+                  <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            </div>
           )}
         </div>
-
-                 <div className="border border-gray-200 rounded-lg p-4">
-           <h4 className="font-medium text-gray-900 mb-2">Products ({formData.products?.length || 0})</h4>
-           {formData.products && formData.products.length > 0 ? (
-             <div className="space-y-2">
-               {formData.products.map((product, index) => (
-                 <div key={index} className="text-sm">
-                   <span className="text-gray-600">• {product.name}:</span>
-                   <span className="ml-2 font-medium">
-                     ${product.priceOverride?.toFixed(2) || 'Base price'}, 
-                     Limit: {product.perOrderLimit || 'No limit'}, 
-                     Cap: {product.totalCap || 'No cap'}
-                   </span>
-                 </div>
-               ))}
-             </div>
-           ) : (
-             <p className="text-sm text-gray-500">No products selected</p>
-           )}
-         </div>
-
-         <div className="border border-gray-200 rounded-lg p-4">
-           <h4 className="font-medium text-gray-900 mb-2">Settings</h4>
-           <div className="grid grid-cols-2 gap-4 text-sm">
-             <div>
-               <span className="text-gray-600">Capacity:</span>
-               <span className="ml-2 font-medium">{formData.settings?.capacity || 'Not set'}</span>
-             </div>
-             <div>
-               <span className="text-gray-600">Tags:</span>
-               <span className="ml-2 font-medium">
-                 {formData.settings?.tags?.length ? formData.settings.tags.join(', ') : 'None'}
-               </span>
-             </div>
-             <div>
-               <span className="text-gray-600">Preorders:</span>
-               <span className="ml-2 font-medium">{formData.settings?.allowPreorders ? 'Allowed' : 'Not allowed'}</span>
-             </div>
-             <div>
-               <span className="text-gray-600">Storefront:</span>
-               <span className="ml-2 font-medium">{formData.settings?.showInStorefront ? 'Visible' : 'Hidden'}</span>
-             </div>
-           </div>
-         </div>
+        </div>
       </div>
     </div>
-  );
+    );
+  };
 
   const renderCurrentStep = () => {
     switch (currentStep) {
@@ -1076,16 +847,16 @@ const CreateEditSalesWindowDrawer: React.FC<CreateEditSalesWindowDrawerProps> = 
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center">
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors mr-3"
-              title="Close drawer"
-              aria-label="Close drawer"
-            >
-              <X className="h-5 w-5 text-gray-600" />
-            </button>
             {renderStepTitle()}
           </div>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            title="Close drawer"
+            aria-label="Close drawer"
+          >
+            <X className="h-5 w-5 text-gray-600" />
+          </button>
         </div>
 
         {/* Step Indicator */}

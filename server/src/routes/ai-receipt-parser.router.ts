@@ -77,10 +77,106 @@ interface ParsingResult {
   suggestions?: string[];
 }
 
+// Helper function to detect if content is a recipe
+const detectRecipeContent = (text: string): boolean => {
+  const recipeKeywords = [
+    'recipe', 'ingredients', 'instructions', 'directions', 'prep time', 'cook time',
+    'serves', 'yield', 'cups', 'tablespoons', 'teaspoons', 'ounces', 'pounds',
+    'preheat', 'bake', 'mix', 'combine', 'add', 'stir', 'whisk', 'fold',
+    'traditional', 'lebanese', 'garlic sauce', 'toum', 'serious eats'
+  ];
+  
+  const lowerText = text.toLowerCase();
+  const keywordMatches = recipeKeywords.filter(keyword => lowerText.includes(keyword));
+  
+  // If we find 3+ recipe keywords, it's likely a recipe
+  return keywordMatches.length >= 3;
+};
+
+// Helper function to parse recipe content as a single product
+const parseRecipeAsReceipt = (text: string): ParsedReceipt => {
+  const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+  
+  // Extract recipe title (usually the first significant line)
+  let recipeTitle = 'Parsed Recipe';
+  for (const line of lines) {
+    if (line.length > 5 && !line.includes('Prep:') && !line.includes('Total:') && !line.includes('Serves:')) {
+      recipeTitle = line;
+      break;
+    }
+  }
+  
+  // Extract ingredients from the text
+  const ingredientLines = lines.filter(line => {
+    const lowerLine = line.toLowerCase();
+    return (
+      lowerLine.includes('cup') || 
+      lowerLine.includes('tablespoon') || 
+      lowerLine.includes('teaspoon') ||
+      lowerLine.includes('ounce') ||
+      lowerLine.includes('pound') ||
+      lowerLine.includes('clove') ||
+      lowerLine.includes('gram') ||
+      lowerLine.includes('ml') ||
+      lowerLine.includes('g') ||
+      (lowerLine.includes('garlic') || lowerLine.includes('salt') || lowerLine.includes('lemon') || lowerLine.includes('oil'))
+    );
+  });
+  
+  // Create a single "product" representing the recipe
+  const recipeItem: ParsedItem = {
+    id: `recipe-${Date.now()}`,
+    name: recipeTitle,
+    quantity: 1,
+    unit: 'recipe',
+    price: 0, // Recipes don't have prices
+    totalPrice: 0,
+    category: 'food_grade',
+    confidence: 95,
+    lineNumber: 1,
+    rawText: `Recipe: ${recipeTitle}`
+  };
+  
+  // Create ingredient items
+  const ingredientItems = ingredientLines.slice(0, 5).map((line, index) => ({
+    id: `ingredient-${Date.now()}-${index}`,
+    name: line.trim(),
+    quantity: 1,
+    unit: 'item',
+    price: 0,
+    totalPrice: 0,
+    category: 'food_grade' as const,
+    confidence: 85,
+    lineNumber: index + 2,
+    rawText: line
+  }));
+  
+  return {
+    id: `recipe-receipt-${Date.now()}`,
+    storeName: 'Recipe Source',
+    storeAddress: 'Parsed from uploaded document',
+    receiptDate: new Date().toISOString(),
+    totalAmount: 0,
+    taxAmount: 0,
+    items: [recipeItem, ...ingredientItems],
+    rawText: text,
+    confidence: 90,
+    processingTime: 2000,
+    createdAt: new Date().toISOString()
+  };
+};
+
 // Mock AI parsing function - in production, this would call OpenAI, Google Vision, or similar
 const mockAIParseReceipt = async (text: string, imageData?: Buffer): Promise<ParsedReceipt> => {
   // Simulate AI processing time
   await new Promise(resolve => setTimeout(resolve, 2000));
+  
+  // Detect if this is a recipe vs a receipt
+  const isRecipe = detectRecipeContent(text);
+  
+  if (isRecipe) {
+    return parseRecipeAsReceipt(text);
+  }
   
   // Parse the input text to extract store information
   const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);

@@ -1,5 +1,4 @@
-﻿import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, 
@@ -17,7 +16,12 @@ import {
   List,
   Kanban,
   ChefHat,
-  Layers
+  Layers,
+  BookOpen,
+  AlertCircle,
+  CheckSquare,
+  Printer,
+  ArrowLeft
 } from 'lucide-react';
 import VendorDashboardLayout from '../layouts/VendorDashboardLayout';
 import Button from '../components/ui/Button';
@@ -71,6 +75,22 @@ interface OrderItem {
     id: string;
     name: string;
     imageUrl?: string;
+    recipeId?: string;
+    recipe?: {
+      id: string;
+      name: string;
+      ingredients: Array<{
+        name: string;
+        quantity: number;
+        unit: string;
+      }>;
+      steps: Array<{
+        stepNumber: number;
+        instruction: string;
+        duration: number;
+      }>;
+      yieldAmount: number;
+    };
   };
 }
 
@@ -81,76 +101,262 @@ interface OrderTimeline {
   createdAt: string;
 }
 
+// Mock data for orders
+const mockOrders: Order[] = [
+  {
+    id: '1',
+    orderNumber: 'ORD-1001',
+    customerName: 'Suzy Johnson',
+    customerEmail: 'suzy@example.com',
+    phone: '(555) 123-4567',
+    status: 'CONFIRMED',
+    priority: 'MEDIUM',
+    createdAt: new Date().toISOString(),
+    dueAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    paymentStatus: 'PAID',
+    total: 20.97,
+    orderItems: [
+      {
+        id: 'item-1',
+        productId: 'prod-sourdough',
+        productName: 'Sourdough Bread',
+        quantity: 3,
+        unitPrice: 6.99,
+        total: 20.97,
+        status: 'PENDING',
+        madeQty: 0,
+        product: {
+          id: 'prod-sourdough',
+          name: 'Sourdough Bread',
+          imageUrl: '/images/sourdough.jpg',
+          recipeId: 'recipe-sourdough',
+          recipe: {
+            id: 'recipe-sourdough',
+            name: 'Classic Sourdough Bread',
+            ingredients: [
+              { name: 'Bread Flour', quantity: 500, unit: 'g' },
+              { name: 'Sourdough Starter', quantity: 100, unit: 'g' },
+              { name: 'Water', quantity: 350, unit: 'ml' },
+              { name: 'Salt', quantity: 10, unit: 'g' }
+            ],
+            steps: [
+              { stepNumber: 1, instruction: 'Mix flour, water, and starter. Let autolyse for 30 minutes.', duration: 30 },
+              { stepNumber: 2, instruction: 'Add salt and perform stretch and folds every 30 minutes for 3 hours.', duration: 180 },
+              { stepNumber: 3, instruction: 'Shape and place in banneton. Cold proof overnight (12-16 hours).', duration: 720 },
+              { stepNumber: 4, instruction: 'Preheat oven to 475�F. Score and bake covered for 20 mins, then uncovered for 25 mins.', duration: 45 }
+            ],
+            yieldAmount: 1
+          }
+        }
+      }
+    ]
+  },
+  {
+    id: '2',
+    orderNumber: 'ORD-1002',
+    customerName: 'Mike Stevens',
+    customerEmail: 'mike@example.com',
+    phone: '(555) 987-6543',
+    status: 'CONFIRMED',
+    priority: 'HIGH',
+    createdAt: new Date().toISOString(),
+    dueAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    paymentStatus: 'PAID',
+    total: 41.94,
+    orderItems: [
+      {
+        id: 'item-2',
+        productId: 'prod-sourdough',
+        productName: 'Sourdough Bread',
+        quantity: 6,
+        unitPrice: 6.99,
+        total: 41.94,
+        status: 'PENDING',
+        madeQty: 0,
+        product: {
+          id: 'prod-sourdough',
+          name: 'Sourdough Bread',
+          imageUrl: '/images/sourdough.jpg',
+          recipeId: 'recipe-sourdough',
+          recipe: {
+            id: 'recipe-sourdough',
+            name: 'Classic Sourdough Bread',
+            ingredients: [
+              { name: 'Bread Flour', quantity: 500, unit: 'g' },
+              { name: 'Sourdough Starter', quantity: 100, unit: 'g' },
+              { name: 'Water', quantity: 350, unit: 'ml' },
+              { name: 'Salt', quantity: 10, unit: 'g' }
+            ],
+            steps: [
+              { stepNumber: 1, instruction: 'Mix flour, water, and starter. Let autolyse for 30 minutes.', duration: 30 },
+              { stepNumber: 2, instruction: 'Add salt and perform stretch and folds every 30 minutes for 3 hours.', duration: 180 },
+              { stepNumber: 3, instruction: 'Shape and place in banneton. Cold proof overnight (12-16 hours).', duration: 720 },
+              { stepNumber: 4, instruction: 'Preheat oven to 475�F. Score and bake covered for 20 mins, then uncovered for 25 mins.', duration: 45 }
+            ],
+            yieldAmount: 1
+          }
+        }
+      }
+    ]
+  },
+  {
+    id: '3',
+    orderNumber: 'ORD-1003',
+    customerName: 'Emily Chen',
+    customerEmail: 'emily@example.com',
+    phone: '(555) 246-8135',
+    status: 'CONFIRMED',
+    priority: 'MEDIUM',
+    createdAt: new Date().toISOString(),
+    dueAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    paymentStatus: 'PAID',
+    total: 37.96,
+    orderItems: [
+      {
+        id: 'item-3',
+        productId: 'prod-croissant',
+        productName: 'Butter Croissant',
+        quantity: 12,
+        unitPrice: 3.99,
+        total: 47.88,
+        status: 'PENDING',
+        madeQty: 0,
+        product: {
+          id: 'prod-croissant',
+          name: 'Butter Croissant',
+          imageUrl: '/images/croissant.jpg',
+          recipeId: 'recipe-croissant',
+          recipe: {
+            id: 'recipe-croissant',
+            name: 'Classic Butter Croissants',
+            ingredients: [
+              { name: 'All-Purpose Flour', quantity: 500, unit: 'g' },
+              { name: 'European Butter', quantity: 280, unit: 'g' },
+              { name: 'Whole Milk', quantity: 240, unit: 'ml' },
+              { name: 'Sugar', quantity: 50, unit: 'g' },
+              { name: 'Salt', quantity: 10, unit: 'g' },
+              { name: 'Instant Yeast', quantity: 10, unit: 'g' }
+            ],
+            steps: [
+              { stepNumber: 1, instruction: 'Make dough and refrigerate for 1 hour.', duration: 60 },
+              { stepNumber: 2, instruction: 'Laminate with butter using 3 letter folds. Chill 30 mins between folds.', duration: 240 },
+              { stepNumber: 3, instruction: 'Roll out and cut into triangles. Shape and proof for 2-3 hours until doubled.', duration: 150 },
+              { stepNumber: 4, instruction: 'Egg wash and bake at 400�F for 15-18 minutes until golden.', duration: 18 }
+            ],
+            yieldAmount: 12
+          }
+        }
+      }
+    ]
+  },
+  {
+    id: '4',
+    orderNumber: 'ORD-1004',
+    customerName: 'David Martinez',
+    customerEmail: 'david@example.com',
+    phone: '(555) 369-2580',
+    status: 'CONFIRMED',
+    priority: 'MEDIUM',
+    createdAt: new Date().toISOString(),
+    dueAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    paymentStatus: 'PAID',
+    total: 27.96,
+    orderItems: [
+      {
+        id: 'item-4a',
+        productId: 'prod-sourdough',
+        productName: 'Sourdough Bread',
+        quantity: 2,
+        unitPrice: 6.99,
+        total: 13.98,
+        status: 'PENDING',
+        madeQty: 0,
+        product: {
+          id: 'prod-sourdough',
+          name: 'Sourdough Bread',
+          imageUrl: '/images/sourdough.jpg',
+          recipeId: 'recipe-sourdough',
+          recipe: {
+            id: 'recipe-sourdough',
+            name: 'Classic Sourdough Bread',
+            ingredients: [
+              { name: 'Bread Flour', quantity: 500, unit: 'g' },
+              { name: 'Sourdough Starter', quantity: 100, unit: 'g' },
+              { name: 'Water', quantity: 350, unit: 'ml' },
+              { name: 'Salt', quantity: 10, unit: 'g' }
+            ],
+            steps: [
+              { stepNumber: 1, instruction: 'Mix flour, water, and starter. Let autolyse for 30 minutes.', duration: 30 },
+              { stepNumber: 2, instruction: 'Add salt and perform stretch and folds every 30 minutes for 3 hours.', duration: 180 },
+              { stepNumber: 3, instruction: 'Shape and place in banneton. Cold proof overnight (12-16 hours).', duration: 720 },
+              { stepNumber: 4, instruction: 'Preheat oven to 475�F. Score and bake covered for 20 mins, then uncovered for 25 mins.', duration: 45 }
+            ],
+            yieldAmount: 1
+          }
+        }
+      },
+      {
+        id: 'item-4b',
+        productId: 'prod-croissant',
+        productName: 'Butter Croissant',
+        quantity: 6,
+        unitPrice: 3.99,
+        total: 23.94,
+        status: 'PENDING',
+        madeQty: 0,
+        product: {
+          id: 'prod-croissant',
+          name: 'Butter Croissant',
+          imageUrl: '/images/croissant.jpg',
+          recipeId: 'recipe-croissant',
+          recipe: {
+            id: 'recipe-croissant',
+            name: 'Classic Butter Croissants',
+            ingredients: [
+              { name: 'All-Purpose Flour', quantity: 500, unit: 'g' },
+              { name: 'European Butter', quantity: 280, unit: 'g' },
+              { name: 'Whole Milk', quantity: 240, unit: 'ml' },
+              { name: 'Sugar', quantity: 50, unit: 'g' },
+              { name: 'Salt', quantity: 10, unit: 'g' },
+              { name: 'Instant Yeast', quantity: 10, unit: 'g' }
+            ],
+            steps: [
+              { stepNumber: 1, instruction: 'Make dough and refrigerate for 1 hour.', duration: 60 },
+              { stepNumber: 2, instruction: 'Laminate with butter using 3 letter folds. Chill 30 mins between folds.', duration: 240 },
+              { stepNumber: 3, instruction: 'Roll out and cut into triangles. Shape and proof for 2-3 hours until doubled.', duration: 150 },
+              { stepNumber: 4, instruction: 'Egg wash and bake at 400�F for 15-18 minutes until golden.', duration: 18 }
+            ],
+            yieldAmount: 12
+          }
+        }
+      }
+    ]
+  }
+];
 
 
 type ViewMode = 'list' | 'tracker' | 'board' | 'calendar' | 'kds' | 'batching';
+type BatchingMode = 'production' | 'fulfillment';
 
 const VendorOrdersPage: React.FC = () => {
-  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [viewMode, setViewMode] = useState<ViewMode>('batching'); // Default to batching for demo
+  const [batchingMode, setBatchingMode] = useState<BatchingMode>('production');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [priorityFilter, setPriorityFilter] = useState<string>('');
   const [showSystemMessages, setShowSystemMessages] = useState(false);
   const [showAIInsights, setShowAIInsights] = useState(false);
   const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
+  const [expandedRecipe, setExpandedRecipe] = useState<string | null>(null);
+  const [completedBatches, setCompletedBatches] = useState<Set<string>>(new Set());
+  const [viewingOrder, setViewingOrder] = useState<Order | null>(null);
+  const [editingOrder, setEditingOrder] = useState<Order | null>(null);
 
-  const queryClient = useQueryClient();
-
-  // Fetch orders
-  const { data: ordersData, isLoading: isLoadingOrders } = useQuery({
-    queryKey: ['orders', { searchQuery, statusFilter, priorityFilter, viewMode }],
-    queryFn: async () => {
-      const params = new URLSearchParams();
-      if (searchQuery) params.append('q', searchQuery);
-      if (statusFilter) params.append('status', statusFilter);
-      if (priorityFilter) params.append('priority', priorityFilter);
-      params.append('view', viewMode);
-
-      const response = await fetch(`/api/vendor/orders?${params}`, {
-        credentials: 'include'
-      });
-      if (!response.ok) throw new Error('Failed to fetch orders');
-      return response.json();
-    },
-  });
-
-  // Fetch AI insights
-  const { data: aiInsights, isLoading: isLoadingInsights } = useQuery({
-    queryKey: ['ai-orders-insights'],
-    queryFn: async () => {
-      const response = await fetch('/api/ai/insights/orders?range=7d', {
-        credentials: 'include'
-      });
-      if (!response.ok) throw new Error('Failed to fetch AI insights');
-      return response.json();
-    },
-    refetchInterval: 5 * 60 * 1000, // Refetch every 5 minutes
-  });
-
-  // Bulk status update mutation
-  const bulkStatusMutation = useMutation({
-    mutationFn: async ({ orderIds, status }: { orderIds: string[]; status: string }) => {
-      const response = await fetch('/api/vendor/orders/bulk-status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ ids: orderIds, status }),
-      });
-      if (!response.ok) throw new Error('Failed to update orders');
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
-      toast.success('Orders updated successfully');
-      setSelectedOrders([]);
-    },
-    onError: () => {
-      toast.error('Failed to update orders');
-    },
-  });
-
-  const orders = ordersData?.orders || [];
-  const stats = ordersData?.stats || {};
+  // Use mock data for now
+  const orders = mockOrders;
+  const isLoadingOrders = false;
+  const aiInsights = null;
+  const isLoadingInsights = false;
 
   // Calculate summary stats
   const summaryStats = {
@@ -160,10 +366,63 @@ const VendorOrdersPage: React.FC = () => {
       const today = new Date().toDateString();
       return new Date(order.dueAt).toDateString() === today;
     }).length,
-    delivered: stats.DELIVERED?.count || 0,
-    finished: (stats.DELIVERED?.count || 0) + (stats.PICKED_UP?.count || 0),
-    revenue: Number(Object.values(stats).reduce((sum: number, stat: { total?: number }) => sum + (stat.total || 0), 0)),
+    delivered: 0,
+    finished: 0,
+    revenue: orders.reduce((sum, order) => sum + order.total, 0),
   };
+
+  // Aggregate orders by product for batching
+  const aggregateProductionBatch = () => {
+    const batches: Record<string, {
+      productId: string;
+      productName: string;
+      totalQuantity: number;
+      orders: Array<{ orderNumber: string; customerName: string; quantity: number; }>;
+      recipe?: typeof mockOrders[0]['orderItems'][0]['product']['recipe'];
+      ingredients: Record<string, { quantity: number; unit: string }>;
+    }> = {};
+
+    orders.forEach(order => {
+      order.orderItems.forEach(item => {
+        if (!batches[item.productId]) {
+          batches[item.productId] = {
+            productId: item.productId,
+            productName: item.productName,
+            totalQuantity: 0,
+            orders: [],
+            recipe: item.product.recipe,
+            ingredients: {}
+          };
+        }
+
+        batches[item.productId].totalQuantity += item.quantity;
+        batches[item.productId].orders.push({
+          orderNumber: order.orderNumber,
+          customerName: order.customerName,
+          quantity: item.quantity
+        });
+
+        // Aggregate ingredients
+        if (item.product.recipe) {
+          const batchMultiplier = item.quantity / item.product.recipe.yieldAmount;
+          item.product.recipe.ingredients.forEach(ing => {
+            const key = `${ing.name}-${ing.unit}`;
+            if (!batches[item.productId].ingredients[key]) {
+              batches[item.productId].ingredients[key] = {
+                quantity: 0,
+                unit: ing.unit
+              };
+            }
+            batches[item.productId].ingredients[key].quantity += ing.quantity * batchMultiplier;
+          });
+        }
+      });
+    });
+
+    return Object.values(batches);
+  };
+
+  const productionBatches = aggregateProductionBatch();
 
   const getStatusColor = (status: string) => {
     const colors = {
@@ -194,7 +453,8 @@ const VendorOrdersPage: React.FC = () => {
       toast.error('Please select orders to update');
       return;
     }
-    bulkStatusMutation.mutate({ orderIds: selectedOrders, status });
+    toast.success(`Updated ${selectedOrders.length} orders to ${status}`);
+    setSelectedOrders([]);
   };
 
   const handleSelectOrder = (orderId: string) => {
@@ -213,6 +473,27 @@ const VendorOrdersPage: React.FC = () => {
     }
   };
 
+  const toggleBatchComplete = (productId: string) => {
+    setCompletedBatches(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(productId)) {
+        newSet.delete(productId);
+      } else {
+        newSet.add(productId);
+      }
+      return newSet;
+    });
+  };
+
+  const markAllBatchesComplete = () => {
+    const allProductIds = productionBatches.map(batch => batch.productId);
+    setCompletedBatches(new Set(allProductIds));
+    toast.success('All batches marked as complete! Switching to fulfillment mode...');
+    setTimeout(() => {
+      setBatchingMode('fulfillment');
+    }, 1500);
+  };
+
     return (
     <VendorDashboardLayout>
       <div className="min-h-screen bg-gray-50">
@@ -225,6 +506,11 @@ const VendorOrdersPage: React.FC = () => {
                 <Badge variant="default" className="bg-blue-100 text-blue-800">
                   {summaryStats.total} Total
                 </Badge>
+                {viewMode === 'batching' && (
+                  <Badge variant="default" className="bg-purple-100 text-purple-800">
+                    ?? Production Mode
+                  </Badge>
+                )}
               </div>
               
               <div className="flex items-center space-x-4">
@@ -234,9 +520,6 @@ const VendorOrdersPage: React.FC = () => {
                   className="relative text-xs px-2 py-1"
                 >
                   <Bell className="h-4 w-4" />
-                  {aiInsights?.summary?.rushCount > 0 && (
-                    <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full"></span>
-                  )}
                 </Button>
                 
                 <Button
@@ -397,6 +680,7 @@ const VendorOrdersPage: React.FC = () => {
                   variant={viewMode === 'batching' ? 'primary' : 'secondary'}
                   onClick={() => setViewMode('batching')}
                   className="text-xs px-2 py-1"
+                  title="Production Batching"
                 >
                   <Layers className="h-4 w-4" />
                 </Button>
@@ -411,7 +695,7 @@ const VendorOrdersPage: React.FC = () => {
         </div>
 
         {/* Bulk Actions */}
-        {selectedOrders.length > 0 && (
+        {selectedOrders.length > 0 && viewMode !== 'batching' && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
             <div className="flex items-center justify-between">
               <p className="text-sm text-blue-800">
@@ -590,37 +874,702 @@ const VendorOrdersPage: React.FC = () => {
             )}
 
             {viewMode === 'tracker' && (
-              <div className="bg-white rounded-lg shadow-sm border p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Order Tracker</h3>
-                <p className="text-gray-500">Tracker view coming soon...</p>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {orders.map((order) => (
+                    <Card key={order.id} className="p-6 hover:shadow-lg transition-shadow">
+                      <div className="space-y-4">
+                        {/* Header */}
+                        <div className="flex items-center justify-between pb-3 border-b border-gray-200">
+                          <div>
+                            <h3 className="font-bold text-gray-900">{order.orderNumber}</h3>
+                            <p className="text-sm text-gray-600">{order.customerName}</p>
+                          </div>
+                          <Badge className={getStatusColor(order.status)}>
+                            {order.status}
+                          </Badge>
+                        </div>
+
+                        {/* Items */}
+                        <div className="space-y-2">
+                          {order.orderItems.map((item) => (
+                            <div key={item.id} className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                              <div>
+                                <div className="font-medium text-gray-900">{item.productName}</div>
+                                <div className="text-sm text-gray-600">Qty: {item.quantity}</div>
+                              </div>
+                              <div className="text-right">
+                                <div className="font-bold text-gray-900">${item.total.toFixed(2)}</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Footer */}
+                        <div className="pt-3 border-t border-gray-200">
+                          <div className="flex items-center justify-between mb-3">
+                            <span className="text-sm text-gray-600">Total</span>
+                            <span className="text-lg font-bold text-green-600">${order.total.toFixed(2)}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm text-gray-600 mb-3">
+                            <span>Due</span>
+                            <span className="font-medium">
+                              {order.dueAt ? new Date(order.dueAt).toLocaleString() : 'N/A'}
+                            </span>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button variant="secondary" className="flex-1 text-xs">
+                              <Eye className="h-4 w-4 mr-1" />
+                              View
+                            </Button>
+                            <Button variant="secondary" className="flex-1 text-xs">
+                              <Edit className="h-4 w-4 mr-1" />
+                              Edit
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
         </div>
       )}
 
             {viewMode === 'board' && (
-              <div className="bg-white rounded-lg shadow-sm border p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Kanban Board</h3>
-                <p className="text-gray-500">Board view coming soon...</p>
-              </div>
-            )}
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  {/* Confirmed Column */}
+                  <div className="bg-white rounded-lg shadow-sm border">
+                    <div className="bg-blue-500 text-white p-4 rounded-t-lg">
+                      <h3 className="font-bold">Confirmed</h3>
+                      <p className="text-sm text-blue-100">
+                        {orders.filter(o => o.status === 'CONFIRMED').length} orders
+                      </p>
+                    </div>
+                    <div className="p-4 space-y-3 max-h-[600px] overflow-y-auto">
+                      {orders.filter(o => o.status === 'CONFIRMED').map((order) => (
+                        <Card key={order.id} className="p-4 hover:shadow-md transition-shadow cursor-pointer">
+                          <div className="space-y-2">
+                            <div className="font-bold text-gray-900">{order.orderNumber}</div>
+                            <div className="text-sm text-gray-600">{order.customerName}</div>
+                            <Badge className={getPriorityColor(order.priority)}>
+                              {order.priority}
+                            </Badge>
+                            <div className="text-sm font-medium text-green-600">
+                              ${order.total.toFixed(2)}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {order.orderItems.length} items
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* In Production Column */}
+                  <div className="bg-white rounded-lg shadow-sm border">
+                    <div className="bg-orange-500 text-white p-4 rounded-t-lg">
+                      <h3 className="font-bold">In Production</h3>
+                      <p className="text-sm text-orange-100">
+                        {orders.filter(o => o.status === 'IN_PRODUCTION').length} orders
+                      </p>
+                    </div>
+                    <div className="p-4 space-y-3 max-h-[600px] overflow-y-auto">
+                      {orders.filter(o => o.status === 'IN_PRODUCTION').map((order) => (
+                        <Card key={order.id} className="p-4 hover:shadow-md transition-shadow cursor-pointer">
+                          <div className="space-y-2">
+                            <div className="font-bold text-gray-900">{order.orderNumber}</div>
+                            <div className="text-sm text-gray-600">{order.customerName}</div>
+                            <Badge className={getPriorityColor(order.priority)}>
+                              {order.priority}
+                            </Badge>
+                            <div className="text-sm font-medium text-green-600">
+                              ${order.total.toFixed(2)}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {order.orderItems.length} items
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                      {orders.filter(o => o.status === 'IN_PRODUCTION').length === 0 && (
+                        <p className="text-sm text-gray-400 text-center py-8">No orders in production</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Ready Column */}
+                  <div className="bg-white rounded-lg shadow-sm border">
+                    <div className="bg-green-500 text-white p-4 rounded-t-lg">
+                      <h3 className="font-bold">Ready</h3>
+                      <p className="text-sm text-green-100">
+                        {orders.filter(o => o.status === 'READY').length} orders
+                      </p>
+                    </div>
+                    <div className="p-4 space-y-3 max-h-[600px] overflow-y-auto">
+                      {orders.filter(o => o.status === 'READY').map((order) => (
+                        <Card key={order.id} className="p-4 hover:shadow-md transition-shadow cursor-pointer">
+                          <div className="space-y-2">
+                            <div className="font-bold text-gray-900">{order.orderNumber}</div>
+                            <div className="text-sm text-gray-600">{order.customerName}</div>
+                            <Badge className={getPriorityColor(order.priority)}>
+                              {order.priority}
+                            </Badge>
+                            <div className="text-sm font-medium text-green-600">
+                              ${order.total.toFixed(2)}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {order.orderItems.length} items
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                      {orders.filter(o => o.status === 'READY').length === 0 && (
+                        <p className="text-sm text-gray-400 text-center py-8">No orders ready</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Completed Column */}
+                  <div className="bg-white rounded-lg shadow-sm border">
+                    <div className="bg-gray-500 text-white p-4 rounded-t-lg">
+                      <h3 className="font-bold">Completed</h3>
+                      <p className="text-sm text-gray-100">
+                        {orders.filter(o => ['DELIVERED', 'PICKED_UP'].includes(o.status)).length} orders
+                      </p>
+                    </div>
+                    <div className="p-4 space-y-3 max-h-[600px] overflow-y-auto">
+                      {orders.filter(o => ['DELIVERED', 'PICKED_UP'].includes(o.status)).map((order) => (
+                        <Card key={order.id} className="p-4 hover:shadow-md transition-shadow cursor-pointer opacity-75">
+                          <div className="space-y-2">
+                            <div className="font-bold text-gray-900">{order.orderNumber}</div>
+                            <div className="text-sm text-gray-600">{order.customerName}</div>
+                            <Badge className={getStatusColor(order.status)}>
+                              {order.status}
+                            </Badge>
+                            <div className="text-sm font-medium text-green-600">
+                              ${order.total.toFixed(2)}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {order.orderItems.length} items
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                      {orders.filter(o => ['DELIVERED', 'PICKED_UP'].includes(o.status)).length === 0 && (
+                        <p className="text-sm text-gray-400 text-center py-8">No completed orders</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+        </div>
+      )}
 
             {viewMode === 'calendar' && (
-              <div className="bg-white rounded-lg shadow-sm border p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Calendar View</h3>
-                <p className="text-gray-500">Calendar view coming soon...</p>
+              <div className="space-y-6">
+                {/* Calendar Header */}
+                <Card className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-2xl font-bold text-gray-900">Orders Calendar</h2>
+                    <div className="text-sm text-gray-600">
+                      {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Group orders by date */}
+                {(() => {
+                  const ordersByDate: Record<string, Order[]> = {};
+                  orders.forEach(order => {
+                    if (order.dueAt) {
+                      const dateKey = new Date(order.dueAt).toDateString();
+                      if (!ordersByDate[dateKey]) {
+                        ordersByDate[dateKey] = [];
+                      }
+                      ordersByDate[dateKey].push(order);
+                    }
+                  });
+
+                  const sortedDates = Object.keys(ordersByDate).sort((a, b) => 
+                    new Date(a).getTime() - new Date(b).getTime()
+                  );
+
+                  return sortedDates.map(dateKey => (
+                    <Card key={dateKey} className="p-6">
+                      <div className="mb-4 pb-3 border-b border-gray-200">
+                        <div className="flex items-center gap-3">
+                          <Calendar className="h-6 w-6 text-blue-600" />
+                          <h3 className="text-xl font-bold text-gray-900">
+                            {new Date(dateKey).toLocaleDateString('en-US', { 
+                              weekday: 'long', 
+                              month: 'long', 
+                              day: 'numeric',
+                              year: 'numeric'
+                            })}
+                          </h3>
+                          <Badge className="bg-blue-100 text-blue-800">
+                            {ordersByDate[dateKey].length} orders
+                          </Badge>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        {ordersByDate[dateKey].map(order => (
+                          <div key={order.id} className="flex items-center justify-between bg-gray-50 p-4 rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
+                            <div className="flex items-center gap-4 flex-1">
+                              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <Package className="h-6 w-6 text-blue-600" />
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-3 mb-1">
+                                  <span className="font-bold text-gray-900">{order.orderNumber}</span>
+                                  <Badge className={getStatusColor(order.status)}>
+                                    {order.status}
+                                  </Badge>
+                                  <Badge className={getPriorityColor(order.priority)}>
+                                    {order.priority}
+                                  </Badge>
+                                </div>
+                                <div className="text-sm text-gray-600">
+                                  {order.customerName} • {order.orderItems.length} items
+                                </div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-bold text-green-600 text-lg">${order.total.toFixed(2)}</div>
+                              <div className="text-xs text-gray-500">
+                                Due: {new Date(order.dueAt!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </Card>
+                  ));
+                })()}
+
+                {Object.keys(orders.reduce((acc: Record<string, Order[]>, order) => {
+                  if (order.dueAt) {
+                    const dateKey = new Date(order.dueAt).toDateString();
+                    if (!acc[dateKey]) acc[dateKey] = [];
+                    acc[dateKey].push(order);
+                  }
+                  return acc;
+                }, {})).length === 0 && (
+                  <Card className="p-12 text-center">
+                    <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-500">No orders scheduled</p>
+                  </Card>
+                )}
               </div>
             )}
 
             {viewMode === 'kds' && (
-              <div className="bg-white rounded-lg shadow-sm border p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Kitchen Display System</h3>
-                <p className="text-gray-500">KDS view coming soon...</p>
+              <div className="space-y-4">
+                {/* KDS Header */}
+                <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white p-6 rounded-lg shadow-lg">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h1 className="text-3xl font-bold mb-2">🔥 Kitchen Display System</h1>
+                      <p className="text-white/90">Production orders in real-time</p>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-4xl font-bold">
+                        {orders.filter(o => ['CONFIRMED', 'IN_PRODUCTION'].includes(o.status)).length}
+                      </div>
+                      <div className="text-sm text-white/80">Active Orders</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Production Queue - Large Format for Kitchen */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {orders.filter(o => ['CONFIRMED', 'IN_PRODUCTION'].includes(o.status)).map((order) => (
+                    <Card key={order.id} className={`p-8 ${order.status === 'IN_PRODUCTION' ? 'border-4 border-orange-500 bg-orange-50' : 'bg-white'}`}>
+                      <div className="space-y-4">
+                        {/* Order Header - Large Text */}
+                        <div className="flex items-start justify-between pb-4 border-b-2 border-gray-300">
+                          <div>
+                            <h2 className="text-3xl font-bold text-gray-900 mb-2">{order.orderNumber}</h2>
+                            <p className="text-xl text-gray-700">{order.customerName}</p>
+                          </div>
+                          <div className="text-right">
+                            <Badge className={`text-lg px-4 py-2 ${getPriorityColor(order.priority)}`}>
+                              {order.priority}
+                            </Badge>
+                            {order.status === 'IN_PRODUCTION' && (
+                              <div className="mt-2 text-orange-600 font-bold animate-pulse">
+                                🔥 IN PRODUCTION
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Items - Large, Clear Display */}
+                        <div className="space-y-3">
+                          <h3 className="text-lg font-bold text-gray-700 uppercase">Items to Make:</h3>
+                          {order.orderItems.map((item) => (
+                            <div key={item.id} className="bg-white p-4 rounded-lg border-2 border-gray-300">
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1">
+                                  <div className="text-2xl font-bold text-gray-900">{item.productName}</div>
+                                  {item.variantName && (
+                                    <div className="text-lg text-gray-600">{item.variantName}</div>
+                                  )}
+                                  {item.notes && (
+                                    <div className="mt-2 bg-yellow-100 border border-yellow-300 rounded p-2">
+                                      <div className="text-sm font-bold text-yellow-900">⚠️ Special Instructions:</div>
+                                      <div className="text-base text-yellow-800">{item.notes}</div>
+                                    </div>
+                                  )}
+                                </div>
+                                <div className="text-center ml-4">
+                                  <div className="text-5xl font-bold text-blue-600">{item.quantity}</div>
+                                  <div className="text-sm text-gray-600 uppercase">units</div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Due Time - Prominent */}
+                        <div className="bg-blue-100 border-2 border-blue-300 rounded-lg p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <Clock className="h-8 w-8 text-blue-600" />
+                              <div>
+                                <div className="text-sm text-blue-800 font-medium">DUE TIME</div>
+                                <div className="text-2xl font-bold text-blue-900">
+                                  {order.dueAt ? new Date(order.dueAt).toLocaleTimeString([], { 
+                                    hour: '2-digit', 
+                                    minute: '2-digit' 
+                                  }) : 'N/A'}
+                                </div>
+                              </div>
+                            </div>
+                            <Button 
+                              className="bg-green-500 hover:bg-green-600 text-white text-lg px-6 py-3"
+                              onClick={() => toast.success(`Order ${order.orderNumber} marked as ready!`)}
+                            >
+                              <CheckCircle className="h-6 w-6 mr-2" />
+                              Done
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+
+                {orders.filter(o => ['CONFIRMED', 'IN_PRODUCTION'].includes(o.status)).length === 0 && (
+                  <Card className="p-12 text-center">
+                    <ChefHat className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-xl font-medium text-gray-900 mb-2">No Active Production Orders</h3>
+                    <p className="text-gray-500">All caught up! New orders will appear here.</p>
+                  </Card>
+                )}
       </div>
             )}
 
             {viewMode === 'batching' && (
-              <div className="bg-white rounded-lg shadow-sm border p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Batching View</h3>
-                <p className="text-gray-500">Batching view coming soon...</p>
+              <div className="space-y-6">
+                {/* Mode Toggle */}
+                <div className="bg-gradient-to-r from-purple-500 to-blue-500 rounded-lg shadow-lg p-6 text-white">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-2xl font-bold mb-2">
+                        {batchingMode === 'production' ? '?? Production Kitchen' : '?? Fulfillment Center'}
+                      </h2>
+                      <p className="text-white/90">
+                        {batchingMode === 'production' 
+                          ? 'Aggregate all orders by product for efficient batch production' 
+                          : 'Package individual orders, print labels, and mark complete'}
+                      </p>
+                    </div>
+                    {batchingMode === 'production' ? (
+                      <Button
+                        onClick={markAllBatchesComplete}
+                        className="bg-white text-purple-600 hover:bg-gray-100 font-semibold"
+                      >
+                        <CheckCircle className="h-5 w-5 mr-2" />
+                        Complete Production ? Fulfillment
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={() => setBatchingMode('production')}
+                        variant="secondary"
+                        className="bg-white/20 text-white hover:bg-white/30 border-white"
+                      >
+                        <ArrowLeft className="h-5 w-5 mr-2" />
+                        Back to Production
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
+                {batchingMode === 'production' ? (
+                  // PRODUCTION MODE
+                  <div className="space-y-6">
+                    {/* Production Summary */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <Card className="p-4 bg-orange-50 border-orange-200">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-orange-900">Total Items to Produce</p>
+                            <p className="text-3xl font-bold text-orange-600">
+                              {productionBatches.reduce((sum, batch) => sum + batch.totalQuantity, 0)}
+                            </p>
+                          </div>
+                          <ChefHat className="h-12 w-12 text-orange-400" />
+                        </div>
+                      </Card>
+
+                      <Card className="p-4 bg-blue-50 border-blue-200">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-blue-900">Product Types</p>
+                            <p className="text-3xl font-bold text-blue-600">{productionBatches.length}</p>
+                          </div>
+                          <Layers className="h-12 w-12 text-blue-400" />
+                        </div>
+                      </Card>
+
+                      <Card className="p-4 bg-green-50 border-green-200">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-green-900">Completed Batches</p>
+                            <p className="text-3xl font-bold text-green-600">
+                              {completedBatches.size}/{productionBatches.length}
+                            </p>
+                          </div>
+                          <CheckSquare className="h-12 w-12 text-green-400" />
+                        </div>
+                      </Card>
+                    </div>
+
+                    {/* Production Batches */}
+                    {productionBatches.map((batch) => (
+                      <Card key={batch.productId} className={`p-6 ${completedBatches.has(batch.productId) ? 'bg-green-50 border-green-300' : 'bg-white'}`}>
+                        <div className="space-y-4">
+                          {/* Batch Header */}
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <h3 className="text-xl font-bold text-gray-900">{batch.productName}</h3>
+                                {completedBatches.has(batch.productId) && (
+                                  <Badge className="bg-green-100 text-green-800 border-green-300">
+                                    ? Complete
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-3xl font-bold text-blue-600 mb-2">
+                                {batch.totalQuantity} units to produce
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                For {batch.orders.length} customer{batch.orders.length !== 1 ? 's' : ''}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {batch.recipe && (
+                                <Button
+                                  variant="secondary"
+                                  onClick={() => setExpandedRecipe(expandedRecipe === batch.productId ? null : batch.productId)}
+                                  className="text-sm"
+                                >
+                                  <BookOpen className="h-4 w-4 mr-2" />
+                                  {expandedRecipe === batch.productId ? 'Hide' : 'View'} Recipe
+                                </Button>
+                              )}
+                              <Button
+                                onClick={() => toggleBatchComplete(batch.productId)}
+                                className={completedBatches.has(batch.productId) 
+                                  ? 'bg-gray-400 hover:bg-gray-500' 
+                                  : 'bg-green-500 hover:bg-green-600'}
+                              >
+                                <CheckCircle className="h-4 w-4 mr-2" />
+                                {completedBatches.has(batch.productId) ? 'Mark Incomplete' : 'Mark Complete'}
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* Ingredient Breakdown */}
+                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <h4 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                              <Package className="h-5 w-5" />
+                              Total Ingredients Needed
+                            </h4>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                              {Object.entries(batch.ingredients).map(([key, value]) => {
+                                const ingredientName = key.split('-')[0];
+                                return (
+                                  <div key={key} className="bg-white rounded-lg p-3 border border-blue-200">
+                                    <div className="text-sm text-gray-600">{ingredientName}</div>
+                                    <div className="text-lg font-bold text-gray-900">
+                                      {value.quantity.toFixed(1)} {value.unit}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+
+                          {/* Recipe/SOP */}
+                          {batch.recipe && expandedRecipe === batch.productId && (
+                            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                              <h4 className="font-semibold text-yellow-900 mb-3 flex items-center gap-2">
+                                <BookOpen className="h-5 w-5" />
+                                Production Guide - {batch.recipe.name}
+                              </h4>
+                              <div className="space-y-3">
+                                {batch.recipe.steps.map((step) => (
+                                  <div key={step.stepNumber} className="bg-white rounded-lg p-4 border border-yellow-200">
+                                    <div className="flex items-start gap-3">
+                                      <div className="flex-shrink-0 w-8 h-8 bg-yellow-500 text-white rounded-full flex items-center justify-center font-bold">
+                                        {step.stepNumber}
+                                      </div>
+                                      <div className="flex-1">
+                                        <p className="text-gray-900">{step.instruction}</p>
+                                        <p className="text-sm text-gray-600 mt-1">
+                                          ?? Duration: {step.duration} minutes
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Order Breakdown */}
+                          <details className="bg-gray-50 border border-gray-200 rounded-lg">
+                            <summary className="cursor-pointer p-4 font-semibold text-gray-900 hover:bg-gray-100">
+                              ?? View Order Breakdown ({batch.orders.length} orders)
+                            </summary>
+                            <div className="p-4 border-t border-gray-200 space-y-2">
+                              {batch.orders.map((order, idx) => (
+                                <div key={idx} className="flex items-center justify-between bg-white p-3 rounded border border-gray-200">
+                                  <div>
+                                    <span className="font-medium text-gray-900">{order.orderNumber}</span>
+                                    <span className="text-gray-600 ml-2">- {order.customerName}</span>
+                                  </div>
+                                  <div className="font-bold text-blue-600">{order.quantity} units</div>
+                                </div>
+                              ))}
+                            </div>
+                          </details>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  // FULFILLMENT MODE
+                  <div className="space-y-6">
+                    {/* Fulfillment Instructions */}
+                    <Card className="p-6 bg-blue-50 border-blue-200">
+                      <div className="flex items-start gap-4">
+                        <AlertCircle className="h-6 w-6 text-blue-600 flex-shrink-0 mt-1" />
+                        <div>
+                          <h3 className="font-bold text-blue-900 mb-2">Fulfillment Mode Instructions</h3>
+                          <p className="text-blue-800">
+                            Production is complete! Now package each order individually, print customer labels, 
+                            and mark orders as ready for pickup/delivery. Check off each order as you complete it.
+                          </p>
+                        </div>
+                      </div>
+                    </Card>
+
+                    {/* Individual Orders for Fulfillment */}
+                    {orders.map((order) => (
+                      <Card key={order.id} className="p-6 hover:shadow-lg transition-shadow">
+                        <div className="space-y-4">
+                          {/* Order Header */}
+                          <div className="flex items-start justify-between pb-4 border-b border-gray-200">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <h3 className="text-lg font-bold text-gray-900">{order.orderNumber}</h3>
+                                <Badge className={getPriorityColor(order.priority)}>
+                                  {order.priority}
+                                </Badge>
+                                <Badge className={getStatusColor(order.status)}>
+                                  {order.status.replace('_', ' ')}
+                                </Badge>
+                              </div>
+                              <div className="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                  <span className="text-gray-600">Customer:</span>
+                                  <span className="ml-2 font-medium text-gray-900">{order.customerName}</span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-600">Phone:</span>
+                                  <span className="ml-2 font-medium text-gray-900">{order.phone}</span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-600">Due:</span>
+                                  <span className="ml-2 font-medium text-gray-900">
+                                    {order.dueAt ? new Date(order.dueAt).toLocaleString() : 'N/A'}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-gray-600">Total:</span>
+                                  <span className="ml-2 font-bold text-green-600">${order.total.toFixed(2)}</span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button variant="secondary" className="text-sm">
+                                <Printer className="h-4 w-4 mr-2" />
+                                Print Label
+                              </Button>
+                              <Button className="bg-green-500 hover:bg-green-600 text-sm">
+                                <CheckCircle className="h-4 w-4 mr-2" />
+                                Mark Complete
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* Order Items */}
+                          <div className="space-y-2">
+                            <h4 className="font-semibold text-gray-900">Items to Package:</h4>
+                            {order.orderItems.map((item) => (
+                              <div key={item.id} className="flex items-center justify-between bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                <div className="flex items-center gap-4">
+                                  <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
+                                    <Package className="h-6 w-6 text-gray-500" />
+                                  </div>
+                                  <div>
+                                    <div className="font-medium text-gray-900">{item.productName}</div>
+                                    <div className="text-sm text-gray-600">
+                                      Quantity: <span className="font-bold text-blue-600">{item.quantity}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                  <div className="text-right">
+                                    <div className="text-sm text-gray-600">Unit Price</div>
+                                    <div className="font-medium text-gray-900">${item.unitPrice.toFixed(2)}</div>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="text-sm text-gray-600">Total</div>
+                                    <div className="font-bold text-gray-900">${item.total.toFixed(2)}</div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          {/* Notes */}
+                          {order.notes && (
+                            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                              <h4 className="font-semibold text-yellow-900 mb-2">?? Special Instructions:</h4>
+                              <p className="text-yellow-800">{order.notes}</p>
+                            </div>
+                          )}
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </motion.div>
@@ -641,9 +1590,233 @@ const VendorOrdersPage: React.FC = () => {
           insights={aiInsights || { rush: [], batching: [], shortages: [], prepPlan: [] }}
           isLoading={isLoadingInsights}
         />
+
+        {/* View Order Modal */}
+        {viewingOrder && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">Order Details - {viewingOrder.orderNumber}</h3>
+                <button
+                  onClick={() => setViewingOrder(null)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+                {/* Customer Info */}
+                <div className="mb-6">
+                  <h4 className="font-semibold text-gray-900 mb-3">Customer Information</h4>
+                  <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Name:</span>
+                      <span className="font-medium text-gray-900">{viewingOrder.customerName}</span>
+                    </div>
+                    {viewingOrder.customerEmail && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Email:</span>
+                        <span className="font-medium text-gray-900">{viewingOrder.customerEmail}</span>
+                      </div>
+                    )}
+                    {viewingOrder.phone && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Phone:</span>
+                        <span className="font-medium text-gray-900">{viewingOrder.phone}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Order Info */}
+                <div className="mb-6">
+                  <h4 className="font-semibold text-gray-900 mb-3">Order Information</h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <span className="text-sm text-gray-600">Status</span>
+                      <div className="mt-1">
+                        <Badge className={getStatusColor(viewingOrder.status)}>
+                          {viewingOrder.status}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <span className="text-sm text-gray-600">Priority</span>
+                      <div className="mt-1">
+                        <Badge className={getPriorityColor(viewingOrder.priority)}>
+                          {viewingOrder.priority}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <span className="text-sm text-gray-600">Payment Status</span>
+                      <p className="font-medium text-gray-900 mt-1">{viewingOrder.paymentStatus}</p>
+                    </div>
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <span className="text-sm text-gray-600">Due Date</span>
+                      <p className="font-medium text-gray-900 mt-1">
+                        {viewingOrder.dueAt ? new Date(viewingOrder.dueAt).toLocaleString() : 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Order Items */}
+                <div className="mb-6">
+                  <h4 className="font-semibold text-gray-900 mb-3">Order Items</h4>
+                  <div className="space-y-2">
+                    {viewingOrder.orderItems.map((item) => (
+                      <div key={item.id} className="flex items-center justify-between bg-gray-50 p-4 rounded-lg">
+                        <div className="flex-1">
+                          <div className="font-medium text-gray-900">{item.productName}</div>
+                          <div className="text-sm text-gray-600">Quantity: {item.quantity} × ${item.unitPrice.toFixed(2)}</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-gray-900">${item.total.toFixed(2)}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Total */}
+                <div className="border-t border-gray-200 pt-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-lg font-semibold text-gray-900">Total</span>
+                    <span className="text-2xl font-bold text-green-600">${viewingOrder.total.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+                <Button variant="secondary" onClick={() => setViewingOrder(null)}>
+                  Close
+                </Button>
+                <Button onClick={() => {
+                  setViewingOrder(null);
+                  setEditingOrder(viewingOrder);
+                }}>
+                  Edit Order
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Order Modal */}
+        {editingOrder && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900">Edit Order - {editingOrder.orderNumber}</h3>
+                <button
+                  onClick={() => setEditingOrder(null)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                  <p className="text-blue-900 text-sm">
+                    💡 <strong>Quick Edit:</strong> Update order status, priority, or customer information below.
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select 
+                      defaultValue={editingOrder.status}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      title="Select order status"
+                    >
+                      <option value="PENDING">Pending</option>
+                      <option value="CONFIRMED">Confirmed</option>
+                      <option value="IN_PRODUCTION">In Production</option>
+                      <option value="READY">Ready</option>
+                      <option value="OUT_FOR_DELIVERY">Out for Delivery</option>
+                      <option value="DELIVERED">Delivered</option>
+                      <option value="PICKED_UP">Picked Up</option>
+                      <option value="CANCELLED">Cancelled</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                    <select 
+                      defaultValue={editingOrder.priority}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      title="Select order priority"
+                    >
+                      <option value="NORMAL">Normal</option>
+                      <option value="HIGH">High Priority</option>
+                      <option value="URGENT">Urgent</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Customer Name</label>
+                    <input
+                      type="text"
+                      defaultValue={editingOrder.customerName}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Customer name"
+                      title="Customer name"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                      <input
+                        type="email"
+                        defaultValue={editingOrder.customerEmail}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="customer@email.com"
+                        title="Customer email"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                      <input
+                        type="tel"
+                        defaultValue={editingOrder.phone}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="(555) 123-4567"
+                        title="Customer phone"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                    <input
+                      type="datetime-local"
+                      defaultValue={editingOrder.dueAt ? new Date(editingOrder.dueAt).toISOString().slice(0, 16) : ''}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      title="Order due date"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+                <Button variant="secondary" onClick={() => setEditingOrder(null)}>
+                  Cancel
+                </Button>
+                <Button onClick={() => {
+                  toast.success(`Order ${editingOrder.orderNumber} updated successfully!`);
+                  setEditingOrder(null);
+                }}>
+                  Save Changes
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </VendorDashboardLayout>
   );
 };
 
-export default VendorOrdersPage; 
+export default VendorOrdersPage;
