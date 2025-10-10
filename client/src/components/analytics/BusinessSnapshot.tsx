@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 import {
   DollarSign,
   TrendingUp,
@@ -358,9 +361,81 @@ Customer Growth: ${snapshotData.customers.newCount} new customers`;
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
       } else if (format === 'pdf') {
-        alert('PDF export requires jsPDF library. Please run: npm install jspdf jspdf-autotable');
+        // Create PDF
+        const doc = new jsPDF();
+        
+        // Add title
+        doc.setFontSize(18);
+        doc.text('Business Snapshot Report', 14, 20);
+        doc.setFontSize(11);
+        doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 28);
+        doc.text(`Date Range: ${dateFrom} to ${dateTo}`, 14, 34);
+        
+        // Sales Metrics Table
+        autoTable(doc, {
+          startY: 45,
+          head: [['Sales Metrics', 'Value']],
+          body: [
+            ['Net Sales', `$${snapshotData.sales.netSales.toLocaleString()}`],
+            ['Orders', snapshotData.sales.ordersCount.toLocaleString()],
+            ['Average Order Value', `$${snapshotData.sales.aov.toFixed(2)}`],
+            ['Refund Rate', `${((snapshotData.sales.refundsCount / snapshotData.sales.ordersCount) * 100).toFixed(1)}%`],
+            ['Discounts', `$${snapshotData.sales.discountsValue.toLocaleString()}`],
+            ['Est. Net Payout', `$${snapshotData.sales.estNetPayout.toLocaleString()}`],
+            ['Open Disputes', snapshotData.sales.disputesOpen.toString()]
+          ],
+          theme: 'grid',
+          headStyles: { fillColor: [91, 110, 2] }
+        });
+        
+        // Customer Metrics Table
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        autoTable(doc, {
+          startY: (doc as any).lastAutoTable.finalY + 10,
+          head: [['Customer Metrics', 'Value']],
+          body: [
+            ['New Customers', snapshotData.customers.newCount.toString()],
+            ['Returning Customers', snapshotData.customers.returningCount.toString()],
+            ['Repeat Rate', `${snapshotData.customers.repeatRate.toFixed(1)}%`],
+            ['Predicted Churn', `${snapshotData.customers.predictedChurnPct.toFixed(1)}%`]
+          ],
+          theme: 'grid',
+          headStyles: { fillColor: [91, 110, 2] }
+        });
+        
+        // Save PDF
+        doc.save(`business-snapshot-report-${dateFrom}-to-${dateTo}.pdf`);
       } else if (format === 'excel') {
-        alert('Excel export requires xlsx library. Please run: npm install xlsx');
+        // Create Excel workbook
+        const wb = XLSX.utils.book_new();
+        
+        // Sales Metrics Sheet
+        const salesData = [
+          ['Business Snapshot Report'],
+          [`Generated: ${new Date().toLocaleDateString()}`],
+          [`Date Range: ${dateFrom} to ${dateTo}`],
+          [],
+          ['Sales Metrics', 'Value'],
+          ['Net Sales', `$${snapshotData.sales.netSales.toLocaleString()}`],
+          ['Orders', snapshotData.sales.ordersCount.toLocaleString()],
+          ['Average Order Value', `$${snapshotData.sales.aov.toFixed(2)}`],
+          ['Refund Rate', `${((snapshotData.sales.refundsCount / snapshotData.sales.ordersCount) * 100).toFixed(1)}%`],
+          ['Discounts', `$${snapshotData.sales.discountsValue.toLocaleString()}`],
+          ['Est. Net Payout', `$${snapshotData.sales.estNetPayout.toLocaleString()}`],
+          ['Open Disputes', snapshotData.sales.disputesOpen.toString()],
+          [],
+          ['Customer Metrics', 'Value'],
+          ['New Customers', snapshotData.customers.newCount.toString()],
+          ['Returning Customers', snapshotData.customers.returningCount.toString()],
+          ['Repeat Rate', `${snapshotData.customers.repeatRate.toFixed(1)}%`],
+          ['Predicted Churn', `${snapshotData.customers.predictedChurnPct.toFixed(1)}%`]
+        ];
+        
+        const ws = XLSX.utils.aoa_to_sheet(salesData);
+        XLSX.utils.book_append_sheet(wb, ws, 'Business Snapshot');
+        
+        // Save Excel file
+        XLSX.writeFile(wb, `business-snapshot-report-${dateFrom}-to-${dateTo}.xlsx`);
       }
       
       console.log(`Export all (${format}) completed successfully`);
@@ -414,9 +489,56 @@ Highest Revenue: $${snapshotData.products.top[0]?.revenue.toLocaleString() || '0
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
       } else if (format === 'pdf') {
-        alert('PDF export requires jsPDF library. Please run: npm install jspdf jspdf-autotable');
+        // Create PDF
+        const doc = new jsPDF();
+        
+        // Add title
+        doc.setFontSize(18);
+        doc.text('Top Products Report', 14, 20);
+        doc.setFontSize(11);
+        doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 28);
+        doc.text(`Date Range: ${dateFrom} to ${dateTo}`, 14, 34);
+        
+        // Products Table
+        autoTable(doc, {
+          startY: 45,
+          head: [['Product Name', 'Units Sold', 'Revenue', 'Refund Rate']],
+          body: snapshotData.products.top.map(product => [
+            product.name,
+            product.units.toString(),
+            `$${product.revenue.toLocaleString()}`,
+            `${product.refundRatePct.toFixed(1)}%`
+          ]),
+          theme: 'grid',
+          headStyles: { fillColor: [91, 110, 2] }
+        });
+        
+        // Save PDF
+        doc.save(`products-report-${dateFrom}-to-${dateTo}.pdf`);
       } else if (format === 'excel') {
-        alert('Excel export requires xlsx library. Please run: npm install xlsx');
+        // Create Excel workbook
+        const wb = XLSX.utils.book_new();
+        
+        // Products data
+        const productsData = [
+          ['Top Products Report'],
+          [`Generated: ${new Date().toLocaleDateString()}`],
+          [`Date Range: ${dateFrom} to ${dateTo}`],
+          [],
+          ['Product Name', 'Units Sold', 'Revenue', 'Refund Rate'],
+          ...snapshotData.products.top.map(product => [
+            product.name,
+            product.units,
+            `$${product.revenue.toLocaleString()}`,
+            `${product.refundRatePct.toFixed(1)}%`
+          ])
+        ];
+        
+        const ws = XLSX.utils.aoa_to_sheet(productsData);
+        XLSX.utils.book_append_sheet(wb, ws, 'Products');
+        
+        // Save Excel file
+        XLSX.writeFile(wb, `products-report-${dateFrom}-to-${dateTo}.xlsx`);
       }
       
       console.log(`Export products (${format}) completed successfully`);
@@ -470,11 +592,54 @@ Highest Sales: $${snapshotData.salesChannels[0]?.sales.toLocaleString() || '0'}`
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
       } else if (format === 'pdf') {
-        // Create PDF using jsPDF (will be implemented when library is available)
-        alert('PDF export requires jsPDF library. Please run: npm install jspdf jspdf-autotable');
+        // Create PDF
+        const doc = new jsPDF();
+        
+        // Add title
+        doc.setFontSize(18);
+        doc.text('Sales Windows Report', 14, 20);
+        doc.setFontSize(11);
+        doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 28);
+        doc.text(`Date Range: ${dateFrom} to ${dateTo}`, 14, 34);
+        
+        // Sales Channels Table
+        autoTable(doc, {
+          startY: 45,
+          head: [['Sales Window', 'Sales Amount', 'Market Share']],
+          body: snapshotData.salesChannels.map(channel => [
+            channel.channel,
+            `$${channel.sales.toLocaleString()}`,
+            `${channel.sharePct.toFixed(1)}%`
+          ]),
+          theme: 'grid',
+          headStyles: { fillColor: [91, 110, 2] }
+        });
+        
+        // Save PDF
+        doc.save(`sales-windows-report-${dateFrom}-to-${dateTo}.pdf`);
       } else if (format === 'excel') {
-        // Create Excel using xlsx (will be implemented when library is available)
-        alert('Excel export requires xlsx library. Please run: npm install xlsx');
+        // Create Excel workbook
+        const wb = XLSX.utils.book_new();
+        
+        // Sales Channels data
+        const channelsData = [
+          ['Sales Windows Report'],
+          [`Generated: ${new Date().toLocaleDateString()}`],
+          [`Date Range: ${dateFrom} to ${dateTo}`],
+          [],
+          ['Sales Window', 'Sales Amount', 'Market Share'],
+          ...snapshotData.salesChannels.map(channel => [
+            channel.channel,
+            `$${channel.sales.toLocaleString()}`,
+            `${channel.sharePct.toFixed(1)}%`
+          ])
+        ];
+        
+        const ws = XLSX.utils.aoa_to_sheet(channelsData);
+        XLSX.utils.book_append_sheet(wb, ws, 'Sales Windows');
+        
+        // Save Excel file
+        XLSX.writeFile(wb, `sales-windows-report-${dateFrom}-to-${dateTo}.xlsx`);
       }
       
       console.log(`Export sales channels (${format}) completed successfully`);
@@ -533,9 +698,71 @@ Overall Conversion: ${snapshotData.funnel.stages.length > 0 ? ((snapshotData.fun
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
       } else if (format === 'pdf') {
-        alert('PDF export requires jsPDF library. Please run: npm install jspdf jspdf-autotable');
+        // Create PDF
+        const doc = new jsPDF();
+        
+        // Add title
+        doc.setFontSize(18);
+        doc.text('Sales & Checkout Funnel Report', 14, 20);
+        doc.setFontSize(11);
+        doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 28);
+        doc.text(`Date Range: ${dateFrom} to ${dateTo}`, 14, 34);
+        
+        // Funnel Stages Table
+        autoTable(doc, {
+          startY: 45,
+          head: [['Stage', 'Count', 'Conversion Rate']],
+          body: snapshotData.funnel.stages.map((stage, index) => {
+            const prevStage = snapshotData.funnel.stages[index - 1];
+            const conversionRate = prevStage ? ((stage.count / prevStage.count) * 100).toFixed(1) : '100.0';
+            return [stage.name, stage.count.toString(), `${conversionRate}%`];
+          }),
+          theme: 'grid',
+          headStyles: { fillColor: [91, 110, 2] }
+        });
+        
+        // Abandonment Metrics Table
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        autoTable(doc, {
+          startY: (doc as any).lastAutoTable.finalY + 10,
+          head: [['Metric', 'Rate']],
+          body: [
+            ['Cart Abandonment Rate', `${snapshotData.funnel.abandonment.cartRate.toFixed(1)}%`],
+            ['Checkout Abandonment Rate', `${snapshotData.funnel.abandonment.checkoutRate.toFixed(1)}%`]
+          ],
+          theme: 'grid',
+          headStyles: { fillColor: [91, 110, 2] }
+        });
+        
+        // Save PDF
+        doc.save(`funnel-report-${dateFrom}-to-${dateTo}.pdf`);
       } else if (format === 'excel') {
-        alert('Excel export requires xlsx library. Please run: npm install xlsx');
+        // Create Excel workbook
+        const wb = XLSX.utils.book_new();
+        
+        // Funnel data
+        const funnelData = [
+          ['Sales & Checkout Funnel Report'],
+          [`Generated: ${new Date().toLocaleDateString()}`],
+          [`Date Range: ${dateFrom} to ${dateTo}`],
+          [],
+          ['Stage', 'Count', 'Conversion Rate'],
+          ...snapshotData.funnel.stages.map((stage, index) => {
+            const prevStage = snapshotData.funnel.stages[index - 1];
+            const conversionRate = prevStage ? ((stage.count / prevStage.count) * 100).toFixed(1) : '100.0';
+            return [stage.name, stage.count, `${conversionRate}%`];
+          }),
+          [],
+          ['Abandonment Metrics', 'Rate'],
+          ['Cart Abandonment Rate', `${snapshotData.funnel.abandonment.cartRate.toFixed(1)}%`],
+          ['Checkout Abandonment Rate', `${snapshotData.funnel.abandonment.checkoutRate.toFixed(1)}%`]
+        ];
+        
+        const ws = XLSX.utils.aoa_to_sheet(funnelData);
+        XLSX.utils.book_append_sheet(wb, ws, 'Funnel');
+        
+        // Save Excel file
+        XLSX.writeFile(wb, `funnel-report-${dateFrom}-to-${dateTo}.xlsx`);
       }
       
       console.log(`Export funnel (${format}) completed successfully`);
@@ -956,6 +1183,9 @@ const KPICards: React.FC<{
           <BarChart3 className="w-5 h-5" />
           Key Performance Indicators
         </h3>
+        <p className="text-sm text-gray-600 mt-2">
+          Select any metric card below to visualize its performance trends in the interactive chart
+        </p>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {cards.map((card, index) => (

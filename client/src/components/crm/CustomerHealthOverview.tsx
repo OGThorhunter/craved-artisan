@@ -12,30 +12,7 @@ import {
   Activity,
   UserX
 } from 'lucide-react';
-
-interface Customer {
-  id: string;
-  email: string;
-  phone?: string;
-  website?: string;
-  firstName: string;
-  lastName: string;
-  company?: string;
-  status: 'lead' | 'prospect' | 'customer' | 'vip' | 'inactive';
-  source: string;
-  tags: string[];
-  totalOrders: number;
-  totalSpent: number;
-  lifetimeValue: number;
-  lastContactAt?: string;
-  createdAt: string;
-  assignedTo?: string;
-  leadScore: number;
-  isVip: boolean;
-  isBlocked?: boolean;
-  blockedReason?: string;
-  blockedAt?: string;
-}
+import { Customer } from '@/types/customer';
 
 interface Opportunity {
   id: string;
@@ -100,7 +77,7 @@ const CustomerHealthOverview: React.FC<CustomerHealthOverviewProps> = ({
     // Lead Metrics
     const totalLeads = customers.filter(c => c.status === 'lead').length;
     const qualifiedLeads = customers.filter(c => c.status === 'prospect').length;
-    const avgLeadScore = customers.filter(c => c.status === 'lead').reduce((sum, c) => sum + c.leadScore, 0) / Math.max(totalLeads, 1);
+    // Lead score removed - no longer tracked for customers
 
     // Pipeline Metrics
     const totalPipelineValue = opportunities
@@ -140,7 +117,7 @@ const CustomerHealthOverview: React.FC<CustomerHealthOverviewProps> = ({
       leads: {
         total: totalLeads,
         qualified: qualifiedLeads,
-        avgScore: avgLeadScore
+        avgScore: 0 // Lead score removed
       },
       pipeline: {
         value: totalPipelineValue,

@@ -14,7 +14,7 @@ interface BulkItem {
   savingsPercentage: number;
 }
 
-const BulkingCalculator: React.FC = () => {
+const JobCostEstimator: React.FC = () => {
   const [items, setItems] = useState<BulkItem[]>([]);
   const [newItem, setNewItem] = useState({
     name: '',
@@ -68,7 +68,7 @@ const BulkingCalculator: React.FC = () => {
         <div>
           <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <Calculator className="h-6 w-6 text-blue-600" />
-            Bulking Calculator
+            Job Cost Estimator
           </h2>
           <p className="text-gray-600 mt-1">
             Calculate savings from bulk purchases and optimize your inventory costs
@@ -264,7 +264,20 @@ const BulkingCalculator: React.FC = () => {
   );
 };
 
-export default BulkingCalculator;
+export default JobCostEstimator;
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

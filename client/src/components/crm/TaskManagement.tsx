@@ -20,6 +20,7 @@ import {
   Calendar as CalendarIcon
 } from 'lucide-react';
 import AIInsights from './AIInsights';
+import { Badge } from '../ui/Badge';
 
 interface Task {
   id: string;
@@ -252,7 +253,17 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
                         task.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                         task.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = !statusFilter || task.status === statusFilter;
-    const matchesPriority = !priorityFilter || task.priority === priorityFilter;
+    
+    // Handle special priority filters
+    let matchesPriority = true;
+    if (priorityFilter === 'overdue') {
+      matchesPriority = isOverdue(task.dueDate) && task.status !== 'completed' && task.status !== 'cancelled';
+    } else if (priorityFilter === 'dueSoon') {
+      matchesPriority = isDueSoon(task.dueDate) && task.status !== 'completed' && task.status !== 'cancelled';
+    } else if (priorityFilter) {
+      matchesPriority = task.priority === priorityFilter;
+    }
+    
     const matchesAssignee = !assigneeFilter || task.assignedTo === assigneeFilter;
     
     return matchesSearch && matchesStatus && matchesPriority && matchesAssignee;
@@ -517,9 +528,19 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
         }}
       />
 
-      {/* Task Statistics */}
+      {/* Task Statistics - Clickable to Filter */}
       <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-        <div className="rounded-lg shadow-lg p-4 hover:shadow-xl transition-shadow duration-200" style={{ backgroundColor: '#F7F2EC' }}>
+        <button
+          onClick={() => {
+            setStatusFilter('');
+            setPriorityFilter('');
+          }}
+          className={`rounded-lg shadow-lg p-4 hover:shadow-xl transition-all duration-200 text-left ${
+            statusFilter === '' && priorityFilter === '' ? 'ring-2 ring-blue-500' : ''
+          }`}
+          style={{ backgroundColor: '#F7F2EC' }}
+          title="Show all tasks"
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Tasks</p>
@@ -529,9 +550,23 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
               <FileText className="h-6 w-6 text-blue-600" />
             </div>
           </div>
-        </div>
+        </button>
 
-        <div className="rounded-lg shadow-lg p-4 hover:shadow-xl transition-shadow duration-200" style={{ backgroundColor: '#F7F2EC' }}>
+        <button
+          onClick={() => {
+            if (statusFilter === 'pending') {
+              setStatusFilter('');
+            } else {
+              setStatusFilter('pending');
+              setPriorityFilter('');
+            }
+          }}
+          className={`rounded-lg shadow-lg p-4 hover:shadow-xl transition-all duration-200 text-left ${
+            statusFilter === 'pending' && priorityFilter !== 'overdue' ? 'ring-2 ring-yellow-500' : ''
+          }`}
+          style={{ backgroundColor: '#F7F2EC' }}
+          title="Filter by pending tasks"
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Pending</p>
@@ -541,9 +576,23 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
               <AlertCircle className="h-6 w-6 text-yellow-600" />
             </div>
           </div>
-        </div>
+        </button>
 
-        <div className="rounded-lg shadow-lg p-4 hover:shadow-xl transition-shadow duration-200" style={{ backgroundColor: '#F7F2EC' }}>
+        <button
+          onClick={() => {
+            if (statusFilter === 'in_progress') {
+              setStatusFilter('');
+            } else {
+              setStatusFilter('in_progress');
+              setPriorityFilter('');
+            }
+          }}
+          className={`rounded-lg shadow-lg p-4 hover:shadow-xl transition-all duration-200 text-left ${
+            statusFilter === 'in_progress' ? 'ring-2 ring-blue-500' : ''
+          }`}
+          style={{ backgroundColor: '#F7F2EC' }}
+          title="Filter by in progress tasks"
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">In Progress</p>
@@ -553,9 +602,23 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
               <Clock className="h-6 w-6 text-blue-600" />
             </div>
           </div>
-        </div>
+        </button>
 
-        <div className="rounded-lg shadow-lg p-4 hover:shadow-xl transition-shadow duration-200" style={{ backgroundColor: '#F7F2EC' }}>
+        <button
+          onClick={() => {
+            if (statusFilter === 'completed') {
+              setStatusFilter('');
+            } else {
+              setStatusFilter('completed');
+              setPriorityFilter('');
+            }
+          }}
+          className={`rounded-lg shadow-lg p-4 hover:shadow-xl transition-all duration-200 text-left ${
+            statusFilter === 'completed' ? 'ring-2 ring-green-500' : ''
+          }`}
+          style={{ backgroundColor: '#F7F2EC' }}
+          title="Filter by completed tasks"
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Completed</p>
@@ -565,9 +628,25 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
               <CheckCircle className="h-6 w-6 text-green-600" />
             </div>
           </div>
-        </div>
+        </button>
 
-        <div className="rounded-lg shadow-lg p-4 hover:shadow-xl transition-shadow duration-200" style={{ backgroundColor: '#F7F2EC' }}>
+        <button
+          onClick={() => {
+            // Show overdue tasks - filter by pending/in_progress and check due date
+            if (statusFilter === 'pending' && priorityFilter === 'overdue') {
+              setStatusFilter('');
+              setPriorityFilter('');
+            } else {
+              setStatusFilter('pending');
+              setPriorityFilter('overdue');
+            }
+          }}
+          className={`rounded-lg shadow-lg p-4 hover:shadow-xl transition-all duration-200 text-left ${
+            priorityFilter === 'overdue' ? 'ring-2 ring-red-500' : ''
+          }`}
+          style={{ backgroundColor: '#F7F2EC' }}
+          title="Filter by overdue tasks"
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Overdue</p>
@@ -577,9 +656,25 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
               <AlertCircle className="h-6 w-6 text-red-600" />
             </div>
           </div>
-        </div>
+        </button>
 
-        <div className="rounded-lg shadow-lg p-4 hover:shadow-xl transition-shadow duration-200" style={{ backgroundColor: '#F7F2EC' }}>
+        <button
+          onClick={() => {
+            // Show due soon tasks
+            if (priorityFilter === 'dueSoon') {
+              setPriorityFilter('');
+              setStatusFilter('');
+            } else {
+              setPriorityFilter('dueSoon');
+              setStatusFilter('');
+            }
+          }}
+          className={`rounded-lg shadow-lg p-4 hover:shadow-xl transition-all duration-200 text-left ${
+            priorityFilter === 'dueSoon' ? 'ring-2 ring-orange-500' : ''
+          }`}
+          style={{ backgroundColor: '#F7F2EC' }}
+          title="Filter by due soon tasks"
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Due Soon</p>
@@ -589,8 +684,40 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
               <Bell className="h-6 w-6 text-orange-600" />
             </div>
           </div>
-        </div>
+        </button>
       </div>
+
+      {/* Active Filter Indicator */}
+      {(statusFilter || priorityFilter) && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-blue-900">Active Filter:</span>
+            <Badge className="bg-blue-600 text-white">
+              {statusFilter === 'pending' && 'Pending Tasks'}
+              {statusFilter === 'in_progress' && 'In Progress Tasks'}
+              {statusFilter === 'completed' && 'Completed Tasks'}
+              {statusFilter === 'cancelled' && 'Cancelled Tasks'}
+              {statusFilter === 'on_hold' && 'On Hold Tasks'}
+              {priorityFilter === 'overdue' && 'Overdue Tasks'}
+              {priorityFilter === 'dueSoon' && 'Due Soon Tasks'}
+              {priorityFilter && !['overdue', 'dueSoon'].includes(priorityFilter) && `${priorityFilter} Priority`}
+            </Badge>
+            <span className="text-sm text-blue-800">
+              Showing {filteredTasks.length} of {tasks.length} tasks
+            </span>
+          </div>
+          <button
+            onClick={() => {
+              setStatusFilter('');
+              setPriorityFilter('');
+            }}
+            className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+          >
+            <X className="h-4 w-4" />
+            Clear Filter
+          </button>
+        </div>
+      )}
 
       {/* Task List View */}
       {activeView === 'list' && (

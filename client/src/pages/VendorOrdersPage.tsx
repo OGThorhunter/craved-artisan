@@ -29,6 +29,7 @@ import { toast } from 'react-hot-toast';
 import SystemMessagesDrawer from '../components/inventory/SystemMessagesDrawer';
 import AIInsightsDrawer from '../components/inventory/AIInsightsDrawer';
 import SimpleLabelPrintModal from '../components/labels/SimpleLabelPrintModal';
+import AddOrderWizard from '../components/orders/AddOrderWizard';
 
 // Types
 interface Order {
@@ -349,6 +350,7 @@ const VendorOrdersPage: React.FC = () => {
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
   const [showLabelModal, setShowLabelModal] = useState(false);
   const [selectedOrderForLabel, setSelectedOrderForLabel] = useState<Order | null>(null);
+  const [showAddOrderWizard, setShowAddOrderWizard] = useState(false);
 
   // Use mock data for now
   const orders = mockOrders;
@@ -531,7 +533,10 @@ const VendorOrdersPage: React.FC = () => {
                   AI Insights
                 </Button>
                 
-                <Button className="text-xs px-2 py-1">
+                <Button 
+                  onClick={() => setShowAddOrderWizard(true)}
+                  className="text-xs px-2 py-1"
+                >
                   <Plus className="h-4 w-4" />
                   New Order
                 </Button>
@@ -1508,6 +1513,18 @@ const VendorOrdersPage: React.FC = () => {
             orders={[selectedOrderForLabel as any]} // Type mismatch between Order types
           />
         )}
+
+        {/* Add Order Wizard */}
+        <AddOrderWizard
+          isOpen={showAddOrderWizard}
+          onClose={() => setShowAddOrderWizard(false)}
+          onComplete={(orderData) => {
+            console.log('New order created:', orderData);
+            // In production, this would make an API call to create the order
+            toast.success(`Order created for ${orderData.customerName}!`);
+            setShowAddOrderWizard(false);
+          }}
+        />
       </div>
     </VendorDashboardLayout>
   );

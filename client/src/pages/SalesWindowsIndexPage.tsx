@@ -4,10 +4,8 @@ import MotivationalQuote from '../components/dashboard/MotivationalQuote';
 import VendorDashboardLayout from '../layouts/VendorDashboardLayout';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
-import { Plus, Search, Calendar, MapPin, Package, TrendingUp, Clock, ExternalLink, QrCode, Copy, Edit2 } from 'lucide-react';
+import { Search, Calendar, MapPin, Package, TrendingUp, Clock, ExternalLink, QrCode, Copy, Edit2 } from 'lucide-react';
 import { Link } from 'wouter';
-import CreateEditSalesWindowDrawer from '../components/sales-windows/CreateEditSalesWindowDrawer';
-import toast from 'react-hot-toast';
 
 // Mock data for demonstration
 const mockSalesWindows = [
@@ -163,82 +161,13 @@ interface SalesWindow {
 const SalesWindowsIndexPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'all' | 'open' | 'upcoming' | 'drafts' | 'closed' | 'always-on'>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [editingWindow, setEditingWindow] = useState<SalesWindow | undefined>(undefined);
-  const [salesWindows, setSalesWindows] = useState<SalesWindow[]>(mockSalesWindows);
+  const [salesWindows] = useState<SalesWindow[]>(mockSalesWindows);
 
   // Using mock data for now
   const windows: SalesWindow[] = salesWindows;
   const isLoading = false;
 
   // Handler functions
-  const handleCreateSale = () => {
-    setEditingWindow(undefined);
-    setIsDrawerOpen(true);
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleSaveWindow = (windowData: any) => {
-    if (editingWindow) {
-      // Update existing window
-      const updatedWindows = salesWindows.map(w => 
-        w.id === editingWindow.id ? { ...w, ...windowData, id: editingWindow.id } as SalesWindow : w
-      );
-      setSalesWindows(updatedWindows);
-      toast.success(`Updated window: ${windowData.name}`);
-    } else {
-      // Create new window - convert from new format to old format
-      const newWindow: SalesWindow = {
-        id: `sw-${Date.now()}`,
-        vendorId: 'vendor-user-id',
-        type: windowData.channels?.[0]?.type === 'MEETUP_PICKUP' ? 'PARK_PICKUP' : 
-              windowData.channels?.[0]?.type === 'DELIVERY' ? 'DELIVERY' : 'MARKET',
-        name: windowData.name || 'Untitled Window',
-        description: windowData.description || null,
-        status: windowData.status || 'DRAFT',
-        location_name: null,
-        address_text: null,
-        static_map_mode: 'NONE',
-        static_map_image_url: null,
-        static_map_tile_url_template: null,
-        vendor_vehicle_image_url: null,
-        vendor_vehicle_plate: null,
-        epicenter_address: null,
-        radius_miles: null,
-        delivery_fee_mode: null,
-        preorder_open_at: windowData.startDate ? new Date(windowData.startDate) : null,
-        preorder_close_at: windowData.endDate ? new Date(windowData.endDate) : null,
-        fulfill_start_at: windowData.startDate ? new Date(windowData.startDate) : null,
-        fulfill_end_at: windowData.endDate ? new Date(windowData.endDate) : null,
-        is_always_on: windowData.isEvergreen || false,
-        scheduling_mode: null,
-        max_items_total: windowData.settings?.capacity || null,
-        auto_close_when_full: windowData.settings?.autoCloseWhenSoldOut || false,
-        porch_instructions: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        products: [],
-        metrics: { 
-          id: `m-${Date.now()}`, 
-          salesWindowId: `sw-${Date.now()}`, 
-          orders_count: 0, 
-          items_count: 0, 
-          gross: 0, 
-          refunds: 0, 
-          net: 0 
-        },
-      };
-      setSalesWindows(prev => [newWindow, ...prev]);
-      toast.success(`Created window: ${windowData.name}`);
-    }
-    setIsDrawerOpen(false);
-    setEditingWindow(undefined);
-  };
-
-  const handleCloseDrawer = () => {
-    setIsDrawerOpen(false);
-    setEditingWindow(undefined);
-  };
 
   const handleDuplicate = (window: SalesWindow) => {
     // TODO: Implement duplicate functionality
@@ -390,13 +319,6 @@ const SalesWindowsIndexPage: React.FC = () => {
               />
             </div>
           </div>
-          <Button 
-            className="bg-[#7F232E] hover:bg-[#7F232E]/90 text-white"
-            onClick={handleCreateSale}
-          >
-            <Plus className="h-5 w-5 mr-2" />
-            Create Sale
-          </Button>
         </div>
 
         {/* Tabs */}
@@ -447,13 +369,6 @@ const SalesWindowsIndexPage: React.FC = () => {
               <p className="text-gray-600 mb-6">
                 Create your first sales window to start selling
               </p>
-              <Button 
-                className="bg-[#7F232E] hover:bg-[#7F232E]/90 text-white"
-                onClick={handleCreateSale}
-              >
-                <Plus className="h-5 w-5 mr-2" />
-                Create Sale
-              </Button>
             </div>
           </Card>
         ) : (
@@ -599,13 +514,6 @@ const SalesWindowsIndexPage: React.FC = () => {
         )}
       </div>
 
-      {/* Create/Edit Sales Window Drawer */}
-      <CreateEditSalesWindowDrawer
-        isOpen={isDrawerOpen}
-        onClose={handleCloseDrawer}
-        window={undefined}
-        onSave={handleSaveWindow}
-      />
     </VendorDashboardLayout>
   );
 };

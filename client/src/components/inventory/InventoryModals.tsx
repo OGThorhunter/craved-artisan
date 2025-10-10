@@ -182,11 +182,11 @@ const InventoryModals: React.FC<InventoryModalsProps> = ({
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Unit Price</label>
-                  <p className="text-gray-900">${viewingItem.unitPrice.toFixed(2)}/{viewingItem.unit}</p>
+                  <p className="text-gray-900">${(viewingItem.unitPrice || 0).toFixed(2)}/{viewingItem.unit}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Total Value</label>
-                  <p className="text-gray-900">${viewingItem.totalValue.toFixed(2)}</p>
+                  <p className="text-gray-900">${(viewingItem.totalValue || 0).toFixed(2)}</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Supplier</label>

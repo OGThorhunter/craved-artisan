@@ -1,4 +1,4 @@
-// Unit conversion utilities for the bulking calculator
+// Unit conversion utilities for the job cost estimator
 
 export interface ConversionResult {
   qty: number;

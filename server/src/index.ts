@@ -27,6 +27,7 @@ import inventoryInsightsRouter from './routes/inventory-insights.router';
 import inventoryReceiptParserRouter from './routes/inventory-receipt-parser.router';
 import inventoryShortfallRouter from './routes/inventory-shortfall.router';
 import inventoryExportRouter from './routes/inventory-export.router';
+import inventoryItemsRouter from './routes/inventory-items.router';
 import systemMessagesRouter from './routes/system-messages.router';
 // AI Routes
 import aiReceiptRouter from './routes/ai-receipt.router';
@@ -154,6 +155,7 @@ app.use('/api/vendor/inventory', inventoryInsightsRouter);
 app.use('/api/vendor/inventory', inventoryReceiptParserRouter);
 app.use('/api/vendor/inventory', inventoryShortfallRouter);
 app.use('/api/vendor/inventory', inventoryExportRouter);
+app.use('/api/inventory', inventoryItemsRouter);
 
 // System Messages routes
 app.use('/api/vendor/system-messages', systemMessagesRouter);

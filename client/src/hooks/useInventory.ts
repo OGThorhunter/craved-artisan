@@ -20,6 +20,10 @@ export interface InventoryItem {
   isExpired?: boolean;
   createdAt: string;
   updatedAt: string;
+  // Additional fields for cost calculation
+  avg_cost?: number;
+  last_cost?: number;
+  current_qty?: number;
 }
 
 export interface CreateInventoryItemData {
@@ -117,6 +121,158 @@ const mockInventoryData: InventoryItem[] = [
     isExpired: true,
     createdAt: '2023-12-01T08:00:00Z',
     updatedAt: '2023-12-01T08:00:00Z'
+  },
+  {
+    id: '5',
+    name: 'All-Purpose Flour',
+    description: 'High-quality all-purpose flour for baking',
+    category: 'food_grade',
+    currentStock: 5,
+    reorderPoint: 20,
+    unit: 'kg',
+    unitPrice: 2.50,
+    totalValue: 12.50,
+    supplier: 'ABC Suppliers',
+    batch: 'APF-2024-005',
+    expiryDate: '2024-12-31',
+    tags: ['flour', 'baking', 'all-purpose'],
+    location: 'Storage Room A',
+    isExpired: false,
+    createdAt: '2024-01-15T10:00:00Z',
+    updatedAt: '2024-01-15T10:00:00Z'
+  },
+  {
+    id: '6',
+    name: 'Granulated Sugar',
+    description: 'Fine granulated white sugar',
+    category: 'food_grade',
+    currentStock: 3,
+    reorderPoint: 15,
+    unit: 'kg',
+    unitPrice: 1.80,
+    totalValue: 5.40,
+    supplier: 'ABC Suppliers',
+    batch: 'GS-2024-006',
+    expiryDate: '2025-06-30',
+    tags: ['sugar', 'granulated', 'sweetener'],
+    location: 'Storage Room A',
+    isExpired: false,
+    createdAt: '2024-01-20T14:30:00Z',
+    updatedAt: '2024-01-20T14:30:00Z'
+  },
+  {
+    id: '7',
+    name: 'Butter (Unsalted)',
+    description: 'Premium unsalted butter',
+    category: 'food_grade',
+    currentStock: 2,
+    reorderPoint: 10,
+    unit: 'lb',
+    unitPrice: 4.50,
+    totalValue: 9.00,
+    supplier: 'Dairy Direct',
+    batch: 'BU-2024-007',
+    expiryDate: '2024-11-30',
+    tags: ['butter', 'dairy', 'unsalted'],
+    location: 'Refrigerator',
+    isExpired: false,
+    createdAt: '2024-01-25T09:15:00Z',
+    updatedAt: '2024-01-25T09:15:00Z'
+  },
+  {
+    id: '8',
+    name: 'Active Dry Yeast',
+    description: 'Fast-acting dry yeast packets',
+    category: 'food_grade',
+    currentStock: 8,
+    reorderPoint: 6,
+    unit: 'packets',
+    unitPrice: 0.75,
+    totalValue: 6.00,
+    supplier: 'ABC Suppliers',
+    batch: 'ADY-2024-008',
+    expiryDate: '2024-12-31',
+    tags: ['yeast', 'dry', 'baking'],
+    location: 'Cool Storage',
+    isExpired: false,
+    createdAt: '2024-02-01T11:45:00Z',
+    updatedAt: '2024-02-01T11:45:00Z'
+  },
+  {
+    id: '9',
+    name: 'Chocolate Chips',
+    description: 'Premium dark chocolate chips',
+    category: 'food_grade',
+    currentStock: 1,
+    reorderPoint: 8,
+    unit: 'kg',
+    unitPrice: 8.50,
+    totalValue: 8.50,
+    supplier: 'Chocolate Co',
+    batch: 'CC-2024-009',
+    expiryDate: '2024-11-30',
+    tags: ['chocolate', 'chips', 'dark'],
+    location: 'Cool Storage',
+    isExpired: false,
+    createdAt: '2024-02-05T13:20:00Z',
+    updatedAt: '2024-02-05T13:20:00Z'
+  },
+  {
+    id: '10',
+    name: 'Bread Flour (High Protein)',
+    description: 'High protein bread flour for artisan breads',
+    category: 'food_grade',
+    currentStock: 4,
+    reorderPoint: 15,
+    unit: 'kg',
+    unitPrice: 3.20,
+    totalValue: 12.80,
+    supplier: 'Local Mill Co',
+    batch: 'BF-2024-010',
+    expiryDate: '2024-12-31',
+    tags: ['flour', 'bread', 'high-protein'],
+    location: 'Storage Room A',
+    isExpired: false,
+    createdAt: '2024-02-10T15:30:00Z',
+    updatedAt: '2024-02-10T15:30:00Z'
+  },
+  {
+    id: '11',
+    name: 'Brown Sugar (Dark)',
+    description: 'Dark brown sugar for rich flavor',
+    category: 'food_grade',
+    currentStock: 2,
+    reorderPoint: 8,
+    unit: 'kg',
+    unitPrice: 2.10,
+    totalValue: 4.20,
+    supplier: 'Sweet Supply Co',
+    batch: 'BS-2024-011',
+    expiryDate: '2025-06-30',
+    tags: ['sugar', 'brown', 'dark'],
+    location: 'Storage Room A',
+    isExpired: false,
+    createdAt: '2024-02-15T08:45:00Z',
+    updatedAt: '2024-02-15T08:45:00Z'
+  },
+  {
+    id: '12',
+    name: 'Eggs (Large)',
+    description: 'Fresh large eggs',
+    category: 'food_grade',
+    currentStock: 0,
+    reorderPoint: 12,
+    unit: 'dozen',
+    unitPrice: 3.50,
+    totalValue: 0.00,
+    supplier: 'Farm Fresh Dairy',
+    batch: 'EG-2024-012',
+    expiryDate: '2024-10-15',
+    tags: ['eggs', 'fresh', 'large'],
+    location: 'Refrigerator',
+    isExpired: false,
+    createdAt: '2024-02-20T12:15:00Z',
+    updatedAt: '2024-02-20T12:15:00Z'
   }
 ];
 
@@ -125,9 +281,19 @@ export function useInventoryItems() {
   return useQuery({
     queryKey: ['inventory-items'],
     queryFn: async (): Promise<InventoryItem[]> => {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return mockInventoryData;
+      try {
+        const response = await fetch('/api/inventory/items');
+        if (!response.ok) {
+          throw new Error('Failed to fetch inventory items');
+        }
+        const data = await response.json();
+        return data.success ? data.data : [];
+      } catch (error) {
+        console.warn('Failed to fetch inventory from API, using mock data:', error);
+        // Fallback to mock data if API fails
+        await new Promise(resolve => setTimeout(resolve, 500));
+        return mockInventoryData;
+      }
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });

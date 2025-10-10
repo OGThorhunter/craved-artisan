@@ -182,14 +182,14 @@ const InventoryItemCard: React.FC<InventoryItemCardProps> = ({
         <div className="flex items-center justify-between text-sm">
           <span className="text-gray-600">Unit Price:</span>
           <span className="font-medium text-gray-900">
-            ${item.unitPrice.toFixed(2)}/{item.unit}
+            ${(item.unitPrice || 0).toFixed(2)}/{item.unit}
           </span>
         </div>
         
         <div className="flex items-center justify-between text-sm">
           <span className="text-gray-600">Total Value:</span>
           <span className="font-medium text-gray-900">
-            ${item.totalValue.toFixed(2)}
+            ${(item.totalValue || 0).toFixed(2)}
           </span>
         </div>
       </div>
@@ -219,7 +219,7 @@ const InventoryItemCard: React.FC<InventoryItemCardProps> = ({
       </div>
 
       {/* Tags */}
-      {item.tags.length > 0 && (
+      {item.tags && Array.isArray(item.tags) && item.tags.length > 0 && (
         <div className="mb-4">
           <div className="flex flex-wrap gap-1">
             {item.tags.slice(0, 3).map((tag, index) => (

@@ -1,17 +1,13 @@
 import React, { useState } from 'react';
-import { useLocation } from 'wouter';
 import {
   Calendar,
   Clock,
   MapPin,
   ShoppingCart,
-  Plus,
   Edit,
   Copy,
   Archive,
   Trash2,
-  Search,
-  ArrowLeft,
   CheckCircle,
   X,
   Settings,
@@ -20,42 +16,32 @@ import {
   Truck,
   Store,
   Globe,
-  List
+  List,
+  Wand2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
 import MotivationalQuote from '@/components/dashboard/MotivationalQuote';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
-import { getQuoteByCategory } from '@/data/motivationalQuotes';
-import CreateEditSalesWindowDrawer from '@/components/sales-windows/CreateEditSalesWindowDrawer';
 import SalesWindowWizard from '@/components/sales-windows/SalesWindowWizard';
-import BulkOperationsBar from '@/components/sales-windows/BulkOperationsBar';
-import type { 
-  SalesWindow, 
-  SalesChannel, 
-  WindowProduct, 
-  WindowSettings, 
-  MarketEvent, 
-  SalesWindowStats 
+import { getQuoteByCategory } from '@/data/motivationalQuotes';
+import type {
+  SalesWindow,
+  SalesWindowStats
 } from '@/types/sales-windows';
 
 const VendorSalesWindowsPage = () => {
-  const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState<'all' | 'open' | 'upcoming' | 'drafts' | 'closed'>('all');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm] = useState('');
   const [filterChannels, setFilterChannels] = useState<string[]>([]);
-  const [filterTags, setFilterTags] = useState<string[]>([]);
+  const [filterTags] = useState<string[]>([]);
   const [showMarketLinked, setShowMarketLinked] = useState(false);
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
   const [sortBy, setSortBy] = useState<'name' | 'date' | 'status' | 'revenue'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [dateRange, setDateRange] = useState<{ start: string; end: string }>({ start: '', end: '' });
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [editingWindow, setEditingWindow] = useState<SalesWindow | undefined>(undefined);
-  const [showWizard, setShowWizard] = useState(false);
+  const [dateRange] = useState<{ start: string; end: string }>({ start: '', end: '' });
   const [selectedWindows, setSelectedWindows] = useState<string[]>([]);
-  const [showBatchOrderModal, setShowBatchOrderModal] = useState(false);
-  const [batchOrderProducts, setBatchOrderProducts] = useState<Array<{product: any, quantity: number}>>([]);
+  const [showWizard, setShowWizard] = useState(false);
 
   // Mock data for development - replace with actual API calls
   const [mockSalesWindows, setMockSalesWindows] = useState<SalesWindow[]>([
@@ -323,52 +309,6 @@ const VendorSalesWindowsPage = () => {
     }
   };
 
-  const handleCreateWindow = () => {
-    setShowWizard(true);
-  };
-
-  const handleWizardComplete = (salesWindowData: Partial<SalesWindow>) => {
-    // Create a new sales window with the wizard data
-    const newSalesWindow: SalesWindow = {
-      id: `window-${Date.now()}`,
-      name: salesWindowData.name || 'New Sales Window',
-      description: salesWindowData.description || '',
-      status: 'DRAFT',
-      isEvergreen: salesWindowData.isEvergreen || false,
-      startDate: salesWindowData.startDate || '',
-      endDate: salesWindowData.endDate || '',
-      timezone: salesWindowData.timezone || 'America/New_York',
-      channels: salesWindowData.channels || [],
-      products: salesWindowData.products || [],
-      settings: salesWindowData.settings || {
-        allowPreorders: true,
-        showInStorefront: true,
-        autoCloseWhenSoldOut: false,
-        capacity: 100,
-        tags: []
-      },
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-
-    // Add to the sales windows list (mock implementation)
-    setMockSalesWindows(prev => [newSalesWindow, ...prev]);
-    setShowWizard(false);
-    toast.success('Sales window created successfully!');
-  };
-
-
-  const handleEditWindow = (window: SalesWindow) => {
-    setEditingWindow(window);
-    setIsDrawerOpen(true);
-  };
-
-  const handleCreateBatchOrders = (products: Array<{product: any, quantity: number}>) => {
-    setBatchOrderProducts(products);
-    setShowBatchOrderModal(true);
-    // In a real app, this would create actual orders in the order management system
-    toast.success(`Created ${products.length} batch orders for ${products.reduce((sum, p) => sum + p.quantity, 0)} total items`);
-  };
 
   const handleDuplicateWindow = (window: SalesWindow) => {
     const duplicatedWindow: SalesWindow = {
@@ -472,117 +412,6 @@ const VendorSalesWindowsPage = () => {
     }
   };
 
-  const handleSaveWindow = (windowData: Partial<SalesWindow>) => {
-    if (editingWindow) {
-      // Update existing window
-      const updatedWindows = mockSalesWindows.map(w => 
-        w.id === editingWindow.id 
-          ? { ...w, ...windowData, id: editingWindow.id }
-          : w
-      );
-      setMockSalesWindows(updatedWindows);
-      toast.success(`Updated window: ${windowData.name}`);
-    } else {
-      // Create new window
-      const newWindow: SalesWindow = {
-        id: `window-${Date.now()}`,
-        name: windowData.name || 'Untitled Window',
-        description: windowData.description || '',
-        status: windowData.status || 'DRAFT',
-        isEvergreen: windowData.isEvergreen || false,
-        startDate: windowData.startDate || '',
-        endDate: windowData.endDate || '',
-        timezone: windowData.timezone || 'America/New_York',
-        channels: windowData.channels || [],
-        products: windowData.products || [],
-        settings: windowData.settings || {
-          allowPreorders: true,
-          showInStorefront: true,
-          autoCloseWhenSoldOut: false,
-          capacity: 100,
-          tags: []
-        },
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      setMockSalesWindows(prev => [newWindow, ...prev]);
-      toast.success(`Created window: ${windowData.name}`);
-      // Auto-switch to drafts tab to show the new window
-      setActiveTab('drafts');
-    }
-    setEditingWindow(undefined);
-    setIsDrawerOpen(false);
-  };
-
-  const handleCloseDrawer = () => {
-    setIsDrawerOpen(false);
-    setEditingWindow(undefined);
-  };
-
-  // Bulk operations
-  const handleBulkStatusChange = (status: string) => {
-    // Update selected windows status
-    const updatedWindows = mockSalesWindows.map(window => 
-      selectedWindows.includes(window.id) 
-        ? { ...window, status: status as 'DRAFT' | 'SCHEDULED' | 'OPEN' | 'CLOSED' | 'ARCHIVED' }
-        : window
-    );
-    setMockSalesWindows(updatedWindows);
-    toast.success(`Updated ${selectedWindows.length} windows to ${status.toLowerCase()}`);
-    setSelectedWindows([]);
-  };
-
-  const handleBulkArchive = () => {
-    // Archive selected windows
-    const updatedWindows = mockSalesWindows.map(window => 
-      selectedWindows.includes(window.id) 
-        ? { ...window, status: 'ARCHIVED' as const }
-        : window
-    );
-    setMockSalesWindows(updatedWindows);
-    toast.success(`Archived ${selectedWindows.length} windows`);
-    setSelectedWindows([]);
-  };
-
-  const handleBulkDuplicate = () => {
-    // Duplicate selected windows
-    const windowsToDuplicate = mockSalesWindows.filter(window => 
-      selectedWindows.includes(window.id)
-    );
-    
-    const duplicatedWindows = windowsToDuplicate.map(window => ({
-      ...window,
-      id: `duplicate-${Date.now()}-${Math.random()}`,
-      name: `${window.name} (Copy)`,
-      status: 'DRAFT' as const,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    }));
-    
-    setMockSalesWindows(prev => [...duplicatedWindows, ...prev]);
-    toast.success(`Duplicated ${selectedWindows.length} windows`);
-    setSelectedWindows([]);
-    // Auto-switch to drafts tab to show the duplicated windows
-    setActiveTab('drafts');
-  };
-
-  const handleBulkDelete = () => {
-    // Delete selected windows
-    const updatedWindows = mockSalesWindows.filter(window => 
-      !selectedWindows.includes(window.id)
-    );
-    setMockSalesWindows(updatedWindows);
-    toast.success(`Deleted ${selectedWindows.length} windows`);
-    setSelectedWindows([]);
-  };
-
-  const handleSelectAll = () => {
-    setSelectedWindows(mockSalesWindows.map(w => w.id));
-  };
-
-  const handleClearSelection = () => {
-    setSelectedWindows([]);
-  };
 
   const handleWindowSelection = (windowId: string, isSelected: boolean) => {
     if (isSelected) {
@@ -590,6 +419,36 @@ const VendorSalesWindowsPage = () => {
     } else {
       setSelectedWindows(prev => prev.filter(id => id !== windowId));
     }
+  };
+
+  const handleWizardComplete = (windowData: any) => {
+    // Create new sales window from wizard data
+    const newWindow: SalesWindow = {
+      id: Date.now().toString(),
+      name: windowData.name,
+      description: windowData.description,
+      status: 'DRAFT',
+      isEvergreen: false,
+      startDate: windowData.startDate,
+      endDate: windowData.endDate,
+      timezone: 'America/New_York',
+      channels: windowData.channels,
+      products: [],
+      settings: {
+        allowPreorders: windowData.settings.allowPreorders,
+        showInStorefront: windowData.settings.showInStorefront,
+        autoCloseWhenSoldOut: windowData.settings.autoCloseWhenSoldOut,
+        capacity: windowData.settings.capacity,
+        tags: windowData.settings.tags
+      },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    setMockSalesWindows(prev => [newWindow, ...prev]);
+    toast.success(`Created sales window: ${windowData.name}`);
+    setShowWizard(false);
+    setActiveTab('drafts'); // Switch to drafts tab to show the new window
   };
 
   const filteredWindows = getFilteredWindows();
@@ -614,7 +473,7 @@ const VendorSalesWindowsPage = () => {
 
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
-            <div className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-all duration-300 border border-gray-200">
+            <div className="bg-[#F7F2EC] rounded-lg shadow-sm p-6 hover:shadow-md transition-all duration-300 border border-gray-200">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-100 rounded-lg">
                   <Calendar className="h-6 w-6 text-blue-600" />
@@ -626,7 +485,7 @@ const VendorSalesWindowsPage = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-all duration-300 border border-gray-200">
+            <div className="bg-[#F7F2EC] rounded-lg shadow-sm p-6 hover:shadow-md transition-all duration-300 border border-gray-200">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-green-100 rounded-lg">
                   <CheckCircle className="h-6 w-6 text-green-600" />
@@ -638,7 +497,7 @@ const VendorSalesWindowsPage = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-all duration-300 border border-gray-200">
+            <div className="bg-[#F7F2EC] rounded-lg shadow-sm p-6 hover:shadow-md transition-all duration-300 border border-gray-200">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-yellow-100 rounded-lg">
                   <Clock className="h-6 w-6 text-yellow-600" />
@@ -650,7 +509,7 @@ const VendorSalesWindowsPage = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-all duration-300 border border-gray-200">
+            <div className="bg-[#F7F2EC] rounded-lg shadow-sm p-6 hover:shadow-md transition-all duration-300 border border-gray-200">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-gray-100 rounded-lg">
                   <Edit className="h-6 w-6 text-gray-600" />
@@ -662,7 +521,7 @@ const VendorSalesWindowsPage = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-all duration-300 border border-gray-200">
+            <div className="bg-[#F7F2EC] rounded-lg shadow-sm p-6 hover:shadow-md transition-all duration-300 border border-gray-200">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-red-100 rounded-lg">
                   <X className="h-6 w-6 text-red-600" />
@@ -674,7 +533,7 @@ const VendorSalesWindowsPage = () => {
               </div>
             </div>
 
-            <div className="bg-white rounded-lg shadow-lg p-6 hover:shadow-xl transition-all duration-300 border border-gray-200">
+            <div className="bg-[#F7F2EC] rounded-lg shadow-sm p-6 hover:shadow-md transition-all duration-300 border border-gray-200">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-purple-100 rounded-lg">
                   <ShoppingCart className="h-6 w-6 text-purple-600" />
@@ -688,21 +547,17 @@ const VendorSalesWindowsPage = () => {
           </div>
 
           {/* Action Bar */}
-          <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6 mb-8 hover:shadow-xl transition-all duration-300">
+          <div className="bg-[#F7F2EC] rounded-lg shadow-sm border border-gray-200 p-6 mb-8 hover:shadow-md transition-all duration-300">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="flex flex-col gap-2">
-                  <button
-                    onClick={handleCreateWindow}
-                    className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
-                  >
-                    <Plus className="w-4 h-4" />
-                    🎯 Create Sales Window Wizard 🎯
-                  </button>
-                  <span className="text-xs text-gray-600 text-center">New windows start as drafts</span>
-                </div>
-              </div>
               <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowWizard(true)}
+                  className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-6 py-3 rounded-lg transition-colors flex items-center gap-2 font-medium"
+                  title="Create new sales window with wizard"
+                >
+                  <Wand2 className="w-5 h-5" />
+                  Create Sales Window Wizard
+                </button>
                 <button
                   onClick={() => {
                     // TODO: Implement export functionality
@@ -736,7 +591,7 @@ const VendorSalesWindowsPage = () => {
           </div>
 
           {/* Tabs */}
-          <div className="bg-white rounded-lg shadow-lg border border-gray-200 mb-8">
+          <div className="bg-[#F7F2EC] rounded-lg shadow-sm border border-gray-200 mb-8">
             <div className="border-b border-gray-200">
               <nav className="flex space-x-8 px-6">
                 {[
@@ -764,17 +619,6 @@ const VendorSalesWindowsPage = () => {
               </nav>
             </div>
             
-            {/* Bulk Operations Bar */}
-            <BulkOperationsBar
-              selectedWindows={selectedWindows}
-              onBulkStatusChange={handleBulkStatusChange}
-              onBulkArchive={handleBulkArchive}
-              onBulkDuplicate={handleBulkDuplicate}
-              onBulkDelete={handleBulkDelete}
-              onSelectAll={handleSelectAll}
-              onClearSelection={handleClearSelection}
-              totalWindows={filteredWindows.length}
-            />
           </div>
 
 
@@ -878,17 +722,10 @@ const VendorSalesWindowsPage = () => {
                     {activeTab === 'drafts' && 'No draft sales windows created yet.'}
                     {activeTab === 'closed' && 'No closed or archived sales windows.'}
                   </p>
-                  <button
-                    onClick={handleCreateWindow}
-                    className="bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2 mx-auto"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Create Your First Sales Window
-                  </button>
                 </div>
               ) : (
                 filteredWindows.map((window) => (
-                  <div key={window.id} className="bg-white rounded-lg shadow-lg border border-gray-200 p-6 hover:shadow-xl transition-all duration-300">
+                  <div key={window.id} className="bg-[#F7F2EC] rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-all duration-300">
                     {window.status === 'OPEN' && (
                       <div className="bg-green-500 text-white px-4 py-2 rounded-lg mb-4 flex items-center gap-2">
                         <CheckCircle className="h-5 w-5 animate-pulse" />
@@ -973,7 +810,6 @@ const VendorSalesWindowsPage = () => {
                       
                       <div className="flex items-center gap-2 ml-4">
                         <button
-                          onClick={() => handleEditWindow(window)}
                           className="p-2 text-gray-500 hover:text-gray-700 hover:bg-brand-beige rounded-md transition-colors"
                           title="Edit window"
                         >
@@ -1030,7 +866,7 @@ const VendorSalesWindowsPage = () => {
               )}
             </div>
           ) : (
-            <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6">
+            <div className="bg-[#F7F2EC] rounded-lg shadow-sm border border-gray-200 p-6">
               <div className="text-center text-gray-600">
                 <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Calendar View</h3>
@@ -1041,92 +877,12 @@ const VendorSalesWindowsPage = () => {
         </div>
       </div>
 
-          {/* Create/Edit Sales Window Drawer */}
-          <CreateEditSalesWindowDrawer
-            isOpen={isDrawerOpen}
-            onClose={handleCloseDrawer}
-            window={editingWindow}
-            onSave={handleSaveWindow}
-            onCreateBatchOrders={handleCreateBatchOrders}
-          />
-
-          {/* Sales Window Wizard */}
-          <SalesWindowWizard
-            isOpen={showWizard}
-            onClose={() => setShowWizard(false)}
-            onComplete={handleWizardComplete}
-          />
-          
-
-          {/* Batch Order Confirmation Modal */}
-          {showBatchOrderModal && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-lg shadow-xl border border-gray-200 max-w-2xl w-full mx-4 max-h-[80vh] overflow-hidden">
-                <div className="px-6 py-4 border-b border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-medium text-gray-900">Batch Orders Created</h3>
-                    <button
-                      onClick={() => setShowBatchOrderModal(false)}
-                      className="p-2 text-gray-400 hover:text-gray-600"
-                      title="Close batch order modal"
-                    >
-                      <X className="h-5 w-5" />
-                    </button>
-                  </div>
-                </div>
-                <div className="p-6 overflow-y-auto max-h-[60vh]">
-                  <div className="space-y-4">
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                      <div className="flex items-center">
-                        <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
-                        <p className="text-green-800 font-medium">
-                          Successfully created {batchOrderProducts.length} batch orders
-                        </p>
-                      </div>
-                      <p className="text-green-700 text-sm mt-1">
-                        These orders have been moved to the Order Management tab for processing.
-                      </p>
-                    </div>
-                    
-                    <div className="space-y-3">
-                      <h4 className="font-medium text-gray-900">Order Summary:</h4>
-                      {batchOrderProducts.map((item, index) => (
-                        <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                          <div>
-                            <p className="font-medium text-gray-900">{item.product.name}</p>
-                            <p className="text-sm text-gray-600">${item.product.priceOverride || item.product.price} each</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-medium text-gray-900">Qty: {item.quantity}</p>
-                            <p className="text-sm text-gray-600">
-                              Total: ${(item.quantity * (item.product.priceOverride || item.product.price)).toFixed(2)}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                <div className="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
-                  <button
-                    onClick={() => setShowBatchOrderModal(false)}
-                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
-                  >
-                    Close
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowBatchOrderModal(false);
-                      setLocation('/dashboard/vendor/orders');
-                    }}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                  >
-                    View Orders
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+      {/* Sales Window Wizard */}
+      <SalesWindowWizard
+        isOpen={showWizard}
+        onClose={() => setShowWizard(false)}
+        onComplete={handleWizardComplete}
+      />
 
         </VendorDashboardLayout>
       );

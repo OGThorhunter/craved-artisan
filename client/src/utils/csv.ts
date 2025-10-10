@@ -1,4 +1,4 @@
-// CSV export utilities for the bulking calculator
+// CSV export utilities for the job cost estimator
 
 export interface ProcurementRow {
   ingredient: string;
@@ -42,7 +42,7 @@ export function toCSV(
   const lines: string[] = [];
   
   // Header
-  lines.push(`Bulking Calculator Results - ${recipeName}`);
+  lines.push(`Job Cost Estimator Results - ${recipeName}`);
   lines.push(`Generated on ${new Date().toLocaleDateString()}`);
   lines.push('');
   
@@ -110,8 +110,21 @@ export function downloadCSV(csvContent: string, filename: string): void {
 export function generateFilename(recipeName: string): string {
   const sanitizedName = recipeName.replace(/[^a-zA-Z0-9]/g, '_');
   const date = new Date().toISOString().split('T')[0];
-  return `bulking_calculator_${sanitizedName}_${date}.csv`;
+  return `job_cost_estimator_${sanitizedName}_${date}.csv`;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -1,44 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import {
   Users,
-  TrendingUp, 
-  Calendar, 
-  Mail,
-  Phone,
   Target, 
   BarChart3, 
-  Plus,
-  Search,
-  Filter,
-  Download,
-  Eye,
-  Edit,
-  Trash2,
-  Star,
-  Clock,
-  CheckCircle,
-  AlertCircle,
-  DollarSign,
-  UserPlus,
-  Activity,
-  PieChart,
-  LineChart,
-  UserCheck,
-  Filter as FilterIcon,
-  Target as TargetIcon,
-  MessageSquare,
-  Zap,
-  FileText,
-  Bot,
-  Shield,
-  Database,
-  Workflow,
-  Brain,
-  Sparkles
+  FileText
 } from 'lucide-react';
 
 // Import consolidated CRM components
@@ -46,28 +15,7 @@ import Customer360 from '../components/crm/Customer360';
 import Pipeline from '../components/crm/Pipeline';
 import TaskManagement from '../components/crm/TaskManagement';
 import CustomerHealthOverview from '../components/crm/CustomerHealthOverview';
-
-// Types
-interface Customer {
-  id: string;
-  email: string;
-  phone?: string;
-  website?: string;
-  firstName: string;
-  lastName: string;
-  company?: string;
-  status: 'lead' | 'prospect' | 'customer' | 'vip' | 'inactive';
-  source: string;
-  tags: string[];
-  totalOrders: number;
-  totalSpent: number;
-  lifetimeValue: number;
-  lastContactAt?: string;
-  createdAt: string;
-  assignedTo?: string;
-  leadScore: number;
-  isVip: boolean;
-}
+import { Customer } from '@/types/customer';
 
 interface Opportunity {
   id: string;
@@ -201,7 +149,6 @@ const fetchCustomers = async (filters: any) => {
         lastContactAt: '2024-01-15',
         createdAt: '2023-06-15',
         assignedTo: 'sales@company.com',
-        leadScore: 85,
         isVip: true
       }
     ]

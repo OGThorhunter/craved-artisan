@@ -6,6 +6,8 @@ import MotivationalQuote from '@/components/dashboard/MotivationalQuote';
 import { getQuoteByCategory } from '@/data/motivationalQuotes';
 import EnhancedProductModal from '@/components/products/EnhancedProductModal';
 import AddProductWizard from '@/components/products/AddProductWizard';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 import { 
   Plus, 
   Search,
@@ -402,6 +404,7 @@ const VendorProductsPage: React.FC = () => {
   const [editingParsedProduct, setEditingParsedProduct] = useState<Product | null>(null);
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [showExportModal, setShowExportModal] = useState(false);
   const [showProductWizard, setShowProductWizard] = useState(false);
   
   // Mock inventory items for ingredient selection
@@ -520,8 +523,12 @@ const VendorProductsPage: React.FC = () => {
   };
 
   const getStockStatus = (materials: Product['materials']) => {
+    if (!materials || materials.length === 0) {
+      return { status: 'ok', count: 0 };
+    }
+    
     const lowStockItems = materials.filter(material => 
-      material.inventoryItem.currentQty <= material.inventoryItem.reorderPoint
+      material?.inventoryItem?.currentQty <= material?.inventoryItem?.reorderPoint
     );
     
     if (lowStockItems.length > 0) {
@@ -636,9 +643,46 @@ const VendorProductsPage: React.FC = () => {
     price?: number;
     baseCost?: number;
     laborCost?: number;
-    materialsCost?: number;
+    sku?: string;
+    autoGenerateSku?: boolean;
+    batchSize?: number;
+    creationTimeMinutes?: number;
+    leadTimeDays?: number;
+    instructions?: string;
+    sops?: string;
+    categoryId?: string;
+    tags?: string[];
+    allergenFlags?: string[];
+    active?: boolean;
+    ingredients?: Array<{
+      inventoryItemId: string;
+      quantity: number;
+      unit: string;
+      notes?: string;
+      isOptional: boolean;
+    }>;
+    images?: Array<{
+      imageUrl: string;
+      altText?: string;
+      isPrimary: boolean;
+      sortOrder: number;
+    }>;
+    documents?: Array<{
+      title: string;
+      documentUrl: string;
+      type: 'SOP' | 'INSTRUCTION' | 'NUTRITION' | 'ALLERGEN';
+      description?: string;
+    }>;
+    availableSeats?: number;
+    costPerSeat?: number;
+    duration?: string;
   }) => {
     // Convert wizard data to product format
+    const totalCost = (productData.baseCost || 0) + (productData.laborCost || 0);
+    const marginPct = productData.price && productData.price > 0 && totalCost > 0
+      ? parseFloat((((productData.price - totalCost) / productData.price) * 100).toFixed(1))
+      : 0;
+
     const newProduct: Product = {
       id: `product-${Date.now()}`,
       name: productData.name || 'New Product',
@@ -648,33 +692,47 @@ const VendorProductsPage: React.FC = () => {
       price: productData.price || 0,
       baseCost: productData.baseCost || 0,
       laborCost: productData.laborCost || 0,
-      imageUrl: '',
-      active: true,
-      sku: `WIZ-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
+      imageUrl: productData.images?.[0]?.imageUrl || '',
+      active: productData.active !== undefined ? productData.active : true,
+      sku: productData.sku || `WIZ-${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
       category: { name: 'General' },
       subcategory: { name: 'General' },
-      tags: [],
-      allergenFlags: [],
-      batchSize: 1,
-      creationTimeMinutes: 30,
-      leadTimeDays: 0,
-      instructions: '',
-      sops: '',
-      nutritionInfo: null,
-      ingredients: [],
-      images: [],
-      documents: [],
+      tags: productData.tags || [],
+      allergenFlags: productData.allergenFlags || [],
+      batchSize: productData.batchSize,
+      creationTimeMinutes: productData.creationTimeMinutes,
+      leadTimeDays: productData.leadTimeDays,
+      instructions: productData.instructions || '',
+      sops: productData.sops || '',
+      materials: productData.ingredients?.map((ing) => {
+        const invItem = mockInventoryItems.find(item => item.id === ing.inventoryItemId);
+        return {
+          qty: ing.quantity,
+          unit: ing.unit,
+          inventoryItem: {
+            name: invItem?.name || 'Unknown',
+            currentQty: invItem?.current_qty || 0,
+            reorderPoint: invItem?.reorder_point || 0
+          }
+        };
+      }) || [],
+      variants: [],
       costRollup: {
-        materialsCost: productData.materialsCost || 0,
+        materialsCost: productData.ingredients?.reduce((sum, ing) => {
+          const invItem = mockInventoryItems.find(item => item.id === ing.inventoryItemId);
+          return sum + (ing.quantity * (invItem?.avg_cost || 0));
+        }, 0) || 0,
         laborCost: productData.laborCost || 0,
         baseCost: productData.baseCost || 0,
-        totalCost: (productData.materialsCost || 0) + (productData.laborCost || 0) + (productData.baseCost || 0),
+        totalCost: totalCost,
         marginAtPrice: productData.price || 0,
-        marginPct: parseFloat((((productData.price || 0) - ((productData.materialsCost || 0) + (productData.laborCost || 0) + (productData.baseCost || 0))) / (productData.price || 1) * 100).toFixed(1)) || 0
+        marginPct: marginPct
       },
-      availableSeats: undefined,
-      costPerSeat: undefined,
-      duration: undefined,
+      availableSeats: productData.availableSeats,
+      costPerSeat: productData.availableSeats && productData.price 
+        ? productData.price / productData.availableSeats 
+        : undefined,
+      duration: productData.duration,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       vendorProfileId: 'vendor-1'
@@ -686,7 +744,7 @@ const VendorProductsPage: React.FC = () => {
     });
 
     // Show success message
-    alert('Product created successfully!');
+    alert('Product created successfully with all details!');
   };
 
   const handleDocumentUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -922,23 +980,145 @@ const VendorProductsPage: React.FC = () => {
   };
 
   const handleBulkExport = () => {
+    setShowExportModal(true);
+  };
+
+  const handleExportCSV = () => {
     const selectedProductsData = products.filter(p => selectedProducts.includes(p.id));
-    const exportData = {
-      products: selectedProductsData,
-      exportedAt: new Date().toISOString(),
-      exportType: 'bulk',
-      totalProducts: selectedProductsData.length
-    };
     
-    const dataStr = JSON.stringify(exportData, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    // Create CSV header
+    const headers = ['Name', 'Type', 'SKU', 'Category', 'Price', 'Cost', 'Margin %', 'Status', 'Tags'];
     
-    const exportFileDefaultName = `products_bulk_export_${new Date().toISOString().split('T')[0]}.json`;
+    // Create CSV rows
+    const rows = selectedProductsData.map(product => [
+      product.name,
+      product.type,
+      product.sku || '',
+      product.category?.name || '',
+      `$${product.price.toFixed(2)}`,
+      `$${product.costRollup?.totalCost?.toFixed(2) || '0.00'}`,
+      `${product.costRollup?.marginPct?.toFixed(1) || '0.0'}%`,
+      product.active ? 'Active' : 'Inactive',
+      product.tags.join(', ')
+    ]);
     
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
+    // Combine headers and rows
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+    
+    // Create download link
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `products_export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.click();
+    URL.revokeObjectURL(url);
+    setShowExportModal(false);
+  };
+
+  const handleExportPDF = () => {
+    const selectedProductsData = products.filter(p => selectedProducts.includes(p.id));
+    
+    // Create new PDF document
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    
+    // Add header with logo/branding
+    doc.setFillColor(91, 110, 2); // #5B6E02
+    doc.rect(0, 0, pageWidth, 40, 'F');
+    
+    // Title
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(24);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Product Catalog', 14, 20);
+    
+    // Subtitle
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Exported on ${new Date().toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    })}`, 14, 30);
+    
+    // Summary stats
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(10);
+    doc.text(`Total Products: ${selectedProductsData.length}`, pageWidth - 14, 20, { align: 'right' });
+    
+    const totalValue = selectedProductsData.reduce((sum, p) => sum + p.price, 0);
+    doc.text(`Total Value: $${totalValue.toFixed(2)}`, pageWidth - 14, 26, { align: 'right' });
+    
+    const avgMargin = selectedProductsData.reduce((sum, p) => sum + (p.costRollup?.marginPct || 0), 0) / selectedProductsData.length;
+    doc.text(`Avg Margin: ${avgMargin.toFixed(1)}%`, pageWidth - 14, 32, { align: 'right' });
+    
+    // Add table
+    const tableData = selectedProductsData.map(product => [
+      product.name,
+      product.type,
+      product.category?.name || '',
+      `$${product.price.toFixed(2)}`,
+      `$${product.costRollup?.totalCost?.toFixed(2) || '0.00'}`,
+      `${product.costRollup?.marginPct?.toFixed(1) || '0.0'}%`,
+      product.active ? '✓' : '✗'
+    ]);
+    
+    (doc as any).autoTable({
+      startY: 50,
+      head: [['Product Name', 'Type', 'Category', 'Price', 'Cost', 'Margin', 'Active']],
+      body: tableData,
+      theme: 'striped',
+      headStyles: {
+        fillColor: [91, 110, 2],
+        textColor: [255, 255, 255],
+        fontStyle: 'bold',
+        fontSize: 10
+      },
+      bodyStyles: {
+        fontSize: 9,
+        cellPadding: 4
+      },
+      alternateRowStyles: {
+        fillColor: [247, 242, 236] // #F7F2EC
+      },
+      columnStyles: {
+        0: { cellWidth: 50 },
+        1: { cellWidth: 25, halign: 'center' },
+        2: { cellWidth: 30 },
+        3: { cellWidth: 20, halign: 'right' },
+        4: { cellWidth: 20, halign: 'right' },
+        5: { cellWidth: 20, halign: 'right' },
+        6: { cellWidth: 15, halign: 'center' }
+      },
+      margin: { left: 14, right: 14 },
+      didDrawPage: function(data: any) {
+        // Footer
+        const pageCount = doc.getNumberOfPages();
+        const currentPage = (doc as any).internal.getCurrentPageInfo().pageNumber;
+        doc.setFontSize(8);
+        doc.setTextColor(128, 128, 128);
+        doc.text(
+          `Page ${currentPage} of ${pageCount}`,
+          pageWidth / 2,
+          doc.internal.pageSize.getHeight() - 10,
+          { align: 'center' }
+        );
+        doc.text(
+          'CravedArtisan - Product Management',
+          pageWidth - 14,
+          doc.internal.pageSize.getHeight() - 10,
+          { align: 'right' }
+        );
+      }
+    });
+    
+    // Save the PDF
+    doc.save(`products_catalog_${new Date().toISOString().split('T')[0]}.pdf`);
+    setShowExportModal(false);
   };
 
 
@@ -1995,7 +2175,62 @@ const VendorProductsPage: React.FC = () => {
           isOpen={showProductWizard}
           onClose={() => setShowProductWizard(false)}
           onComplete={handleWizardComplete}
+          categories={mockCategories}
+          inventoryItems={mockInventoryItems}
         />
+
+        {/* Export Modal */}
+        {showExportModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-semibold text-gray-900">Export Products</h3>
+                <button
+                    onClick={() => setShowExportModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                    title="Close"
+                    aria-label="Close export modal"
+                >
+                    <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+                <p className="text-gray-600 mb-6">
+                  Choose your export format for {selectedProducts.length} selected product{selectedProducts.length !== 1 ? 's' : ''}:
+                </p>
+                
+                <div className="space-y-3">
+                  <button
+                    onClick={handleExportCSV}
+                    className="w-full flex items-center gap-3 p-4 border-2 border-gray-200 rounded-lg hover:border-[#5B6E02] hover:bg-[#F7F2EC] transition-all group"
+                  >
+                    <div className="flex-shrink-0 w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200">
+                      <FileText className="w-6 h-6 text-green-600" />
+                  </div>
+                    <div className="text-left flex-1">
+                      <div className="font-semibold text-gray-900">Export as CSV</div>
+                      <div className="text-sm text-gray-600">Spreadsheet format for Excel, Google Sheets</div>
+                  </div>
+                  </button>
+                  
+                  <button
+                    onClick={handleExportPDF}
+                    className="w-full flex items-center gap-3 p-4 border-2 border-gray-200 rounded-lg hover:border-[#5B6E02] hover:bg-[#F7F2EC] transition-all group"
+                  >
+                    <div className="flex-shrink-0 w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center group-hover:bg-red-200">
+                      <FileText className="w-6 h-6 text-red-600" />
+                  </div>
+                    <div className="text-left flex-1">
+                      <div className="font-semibold text-gray-900">Export as PDF</div>
+                      <div className="text-sm text-gray-600">Professional catalog with branding</div>
+                  </div>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
           </div>
     </VendorDashboardLayout>

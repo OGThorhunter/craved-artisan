@@ -2,13 +2,9 @@ import React, { useState, useMemo } from 'react';
 import {
   Users,
   Search,
-  Filter,
   Plus,
-  Mail,
-  Phone,
   MessageSquare,
   Calendar,
-  Tag,
   Star,
   Edit,
   Trash2,
@@ -17,39 +13,13 @@ import {
   Building,
   Clock,
   DollarSign,
-  TrendingUp,
   AlertCircle,
-  CheckCircle,
-  MoreVertical,
   List,
   X,
   Shield
 } from 'lucide-react';
 import AIInsights from './AIInsights';
-
-interface Customer {
-  id: string;
-  email: string;
-  phone?: string;
-  website?: string;
-  firstName: string;
-  lastName: string;
-  company?: string;
-  status: 'lead' | 'prospect' | 'customer' | 'vip' | 'inactive';
-  source: string;
-  tags: string[];
-  totalOrders: number;
-  totalSpent: number;
-  lifetimeValue: number;
-  lastContactAt?: string;
-  createdAt: string;
-  assignedTo?: string;
-  leadScore: number;
-  isVip: boolean;
-  isBlocked?: boolean;
-  blockedReason?: string;
-  blockedAt?: string;
-}
+import { Customer } from '@/types/customer';
 
 interface Customer360Props {
   customers: Customer[];
@@ -76,9 +46,10 @@ const Customer360: React.FC<Customer360Props> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [filterType, setFilterType] = useState<'all' | 'vip' | 'high-priority'>('all');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [showProfile, setShowProfile] = useState(false);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [showAddCustomer, setShowAddCustomer] = useState(false);
   const [newCustomer, setNewCustomer] = useState({
     email: '',
@@ -90,8 +61,7 @@ const Customer360: React.FC<Customer360Props> = ({
     status: 'lead' as const,
     source: 'manual',
     tags: [] as string[],
-    assignedTo: '',
-    leadScore: 50
+    assignedTo: ''
   });
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [selectedCustomerForMessage, setSelectedCustomerForMessage] = useState<Customer | null>(null);
@@ -167,20 +137,6 @@ const Customer360: React.FC<Customer360Props> = ({
       });
     }
 
-    // Lead scoring insights
-    const highScoreLeads = customers.filter(c => c.leadScore >= 80 && c.status === 'lead');
-    if (highScoreLeads.length > 0) {
-      insights.push({
-        id: 'high-score-leads',
-        type: 'recommendation' as const,
-        title: 'High-Score Leads Ready for Conversion',
-        description: `${highScoreLeads.length} leads have scores above 80. These are prime candidates for sales outreach.`,
-        confidence: 92,
-        priority: 'high' as const,
-        category: 'sales-opportunity' as const,
-        action: 'Start Sales Process'
-      });
-    }
 
     // Customer acquisition trend
     const recentCustomers = customers.filter(c => 
@@ -216,14 +172,22 @@ const Customer360: React.FC<Customer360Props> = ({
     );
   };
 
-  // Filter customers based on search and status
+  // Filter customers based on search, status, and filter type
   const filteredCustomers = customers.filter(customer => {
     const matchesSearch = customer.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                         customer.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                         customer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                         customer.company?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = !statusFilter || customer.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    
+    let matchesFilterType = true;
+    if (filterType === 'vip') {
+      matchesFilterType = customer.isVip;
+    } else if (filterType === 'high-priority') {
+      matchesFilterType = customer.status === 'lead' || customer.status === 'prospect';
+    }
+    
+    return matchesSearch && matchesStatus && matchesFilterType;
   });
 
   const getStatusColor = (customer: Customer) => {
@@ -247,12 +211,6 @@ const Customer360: React.FC<Customer360Props> = ({
     return customer.status.toUpperCase();
   };
 
-  const getPriorityColor = (leadScore: number) => {
-    if (leadScore >= 80) return 'text-red-600';
-    if (leadScore >= 60) return 'text-orange-600';
-    if (leadScore >= 40) return 'text-yellow-600';
-    return 'text-green-600';
-  };
 
   return (
     <div className="space-y-6">
@@ -318,7 +276,6 @@ const Customer360: React.FC<Customer360Props> = ({
                       source: 'manual',
                       tags: [],
                       assignedTo: '',
-                      leadScore: 50
                     });
                     setShowAddCustomer(true);
                   }}
@@ -361,7 +318,11 @@ const Customer360: React.FC<Customer360Props> = ({
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="rounded-lg shadow-lg p-4 hover:shadow-xl transition-shadow duration-200" style={{ backgroundColor: '#F7F2EC' }}>
+        <button 
+          onClick={() => setFilterType('all')}
+          className={`rounded-lg shadow-lg p-4 hover:shadow-xl transition-all duration-200 cursor-pointer text-left ${filterType === 'all' ? 'ring-2 ring-blue-500' : ''}`}
+          style={{ backgroundColor: '#F7F2EC' }}
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Customers</p>
@@ -369,9 +330,13 @@ const Customer360: React.FC<Customer360Props> = ({
             </div>
             <Users className="h-8 w-8 text-blue-600" />
           </div>
-        </div>
+        </button>
         
-        <div className="rounded-lg shadow-lg p-4 hover:shadow-xl transition-shadow duration-200" style={{ backgroundColor: '#F7F2EC' }}>
+        <button 
+          onClick={() => setFilterType('vip')}
+          className={`rounded-lg shadow-lg p-4 hover:shadow-xl transition-all duration-200 cursor-pointer text-left ${filterType === 'vip' ? 'ring-2 ring-purple-500' : ''}`}
+          style={{ backgroundColor: '#F7F2EC' }}
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">VIP Customers</p>
@@ -379,17 +344,21 @@ const Customer360: React.FC<Customer360Props> = ({
             </div>
             <Star className="h-8 w-8 text-purple-600" />
           </div>
-        </div>
+        </button>
         
-        <div className="rounded-lg shadow-lg p-4 hover:shadow-xl transition-shadow duration-200" style={{ backgroundColor: '#F7F2EC' }}>
+        <button 
+          onClick={() => setFilterType('high-priority')}
+          className={`rounded-lg shadow-lg p-4 hover:shadow-xl transition-all duration-200 cursor-pointer text-left ${filterType === 'high-priority' ? 'ring-2 ring-red-500' : ''}`}
+          style={{ backgroundColor: '#F7F2EC' }}
+        >
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">High Priority</p>
-              <p className="text-2xl font-bold text-gray-900">{customers.filter(c => c.leadScore >= 80).length}</p>
+              <p className="text-2xl font-bold text-gray-900">{customers.filter(c => c.status === 'lead' || c.status === 'prospect').length}</p>
             </div>
             <AlertCircle className="h-8 w-8 text-red-600" />
           </div>
-        </div>
+        </button>
         
         <div className="rounded-lg shadow-lg p-4 hover:shadow-xl transition-shadow duration-200" style={{ backgroundColor: '#F7F2EC' }}>
           <div className="flex items-center justify-between">
@@ -472,9 +441,6 @@ const Customer360: React.FC<Customer360Props> = ({
                           </div>
                         </div>
                       </div>
-                      <span className={`font-semibold ${getPriorityColor(customer.leadScore)}`}>
-                        {customer.leadScore}
-                      </span>
                     </div>
                     
                     <div className="flex items-center justify-between">
@@ -632,9 +598,6 @@ const Customer360: React.FC<Customer360Props> = ({
                           </div>
                         </div>
                       </div>
-                      <p className={`font-semibold ${getPriorityColor(customer.leadScore)}`}>
-                        {customer.leadScore}
-                      </p>
                     </div>
                     <div className="text-center">
                       <p className="text-sm text-gray-600">LTV</p>
@@ -772,29 +735,6 @@ const Customer360: React.FC<Customer360Props> = ({
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Business Metrics</h3>
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">Lead Score:</span> 
-                      <span className={`font-semibold ${getPriorityColor(selectedCustomer.leadScore)}`}>
-                        {selectedCustomer.leadScore}
-                      </span>
-                      <div className="group relative">
-                        <div className="w-4 h-4 bg-blue-100 rounded-full flex items-center justify-center cursor-help">
-                          <span className="text-blue-600 text-xs font-bold">?</span>
-                        </div>
-                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-20 w-64">
-                          <div className="max-w-xs">
-                            <div className="font-semibold mb-1">Lead Score Guide:</div>
-                            <div className="text-xs space-y-1">
-                              <div><span className="text-red-300">76-100:</span> Sales-ready (immediate follow-up)</div>
-                              <div><span className="text-orange-300">51-75:</span> Hot lead (strong interest)</div>
-                              <div><span className="text-yellow-300">26-50:</span> Warm lead (some interest)</div>
-                              <div><span className="text-green-300">0-25:</span> Cold lead (needs nurturing)</div>
-                            </div>
-                          </div>
-                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
-                        </div>
-                      </div>
-                    </div>
                     <p><span className="font-medium">Lifetime Value:</span> 
                       <span className="ml-2 font-semibold">${selectedCustomer.lifetimeValue.toLocaleString()}</span>
                     </p>
@@ -885,7 +825,6 @@ const Customer360: React.FC<Customer360Props> = ({
                       source: 'manual',
                       tags: [],
                       assignedTo: '',
-                      leadScore: 50
                     });
                   }}
                   className="text-gray-500 hover:text-gray-700"
@@ -1051,17 +990,6 @@ const Customer360: React.FC<Customer360Props> = ({
                       </div>
                     </div>
                   </div>
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={newCustomer.leadScore}
-                    onChange={(e) => setNewCustomer({...newCustomer, leadScore: parseInt(e.target.value) || 0})}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    title="Enter lead score from 0 to 100"
-                    aria-label="Enter lead score from 0 to 100"
-                    placeholder="50"
-                  />
                 </div>
               </div>
               
@@ -1078,7 +1006,6 @@ const Customer360: React.FC<Customer360Props> = ({
                       source: 'manual',
                       tags: [],
                       assignedTo: '',
-                      leadScore: 50
                     });
                   }}
                   className="px-3 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors text-sm font-medium"
@@ -1122,7 +1049,6 @@ const Customer360: React.FC<Customer360Props> = ({
                       source: 'manual',
                       tags: [],
                       assignedTo: '',
-                      leadScore: 50
                     });
                   }}
                   disabled={!newCustomer.firstName || !newCustomer.lastName || !newCustomer.email || checkForDuplicate(newCustomer.email) || checkForDuplicate('', newCustomer.phone)}
@@ -1440,11 +1366,6 @@ const Customer360: React.FC<Customer360Props> = ({
                       {duplicateCustomer.status}
                     </span>
                   </p>
-                  <p><span className="font-medium">Lead Score:</span> 
-                    <span className={`ml-2 font-semibold ${getPriorityColor(duplicateCustomer.leadScore)}`}>
-                      {duplicateCustomer.leadScore}
-                    </span>
-                  </p>
                 </div>
               </div>
               
@@ -1473,7 +1394,6 @@ const Customer360: React.FC<Customer360Props> = ({
                       source: 'manual',
                       tags: [],
                       assignedTo: '',
-                      leadScore: 50
                     });
                   }}
                   className="px-4 py-2 text-blue-700 bg-blue-100 rounded-lg hover:bg-blue-200 transition-colors"

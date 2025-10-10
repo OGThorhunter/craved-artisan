@@ -18,6 +18,7 @@ import {
   List
 } from 'lucide-react';
 import AIInsights from './AIInsights';
+import AddOpportunityWizard from './AddOpportunityWizard';
 
 interface Opportunity {
   id: string;
@@ -70,6 +71,7 @@ const Pipeline: React.FC<PipelineProps> = ({
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
   const [showDetails, setShowDetails] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showAddWizard, setShowAddWizard] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingOpportunity, setEditingOpportunity] = useState<Opportunity | null>(null);
   const [viewMode, setViewMode] = useState<'card' | 'list'>('list');
@@ -386,14 +388,14 @@ const Pipeline: React.FC<PipelineProps> = ({
                 tags: [],
                 status: 'active'
               });
-              setShowAddModal(true);
+              setShowAddWizard(true);
             }}
-            className="flex items-center gap-2 px-3 py-2 bg-brand-green text-white rounded-md hover:bg-brand-green/80 transition-colors text-sm font-medium"
+            className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-md transition-colors text-sm font-medium"
             title="Add new opportunity"
             aria-label="Add new opportunity to pipeline"
           >
             <Plus className="h-4 w-4" />
-            Add Opportunity
+            Add Opportunity Wizard
           </button>
         </div>
       </div>
@@ -1346,6 +1348,36 @@ const Pipeline: React.FC<PipelineProps> = ({
           </div>
         </div>
       )}
+
+      {/* Add Opportunity Wizard */}
+      <AddOpportunityWizard
+        isOpen={showAddWizard}
+        onClose={() => setShowAddWizard(false)}
+        onComplete={(opportunityData) => {
+          // Create the opportunity with the wizard data
+          const opportunity: Partial<Opportunity> = {
+            title: opportunityData.title || '',
+            description: opportunityData.description || '',
+            customerId: opportunityData.customerId || '',
+            stage: opportunityData.stage || 'lead',
+            value: opportunityData.value || 0,
+            probability: opportunityData.probability || 10,
+            expectedCloseDate: opportunityData.expectedCloseDate || '',
+            source: opportunityData.source || 'Manual',
+            assignedTo: opportunityData.assignedTo || '',
+            tags: opportunityData.tags || [],
+            status: opportunityData.status || 'active',
+            customFields: {}
+          };
+          
+          onOpportunityCreate(opportunity);
+        }}
+        customers={[
+          // Mock customers - in a real app, this would come from props
+          { id: '1', firstName: 'John', lastName: 'Doe', email: 'john@example.com', company: 'Acme Corp' },
+          { id: '2', firstName: 'Jane', lastName: 'Smith', email: 'jane@example.com', company: 'Tech Inc' }
+        ]}
+      />
     </div>
   );
 };

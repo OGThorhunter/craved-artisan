@@ -20,6 +20,7 @@ import { BusinessSnapshot } from '@/components/analytics/BusinessSnapshot';
 import StripeTaxDashboard from '@/components/stripe/StripeTaxDashboard';
 import Customer360 from '@/components/crm/Customer360';
 import CustomerHealthOverview from '@/components/crm/CustomerHealthOverview';
+import type { Customer } from '@/types/customer';
 
 // Import CRM components
 import Pipeline from '@/components/crm/Pipeline';
@@ -59,6 +60,27 @@ const VendorAnalyticsCRMPage: React.FC<VendorAnalyticsCRMPageProps> = ({
         return "AI analysis shows positive trends across all business metrics.";
     }
   };
+
+  const [customers, setCustomers] = useState<Customer[]>([
+    {
+      id: '1',
+      email: 'john.doe@example.com',
+      firstName: 'John',
+      lastName: 'Doe',
+      company: 'Acme Corp',
+      phone: '555-0123',
+      status: 'customer',
+      source: 'website',
+      assignedTo: 'sales-1',
+      tags: ['high-value', 'tech'],
+      totalOrders: 15,
+      totalSpent: 5420,
+      lifetimeValue: 8500,
+      lastContactAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      createdAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString(),
+      isVip: true
+    }
+  ]);
 
   const [opportunities, setOpportunities] = useState<Array<{
     id: string;
@@ -354,28 +376,6 @@ const VendorAnalyticsCRMPage: React.FC<VendorAnalyticsCRMPageProps> = ({
   ];
 
   const renderContent = () => {
-    // Mock data for CRM components
-    const mockCustomers = [
-      {
-        id: '1',
-        email: 'john.doe@example.com',
-        firstName: 'John',
-        lastName: 'Doe',
-        company: 'Acme Corp',
-        status: 'customer' as const,
-        source: 'Website',
-        tags: ['VIP', 'Enterprise'],
-        totalOrders: 15,
-        totalSpent: 25000,
-        lifetimeValue: 35000,
-        lastContactAt: '2024-01-15',
-        createdAt: '2023-06-15',
-        assignedTo: 'sales@company.com',
-        leadScore: 85,
-        isVip: true
-      }
-    ];
-
     switch (activeTab) {
       case 'business-snapshot':
         return <BusinessSnapshot vendorId={vendorId} />;
@@ -388,14 +388,68 @@ const VendorAnalyticsCRMPage: React.FC<VendorAnalyticsCRMPageProps> = ({
       case 'customer-360':
         return (
           <Customer360
-            customers={mockCustomers}
-            onCustomerSelect={() => {}}
-            onCustomerUpdate={() => {}}
-            onCustomerDelete={() => {}}
-            onTagUpdate={() => {}}
-            onNoteAdd={() => {}}
-            onMessageSend={() => {}}
-            onTaskCreate={() => {}}
+            customers={customers}
+            onCustomerSelect={(customer) => {
+              console.log('Customer selected:', customer);
+            }}
+            onCustomerUpdate={(customer) => {
+              console.log('Updating customer:', customer);
+              
+              // Check if customer already exists (update) or is new (add)
+              const existingCustomer = customers.find(c => c.id === customer.id);
+              
+              if (existingCustomer) {
+                // Update existing customer
+                setCustomers(prev => 
+                  prev.map(c => 
+                    c.id === customer.id 
+                      ? { ...c, ...customer }
+                      : c
+                  )
+                );
+                alert(`Customer updated: ${customer.firstName} ${customer.lastName}`);
+              } else {
+                // Add new customer
+                setCustomers(prev => [...prev, customer]);
+                alert(`Customer added: ${customer.firstName} ${customer.lastName}`);
+              }
+            }}
+            onCustomerDelete={(id) => {
+              console.log('Deleting customer:', id);
+              if (confirm('Are you sure you want to delete this customer?')) {
+                setCustomers(prev => prev.filter(c => c.id !== id));
+                alert('Customer deleted');
+              }
+            }}
+            onTagUpdate={(customerId, tags) => {
+              console.log('Updating tags for customer:', customerId, tags);
+              setCustomers(prev => 
+                prev.map(c => 
+                  c.id === customerId 
+                    ? { ...c, tags }
+                    : c
+                )
+              );
+            }}
+            onNoteAdd={(customerId, note) => {
+              console.log('Adding note for customer:', customerId, note);
+              alert(`Note added for customer ${customerId}: ${note}`);
+            }}
+            onMessageSend={(customerId, message) => {
+              console.log('Sending message to customer:', customerId, message);
+              alert(`Message sent to customer ${customerId}: ${message}`);
+            }}
+            onTaskCreate={(customerId, task) => {
+              console.log('Creating task for customer:', customerId, task);
+              const newTask = {
+                ...task,
+                id: Date.now().toString(),
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              };
+              setTasks(prev => [...prev, newTask]);
+              alert(`Task created for customer ${customerId}: ${task.title}`);
+            }}
             isLoading={false}
           />
         );
@@ -535,7 +589,7 @@ const VendorAnalyticsCRMPage: React.FC<VendorAnalyticsCRMPageProps> = ({
       case 'customer-health':
         return (
           <CustomerHealthOverview
-            customers={mockCustomers}
+            customers={customers}
             opportunities={opportunities}
             tasks={tasks}
             isLoading={false}

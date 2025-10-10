@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Database, Brain, Bell, Calculator, FlaskConical, Shield, Wand2 } from 'lucide-react';
+import { Database, Brain, Bell, Calculator, FlaskConical, Shield, Wand2, ShoppingCart } from 'lucide-react';
 import toast from 'react-hot-toast';
 import VendorDashboardLayout from '../layouts/VendorDashboardLayout';
 import DashboardHeader from '../components/dashboard/DashboardHeader';
@@ -14,9 +14,10 @@ import AIInsightsDrawer from '../components/inventory/AIInsightsDrawer';
 import SystemMessagesDrawer from '../components/inventory/SystemMessagesDrawer';
 import InventoryWizard from '../components/inventory/InventoryWizard';
 import CombineInventoryModal from '../components/inventory/CombineInventoryModal';
-import BulkingCalculatorTab from './dashboard/vendor/inventory/tabs/BulkingCalculatorTab';
+import JobCostEstimatorTab from './dashboard/vendor/inventory/tabs/JobCostEstimatorTab';
 import SDStarterManager from '../components/inventory/SDStarterManager';
 import BackupSupplyManager from '../components/inventory/BackupSupplyManager';
+import ShoppingListManager from '../components/inventory/ShoppingListManager';
 import { 
   useInventoryItems, 
   useCreateInventoryItem, 
@@ -30,7 +31,7 @@ import type {
 } from '../hooks/useInventory';
 import { findDuplicateGroups, getDuplicateSuggestions } from '../utils/inventoryDuplicates';
 
-type TabType = 'inventory' | 'bulking' | 'starter' | 'backup';
+type TabType = 'inventory' | 'bulking' | 'starter' | 'backup' | 'shopping-list';
 
 const VendorInventoryPage: React.FC = () => {
   // State
@@ -209,7 +210,7 @@ const VendorInventoryPage: React.FC = () => {
     },
     {
       id: 'bulking' as TabType,
-      label: 'Bulking Calculator',
+      label: 'Job Cost Estimator',
       icon: Calculator,
       description: 'Calculate bulk purchase savings'
     },
@@ -224,6 +225,12 @@ const VendorInventoryPage: React.FC = () => {
       label: 'Backup Supply',
       icon: Shield,
       description: 'Emergency supply management'
+    },
+    {
+      id: 'shopping-list' as TabType,
+      label: 'Shopping List',
+      icon: ShoppingCart,
+      description: 'Smart procurement with vendor comparison'
     }
   ];
 
@@ -411,7 +418,7 @@ const VendorInventoryPage: React.FC = () => {
             )}
 
             {activeTab === 'bulking' && (
-              <BulkingCalculatorTab />
+              <JobCostEstimatorTab />
             )}
 
             {activeTab === 'starter' && (
@@ -420,6 +427,10 @@ const VendorInventoryPage: React.FC = () => {
 
             {activeTab === 'backup' && (
               <BackupSupplyManager />
+            )}
+
+            {activeTab === 'shopping-list' && (
+              <ShoppingListManager inventoryItems={inventoryItems} />
             )}
           </div>
         </div>

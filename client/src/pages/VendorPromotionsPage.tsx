@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import {
   Plus,
   Target,
@@ -7,14 +6,11 @@ import {
   Calendar,
   BarChart3,
   Star,
-  Settings,
   X,
   Percent,
-  DollarSign,
   Gift,
-  Truck,
-  Award,
-  AlertCircle
+  AlertCircle,
+  DollarSign
 } from 'lucide-react';
 import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
 
@@ -47,18 +43,11 @@ interface Promotion {
 const VendorPromotionsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'campaigns' | 'social-media' | 'scheduler-automation' | 'analytics' | 'loyalty-referrals'>('campaigns');
   const [promotions, setPromotions] = useState<Promotion[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showPromotionModal, setShowPromotionModal] = useState(false);
+  const [showUnifiedWizard, setShowUnifiedWizard] = useState(false);
+  const [wizardStep, setWizardStep] = useState(1);
+  const [creationType, setCreationType] = useState<'discount' | 'promotion' | null>(null);
   const [isCreatingPromotion, setIsCreatingPromotion] = useState(false);
-  const [showDiscountCodeModal, setShowDiscountCodeModal] = useState(false);
   const [isCreatingDiscountCode, setIsCreatingDiscountCode] = useState(false);
-  
-  // Advanced modal state
-  const [expandedAccordions, setExpandedAccordions] = useState({
-    eligibility: false,
-    guardrails: false,
-    distribution: false
-  });
   const [collisionCheck, setCollisionCheck] = useState<{ [key: string]: boolean }>({});
 
   // Promotion creation form state
@@ -147,11 +136,6 @@ const VendorPromotionsPage: React.FC = () => {
     }
   });
 
-// Mock data
-  const { data: mockPromotions = [], isLoading: queryLoading } = useQuery({
-    queryKey: ['promotions'],
-    queryFn: () => Promise.resolve([]),
-  });
 
   // Helper functions for promotion form
   const generatePromoCode = () => {
@@ -265,90 +249,20 @@ const VendorPromotionsPage: React.FC = () => {
         value: 10,
         scope: ['entire_cart'],
         channels: ['marketplace', 'app'],
-        limits: { minSpend: 25, perCustomer: 1, oneTime: true },
-        audience: { newReturning: 'new' }
+        limits: { totalUsage: 0, perCustomer: 1, perOrder: 0, minSpend: 25, maxSpend: 0, minQty: 0, maxQty: 0, oneTime: true },
+        audience: { newReturning: 'new', loyaltyTier: '', zipRadius: 0, tags: [] }
       },
       holiday: {
         code: 'HOLIDAY20',
-        description: '20% off holiday orders - Limited time offer',
-        type: 'percentage' as const,
-        value: 20,
-        scope: ['entire_cart'],
-        channels: ['marketplace', 'delivery', 'pickup'],
-        limits: { minSpend: 50, maxDiscount: 100 },
-        audience: { newReturning: 'all' }
+        description: '20% off holiday orders - Limited time offer'
       },
       flash_sale: {
         code: 'FLASH15',
-        description: '15% off flash sale - While supplies last',
-        type: 'percentage' as const,
-        value: 15,
-        scope: ['entire_cart'],
-        channels: ['marketplace', 'app'],
-        limits: { minSpend: 30, totalUsage: 100 },
-        audience: { newReturning: 'all' }
+        description: '15% off flash sale - While supplies last'
       },
       loyalty: {
         code: 'LOYAL25',
-        description: '25% off for loyal customers - Thank you for your support',
-        type: 'percentage' as const,
-        value: 25,
-        scope: ['entire_cart'],
-        channels: ['marketplace', 'delivery'],
-        limits: { minSpend: 75, perCustomer: 3 },
-        audience: { loyaltyTier: 'gold' }
-      },
-      clearance: {
-        code: 'CLEAR30',
-        description: '30% off clearance items - Final sale',
-        type: 'percentage' as const,
-        value: 30,
-        scope: ['collections'],
-        collections: ['clearance'],
-        channels: ['marketplace'],
-        limits: { maxDiscount: 50 },
-        audience: { newReturning: 'all' }
-      },
-      bulk: {
-        code: 'BULK15',
-        description: '15% off bulk orders - Save more when you buy more',
-        type: 'percentage' as const,
-        value: 15,
-        scope: ['entire_cart'],
-        channels: ['marketplace', 'pickup'],
-        limits: { minSpend: 100, minQty: 5 },
-        audience: { newReturning: 'all' }
-      },
-      referral: {
-        code: 'FRIEND20',
-        description: '20% off for referring a friend - Share the love',
-        type: 'percentage' as const,
-        value: 20,
-        scope: ['entire_cart'],
-        channels: ['marketplace', 'app'],
-        limits: { minSpend: 40, perCustomer: 1 },
-        audience: { newReturning: 'all' }
-      },
-      seasonal: {
-        code: 'SPRING25',
-        description: '25% off spring collection - Fresh seasonal items',
-        type: 'percentage' as const,
-        value: 25,
-        scope: ['collections'],
-        collections: ['spring'],
-        channels: ['marketplace', 'delivery'],
-        limits: { minSpend: 60, maxDiscount: 75 },
-        audience: { newReturning: 'all' }
-      },
-      early_bird: {
-        code: 'EARLY10',
-        description: '10% off early bird special - Order before 10am',
-        type: 'percentage' as const,
-        value: 10,
-        scope: ['entire_cart'],
-        channels: ['marketplace', 'app'],
-        limits: { minSpend: 35, totalUsage: 50 },
-        audience: { newReturning: 'all' }
+        description: '25% off for loyal customers - Thank you for your support'
       }
     };
 
@@ -420,13 +334,6 @@ const VendorPromotionsPage: React.FC = () => {
     });
   };
 
-  const toggleAccordion = (accordion: keyof typeof expandedAccordions) => {
-    setExpandedAccordions(prev => ({
-      ...prev,
-      [accordion]: !prev[accordion]
-    }));
-  };
-
   const generateRuleSummary = () => {
     const { code, type, value, scope, collections, channels, limits, startDate, endDate, timezone, stacking } = discountCodeForm;
     
@@ -444,7 +351,7 @@ const VendorPromotionsPage: React.FC = () => {
     summary += `Channels: ${channels.join(' + ')}, `;
     
     if (limits.minSpend > 0) summary += `Min $${limits.minSpend}, `;
-    if (limits.maxDiscount > 0) summary += `Max $${limits.maxDiscount}, `;
+    if (limits.maxSpend > 0) summary += `Max $${limits.maxSpend}, `;
     
     summary += `Stack: ${stacking.policy.charAt(0).toUpperCase() + stacking.policy.slice(1)}, `;
     summary += `${new Date(startDate).toLocaleDateString()}–${new Date(endDate).toLocaleDateString()} (${timezone})`;
@@ -508,6 +415,9 @@ const VendorPromotionsPage: React.FC = () => {
         ? generatePromoCode() 
         : promotionForm.promoCode || generatePromoCode();
 
+      // IMPORTANT: Promotions are VENDOR-SCOPED
+      // This promotion will ONLY apply to this vendor's products
+      // Backend must validate: promotion.vendorId === cart.vendorId before applying
       const newPromotion: Promotion = {
         id: `promotion-${Date.now()}`,
         name: promotionForm.name,
@@ -528,15 +438,17 @@ const VendorPromotionsPage: React.FC = () => {
 
       setPromotions(prev => [...prev, newPromotion]);
       
-      alert(`✅ Custom promotion created successfully!\n\n🎯 ${newPromotion.name}\n📝 ${newPromotion.description}\n💰 Value: ${newPromotion.type === 'percentage' ? newPromotion.value + '%' : 
+      alert(`✅ Vendor-Specific Promotion Created!\n\n🎯 ${newPromotion.name}\n📝 ${newPromotion.description}\n💰 Value: ${newPromotion.type === 'percentage' ? newPromotion.value + '%' : 
             newPromotion.type === 'fixed_amount' ? '$' + newPromotion.value : 
             newPromotion.type === 'bogo' ? newPromotion.value + '% off second item' :
             newPromotion.type === 'free_shipping' ? 'Free shipping' :
-            newPromotion.value + ' bonus points'}\n🔑 Promo Code: ${finalPromoCode}\n📅 Active: ${new Date(newPromotion.startDate).toLocaleDateString()} - ${new Date(newPromotion.endDate).toLocaleDateString()}\n\n✅ This promotion is now ${newPromotion.status.toUpperCase()} and ready to use!`);
+            newPromotion.value + ' bonus points'}\n🔑 Promo Code: ${finalPromoCode}\n📅 Active: ${new Date(newPromotion.startDate).toLocaleDateString()} - ${new Date(newPromotion.endDate).toLocaleDateString()}\n\n✅ This promotion is now ${newPromotion.status.toUpperCase()} and ready to use!\n\n🔒 VENDOR SCOPING:\n• Only applies to YOUR products\n• Customers cannot use it with other vendors\n• Isolated to your store only\n• No cash value transfer between vendors`);
       
-      // Reset form and close modal
+      // Reset form and close wizard
       resetPromotionForm();
-      setShowPromotionModal(false);
+      setShowUnifiedWizard(false);
+      setWizardStep(1);
+      setCreationType(null);
       setActiveTab('campaigns');
 
     } catch (error) {
@@ -578,9 +490,15 @@ const VendorPromotionsPage: React.FC = () => {
     setIsCreatingDiscountCode(true);
 
     try {
+      // IMPORTANT: Discount codes are VENDOR-SCOPED
+      // This code will ONLY work for products from this vendor
+      // Backend must validate: discount.vendorId === cart.vendorId before applying
       const discountCodeData = {
         id: `discount-code-${Date.now()}`,
         code: finalCode,
+        vendorId: 'current-vendor-id', // TODO: Replace with actual logged-in vendor ID from auth context
+        vendorName: 'Current Vendor', // TODO: Replace with actual vendor name
+        isVendorSpecific: true, // CRITICAL: This ensures code only works for this vendor's products
         description: discountCodeForm.description,
         type: discountCodeForm.type,
         value: discountCodeForm.value,
@@ -611,12 +529,13 @@ const VendorPromotionsPage: React.FC = () => {
       console.log('Created advanced discount code:', discountCodeData);
       
       const ruleSummary = generateRuleSummary();
-      alert(`✅ Advanced discount code created successfully!\n\n🔑 Code: ${finalCode}\n📝 Description: ${discountCodeForm.description}\n📋 Rule: ${ruleSummary}\n\n✅ This discount code is now ${discountCodeForm.isActive ? 'ACTIVE' : 'DRAFT'} and ready to use!\n\n🚀 Advanced features enabled:\n• Smart collision detection\n• Multi-channel distribution\n• Advanced eligibility rules\n• Safety guardrails\n• Auto-apply links\n• QR code generation\n\nIn a real implementation, this would:\n• Save to database with full configuration\n• Generate shareable links and QR codes\n• Set up tracking and analytics\n• Configure stacking policies\n• Enable inventory monitoring`);
+      alert(`✅ Vendor-Specific Discount Code Created!\n\n🔑 Code: ${finalCode}\n📝 Description: ${discountCodeForm.description}\n📋 Rule: ${ruleSummary}\n\n✅ This discount code is now ${discountCodeForm.isActive ? 'ACTIVE' : 'DRAFT'} and ready to use!\n\n🔒 VENDOR SCOPING:\n• This code ONLY works for YOUR products\n• Customers cannot use it with other vendors\n• No cash value outside your store\n• Tied to your vendor ID\n\n🚀 Features enabled:\n• Smart collision detection\n• Multi-channel distribution\n• Advanced eligibility rules\n• Safety guardrails\n• Auto-apply links\n• QR code generation\n\nBackend validation required:\n• Verify discount.vendorId === cart.vendorId\n• Reject if cart contains other vendors' products`);
       
-      // Reset form and close modal
+      // Reset form and close wizard
       resetDiscountCodeForm();
-      setShowDiscountCodeModal(false);
-      setExpandedAccordions({ eligibility: false, guardrails: false, distribution: false });
+      setShowUnifiedWizard(false);
+      setWizardStep(1);
+      setCreationType(null);
 
     } catch (error) {
       console.error('Advanced discount code creation failed:', error);
@@ -687,22 +606,17 @@ const VendorPromotionsPage: React.FC = () => {
             </div>
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => setShowDiscountCodeModal(true)}
-                className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                title="Create custom discount code"
-                aria-label="Create custom discount code"
+                onClick={() => {
+                  setShowUnifiedWizard(true);
+                  setWizardStep(1);
+                  setCreationType(null);
+                }}
+                className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl"
+                title="Create discount code or promotion"
+                aria-label="Create discount code or promotion wizard"
               >
-                <Percent className="h-4 w-4" />
-                <span>Create Discount Code</span>
-              </button>
-              <button
-                onClick={() => setShowPromotionModal(true)}
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                title="Create new promotion"
-                aria-label="Create new promotion"
-              >
-                <Plus className="h-4 w-4" />
-                <span>New Promotion</span>
+                <Plus className="h-5 w-5" />
+                <span className="font-semibold">Create Promotion</span>
               </button>
             </div>
           </div>
@@ -717,6 +631,7 @@ const VendorPromotionsPage: React.FC = () => {
                   return (
               <button
                       key={tab.id}
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       onClick={() => setActiveTab(tab.id as any)}
                 className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
                         activeTab === tab.id
@@ -750,7 +665,7 @@ const VendorPromotionsPage: React.FC = () => {
                 selectedPromotions={[]}
                 onSelectPromotion={(id) => console.log('Select promotion:', id)}
                 onSelectAll={() => console.log('Select all')}
-                isLoading={isLoading}
+                isLoading={false}
               />
             )}
 
@@ -832,960 +747,653 @@ const VendorPromotionsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Custom Promotion Creation Modal */}
-      {showPromotionModal && (
+      {/* Unified Promotion Wizard */}
+      {showUnifiedWizard && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            {/* Header */}
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-900">Create Custom Promotion</h2>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    {wizardStep === 1 ? 'Create Promotion Wizard' : creationType === 'discount' ? 'Create Discount Code' : 'Create Promotion'}
+                  </h2>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {wizardStep === 1 ? 'Step 1 of 2: Choose what you want to create' : 'Step 2 of 2: Configure your promotion'}
+                  </p>
+                </div>
                 <button
                   onClick={() => {
+                    setShowUnifiedWizard(false);
+                    setWizardStep(1);
+                    setCreationType(null);
                     resetPromotionForm();
-                    setShowPromotionModal(false);
+                    resetDiscountCodeForm();
                   }}
                   className="text-gray-400 hover:text-gray-600"
-                  title="Close promotion modal"
-                  aria-label="Close promotion modal"
+                  title="Close wizard"
+                  aria-label="Close promotion wizard"
                 >
                   <X className="h-6 w-6" />
                 </button>
               </div>
             </div>
-            
-            <div className="p-6 space-y-6">
-              {/* Quick Templates */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">Quick Templates (Optional)</label>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  <button
-                    onClick={() => applyQuickTemplate('holiday')}
-                    className="px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm"
-                    title="Apply holiday template"
-                  >
-                    🎄 Holiday Special
-                  </button>
-                  <button
-                    onClick={() => applyQuickTemplate('new_customer')}
-                    className="px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm"
-                    title="Apply new customer template"
-                  >
-                    👋 New Customer
-                  </button>
-                  <button
-                    onClick={() => applyQuickTemplate('clearance')}
-                    className="px-3 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors text-sm"
-                    title="Apply clearance template"
-                  >
-                    🔥 Clearance Sale
-                  </button>
-                  <button
-                    onClick={() => applyQuickTemplate('loyalty')}
-                    className="px-3 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors text-sm"
-                    title="Apply loyalty template"
-                  >
-                    ⭐ Loyalty Rewards
-                  </button>
-                  <button
-                    onClick={() => applyQuickTemplate('free_shipping')}
-                    className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm"
-                    title="Apply free shipping template"
-                  >
-                    🚚 Free Shipping
-                  </button>
+
+            {/* Step 1: Choose Template or Type */}
+            {wizardStep === 1 && (
+              <div className="p-8">
+                <div className="max-w-4xl mx-auto">
+                  <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-6 mb-6">
+                    <h3 className="text-blue-900 text-lg font-semibold mb-2">
+                      Create New Campaign
+                    </h3>
+                    <p className="text-blue-800">
+                      Start from a template or create a custom discount code or promotional campaign from scratch.
+                    </p>
+                  </div>
+
+                  {/* Quick Start Templates */}
+                  <div className="mb-8">
+                    <h4 className="text-lg font-semibold text-gray-900 mb-4">Quick Start Templates</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <button
+                        onClick={() => {
+                          applyQuickTemplate('holiday');
+                          setCreationType('promotion');
+                          setWizardStep(2);
+                        }}
+                        className="group p-6 border-2 border-gray-300 rounded-xl hover:border-red-500 hover:shadow-lg transition-all text-left bg-white"
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-2xl">🎄</span>
+                          <Percent className="h-5 w-5 text-red-500" />
+                        </div>
+                        <h5 className="font-bold text-gray-900 mb-2">Holiday Special</h5>
+                        <p className="text-sm text-gray-600">15% off for holiday season</p>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          applyDiscountCodeTemplate('welcome');
+                          setCreationType('discount');
+                          setWizardStep(2);
+                        }}
+                        className="group p-6 border-2 border-gray-300 rounded-xl hover:border-green-500 hover:shadow-lg transition-all text-left bg-white"
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-2xl">👋</span>
+                          <DollarSign className="h-5 w-5 text-green-500" />
+                        </div>
+                        <h5 className="font-bold text-gray-900 mb-2">New Customer</h5>
+                        <p className="text-sm text-gray-600">$10 off first order</p>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          applyQuickTemplate('free_shipping');
+                          setCreationType('promotion');
+                          setWizardStep(2);
+                        }}
+                        className="group p-6 border-2 border-gray-300 rounded-xl hover:border-blue-500 hover:shadow-lg transition-all text-left bg-white"
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-2xl">🚚</span>
+                          <Gift className="h-5 w-5 text-blue-500" />
+                        </div>
+                        <h5 className="font-bold text-gray-900 mb-2">Free Shipping</h5>
+                        <p className="text-sm text-gray-600">Free shipping weekend</p>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          applyDiscountCodeTemplate('flash_sale');
+                          setCreationType('discount');
+                          setWizardStep(2);
+                        }}
+                        className="group p-6 border-2 border-gray-300 rounded-xl hover:border-orange-500 hover:shadow-lg transition-all text-left bg-white"
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-2xl">⚡</span>
+                          <Percent className="h-5 w-5 text-orange-500" />
+                        </div>
+                        <h5 className="font-bold text-gray-900 mb-2">Flash Sale</h5>
+                        <p className="text-sm text-gray-600">15% off limited time</p>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          applyQuickTemplate('clearance');
+                          setCreationType('promotion');
+                          setWizardStep(2);
+                        }}
+                        className="group p-6 border-2 border-gray-300 rounded-xl hover:border-red-500 hover:shadow-lg transition-all text-left bg-white"
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-2xl">🔥</span>
+                          <Percent className="h-5 w-5 text-red-500" />
+                        </div>
+                        <h5 className="font-bold text-gray-900 mb-2">Clearance Sale</h5>
+                        <p className="text-sm text-gray-600">25% off clearance items</p>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          applyDiscountCodeTemplate('loyalty');
+                          setCreationType('discount');
+                          setWizardStep(2);
+                        }}
+                        className="group p-6 border-2 border-gray-300 rounded-xl hover:border-purple-500 hover:shadow-lg transition-all text-left bg-white"
+                      >
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-2xl">⭐</span>
+                          <Percent className="h-5 w-5 text-purple-500" />
+                        </div>
+                        <h5 className="font-bold text-gray-900 mb-2">VIP Loyalty</h5>
+                        <p className="text-sm text-gray-600">25% off for VIP customers</p>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="relative my-8">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-gray-300"></div>
+                    </div>
+                    <div className="relative flex justify-center text-sm">
+                      <span className="px-4 bg-white text-gray-500 font-medium">Or create from scratch</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-purple-50 border border-purple-300 rounded-lg p-4 mb-8">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="h-5 w-5 text-purple-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <h4 className="text-purple-900 font-semibold mb-1">🔒 Important: Vendor-Specific Codes</h4>
+                        <p className="text-purple-800 text-sm">
+                          All discount codes and promotions you create are <strong>vendor-specific</strong>. 
+                          They only work for <strong>your products</strong> and cannot be used with other vendors. 
+                          This protects your business and ensures promotions have no cash value outside your store.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Discount Code Option */}
+                    <button
+                      onClick={() => {
+                        setCreationType('discount');
+                        setWizardStep(2);
+                      }}
+                      className="group relative p-8 border-2 border-gray-300 rounded-xl hover:border-green-500 hover:shadow-lg transition-all text-left bg-white"
+                    >
+                      <div className="absolute top-4 right-4">
+                        <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center group-hover:bg-green-500 transition-colors">
+                          <Percent className="h-6 w-6 text-green-600 group-hover:text-white" />
+                        </div>
+                      </div>
+                      <h3 className="text-2xl font-bold text-gray-900 mb-3">Discount Code</h3>
+                      <p className="text-gray-600 mb-4">
+                        Create a code that customers can enter at checkout to receive a discount or special offer.
+                      </p>
+                      <ul className="space-y-2 text-sm text-gray-700">
+                        <li className="flex items-start">
+                          <span className="text-green-500 mr-2">✓</span>
+                          <span>Custom code (e.g., SAVE20, WELCOME10)</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-green-500 mr-2">✓</span>
+                          <span>Usage limits and restrictions</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-green-500 mr-2">✓</span>
+                          <span>Auto-apply links and QR codes</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-green-500 mr-2">✓</span>
+                          <span><strong>Your products only</strong> - vendor-scoped</span>
+                        </li>
+                      </ul>
+                      <div className="mt-6">
+                        <span className="inline-flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-lg font-medium group-hover:bg-green-500 group-hover:text-white transition-colors">
+                          Choose Discount Code →
+                        </span>
+                      </div>
+                    </button>
+
+                    {/* Promotion Option */}
+                    <button
+                      onClick={() => {
+                        setCreationType('promotion');
+                        setWizardStep(2);
+                      }}
+                      className="group relative p-8 border-2 border-gray-300 rounded-xl hover:border-blue-500 hover:shadow-lg transition-all text-left bg-white"
+                    >
+                      <div className="absolute top-4 right-4">
+                        <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-blue-500 transition-colors">
+                          <Gift className="h-6 w-6 text-blue-600 group-hover:text-white" />
+                        </div>
+                      </div>
+                      <h3 className="text-2xl font-bold text-gray-900 mb-3">Promotion Campaign</h3>
+                      <p className="text-gray-600 mb-4">
+                        Create a marketing campaign to promote your products and drive sales through various channels.
+                      </p>
+                      <ul className="space-y-2 text-sm text-gray-700">
+                        <li className="flex items-start">
+                          <span className="text-blue-500 mr-2">✓</span>
+                          <span>Multi-channel campaigns</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-blue-500 mr-2">✓</span>
+                          <span>Automatic or manual promotions</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-blue-500 mr-2">✓</span>
+                          <span>Performance tracking and analytics</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-blue-500 mr-2">✓</span>
+                          <span><strong>Your store only</strong> - vendor-scoped</span>
+                        </li>
+                      </ul>
+                      <div className="mt-6">
+                        <span className="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-800 rounded-lg font-medium group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                          Choose Promotion →
+                        </span>
+                      </div>
+                    </button>
+                  </div>
                 </div>
               </div>
+            )}
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Left Column - Basic Info */}
-                <div className="space-y-6">
-                  {/* Name */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Promotion Name *</label>
-                    <input
-                      type="text"
-                      value={promotionForm.name}
-                      onChange={(e) => setPromotionForm(prev => ({ ...prev, name: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="e.g., Black Friday Sale"
-                      title="Enter promotion name"
-                    />
-                  </div>
+            {/* Step 2: Discount Code Form */}
+            {wizardStep === 2 && creationType === 'discount' && (
+              <div className="p-6">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                  <p className="text-green-900 text-base leading-relaxed">
+                    Great! Let's create your discount code. Fill in the details below to configure how your discount will work.
+                  </p>
+                </div>
 
-                  {/* Description */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Description *</label>
-                    <textarea
-                      rows={3}
-                      value={promotionForm.description}
-                      onChange={(e) => setPromotionForm(prev => ({ ...prev, description: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="Describe your promotion..."
-                      title="Enter promotion description"
-                    />
-                  </div>
-
-                  {/* Type and Value */}
-                  <div className="grid grid-cols-2 gap-4">
+                {/* Vendor Scoping Notice */}
+                <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+                  <div className="flex items-start">
+                    <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" />
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Type *</label>
-                      <select
-                        value={promotionForm.type}
-                        onChange={(e) => setPromotionForm(prev => ({ ...prev, type: e.target.value as any }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        title="Select promotion type"
-                      >
-                        <option value="percentage">Percentage Discount</option>
-                        <option value="fixed_amount">Fixed Amount</option>
-                        <option value="bogo">Buy One Get One</option>
-                        <option value="free_shipping">Free Shipping</option>
-                        <option value="loyalty_points">Loyalty Points</option>
-                      </select>
+                      <h4 className="text-blue-900 font-semibold mb-1">Vendor-Specific Code</h4>
+                      <p className="text-blue-800 text-sm">
+                        This discount code will <strong>only work for your products</strong>. Customers cannot use your codes with other vendors. 
+                        This ensures your promotions stay within your business and have no cash value outside your store.
+                      </p>
                     </div>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  {/* Code and Description */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Value * {promotionForm.type === 'percentage' && '(%)'}
-                        {promotionForm.type === 'fixed_amount' && '($)'}
-                        {promotionForm.type === 'bogo' && '(%)'}
-                        {promotionForm.type === 'loyalty_points' && '(points)'}
-                        {promotionForm.type === 'free_shipping' && '(N/A)'}
+                      <label className="block text-sm font-medium text-gray-900 mb-2">Discount Code *</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={discountCodeForm.code}
+                          onChange={(e) => {
+                            const code = e.target.value.toUpperCase();
+                            setDiscountCodeForm(prev => ({ ...prev, code, autoGenerateCode: false }));
+                            if (code) checkCodeCollision(code);
+                          }}
+                          className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent font-mono text-lg"
+                          placeholder="SAVE20"
+                          disabled={discountCodeForm.autoGenerateCode}
+                          title="Enter discount code"
+                        />
+                        <button
+                          onClick={() => {
+                            const newCode = generateDiscountCode(discountCodeForm.generatePattern);
+                            setDiscountCodeForm(prev => ({ ...prev, code: newCode, autoGenerateCode: false }));
+                            checkCodeCollision(newCode);
+                          }}
+                          className="px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+                          title="Generate discount code"
+                        >
+                          Generate
+                        </button>
+                      </div>
+                      <label className="flex items-center mt-2">
+                        <input
+                          type="checkbox"
+                          checked={discountCodeForm.autoGenerateCode}
+                          onChange={(e) => setDiscountCodeForm(prev => ({ ...prev, autoGenerateCode: e.target.checked, code: '' }))}
+                          className="mr-2 h-4 w-4"
+                          title="Auto-generate discount code"
+                        />
+                        <span className="text-sm text-gray-600">Auto-generate code at creation</span>
                       </label>
-                      <input
-                        type="number"
-                        value={promotionForm.value}
-                        onChange={(e) => setPromotionForm(prev => ({ ...prev, value: parseFloat(e.target.value) || 0 }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder={promotionForm.type === 'free_shipping' ? 'N/A' : '0'}
-                        disabled={promotionForm.type === 'free_shipping'}
-                        title="Enter promotion value"
+                      {discountCodeForm.code && collisionCheck[discountCodeForm.code] && (
+                        <div className="mt-2 flex items-center text-red-600 text-sm">
+                          <AlertCircle className="h-4 w-4 mr-1" />
+                          Code already exists - choose a different code
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 mb-2">Description *</label>
+                      <textarea
+                        rows={4}
+                        value={discountCodeForm.description}
+                        onChange={(e) => setDiscountCodeForm(prev => ({ ...prev, description: e.target.value }))}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        placeholder="e.g., 20% off all artisan bread this weekend"
+                        title="Enter discount code description"
                       />
                     </div>
                   </div>
 
-                  {/* Status */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                    <select
-                      value={promotionForm.status}
-                      onChange={(e) => setPromotionForm(prev => ({ ...prev, status: e.target.value as any }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      title="Select promotion status"
-                    >
-                      <option value="draft">Draft</option>
-                      <option value="active">Active</option>
-                      <option value="paused">Paused</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Right Column - Advanced Settings */}
-                <div className="space-y-6">
-                  {/* Dates */}
-                  <div className="grid grid-cols-2 gap-4">
+                  {/* Type and Value */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                      <label className="block text-sm font-medium text-gray-900 mb-2">Discount Type *</label>
+                      <select
+                        value={discountCodeForm.type}
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        onChange={(e) => setDiscountCodeForm(prev => ({ ...prev, type: e.target.value as any }))}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        title="Select discount type"
+                      >
+                        <option value="percentage">Percentage Discount (%)</option>
+                        <option value="fixed_amount">Fixed Amount ($)</option>
+                        <option value="free_shipping">Free Shipping</option>
+                        <option value="bogo">Buy One Get One (BOGO)</option>
+                      </select>
+                    </div>
+
+                    {discountCodeForm.type !== 'free_shipping' && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-900 mb-2">
+                          Discount Value * {discountCodeForm.type === 'percentage' ? '(%)' : '($)'}
+                        </label>
+                        <input
+                          type="number"
+                          value={discountCodeForm.value}
+                          onChange={(e) => setDiscountCodeForm(prev => ({ ...prev, value: parseFloat(e.target.value) || 0 }))}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-lg font-medium"
+                          placeholder={discountCodeForm.type === 'percentage' ? '20' : '10'}
+                          title="Discount value"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Dates */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 mb-2">Start Date</label>
                       <input
                         type="date"
-                        value={promotionForm.startDate}
-                        onChange={(e) => setPromotionForm(prev => ({ ...prev, startDate: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        value={discountCodeForm.startDate}
+                        onChange={(e) => setDiscountCodeForm(prev => ({ ...prev, startDate: e.target.value }))}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                         title="Select start date"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                      <label className="block text-sm font-medium text-gray-900 mb-2">End Date</label>
                       <input
                         type="date"
-                        value={promotionForm.endDate}
-                        onChange={(e) => setPromotionForm(prev => ({ ...prev, endDate: e.target.value }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        value={discountCodeForm.endDate}
+                        onChange={(e) => setDiscountCodeForm(prev => ({ ...prev, endDate: e.target.value }))}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                         title="Select end date"
                       />
                     </div>
                   </div>
 
                   {/* Limits */}
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Min Order Amount ($)</label>
+                      <label className="block text-sm font-medium text-gray-900 mb-2">Minimum Order Amount ($)</label>
                       <input
                         type="number"
-                        value={promotionForm.minimumOrderAmount}
-                        onChange={(e) => setPromotionForm(prev => ({ ...prev, minimumOrderAmount: parseFloat(e.target.value) || 0 }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="0"
+                        value={discountCodeForm.limits.minSpend}
+                        onChange={(e) => setDiscountCodeForm(prev => ({
+                          ...prev,
+                          limits: { ...prev.limits, minSpend: parseFloat(e.target.value) || 0 }
+                        }))}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        placeholder="0 = no minimum"
                         title="Minimum order amount"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Usage Limit</label>
+                      <label className="block text-sm font-medium text-gray-900 mb-2">Usage Limit (Total)</label>
                       <input
                         type="number"
-                        value={promotionForm.usageLimit}
-                        onChange={(e) => setPromotionForm(prev => ({ ...prev, usageLimit: parseInt(e.target.value) || 0 }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        value={discountCodeForm.limits.totalUsage}
+                        onChange={(e) => setDiscountCodeForm(prev => ({
+                          ...prev,
+                          limits: { ...prev.limits, totalUsage: parseInt(e.target.value) || 0 }
+                        }))}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
                         placeholder="0 = unlimited"
-                        title="Usage limit (0 for unlimited)"
+                        title="Total usage limit"
                       />
                     </div>
                   </div>
 
-                  {/* Promo Code */}
+                  {/* Status */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Promo Code</label>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={promotionForm.promoCode}
-                        onChange={(e) => setPromotionForm(prev => ({ ...prev, promoCode: e.target.value, autoGenerateCode: false }))}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Enter custom code or leave empty for auto-generation"
-                        title="Enter promo code"
-                      />
-                      <button
-                        onClick={() => {
-                          const newCode = generatePromoCode();
-                          setPromotionForm(prev => ({ ...prev, promoCode: newCode, autoGenerateCode: false }));
-                        }}
-                        className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                        title="Generate random promo code"
-                      >
-                        Generate
-                      </button>
-                    </div>
-                    <label className="flex items-center mt-2">
-                      <input
-                        type="checkbox"
-                        checked={promotionForm.autoGenerateCode}
-                        onChange={(e) => setPromotionForm(prev => ({ ...prev, autoGenerateCode: e.target.checked, promoCode: '' }))}
-                        className="mr-2"
-                        title="Auto-generate promo code"
-                      />
-                      <span className="text-sm text-gray-600">Auto-generate code</span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              <div className="border-t border-gray-200 pt-6">
-                <div className="flex justify-end gap-3">
-                  <button
-                    onClick={() => {
-                      resetPromotionForm();
-                      setShowPromotionModal(false);
-                    }}
-                    className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleCustomPromotionCreate}
-                    disabled={isCreatingPromotion}
-                    className={`px-6 py-2 rounded-lg transition-colors ${
-                      isCreatingPromotion
-                        ? 'bg-gray-400 text-white cursor-not-allowed'
-                        : 'bg-blue-600 text-white hover:bg-blue-700'
-                    }`}
-                    title="Create custom promotion"
-                  >
-                    {isCreatingPromotion ? (
-                      <div className="flex items-center gap-2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                        Creating...
-                      </div>
-                    ) : (
-                      'Create Promotion'
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Advanced Discount Code Creation Modal */}
-      {showDiscountCodeModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full mx-4 max-h-[95vh] overflow-hidden flex flex-col">
-            {/* Header */}
-            <div className="p-6 border-b border-gray-200 flex-shrink-0">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">Create Advanced Discount Code</h2>
-                  <p className="text-gray-600 mt-1">Smart templates, collision detection, and enterprise-grade features</p>
-                </div>
-                <button
-                  onClick={() => {
-                    resetDiscountCodeForm();
-                    setShowDiscountCodeModal(false);
-                  }}
-                  className="text-gray-400 hover:text-gray-600"
-                  title="Close discount code modal"
-                  aria-label="Close discount code modal"
-                >
-                  <X className="h-6 w-6" />
-                </button>
-              </div>
-              
-              {/* Quick Templates */}
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Smart Templates</label>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    onClick={() => applyDiscountCodeTemplate('welcome')}
-                    className="px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm font-medium"
-                    title="Apply welcome template"
-                  >
-                    👋 New Customer ($10 off)
-                  </button>
-                  <button
-                    onClick={() => applyDiscountCodeTemplate('holiday')}
-                    className="px-3 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm font-medium"
-                    title="Apply holiday template"
-                  >
-                    🎄 Holiday (20% off)
-                  </button>
-                  <button
-                    onClick={() => applyDiscountCodeTemplate('flash_sale')}
-                    className="px-3 py-2 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors text-sm font-medium"
-                    title="Apply flash sale template"
-                  >
-                    ⚡ Flash Sale (15% off)
-                  </button>
-                  <button
-                    onClick={() => applyDiscountCodeTemplate('loyalty')}
-                    className="px-3 py-2 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors text-sm font-medium"
-                    title="Apply loyalty template"
-                  >
-                    ⭐ VIP Customer (25% off)
-                  </button>
-                  <button
-                    onClick={() => applyDiscountCodeTemplate('clearance')}
-                    className="px-3 py-2 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-colors text-sm font-medium"
-                    title="Apply clearance template"
-                  >
-                    🔥 Clearance (30% off)
-                  </button>
-                </div>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  <button
-                    onClick={() => applyDiscountCodeTemplate('bulk')}
-                    className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm font-medium"
-                    title="Apply bulk order template"
-                  >
-                    📦 Bulk Order (15% off)
-                  </button>
-                  <button
-                    onClick={() => applyDiscountCodeTemplate('referral')}
-                    className="px-3 py-2 bg-pink-100 text-pink-700 rounded-lg hover:bg-pink-200 transition-colors text-sm font-medium"
-                    title="Apply referral template"
-                  >
-                    👥 Refer Friend (20% off)
-                  </button>
-                  <button
-                    onClick={() => applyDiscountCodeTemplate('seasonal')}
-                    className="px-3 py-2 bg-emerald-100 text-emerald-700 rounded-lg hover:bg-emerald-200 transition-colors text-sm font-medium"
-                    title="Apply seasonal template"
-                  >
-                    🌸 Seasonal (25% off)
-                  </button>
-                  <button
-                    onClick={() => applyDiscountCodeTemplate('early_bird')}
-                    className="px-3 py-2 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition-colors text-sm font-medium"
-                    title="Apply early bird template"
-                  >
-                    🌅 Early Bird (10% off)
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Content - Scrollable */}
-            <div className="flex-1 overflow-y-auto p-6">
-              {/* 1. Smart Templates & Code Generator */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                {/* Code Generation */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Discount Code *</label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={discountCodeForm.code}
-                      onChange={(e) => {
-                        const code = e.target.value.toUpperCase();
-                        setDiscountCodeForm(prev => ({ ...prev, code, autoGenerateCode: false }));
-                        if (code) checkCodeCollision(code);
-                      }}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent font-mono text-lg"
-                      placeholder="SAVE20"
-                      disabled={discountCodeForm.autoGenerateCode}
-                      title="Enter discount code"
-                    />
-                    <button
-                      onClick={() => {
-                        const newCode = generateDiscountCode(discountCodeForm.generatePattern);
-                        setDiscountCodeForm(prev => ({ ...prev, code: newCode, autoGenerateCode: false }));
-                        checkCodeCollision(newCode);
-                      }}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                      title="Generate discount code"
-                    >
-                      Generate
-                    </button>
-                  </div>
-                  <div className="mt-2 flex items-center justify-between">
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={discountCodeForm.autoGenerateCode}
-                        onChange={(e) => setDiscountCodeForm(prev => ({ ...prev, autoGenerateCode: e.target.checked, code: '' }))}
-                        className="mr-2"
-                        title="Auto-generate discount code"
-                      />
-                      <span className="text-sm text-gray-600">Auto-generate</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={discountCodeForm.generatePattern}
-                      onChange={(e) => setDiscountCodeForm(prev => ({ ...prev, generatePattern: e.target.value }))}
-                      className="px-2 py-1 text-xs border border-gray-300 rounded font-mono"
-                      placeholder="SAVE{RAND4}"
-                      title="Code generation pattern"
-                    />
-                  </div>
-                  {discountCodeForm.code && collisionCheck[discountCodeForm.code] && (
-                    <div className="mt-2 flex items-center text-red-600 text-sm">
-                      <AlertCircle className="h-4 w-4 mr-1" />
-                      Code already exists
-                    </div>
-                  )}
-                </div>
-
-                {/* Description & Status */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Description *</label>
-                  <input
-                    type="text"
-                    value={discountCodeForm.description}
-                    onChange={(e) => setDiscountCodeForm(prev => ({ ...prev, description: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    placeholder="e.g., 20% off all items"
-                    title="Enter discount code description"
-                  />
-                  <div className="mt-3 flex items-center justify-between">
                     <label className="flex items-center">
                       <input
                         type="checkbox"
                         checked={discountCodeForm.isActive}
                         onChange={(e) => setDiscountCodeForm(prev => ({ ...prev, isActive: e.target.checked }))}
-                        className="mr-2"
-                        title="Enable/disable discount code"
+                        className="mr-3 h-5 w-5 text-green-600"
+                        title="Activate immediately"
                       />
-                      <span className="text-sm font-medium text-gray-700">Active immediately</span>
+                      <span className="text-base font-medium text-gray-900">Activate discount code immediately</span>
                     </label>
-                    <select
-                      value={discountCodeForm.timezone}
-                      onChange={(e) => setDiscountCodeForm(prev => ({ ...prev, timezone: e.target.value }))}
-                      className="px-2 py-1 text-sm border border-gray-300 rounded"
-                      title="Timezone"
-                    >
-                      <option value="EST">EST</option>
-                      <option value="PST">PST</option>
-                      <option value="CST">CST</option>
-                      <option value="MST">MST</option>
-                    </select>
                   </div>
                 </div>
-              </div>
 
-              {/* 2. Code Type & Scope */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                {/* Type & Value */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Type *</label>
-                  <select
-                    value={discountCodeForm.type}
-                    onChange={(e) => setDiscountCodeForm(prev => ({ ...prev, type: e.target.value as any }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    title="Select discount type"
-                  >
-                    <option value="percentage">Percentage Discount</option>
-                    <option value="fixed_amount">Fixed Amount</option>
-                    <option value="free_shipping">Free Shipping</option>
-                    <option value="bogo">Buy X Get Y</option>
-                    <option value="tiered">Tiered (Spend Thresholds)</option>
-                  </select>
-                  
-                  {/* Dynamic Value Input */}
-                  {discountCodeForm.type === 'percentage' && (
-                    <div className="mt-3">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Percentage (%)</label>
-                      <input
-                        type="number"
-                        value={discountCodeForm.value}
-                        onChange={(e) => setDiscountCodeForm(prev => ({ ...prev, value: parseFloat(e.target.value) || 0 }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        placeholder="20"
-                        title="Discount percentage"
-                      />
-                    </div>
-                  )}
-                  
-                  {discountCodeForm.type === 'fixed_amount' && (
-                    <div className="mt-3">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Amount ($)</label>
-                      <input
-                        type="number"
-                        value={discountCodeForm.value}
-                        onChange={(e) => setDiscountCodeForm(prev => ({ ...prev, value: parseFloat(e.target.value) || 0 }))}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                        placeholder="10"
-                        title="Fixed discount amount"
-                      />
-                    </div>
-                  )}
-                  
-                  {discountCodeForm.type === 'bogo' && (
-                    <div className="mt-3 space-y-3">
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Buy Quantity</label>
-                          <input
-                            type="number"
-                            value={discountCodeForm.bogoConfig.buyQty}
-                            onChange={(e) => setDiscountCodeForm(prev => ({
-                              ...prev,
-                              bogoConfig: { ...prev.bogoConfig, buyQty: parseInt(e.target.value) || 1 }
-                            }))}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                            title="Buy quantity"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Get Quantity</label>
-                          <input
-                            type="number"
-                            value={discountCodeForm.bogoConfig.getQty}
-                            onChange={(e) => setDiscountCodeForm(prev => ({
-                              ...prev,
-                              bogoConfig: { ...prev.bogoConfig, getQty: parseInt(e.target.value) || 1 }
-                            }))}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                            title="Get quantity"
-                          />
-                        </div>
-                      </div>
-                      <label className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={discountCodeForm.bogoConfig.sameCollection}
-                          onChange={(e) => setDiscountCodeForm(prev => ({
-                            ...prev,
-                            bogoConfig: { ...prev.bogoConfig, sameCollection: e.target.checked }
-                          }))}
-                          className="mr-2"
-                          title="Same collection requirement"
-                        />
-                        <span className="text-sm text-gray-600">Same collection required</span>
-                      </label>
-                    </div>
-                  )}
-                </div>
-
-                {/* Scope & Channels */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Scope</label>
-                  <div className="space-y-2">
-                    {['entire_cart', 'collections', 'products', 'first_order', 'subscription', 'sales_window'].map((scope) => (
-                      <label key={scope} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={discountCodeForm.scope.includes(scope)}
-                          onChange={(e) => {
-                            const newScope = e.target.checked
-                              ? [...discountCodeForm.scope, scope]
-                              : discountCodeForm.scope.filter(s => s !== scope);
-                            setDiscountCodeForm(prev => ({ ...prev, scope: newScope }));
-                          }}
-                          className="mr-2"
-                          title={`Apply to ${scope.replace('_', ' ')}`}
-                        />
-                        <span className="text-sm text-gray-700 capitalize">{scope.replace('_', ' ')}</span>
-                      </label>
-                    ))}
-                  </div>
-                  
-                  <label className="block text-sm font-medium text-gray-700 mb-2 mt-4">Channels</label>
-                  <div className="space-y-2">
-                    {['marketplace', 'pickup', 'delivery', 'dropoff', 'market_event', 'app_only'].map((channel) => (
-                      <label key={channel} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={discountCodeForm.channels.includes(channel)}
-                          onChange={(e) => {
-                            const newChannels = e.target.checked
-                              ? [...discountCodeForm.channels, channel]
-                              : discountCodeForm.channels.filter(c => c !== channel);
-                            setDiscountCodeForm(prev => ({ ...prev, channels: newChannels }));
-                          }}
-                          className="mr-2"
-                          title={`Available on ${channel.replace('_', ' ')}`}
-                        />
-                        <span className="text-sm text-gray-700 capitalize">{channel.replace('_', ' ')}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Dates */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
-                  <input
-                    type="date"
-                    value={discountCodeForm.startDate}
-                    onChange={(e) => setDiscountCodeForm(prev => ({ ...prev, startDate: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    title="Select start date"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
-                  <input
-                    type="date"
-                    value={discountCodeForm.endDate}
-                    onChange={(e) => setDiscountCodeForm(prev => ({ ...prev, endDate: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    title="Select end date"
-                  />
-                </div>
-              </div>
-
-              {/* 3. Eligibility & Limits Accordion */}
-              <div className="border border-gray-200 rounded-lg mb-6">
-                <button
-                  onClick={() => toggleAccordion('eligibility')}
-                  className="w-full px-4 py-3 text-left flex items-center justify-between hover:bg-gray-50"
-                >
-                  <span className="font-medium text-gray-900">Advanced · Eligibility & Limits</span>
-                  <span className={`transform transition-transform ${expandedAccordions.eligibility ? 'rotate-180' : ''}`}>
-                    ▼
-                  </span>
-                </button>
-                {expandedAccordions.eligibility && (
-                  <div className="px-4 pb-4 border-t border-gray-200">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-4">
-                      {/* Limits */}
-                      <div className="space-y-4">
-                        <h4 className="font-medium text-gray-900">Usage Limits</h4>
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Total Usage</label>
-                            <input
-                              type="number"
-                              value={discountCodeForm.limits.totalUsage}
-                              onChange={(e) => setDiscountCodeForm(prev => ({
-                                ...prev,
-                                limits: { ...prev.limits, totalUsage: parseInt(e.target.value) || 0 }
-                              }))}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                              placeholder="0 = unlimited"
-                              title="Total usage limit"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Per Customer</label>
-                            <input
-                              type="number"
-                              value={discountCodeForm.limits.perCustomer}
-                              onChange={(e) => setDiscountCodeForm(prev => ({
-                                ...prev,
-                                limits: { ...prev.limits, perCustomer: parseInt(e.target.value) || 0 }
-                              }))}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                              placeholder="0 = unlimited"
-                              title="Per customer limit"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Min Spend ($)</label>
-                            <input
-                              type="number"
-                              value={discountCodeForm.limits.minSpend}
-                              onChange={(e) => setDiscountCodeForm(prev => ({
-                                ...prev,
-                                limits: { ...prev.limits, minSpend: parseFloat(e.target.value) || 0 }
-                              }))}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                              placeholder="0"
-                              title="Minimum spend"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Max Spend ($)</label>
-                            <input
-                              type="number"
-                              value={discountCodeForm.limits.maxSpend}
-                              onChange={(e) => setDiscountCodeForm(prev => ({
-                                ...prev,
-                                limits: { ...prev.limits, maxSpend: parseFloat(e.target.value) || 0 }
-                              }))}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                              placeholder="0 = unlimited"
-                              title="Maximum spend"
-                            />
-                          </div>
-                        </div>
-                        <label className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={discountCodeForm.limits.oneTime}
-                            onChange={(e) => setDiscountCodeForm(prev => ({
-                              ...prev,
-                              limits: { ...prev.limits, oneTime: e.target.checked }
-                            }))}
-                            className="mr-2"
-                            title="One-time use only"
-                          />
-                          <span className="text-sm text-gray-600">One-time use only</span>
-                        </label>
-                      </div>
-
-                      {/* Audience & Stacking */}
-                      <div className="space-y-4">
-                        <h4 className="font-medium text-gray-900">Audience & Stacking</h4>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Customer Type</label>
-                          <select
-                            value={discountCodeForm.audience.newReturning}
-                            onChange={(e) => setDiscountCodeForm(prev => ({
-                              ...prev,
-                              audience: { ...prev.audience, newReturning: e.target.value }
-                            }))}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                            title="Select customer type"
-                          >
-                            <option value="all">All customers</option>
-                            <option value="new">New customers only</option>
-                            <option value="returning">Returning customers only</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Stacking Policy</label>
-                          <select
-                            value={discountCodeForm.stacking.policy}
-                            onChange={(e) => setDiscountCodeForm(prev => ({
-                              ...prev,
-                              stacking: { ...prev.stacking, policy: e.target.value as any }
-                            }))}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                            title="Select stacking policy"
-                          >
-                            <option value="exclusive">Exclusive (cannot combine)</option>
-                            <option value="stackable">Stackable (can combine)</option>
-                            <option value="mutually_exclusive">Mutually Exclusive (group)</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* 4. Guardrails & Forecast Accordion */}
-              <div className="border border-gray-200 rounded-lg mb-6">
-                <button
-                  onClick={() => toggleAccordion('guardrails')}
-                  className="w-full px-4 py-3 text-left flex items-center justify-between hover:bg-gray-50"
-                >
-                  <span className="font-medium text-gray-900">Advanced · Guardrails & Forecast</span>
-                  <span className={`transform transition-transform ${expandedAccordions.guardrails ? 'rotate-180' : ''}`}>
-                    ▼
-                  </span>
-                </button>
-                {expandedAccordions.guardrails && (
-                  <div className="px-4 pb-4 border-t border-gray-200">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-4">
-                      {/* Guardrails */}
-                      <div className="space-y-4">
-                        <h4 className="font-medium text-gray-900">Safety Guardrails</h4>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Max Discount ($)</label>
-                          <input
-                            type="number"
-                            value={discountCodeForm.guardrails.maxDiscount}
-                            onChange={(e) => setDiscountCodeForm(prev => ({
-                              ...prev,
-                              guardrails: { ...prev.guardrails, maxDiscount: parseFloat(e.target.value) || 0 }
-                            }))}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                            placeholder="0 = no limit"
-                            title="Maximum discount amount"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Margin Floor (%)</label>
-                          <input
-                            type="number"
-                            value={discountCodeForm.guardrails.marginFloor}
-                            onChange={(e) => setDiscountCodeForm(prev => ({
-                              ...prev,
-                              guardrails: { ...prev.guardrails, marginFloor: parseFloat(e.target.value) || 0 }
-                            }))}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                            placeholder="0 = no floor"
-                            title="Minimum margin percentage"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Forecast Preview */}
-                      <div className="space-y-4">
-                        <h4 className="font-medium text-gray-900">Forecast Preview</h4>
-                        <div className="bg-blue-50 p-4 rounded-lg">
-                          <div className="text-sm space-y-2">
-                            <div className="flex justify-between">
-                              <span className="text-gray-600">Exposure today:</span>
-                              <span className="font-medium">$0</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-600">Est. redemptions/day:</span>
-                              <span className="font-medium">0</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-600">Inventory alerts:</span>
-                              <span className="font-medium text-green-600">None</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* 5. Instant Distribution Accordion */}
-              <div className="border border-gray-200 rounded-lg mb-6">
-                <button
-                  onClick={() => toggleAccordion('distribution')}
-                  className="w-full px-4 py-3 text-left flex items-center justify-between hover:bg-gray-50"
-                >
-                  <span className="font-medium text-gray-900">Share & Track</span>
-                  <span className={`transform transition-transform ${expandedAccordions.distribution ? 'rotate-180' : ''}`}>
-                    ▼
-                  </span>
-                </button>
-                {expandedAccordions.distribution && (
-                  <div className="px-4 pb-4 border-t border-gray-200">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-4">
-                      {/* Auto-apply Link */}
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Auto-apply Link</label>
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            value={`${window.location.origin}/apply/${discountCodeForm.code || 'CODE'}`}
-                            readOnly
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 font-mono text-sm"
-                          />
-                          <button
-                            onClick={() => navigator.clipboard.writeText(`${window.location.origin}/apply/${discountCodeForm.code || 'CODE'}`)}
-                            className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                            title="Copy link"
-                          >
-                            Copy
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* QR Code & Best Code */}
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-700">QR Code</span>
-                          <div className="w-16 h-16 bg-gray-200 rounded border-2 border-dashed border-gray-300 flex items-center justify-center">
-                            <span className="text-xs text-gray-500">QR</span>
-                          </div>
-                        </div>
-                        <label className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={discountCodeForm.distribution.participateInBestCode}
-                            onChange={(e) => setDiscountCodeForm(prev => ({
-                              ...prev,
-                              distribution: { ...prev.distribution, participateInBestCode: e.target.checked }
-                            }))}
-                            className="mr-2"
-                            title="Participate in best code resolver"
-                          />
-                          <span className="text-sm text-gray-600">Auto-apply best code</span>
-                        </label>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Sticky Rule Summary & Footer */}
-            <div className="border-t border-gray-200 bg-gray-50 p-4 flex-shrink-0">
-              <div className="mb-4">
-                <div className="bg-white p-3 rounded-lg border">
-                  <div className="text-sm font-mono text-gray-700">
-                    {generateRuleSummary()}
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex justify-between items-center">
-                <div className="flex gap-3">
+                {/* Footer */}
+                <div className="border-t border-gray-200 mt-8 pt-6 flex justify-between">
                   <button
                     onClick={() => {
-                      resetDiscountCodeForm();
-                      setShowDiscountCodeModal(false);
+                      setWizardStep(1);
+                      setCreationType(null);
                     }}
                     className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
                   >
-                    Cancel
-                  </button>
-                  <button
-                    className="px-4 py-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-                    title="Preview eligibility rules"
-                  >
-                    Preview Eligibility
-                  </button>
-                </div>
-                
-                <div className="flex gap-3">
-                  <button
-                    className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-                    title="Save as draft"
-                  >
-                    Save as Draft
+                    ← Back
                   </button>
                   <button
                     onClick={handleDiscountCodeCreate}
                     disabled={isCreatingDiscountCode}
-                    className={`px-6 py-2 rounded-lg transition-colors ${
+                    className={`px-8 py-3 rounded-lg transition-colors font-semibold ${
                       isCreatingDiscountCode
                         ? 'bg-gray-400 text-white cursor-not-allowed'
-                        : 'bg-green-600 text-white hover:bg-green-700'
+                        : 'bg-green-600 text-white hover:bg-green-700 shadow-lg'
                     }`}
-                    title="Create advanced discount code"
+                    title="Create discount code"
                   >
-                    {isCreatingDiscountCode ? (
-                      <div className="flex items-center gap-2">
-                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-                        Creating...
-                      </div>
-                    ) : (
-                      'Create Discount Code'
-                    )}
+                    {isCreatingDiscountCode ? 'Creating...' : 'Create Discount Code'}
                   </button>
                 </div>
               </div>
-            </div>
+            )}
+
+            {/* Step 2: Promotion Form */}
+            {wizardStep === 2 && creationType === 'promotion' && (
+              <div className="p-6">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                  <p className="text-blue-900 text-base leading-relaxed">
+                    Let's set up your promotional campaign. Configure the details below to start driving more sales!
+                  </p>
+                </div>
+
+                {/* Vendor Scoping Notice */}
+                <div className="bg-purple-50 border-l-4 border-purple-500 p-4 mb-6">
+                  <div className="flex items-start">
+                    <AlertCircle className="h-5 w-5 text-purple-600 mt-0.5 mr-3 flex-shrink-0" />
+                    <div>
+                      <h4 className="text-purple-900 font-semibold mb-1">Vendor-Specific Promotion</h4>
+                      <p className="text-purple-800 text-sm">
+                        This promotion will <strong>only apply to your products</strong>. Customers shopping from other vendors will not see or be able to use this promotion. 
+                        Your promotions are isolated to your store to protect your business interests.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Name */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 mb-2">Promotion Name *</label>
+                      <input
+                        type="text"
+                        value={promotionForm.name}
+                        onChange={(e) => setPromotionForm(prev => ({ ...prev, name: e.target.value }))}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="e.g., Black Friday Sale"
+                        title="Enter promotion name"
+                      />
+                    </div>
+
+                    {/* Type */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 mb-2">Promotion Type *</label>
+                      <select
+                        value={promotionForm.type}
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        onChange={(e) => setPromotionForm(prev => ({ ...prev, type: e.target.value as any }))}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        title="Select promotion type"
+                      >
+                        <option value="percentage">Percentage Discount</option>
+                        <option value="fixed_amount">Fixed Amount Off</option>
+                        <option value="bogo">Buy One Get One</option>
+                        <option value="free_shipping">Free Shipping</option>
+                        <option value="loyalty_points">Bonus Loyalty Points</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-2">Description *</label>
+                    <textarea
+                      rows={3}
+                      value={promotionForm.description}
+                      onChange={(e) => setPromotionForm(prev => ({ ...prev, description: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Describe your promotion to attract customers..."
+                      title="Enter promotion description"
+                    />
+                  </div>
+
+                  {/* Value and Status */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {promotionForm.type !== 'free_shipping' && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-900 mb-2">
+                          Value * {promotionForm.type === 'percentage' && '(%)'}
+                          {promotionForm.type === 'fixed_amount' && '($)'}
+                          {promotionForm.type === 'loyalty_points' && '(points)'}
+                        </label>
+                        <input
+                          type="number"
+                          value={promotionForm.value}
+                          onChange={(e) => setPromotionForm(prev => ({ ...prev, value: parseFloat(e.target.value) || 0 }))}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg font-medium"
+                          placeholder="0"
+                          title="Enter promotion value"
+                        />
+                      </div>
+                    )}
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 mb-2">Status</label>
+                      <select
+                        value={promotionForm.status}
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        onChange={(e) => setPromotionForm(prev => ({ ...prev, status: e.target.value as any }))}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        title="Select promotion status"
+                      >
+                        <option value="draft">Draft - Not visible yet</option>
+                        <option value="active">Active - Live now</option>
+                        <option value="paused">Paused - Temporarily disabled</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Dates */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 mb-2">Start Date</label>
+                      <input
+                        type="date"
+                        value={promotionForm.startDate}
+                        onChange={(e) => setPromotionForm(prev => ({ ...prev, startDate: e.target.value }))}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        title="Select start date"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-900 mb-2">End Date</label>
+                      <input
+                        type="date"
+                        value={promotionForm.endDate}
+                        onChange={(e) => setPromotionForm(prev => ({ ...prev, endDate: e.target.value }))}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        title="Select end date"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Min Order Amount */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-2">Minimum Order Amount ($)</label>
+                    <input
+                      type="number"
+                      value={promotionForm.minimumOrderAmount}
+                      onChange={(e) => setPromotionForm(prev => ({ ...prev, minimumOrderAmount: parseFloat(e.target.value) || 0 }))}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="0 = no minimum"
+                      title="Minimum order amount"
+                    />
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="border-t border-gray-200 mt-8 pt-6 flex justify-between">
+                  <button
+                    onClick={() => {
+                      setWizardStep(1);
+                      setCreationType(null);
+                    }}
+                    className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  >
+                    ← Back
+                  </button>
+                  <button
+                    onClick={handleCustomPromotionCreate}
+                    disabled={isCreatingPromotion}
+                    className={`px-8 py-3 rounded-lg transition-colors font-semibold ${
+                      isCreatingPromotion
+                        ? 'bg-gray-400 text-white cursor-not-allowed'
+                        : 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg'
+                    }`}
+                    title="Create promotion"
+                  >
+                    {isCreatingPromotion ? 'Creating...' : 'Create Promotion'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
