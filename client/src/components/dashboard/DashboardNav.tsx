@@ -13,12 +13,12 @@ import {
 const navItems = [
   { label: 'Pulse', href: '/dashboard/vendor/pulse', icon: Home },
   { label: 'Analytics & CRM', href: '/dashboard/vendor/analytics-crm', icon: BarChart3 },
+  { label: 'Inventory', href: '/dashboard/vendor/inventory', icon: Database },
   { label: 'Products', href: '/dashboard/vendor/products', icon: Package },
   { label: 'Sales Windows', href: '/dashboard/vendor/sales-windows', icon: ShoppingCart },
-  { label: 'Inventory', href: '/dashboard/vendor/inventory', icon: Database },
   { label: 'Orders', href: '/dashboard/vendor/orders', icon: ClipboardList },
-  { label: 'Promotions', href: '/dashboard/vendor/promotions', icon: Percent },
   { label: 'Labels', href: '/dashboard/vendor/labels', icon: Printer },
+  { label: 'Promotions', href: '/dashboard/vendor/promotions', icon: Percent },
 ];
 
 export default function DashboardNav() {

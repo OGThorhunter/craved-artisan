@@ -3,7 +3,7 @@ export interface SalesWindow {
   id: string;
   name: string;
   description?: string;
-  status: 'DRAFT' | 'SCHEDULED' | 'OPEN' | 'CLOSED' | 'ARCHIVED';
+  status: 'SCHEDULED' | 'OPEN' | 'CLOSED' | 'ARCHIVED';
   isEvergreen: boolean;
   startDate?: string;
   endDate?: string;

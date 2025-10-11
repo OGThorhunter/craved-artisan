@@ -296,8 +296,8 @@ const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
       suggestions.push({
         id: 'sug-consolidate',
         type: 'consolidation',
-        title: 'Consider Vendor Consolidation',
-        description: `You're ordering from ${vendorGroups.size} different vendors. Consolidating orders could reduce shipping costs.`,
+        title: 'Consider Supplier Consolidation',
+        description: `You're ordering from ${vendorGroups.size} different suppliers. Consolidating orders could reduce shipping costs.`,
         itemId: null,
         action: null
       });
@@ -408,7 +408,7 @@ const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
     doc.text(`Total Items: ${totals.itemCount}`, pageWidth - 14, 18, { align: 'right' });
     doc.text(`Low Stock Items: ${totals.lowStockCount}`, pageWidth - 14, 24, { align: 'right' });
     doc.text(`Total Cost: $${totals.total.toFixed(2)}`, pageWidth - 14, 30, { align: 'right' });
-    doc.text(`Vendors: ${totals.vendorCount}`, pageWidth - 14, 36, { align: 'right' });
+    doc.text(`Suppliers: ${totals.vendorCount}`, pageWidth - 14, 36, { align: 'right' });
     
     // Group by vendor
     const byVendor = new Map<string, ShoppingListItem[]>();
@@ -537,7 +537,7 @@ const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
             Shopping List Manager
           </h2>
           <p className="text-gray-600 mt-1">
-            Calculates exact quantities to buy based on current stock and top-up levels, with smart vendor comparisons
+            Calculates exact quantities to buy based on current stock and top-up levels, with smart supplier comparisons
           </p>
         </div>
         <div className="flex gap-2">
@@ -617,7 +617,7 @@ const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
         <Card className="p-4 bg-[#F7F2EC]">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Vendors</p>
+              <p className="text-sm font-medium text-gray-600">Suppliers</p>
               <p className="text-2xl font-bold text-purple-600">{totals.vendorCount}</p>
             </div>
             <Building2 className="h-8 w-8 text-purple-600" />
@@ -732,7 +732,7 @@ const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty to Buy</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Supplier</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
@@ -765,7 +765,7 @@ const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
                           value={item.selectedVendorId || ''}
                           onChange={(e) => handleVendorChange(item.id, e.target.value)}
                           className="px-2 py-1 border border-gray-300 rounded text-xs focus:ring-2 focus:ring-blue-500"
-                          title="Select vendor"
+                          title="Select supplier"
                         >
                           <option value="">-- Select --</option>
                           {item.vendorPrices.map(vendor => (
@@ -1030,7 +1030,7 @@ const ShoppingListManager: React.FC<ShoppingListManagerProps> = ({
                   <p className="text-xl font-bold text-blue-900">{totals.itemCount}</p>
                 </div>
                 <div className="bg-purple-50 p-3 rounded-lg">
-                  <p className="text-xs text-purple-700 mb-1">Vendors</p>
+                  <p className="text-xs text-purple-700 mb-1">Suppliers</p>
                   <p className="text-xl font-bold text-purple-900">{totals.vendorCount}</p>
                 </div>
                 <div className="bg-red-50 p-3 rounded-lg">

@@ -18,6 +18,7 @@ import JobCostEstimatorTab from './dashboard/vendor/inventory/tabs/JobCostEstima
 import SDStarterManager from '../components/inventory/SDStarterManager';
 import BackupSupplyManager from '../components/inventory/BackupSupplyManager';
 import ShoppingListManager from '../components/inventory/ShoppingListManager';
+import SupplierManager from '../components/inventory/SupplierManager';
 import { 
   useInventoryItems, 
   useCreateInventoryItem, 
@@ -31,7 +32,7 @@ import type {
 } from '../hooks/useInventory';
 import { findDuplicateGroups, getDuplicateSuggestions } from '../utils/inventoryDuplicates';
 
-type TabType = 'inventory' | 'bulking' | 'starter' | 'backup' | 'shopping-list';
+type TabType = 'inventory' | 'bulking' | 'starter' | 'backup' | 'shopping-list' | 'suppliers';
 
 const VendorInventoryPage: React.FC = () => {
   // State
@@ -230,7 +231,13 @@ const VendorInventoryPage: React.FC = () => {
       id: 'shopping-list' as TabType,
       label: 'Shopping List',
       icon: ShoppingCart,
-      description: 'Smart procurement with vendor comparison'
+      description: 'Smart procurement with supplier comparison'
+    },
+    {
+      id: 'suppliers' as TabType,
+      label: 'Suppliers',
+      icon: Database,
+      description: 'Manage suppliers and track pricing trends'
     }
   ];
 
@@ -338,6 +345,17 @@ const VendorInventoryPage: React.FC = () => {
           </button>
         </div>
 
+        {/* Inventory Disclaimer */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <Shield className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+            <div className="text-sm text-blue-900">
+              <p className="font-semibold mb-1">📋 Inventory Management Best Practice</p>
+              <p>We recommend periodically auditing your inventory to identify and combine duplicate entries. While our system detects many duplicates automatically, some may slip through. Duplicate items can trigger false stock alerts and affect your inventory accuracy.</p>
+            </div>
+          </div>
+        </div>
+
         {/* Motivational Quote */}
         <MotivationalQuote
           quote={getQuoteByCategory('growth').quote}
@@ -431,6 +449,10 @@ const VendorInventoryPage: React.FC = () => {
 
             {activeTab === 'shopping-list' && (
               <ShoppingListManager inventoryItems={inventoryItems} />
+            )}
+
+            {activeTab === 'suppliers' && (
+              <SupplierManager />
             )}
           </div>
         </div>

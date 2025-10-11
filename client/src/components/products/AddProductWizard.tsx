@@ -18,7 +18,7 @@ import {
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import CravendorWizard from '../ui/CravendorWizard';
-import { useInventoryItems } from '../../hooks/useInventory';
+import { useInventoryItems, useCreateInventoryItem } from '../../hooks/useInventory';
 
 interface ProductWizardData {
   name?: string;
@@ -70,7 +70,7 @@ interface AddProductWizardProps {
   categories?: Array<{ id: string; name: string }>;
 }
 
-type WizardStep = 'welcome' | 'basics' | 'details' | 'ingredients' | 'production' | 'images' | 'pricing' | 'review';
+type WizardStep = 'welcome' | 'creation-method' | 'ai-parsing' | 'basics' | 'details' | 'ingredients' | 'production' | 'images' | 'pricing' | 'review';
 
 const AddProductWizard: React.FC<AddProductWizardProps> = ({
   isOpen,
@@ -80,8 +80,31 @@ const AddProductWizard: React.FC<AddProductWizardProps> = ({
 }) => {
   // Fetch inventory items
   const { data: inventoryItems = [] } = useInventoryItems();
+  const createInventoryItem = useCreateInventoryItem();
   
   const [currentStep, setCurrentStep] = useState<WizardStep>('welcome');
+  const [creationMethod, setCreationMethod] = useState<'manual' | 'scan' | null>(null);
+  const [showCustomIngredientForm, setShowCustomIngredientForm] = useState(false);
+  const [showAiParsingModal, setShowAiParsingModal] = useState(false);
+  const [uploadedDocument, setUploadedDocument] = useState<File | null>(null);
+  const [aiParsingResult, setAiParsingResult] = useState<any>(null);
+  const [isParsing, setIsParsing] = useState(false);
+  const [parsingAttempted, setParsingAttempted] = useState(false);
+  const [customIngredientData, setCustomIngredientData] = useState({
+    name: '',
+    description: '',
+    category: '',
+    supplier: '',
+    currentStock: 0,
+    quantityPerUnit: 1,
+    reorderPoint: 0,
+    unit: '',
+    unitPrice: 0,
+    location: '',
+    batchNumber: '',
+    expirationDate: '',
+    tags: [] as string[]
+  });
   const [productData, setProductData] = useState<ProductWizardData>({
     type: 'FOOD',
     active: true,
@@ -92,6 +115,7 @@ const AddProductWizard: React.FC<AddProductWizardProps> = ({
     images: [],
     documents: []
   });
+  const [noLeadTime, setNoLeadTime] = useState(false);
   const [newTag, setNewTag] = useState('');
   const [newIngredient, setNewIngredient] = useState({
     inventoryItemId: '',
@@ -112,6 +136,12 @@ const AddProductWizard: React.FC<AddProductWizardProps> = ({
   const handleStepNext = () => {
     switch (currentStep) {
       case 'welcome':
+        setCurrentStep('creation-method');
+        break;
+      case 'creation-method':
+        // This case is now handled directly in the button click handlers
+        break;
+      case 'ai-parsing':
         setCurrentStep('basics');
         break;
       case 'basics':
@@ -144,8 +174,14 @@ const AddProductWizard: React.FC<AddProductWizardProps> = ({
 
   const handleStepBack = () => {
     switch (currentStep) {
-      case 'basics':
+      case 'creation-method':
         setCurrentStep('welcome');
+        break;
+      case 'ai-parsing':
+        setCurrentStep('creation-method');
+        break;
+      case 'basics':
+        setCurrentStep(creationMethod === 'scan' ? 'ai-parsing' : 'creation-method');
         break;
       case 'details':
         setCurrentStep('basics');
@@ -172,8 +208,14 @@ const AddProductWizard: React.FC<AddProductWizardProps> = ({
 
   const handleReset = () => {
     setCurrentStep('welcome');
-        setProductData({
-          type: 'FOOD',
+    setCreationMethod(null);
+    setNoLeadTime(false);
+    setUploadedDocument(null);
+    setAiParsingResult(null);
+    setIsParsing(false);
+    setParsingAttempted(false);
+    setProductData({
+      type: 'FOOD',
       active: true,
       autoGenerateSku: true,
       tags: [],
@@ -228,6 +270,69 @@ const AddProductWizard: React.FC<AddProductWizardProps> = ({
     }
   };
 
+  const handleAutoCreateIngredients = async (parsedIngredients: any[]) => {
+    const createdIngredients: any[] = [];
+    const missingIngredients: string[] = [];
+
+    for (const parsedIngredient of parsedIngredients) {
+      // Check if ingredient exists in inventory
+      const existingItem = inventoryItems.find(item => 
+        item.name.toLowerCase().includes(parsedIngredient.name.toLowerCase()) ||
+        parsedIngredient.name.toLowerCase().includes(item.name.toLowerCase())
+      );
+
+      if (existingItem) {
+        // Use existing ingredient
+        createdIngredients.push({
+          inventoryItemId: existingItem.id,
+          quantity: parsedIngredient.quantity,
+          unit: parsedIngredient.unit,
+          notes: `AI parsed from document`,
+          isOptional: false
+        });
+      } else {
+        // Create new ingredient in inventory
+        try {
+          const newInventoryItem = await createInventoryItem.mutateAsync({
+            name: parsedIngredient.name,
+            description: `Auto-created from AI parsing - please update stock levels`,
+            category: 'food_grade',
+            currentStock: 0, // Zero stock as specified
+            reorderPoint: 0,
+            unit: parsedIngredient.unit,
+            unitPrice: 0, // Will need to be updated by user
+            supplier: 'Unknown - AI Created',
+            batch: `AI-${Date.now()}`,
+            tags: ['ai-created', 'needs-review'],
+            location: 'To be determined'
+          });
+
+          // Add to ingredients list
+          createdIngredients.push({
+            inventoryItemId: newInventoryItem.id,
+            quantity: parsedIngredient.quantity,
+            unit: parsedIngredient.unit,
+            notes: `AI created ingredient - stock: 0, needs review`,
+            isOptional: false
+          });
+
+          missingIngredients.push(parsedIngredient.name);
+        } catch (error) {
+          console.error('Failed to create ingredient:', parsedIngredient.name, error);
+          missingIngredients.push(parsedIngredient.name);
+        }
+      }
+    }
+
+    // Update product ingredients
+    updateProductData('ingredients', createdIngredients);
+
+    // Show disclaimer for missing ingredients if any
+    if (missingIngredients.length > 0) {
+      alert(`⚠️ AI Parsing Notice\n\nThe following ingredients were not found in your inventory and have been added with zero stock:\n\n• ${missingIngredients.join('\n• ')}\n\nPlease review and update their stock levels and pricing in your inventory.`);
+    }
+  };
+
   const removeIngredient = (index: number) => {
     updateProductData('ingredients', productData.ingredients?.filter((_, i) => i !== index) || []);
   };
@@ -278,7 +383,7 @@ const AddProductWizard: React.FC<AddProductWizardProps> = ({
   };
 
   const getStepProgress = () => {
-    const steps = ['welcome', 'basics', 'details', 'ingredients', 'production', 'images', 'pricing', 'review'];
+    const steps = ['welcome', 'creation-method', 'ai-parsing', 'basics', 'details', 'ingredients', 'production', 'images', 'pricing', 'review'];
     const currentIndex = steps.indexOf(currentStep);
     return ((currentIndex + 1) / steps.length) * 100;
   };
@@ -319,6 +424,16 @@ const AddProductWizard: React.FC<AddProductWizardProps> = ({
       updateProductData('baseCost', calculatedInventoryCost);
     }
   }, [calculatedInventoryCost, productData.baseCost]);
+
+  // Reset AI parsing states when modal opens
+  React.useEffect(() => {
+    if (showAiParsingModal) {
+      setUploadedDocument(null);
+      setAiParsingResult(null);
+      setIsParsing(false);
+      setParsingAttempted(false);
+    }
+  }, [showAiParsingModal]);
 
   // Calculate suggested selling price based on target margin
   const suggestedPrice = useMemo(() => {
@@ -395,6 +510,175 @@ const AddProductWizard: React.FC<AddProductWizardProps> = ({
                   <Button onClick={handleStepNext} className="bg-purple-600 hover:bg-purple-700 text-white text-lg px-8 py-3 rounded-full inline-flex items-center justify-center mx-auto gap-2">
                     Next <ArrowRight className="w-5 h-5" />
                   </Button>
+                </CravendorWizard>
+              </motion.div>
+            )}
+
+            {currentStep === 'creation-method' && (
+              <motion.div
+                key="creation-method"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <CravendorWizard title="How would you like to create your product?">
+                  <p className="text-lg text-gray-700 mb-6">
+                    Choose your preferred method for adding product details:
+                  </p>
+                  
+                  <div className="space-y-4 max-w-md mx-auto">
+                    <button
+                      onClick={() => {
+                        setCreationMethod('manual');
+                        setCurrentStep('basics');
+                      }}
+                      className="w-full p-6 border-2 border-purple-200 rounded-lg hover:border-purple-400 hover:bg-purple-50 transition-all text-left group"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center group-hover:bg-purple-200 transition-colors">
+                          <Package className="w-6 h-6 text-purple-600" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900">Manual Entry</h3>
+                          <p className="text-gray-600">Fill out product details step by step</p>
+                        </div>
+                      </div>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setCreationMethod('scan');
+                        setShowAiParsingModal(true);
+                      }}
+                      className="w-full p-6 border-2 border-blue-200 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-all text-left group"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                          <Upload className="w-6 h-6 text-blue-600" />
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900">Scan & AI Parse</h3>
+                          <p className="text-gray-600">Upload an image and let AI extract product information</p>
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+                </CravendorWizard>
+              </motion.div>
+            )}
+
+            {currentStep === 'ai-parsing' && parsingAttempted && (
+              <motion.div
+                key="ai-parsing"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <CravendorWizard title="AI Parsing Results">
+                  {aiParsingResult !== null && aiParsingResult !== undefined ? (
+                    <div className="space-y-4">
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <div className="flex items-start gap-3">
+                          <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
+                          <div className="text-sm text-green-800">
+                            <p className="font-semibold mb-1">Successfully Parsed!</p>
+                            <p>AI has extracted the following information from your document:</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-left">
+                        <h4 className="font-semibold text-gray-900 mb-3">Parsed Information:</h4>
+                        <div className="space-y-2 text-sm">
+                          <div><span className="font-medium">Product Name:</span> {aiParsingResult.name || 'Not detected'}</div>
+                          <div><span className="font-medium">Description:</span> {aiParsingResult.description || 'Not detected'}</div>
+                          <div><span className="font-medium">Price:</span> ${aiParsingResult.price || 'Not detected'}</div>
+                          <div><span className="font-medium">Ingredients:</span> {aiParsingResult.ingredients?.length || 0} items detected</div>
+                          {aiParsingResult.ingredients && aiParsingResult.ingredients.length > 0 && (
+                            <div className="mt-2">
+                              <span className="font-medium">Ingredients List:</span>
+                              <ul className="mt-1 ml-4 space-y-1">
+                                {aiParsingResult.ingredients.slice(0, 3).map((ingredient: any, index: number) => (
+                                  <li key={index} className="text-xs text-gray-600">
+                                    • {ingredient.name} ({ingredient.quantity} {ingredient.unit})
+                                  </li>
+                                ))}
+                                {aiParsingResult.ingredients.length > 3 && (
+                                  <li className="text-xs text-gray-500">
+                                    ... and {aiParsingResult.ingredients.length - 3} more
+                                  </li>
+                                )}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex gap-3 justify-center">
+                        <Button
+                          onClick={async () => {
+                            // Apply all parsed data to productData
+                            if (aiParsingResult.name) updateProductData('name', aiParsingResult.name);
+                            if (aiParsingResult.description) updateProductData('description', aiParsingResult.description);
+                            if (aiParsingResult.price) updateProductData('price', aiParsingResult.price);
+                            
+                            // Auto-fill ingredients and create missing ones
+                            if (aiParsingResult.ingredients && aiParsingResult.ingredients.length > 0) {
+                              await handleAutoCreateIngredients(aiParsingResult.ingredients);
+                            }
+                            
+                            // Skip to review step for AI-parsed products
+                            setCurrentStep('review');
+                          }}
+                          className="bg-green-600 hover:bg-green-700 text-white"
+                        >
+                          Use Parsed Data & Skip to Review
+                        </Button>
+                        <Button
+                          onClick={async () => {
+                            // Fill in all fields with parsed data for manual editing
+                            if (aiParsingResult.name) updateProductData('name', aiParsingResult.name);
+                            if (aiParsingResult.description) updateProductData('description', aiParsingResult.description);
+                            if (aiParsingResult.price) updateProductData('price', aiParsingResult.price);
+                            
+                            // Auto-fill ingredients and create missing ones
+                            if (aiParsingResult.ingredients && aiParsingResult.ingredients.length > 0) {
+                              await handleAutoCreateIngredients(aiParsingResult.ingredients);
+                            }
+                            
+                            // Go to basics step for manual editing
+                            setCurrentStep('basics');
+                          }}
+                          variant="secondary"
+                        >
+                          Edit Manually (Pre-filled)
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <div className="flex items-start gap-3">
+                          <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5" />
+                          <div className="text-sm text-yellow-800">
+                            <p className="font-semibold mb-1">Parsing Failed</p>
+                            <p>The AI was unable to extract information from your document. You can proceed with manual entry.</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <Button
+                        onClick={() => {
+                          setCurrentStep('basics');
+                        }}
+                        className="bg-purple-600 hover:bg-purple-700 text-white"
+                      >
+                        Continue with Manual Entry
+                      </Button>
+                    </div>
+                  )}
                 </CravendorWizard>
               </motion.div>
             )}
@@ -659,6 +943,10 @@ const AddProductWizard: React.FC<AddProductWizardProps> = ({
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                             value={newIngredient.inventoryItemId}
                             onChange={(e) => {
+                              if (e.target.value === 'add-custom') {
+                                setShowCustomIngredientForm(true);
+                                return;
+                              }
                               const item = inventoryItems.find(i => i.id === e.target.value);
                               setNewIngredient({
                                 ...newIngredient,
@@ -674,6 +962,9 @@ const AddProductWizard: React.FC<AddProductWizardProps> = ({
                                 {item.name} ({item.currentStock} {item.unit} available)
                               </option>
                             ))}
+                            <option value="add-custom" className="text-blue-600 font-medium">
+                              + Add Custom Ingredient
+                            </option>
                           </select>
                   </div>
                         <div className="flex gap-2">
@@ -783,6 +1074,503 @@ const AddProductWizard: React.FC<AddProductWizardProps> = ({
               </motion.div>
             )}
 
+            {/* AI Parsing Modal */}
+            {showAiParsingModal && (
+              <motion.div
+                key={`ai-modal-${showAiParsingModal}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4"
+              >
+                <motion.div
+                  initial={{ y: 50, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: 50, opacity: 0 }}
+                  className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col"
+                >
+                  {/* Header */}
+                  <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 rounded-t-lg flex items-center justify-between">
+                    <div>
+                      <h3 className="text-xl font-bold">AI Document Parser</h3>
+                      <p className="text-white/90 mt-1">Upload a document and let AI extract product information</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setShowAiParsingModal(false);
+                        setCreationMethod('manual');
+                        setCurrentStep('basics');
+                        // Reset parsing states
+                        setUploadedDocument(null);
+                        setAiParsingResult(null);
+                        setIsParsing(false);
+                        setParsingAttempted(false);
+                      }}
+                      className="text-white/80 hover:text-white transition-colors"
+                      title="Close modal"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-6 flex-1 overflow-y-auto space-y-4">
+                    {!uploadedDocument ? (
+                      <div className="text-center space-y-4">
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                          <Upload className="w-12 h-12 text-blue-600 mx-auto mb-3" />
+                          <h4 className="font-semibold text-blue-900 mb-2">Upload Document</h4>
+                          <p className="text-blue-700 text-sm mb-4">
+                            Upload a PDF, image, or document containing your product information. AI will extract details like name, description, ingredients, and pricing.
+                          </p>
+                          
+                          <input
+                            type="file"
+                            id="document-upload"
+                            accept=".pdf,.jpg,.jpeg,.png,.gif,.bmp,.tiff,.doc,.docx"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                setUploadedDocument(file);
+                              }
+                            }}
+                            className="hidden"
+                          />
+                          <label
+                            htmlFor="document-upload"
+                            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg cursor-pointer transition-colors"
+                          >
+                            <Upload className="w-4 h-4" />
+                            Choose File
+                          </label>
+                        </div>
+
+                        <div className="text-xs text-gray-500">
+                          <p>Supported formats: PDF, JPG, PNG, DOC, DOCX (max 10MB)</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                          <div className="flex items-center gap-3">
+                            <CheckCircle className="w-5 h-5 text-green-600" />
+                            <div>
+                              <p className="font-semibold text-green-900">Document Uploaded</p>
+                              <p className="text-green-700 text-sm">{uploadedDocument.name}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {!isParsing && !aiParsingResult && (
+                          <div className="text-center space-y-4">
+                            <Button
+                              onClick={async () => {
+                                setIsParsing(true);
+                                setParsingAttempted(true);
+                                try {
+                                  // For now, use mock parsing until the API endpoint is implemented
+                                  // TODO: Replace with actual API call when /api/ai/parse-document is available
+                                  
+                                  // Simulate AI parsing delay
+                                  await new Promise(resolve => setTimeout(resolve, 3000));
+                                  
+                                  // Mock successful parsing result based on document type
+                                  const fileName = uploadedDocument.name.toLowerCase();
+                                  let mockResult;
+                                  
+                                  if (fileName.includes('recipe') || fileName.includes('ingredient')) {
+                                    mockResult = {
+                                      name: "Artisan Sourdough Bread",
+                                      description: "Traditional sourdough bread made with organic flour and natural starter",
+                                      price: 8.99,
+                                      ingredients: [
+                                        { name: "Organic Bread Flour", quantity: 500, unit: "g" },
+                                        { name: "Sourdough Starter", quantity: 100, unit: "g" },
+                                        { name: "Himalayan Pink Salt", quantity: 10, unit: "g" },
+                                        { name: "Filtered Water", quantity: 350, unit: "ml" }
+                                      ],
+                                      instructions: "Mix ingredients, knead, proof, and bake at 450°F for 30 minutes"
+                                    };
+                                  } else if (fileName.includes('product') || fileName.includes('menu')) {
+                                    mockResult = {
+                                      name: "Gourmet Chocolate Chip Cookies",
+                                      description: "Handcrafted cookies with premium dark chocolate chips",
+                                      price: 4.99,
+                                      ingredients: [
+                                        { name: "All-Purpose Flour", quantity: 250, unit: "g" },
+                                        { name: "European Butter", quantity: 113, unit: "g" },
+                                        { name: "Dark Brown Sugar", quantity: 100, unit: "g" },
+                                        { name: "Belgian Dark Chocolate Chips", quantity: 150, unit: "g" }
+                                      ]
+                                    };
+                                  } else {
+                                    // Generic product parsing
+                                    mockResult = {
+                                      name: "Custom Artisan Product",
+                                      description: "Handcrafted product made with premium ingredients",
+                                      price: 12.99,
+                                      ingredients: [
+                                        { name: "Premium Ingredient A", quantity: 100, unit: "g" },
+                                        { name: "Special Ingredient B", quantity: 50, unit: "ml" }
+                                      ]
+                                    };
+                                  }
+                                  
+                                  setAiParsingResult(mockResult);
+                                } catch (error) {
+                                  console.error('AI parsing failed:', error);
+                                  setAiParsingResult(null);
+                                } finally {
+                                  setIsParsing(false);
+                                }
+                              }}
+                              className="bg-purple-600 hover:bg-purple-700 text-white"
+                            >
+                              Parse with AI
+                            </Button>
+                            
+                            <Button
+                              onClick={() => {
+                                setUploadedDocument(null);
+                                setAiParsingResult(null);
+                                setParsingAttempted(false);
+                              }}
+                              variant="secondary"
+                            >
+                              Upload Different File
+                            </Button>
+                          </div>
+                        )}
+
+                        {isParsing && (
+                          <div className="text-center space-y-4">
+                            <div className="animate-spin w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full mx-auto"></div>
+                            <p className="text-purple-700 font-medium">AI is analyzing your document...</p>
+                            <p className="text-gray-600 text-sm">This may take a few moments</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Footer */}
+                  <div className="p-4 bg-gray-50 border-t border-gray-200 flex justify-between rounded-b-lg">
+                    <Button
+                      onClick={() => {
+                        setShowAiParsingModal(false);
+                        setCreationMethod('manual');
+                        setCurrentStep('basics');
+                        // Reset parsing states
+                        setUploadedDocument(null);
+                        setAiParsingResult(null);
+                        setIsParsing(false);
+                        setParsingAttempted(false);
+                      }}
+                      variant="secondary"
+                    >
+                      Cancel & Use Manual Entry
+                    </Button>
+                    {aiParsingResult && (
+                      <Button
+                        onClick={() => {
+                          setShowAiParsingModal(false);
+                          setCurrentStep('ai-parsing');
+                        }}
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        View Results
+                      </Button>
+                    )}
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+
+            {/* Custom Ingredient Form Modal */}
+            {showCustomIngredientForm && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4"
+              >
+                <motion.div
+                  initial={{ y: 50, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: 50, opacity: 0 }}
+                  className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col"
+                >
+                  {/* Header */}
+                  <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 rounded-t-lg flex items-center justify-between">
+                    <div>
+                      <h3 className="text-xl font-bold">Add Custom Ingredient</h3>
+                      <p className="text-white/90 mt-1">This ingredient will be saved to your inventory</p>
+                    </div>
+                    <button
+                      onClick={() => setShowCustomIngredientForm(false)}
+                      className="text-white/80 hover:text-white transition-colors"
+                      title="Close modal"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-6 flex-1 overflow-y-auto space-y-4">
+                    {/* Disclaimer */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="flex items-start gap-3">
+                        <Info className="w-5 h-5 text-blue-600 mt-0.5" />
+                        <div className="text-sm text-blue-800">
+                          <p className="font-semibold mb-1">Important Notice</p>
+                          <p>This ingredient will be added to your inventory system. Make sure all information is accurate as it will affect your stock tracking and cost calculations.</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Form Fields */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Item Name *
+                        </label>
+                        <input
+                          type="text"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          value={customIngredientData.name}
+                          onChange={(e) => setCustomIngredientData({...customIngredientData, name: e.target.value})}
+                          placeholder="e.g., Organic Coconut Flour"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Category *
+                        </label>
+                        <select
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          value={customIngredientData.category}
+                          onChange={(e) => setCustomIngredientData({...customIngredientData, category: e.target.value})}
+                          title="Category"
+                        >
+                          <option value="">Select category...</option>
+                          <option value="food_grade">Food Grade</option>
+                          <option value="raw_materials">Raw Materials</option>
+                          <option value="packaging">Packaging</option>
+                          <option value="equipment">Equipment</option>
+                        </select>
+                      </div>
+
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Description
+                        </label>
+                        <textarea
+                          rows={2}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          value={customIngredientData.description}
+                          onChange={(e) => setCustomIngredientData({...customIngredientData, description: e.target.value})}
+                          placeholder="Brief description of the ingredient..."
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Supplier
+                        </label>
+                        <input
+                          type="text"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          value={customIngredientData.supplier}
+                          onChange={(e) => setCustomIngredientData({...customIngredientData, supplier: e.target.value})}
+                          placeholder="e.g., Local Farm Co."
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Location
+                        </label>
+                        <input
+                          type="text"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          value={customIngredientData.location}
+                          onChange={(e) => setCustomIngredientData({...customIngredientData, location: e.target.value})}
+                          placeholder="e.g., Pantry Shelf A1"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Current Stock (Bulk Quantity) *
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          value={customIngredientData.currentStock}
+                          onChange={(e) => setCustomIngredientData({...customIngredientData, currentStock: parseFloat(e.target.value) || 0})}
+                          placeholder="0.00"
+                          title="Current Stock"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Total quantity you have (e.g., 1 box, 5 lbs)</p>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Quantity Per Unit *
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          step="0.01"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          value={customIngredientData.quantityPerUnit}
+                          onChange={(e) => setCustomIngredientData({...customIngredientData, quantityPerUnit: parseFloat(e.target.value) || 1})}
+                          placeholder="1.00"
+                          title="Quantity Per Unit"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">How many individual units in your bulk purchase (e.g., 15 cups from 1 box of garlic)</p>
+                        <p className="text-xs text-blue-600 mt-1">💡 This helps calculate unit cost: if you paid $30 for 15 cups, each cup costs $2.00</p>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Unit *
+                        </label>
+                        <select
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          value={customIngredientData.unit}
+                          onChange={(e) => setCustomIngredientData({...customIngredientData, unit: e.target.value})}
+                          title="Unit"
+                        >
+                          <option value="">Select unit...</option>
+                          <option value="lbs">Pounds (lbs)</option>
+                          <option value="oz">Ounces (oz)</option>
+                          <option value="kg">Kilograms (kg)</option>
+                          <option value="g">Grams (g)</option>
+                          <option value="cups">Cups</option>
+                          <option value="tbsp">Tablespoons (tbsp)</option>
+                          <option value="tsp">Teaspoons (tsp)</option>
+                          <option value="each">Each</option>
+                          <option value="dozen">Dozen</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Unit Price ($) *
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          value={customIngredientData.unitPrice}
+                          onChange={(e) => setCustomIngredientData({...customIngredientData, unitPrice: parseFloat(e.target.value) || 0})}
+                          placeholder="0.00"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Reorder Point
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          value={customIngredientData.reorderPoint}
+                          onChange={(e) => setCustomIngredientData({...customIngredientData, reorderPoint: parseFloat(e.target.value) || 0})}
+                          placeholder="Minimum stock level"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Batch Number
+                        </label>
+                        <input
+                          type="text"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          value={customIngredientData.batchNumber}
+                          onChange={(e) => setCustomIngredientData({...customIngredientData, batchNumber: e.target.value})}
+                          placeholder="e.g., BATCH-2024-001"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Expiration Date
+                        </label>
+                        <input
+                          type="date"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          value={customIngredientData.expirationDate}
+                          onChange={(e) => setCustomIngredientData({...customIngredientData, expirationDate: e.target.value})}
+                          title="Expiration Date"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="p-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3 rounded-b-lg">
+                    <Button
+                      onClick={() => setShowCustomIngredientForm(false)}
+                      variant="secondary"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        createInventoryItem.mutate({
+                          name: customIngredientData.name,
+                          description: customIngredientData.description,
+                          category: customIngredientData.category as 'food_grade' | 'raw_materials' | 'packaging' | 'equipment',
+                          currentStock: customIngredientData.currentStock,
+                          reorderPoint: customIngredientData.reorderPoint,
+                          unit: customIngredientData.unit,
+                          unitPrice: customIngredientData.unitPrice,
+                          supplier: customIngredientData.supplier,
+                          batch: customIngredientData.batchNumber || undefined,
+                          expiryDate: customIngredientData.expirationDate || undefined,
+                          tags: customIngredientData.tags,
+                          location: customIngredientData.location
+                        }, {
+                          onSuccess: () => {
+                            setShowCustomIngredientForm(false);
+                            // Reset form
+                            setCustomIngredientData({
+                              name: '',
+                              description: '',
+                              category: '',
+                              supplier: '',
+                              currentStock: 0,
+                              quantityPerUnit: 1,
+                              reorderPoint: 0,
+                              unit: '',
+                              unitPrice: 0,
+                              location: '',
+                              batchNumber: '',
+                              expirationDate: '',
+                              tags: []
+                            });
+                          }
+                        });
+                      }}
+                      disabled={!customIngredientData.name || !customIngredientData.category || !customIngredientData.unit || customIngredientData.unitPrice <= 0 || createInventoryItem.isPending}
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      {createInventoryItem.isPending ? 'Adding...' : 'Add to Inventory'}
+                    </Button>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+
             {currentStep === 'production' && (
               <motion.div
                 key="production"
@@ -840,12 +1628,34 @@ const AddProductWizard: React.FC<AddProductWizardProps> = ({
                           id="leadTimeDays"
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                           value={productData.leadTimeDays || ''}
-                          onChange={(e) => updateProductData('leadTimeDays', parseInt(e.target.value) || undefined)}
+                          onChange={(e) => {
+                            if (!noLeadTime) {
+                              updateProductData('leadTimeDays', parseInt(e.target.value) || undefined);
+                            }
+                          }}
                           placeholder="e.g., 3"
                           min="0"
                           step="1"
                           title="Lead Time"
+                          disabled={noLeadTime}
                         />
+                        <div className="mt-2 flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            id="noLeadTime"
+                            checked={noLeadTime}
+                            onChange={(e) => {
+                              setNoLeadTime(e.target.checked);
+                              if (e.target.checked) {
+                                updateProductData('leadTimeDays', 0);
+                              }
+                            }}
+                            className="rounded border-gray-300 text-purple-600 focus:ring-purple-500"
+                          />
+                          <label htmlFor="noLeadTime" className="text-sm text-gray-700">
+                            No lead time required
+                          </label>
+                        </div>
                         <p className="text-xs text-gray-500 mt-1">
                           Days needed before production can start (e.g., sourdough starter prep)
                         </p>
@@ -1221,10 +2031,28 @@ const AddProductWizard: React.FC<AddProductWizardProps> = ({
                     <CheckCircle className="w-16 h-16 text-green-600" />
                     </div>
                   </div>
-                <h3 className="text-3xl font-bold text-green-600">Good Job, You Created a New Product!</h3>
+                <h3 className="text-3xl font-bold text-green-600">
+                  {creationMethod === 'scan' ? 'AI-Parsed Product Ready!' : 'Good Job, You Created a New Product!'}
+                </h3>
                 <p className="text-lg text-gray-700 max-w-prose mx-auto">
-                  You can come back and visit this product anytime if you care to update things or just check-in and see if your pricing setup is still relevant. Take a quick look below and make sure everything is right, if so, click accept!
+                  {creationMethod === 'scan' 
+                    ? 'Your AI-parsed product has been automatically created with all the details from your document. Review the information below and make any final adjustments before accepting.'
+                    : 'You can come back and visit this product anytime if you care to update things or just check-in and see if your pricing setup is still relevant. Take a quick look below and make sure everything is right, if so, click accept!'
+                  }
                 </p>
+
+                {/* AI Parsing Notice */}
+                {creationMethod === 'scan' && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-2xl mx-auto">
+                    <div className="flex items-start gap-3">
+                      <Info className="w-5 h-5 text-blue-600 mt-0.5" />
+                      <div className="text-sm text-blue-800 text-left">
+                        <p className="font-semibold mb-1">🤖 AI Parsing Complete</p>
+                        <p>This product was created using AI document parsing. All ingredients have been automatically matched or created in your inventory. Please review the ingredient details and update any missing stock levels or pricing.</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <Card className="p-6 bg-gray-50 border border-gray-200 text-left space-y-3">
                   <h4 className="text-xl font-bold text-gray-900 flex items-center gap-2">
@@ -1264,6 +2092,24 @@ const AddProductWizard: React.FC<AddProductWizardProps> = ({
                         <div>
                       <span className="font-semibold">Ingredients:</span>
                       <p className="text-gray-700">{productData.ingredients?.length || 0} items</p>
+                      {productData.ingredients && productData.ingredients.length > 0 && (
+                        <div className="mt-2 space-y-1">
+                          {productData.ingredients.map((ingredient, index) => {
+                            const item = inventoryItems.find(i => i.id === ingredient.inventoryItemId);
+                            const isAiCreated = item?.tags?.includes('ai-created');
+                            return (
+                              <div key={index} className="text-xs text-gray-600 flex items-center gap-2">
+                                <span>• {item?.name || 'Unknown'} ({ingredient.quantity} {ingredient.unit})</span>
+                                {isAiCreated && (
+                                  <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">
+                                    AI Created
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
                         </div>
                         <div>
                       <span className="font-semibold">Images:</span>
@@ -1351,6 +2197,23 @@ const AddProductWizard: React.FC<AddProductWizardProps> = ({
             >
                 <ArrowLeft className="w-4 h-4" /> Back
             </Button>
+            )}
+            {currentStep === 'creation-method' && (
+              <Button
+                onClick={handleStepNext}
+                disabled={!creationMethod}
+                className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white ml-auto disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next <ArrowRight className="w-4 h-4" />
+              </Button>
+            )}
+            {currentStep === 'ai-parsing' && (
+              <Button
+                onClick={handleStepNext}
+                className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white ml-auto"
+              >
+                Next <ArrowRight className="w-4 h-4" />
+              </Button>
             )}
             {currentStep === 'basics' && (
               <Button

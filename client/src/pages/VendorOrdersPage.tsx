@@ -18,7 +18,8 @@ import {
   BookOpen,
   AlertCircle,
   CheckSquare,
-  Printer
+  Printer,
+  X
 } from 'lucide-react';
 import VendorDashboardLayout from '../layouts/VendorDashboardLayout';
 import Button from '../components/ui/Button';
@@ -330,11 +331,397 @@ const mockOrders: Order[] = [
         }
       }
     ]
+  },
+  {
+    id: '5',
+    orderNumber: 'ORD-1005',
+    customerName: 'Sarah Thompson',
+    customerEmail: 'sarah.t@example.com',
+    phone: '(555) 789-4561',
+    status: 'CONFIRMED',
+    priority: 'HIGH',
+    createdAt: new Date().toISOString(),
+    dueAt: new Date(Date.now() + 12 * 60 * 60 * 1000).toISOString(), // Due in 12 hours
+    paymentStatus: 'PAID',
+    total: 48.00,
+    orderItems: [
+      {
+        id: 'item-5a',
+        productId: 'prod-cinnamon-rolls',
+        productName: 'Cinnamon Rolls',
+        quantity: 6,
+        unitPrice: 4.50,
+        total: 27.00,
+        status: 'PENDING',
+        madeQty: 0,
+        product: {
+          id: 'prod-cinnamon-rolls',
+          name: 'Cinnamon Rolls',
+          imageUrl: '/images/cinnamon-rolls.jpg',
+          recipeId: 'recipe-cinnamon-rolls',
+          recipe: {
+            id: 'recipe-cinnamon-rolls',
+            name: 'Classic Cinnamon Rolls',
+            ingredients: [
+              { name: 'All-Purpose Flour', quantity: 480, unit: 'g' },
+              { name: 'Whole Milk', quantity: 240, unit: 'ml' },
+              { name: 'Butter', quantity: 115, unit: 'g' },
+              { name: 'Sugar', quantity: 100, unit: 'g' },
+              { name: 'Eggs', quantity: 2, unit: 'whole' },
+              { name: 'Instant Yeast', quantity: 7, unit: 'g' },
+              { name: 'Cinnamon', quantity: 15, unit: 'g' }
+            ],
+            steps: [
+              { stepNumber: 1, instruction: 'Make dough and let rise for 1 hour.', duration: 60 },
+              { stepNumber: 2, instruction: 'Roll out, add filling, cut into rolls.', duration: 20 },
+              { stepNumber: 3, instruction: 'Second rise for 45 minutes.', duration: 45 },
+              { stepNumber: 4, instruction: 'Bake at 350°F for 25-30 minutes. Add cream cheese frosting.', duration: 30 }
+            ],
+            yieldAmount: 12
+          }
+        }
+      },
+      {
+        id: 'item-5b',
+        productId: 'prod-sourdough',
+        productName: 'Sourdough Bread',
+        quantity: 3,
+        unitPrice: 6.99,
+        total: 20.97,
+        status: 'PENDING',
+        madeQty: 0,
+        product: {
+          id: 'prod-sourdough',
+          name: 'Sourdough Bread',
+          imageUrl: '/images/sourdough.jpg',
+          recipeId: 'recipe-sourdough',
+          recipe: {
+            id: 'recipe-sourdough',
+            name: 'Classic Sourdough Bread',
+            ingredients: [
+              { name: 'Bread Flour', quantity: 500, unit: 'g' },
+              { name: 'Sourdough Starter', quantity: 100, unit: 'g' },
+              { name: 'Water', quantity: 350, unit: 'ml' },
+              { name: 'Salt', quantity: 10, unit: 'g' }
+            ],
+            steps: [
+              { stepNumber: 1, instruction: 'Mix flour, water, and starter. Let autolyse for 30 minutes.', duration: 30 },
+              { stepNumber: 2, instruction: 'Add salt and perform stretch and folds every 30 minutes for 3 hours.', duration: 180 },
+              { stepNumber: 3, instruction: 'Shape and place in banneton. Cold proof overnight (12-16 hours).', duration: 720 },
+              { stepNumber: 4, instruction: 'Preheat oven to 475°F. Score and bake covered for 20 mins, then uncovered for 25 mins.', duration: 45 }
+            ],
+            yieldAmount: 1
+          }
+        }
+      }
+    ]
+  },
+  {
+    id: '6',
+    orderNumber: 'ORD-1006',
+    customerName: 'James Wilson',
+    customerEmail: 'j.wilson@example.com',
+    phone: '(555) 147-2589',
+    status: 'CONFIRMED',
+    priority: 'LOW',
+    createdAt: new Date().toISOString(),
+    dueAt: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(), // Due in 2 days
+    paymentStatus: 'PAID',
+    total: 72.50,
+    orderItems: [
+      {
+        id: 'item-6',
+        productId: 'prod-focaccia',
+        productName: 'Rosemary Focaccia',
+        quantity: 5,
+        unitPrice: 14.50,
+        total: 72.50,
+        status: 'PENDING',
+        madeQty: 0,
+        product: {
+          id: 'prod-focaccia',
+          name: 'Rosemary Focaccia',
+          imageUrl: '/images/focaccia.jpg',
+          recipeId: 'recipe-focaccia',
+          recipe: {
+            id: 'recipe-focaccia',
+            name: 'Rosemary Focaccia Bread',
+            ingredients: [
+              { name: 'Bread Flour', quantity: 500, unit: 'g' },
+              { name: 'Water', quantity: 375, unit: 'ml' },
+              { name: 'Olive Oil', quantity: 50, unit: 'ml' },
+              { name: 'Fresh Rosemary', quantity: 15, unit: 'g' },
+              { name: 'Sea Salt', quantity: 12, unit: 'g' },
+              { name: 'Instant Yeast', quantity: 8, unit: 'g' }
+            ],
+            steps: [
+              { stepNumber: 1, instruction: 'Mix all ingredients and knead for 10 minutes.', duration: 10 },
+              { stepNumber: 2, instruction: 'First rise for 1 hour in oiled bowl.', duration: 60 },
+              { stepNumber: 3, instruction: 'Stretch into pan, dimple with fingers, add toppings. Rise 30 minutes.', duration: 30 },
+              { stepNumber: 4, instruction: 'Bake at 425°F for 20-25 minutes until golden.', duration: 25 }
+            ],
+            yieldAmount: 1
+          }
+        }
+      }
+    ]
+  },
+  {
+    id: '7',
+    orderNumber: 'ORD-1007',
+    customerName: 'Lisa Anderson',
+    customerEmail: 'lisa.anderson@example.com',
+    phone: '(555) 852-9637',
+    status: 'CONFIRMED',
+    priority: 'MEDIUM',
+    createdAt: new Date().toISOString(),
+    dueAt: new Date(Date.now() + 36 * 60 * 60 * 1000).toISOString(), // Due in 1.5 days
+    paymentStatus: 'PAID',
+    total: 45.96,
+    orderItems: [
+      {
+        id: 'item-7a',
+        productId: 'prod-baguette',
+        productName: 'French Baguette',
+        quantity: 4,
+        unitPrice: 5.99,
+        total: 23.96,
+        status: 'PENDING',
+        madeQty: 0,
+        product: {
+          id: 'prod-baguette',
+          name: 'French Baguette',
+          imageUrl: '/images/baguette.jpg',
+          recipeId: 'recipe-baguette',
+          recipe: {
+            id: 'recipe-baguette',
+            name: 'Traditional French Baguette',
+            ingredients: [
+              { name: 'Bread Flour', quantity: 500, unit: 'g' },
+              { name: 'Water', quantity: 350, unit: 'ml' },
+              { name: 'Salt', quantity: 10, unit: 'g' },
+              { name: 'Instant Yeast', quantity: 5, unit: 'g' }
+            ],
+            steps: [
+              { stepNumber: 1, instruction: 'Mix ingredients and autolyse for 30 minutes.', duration: 30 },
+              { stepNumber: 2, instruction: 'Knead for 5 minutes, bulk ferment for 3-4 hours with folds.', duration: 240 },
+              { stepNumber: 3, instruction: 'Divide and pre-shape. Rest 20 minutes, then final shape.', duration: 20 },
+              { stepNumber: 4, instruction: 'Proof for 1 hour, score, and bake at 475°F with steam for 25 minutes.', duration: 85 }
+            ],
+            yieldAmount: 3
+          }
+        }
+      },
+      {
+        id: 'item-7b',
+        productId: 'prod-croissant',
+        productName: 'Butter Croissant',
+        quantity: 6,
+        unitPrice: 3.99,
+        total: 23.94,
+        status: 'PENDING',
+        madeQty: 0,
+        product: {
+          id: 'prod-croissant',
+          name: 'Butter Croissant',
+          imageUrl: '/images/croissant.jpg',
+          recipeId: 'recipe-croissant',
+          recipe: {
+            id: 'recipe-croissant',
+            name: 'Classic Butter Croissants',
+            ingredients: [
+              { name: 'All-Purpose Flour', quantity: 500, unit: 'g' },
+              { name: 'European Butter', quantity: 280, unit: 'g' },
+              { name: 'Whole Milk', quantity: 240, unit: 'ml' },
+              { name: 'Sugar', quantity: 50, unit: 'g' },
+              { name: 'Salt', quantity: 10, unit: 'g' },
+              { name: 'Instant Yeast', quantity: 10, unit: 'g' }
+            ],
+            steps: [
+              { stepNumber: 1, instruction: 'Make dough and refrigerate for 1 hour.', duration: 60 },
+              { stepNumber: 2, instruction: 'Laminate with butter using 3 letter folds. Chill 30 mins between folds.', duration: 240 },
+              { stepNumber: 3, instruction: 'Roll out and cut into triangles. Shape and proof for 2-3 hours until doubled.', duration: 150 },
+              { stepNumber: 4, instruction: 'Egg wash and bake at 400°F for 15-18 minutes until golden.', duration: 18 }
+            ],
+            yieldAmount: 12
+          }
+        }
+      }
+    ]
+  },
+  {
+    id: '8',
+    orderNumber: 'ORD-1008',
+    customerName: 'Robert Kim',
+    customerEmail: 'robert.kim@example.com',
+    phone: '(555) 963-7412',
+    status: 'CONFIRMED',
+    priority: 'HIGH',
+    createdAt: new Date().toISOString(),
+    dueAt: new Date(Date.now() + 18 * 60 * 60 * 1000).toISOString(), // Due in 18 hours
+    paymentStatus: 'PAID',
+    total: 89.85,
+    orderItems: [
+      {
+        id: 'item-8a',
+        productId: 'prod-sourdough',
+        productName: 'Sourdough Bread',
+        quantity: 5,
+        unitPrice: 6.99,
+        total: 34.95,
+        status: 'PENDING',
+        madeQty: 0,
+        product: {
+          id: 'prod-sourdough',
+          name: 'Sourdough Bread',
+          imageUrl: '/images/sourdough.jpg',
+          recipeId: 'recipe-sourdough',
+          recipe: {
+            id: 'recipe-sourdough',
+            name: 'Classic Sourdough Bread',
+            ingredients: [
+              { name: 'Bread Flour', quantity: 500, unit: 'g' },
+              { name: 'Sourdough Starter', quantity: 100, unit: 'g' },
+              { name: 'Water', quantity: 350, unit: 'ml' },
+              { name: 'Salt', quantity: 10, unit: 'g' }
+            ],
+            steps: [
+              { stepNumber: 1, instruction: 'Mix flour, water, and starter. Let autolyse for 30 minutes.', duration: 30 },
+              { stepNumber: 2, instruction: 'Add salt and perform stretch and folds every 30 minutes for 3 hours.', duration: 180 },
+              { stepNumber: 3, instruction: 'Shape and place in banneton. Cold proof overnight (12-16 hours).', duration: 720 },
+              { stepNumber: 4, instruction: 'Preheat oven to 475°F. Score and bake covered for 20 mins, then uncovered for 25 mins.', duration: 45 }
+            ],
+            yieldAmount: 1
+          }
+        }
+      },
+      {
+        id: 'item-8b',
+        productId: 'prod-bagels',
+        productName: 'Everything Bagels',
+        quantity: 12,
+        unitPrice: 2.99,
+        total: 35.88,
+        status: 'PENDING',
+        madeQty: 0,
+        product: {
+          id: 'prod-bagels',
+          name: 'Everything Bagels',
+          imageUrl: '/images/bagels.jpg',
+          recipeId: 'recipe-bagels',
+          recipe: {
+            id: 'recipe-bagels',
+            name: 'New York Style Everything Bagels',
+            ingredients: [
+              { name: 'Bread Flour', quantity: 500, unit: 'g' },
+              { name: 'Water', quantity: 300, unit: 'ml' },
+              { name: 'Honey', quantity: 15, unit: 'ml' },
+              { name: 'Salt', quantity: 10, unit: 'g' },
+              { name: 'Instant Yeast', quantity: 7, unit: 'g' },
+              { name: 'Everything Seasoning', quantity: 30, unit: 'g' }
+            ],
+            steps: [
+              { stepNumber: 1, instruction: 'Mix dough and knead for 10 minutes.', duration: 10 },
+              { stepNumber: 2, instruction: 'Divide into portions, shape into bagels. Rest 10 minutes.', duration: 10 },
+              { stepNumber: 3, instruction: 'Boil in water with honey for 1 minute per side.', duration: 20 },
+              { stepNumber: 4, instruction: 'Top with everything seasoning and bake at 425°F for 20 minutes.', duration: 20 }
+            ],
+            yieldAmount: 12
+          }
+        }
+      },
+      {
+        id: 'item-8c',
+        productId: 'prod-focaccia',
+        productName: 'Rosemary Focaccia',
+        quantity: 1,
+        unitPrice: 14.50,
+        total: 14.50,
+        status: 'PENDING',
+        madeQty: 0,
+        product: {
+          id: 'prod-focaccia',
+          name: 'Rosemary Focaccia',
+          imageUrl: '/images/focaccia.jpg',
+          recipeId: 'recipe-focaccia',
+          recipe: {
+            id: 'recipe-focaccia',
+            name: 'Rosemary Focaccia Bread',
+            ingredients: [
+              { name: 'Bread Flour', quantity: 500, unit: 'g' },
+              { name: 'Water', quantity: 375, unit: 'ml' },
+              { name: 'Olive Oil', quantity: 50, unit: 'ml' },
+              { name: 'Fresh Rosemary', quantity: 15, unit: 'g' },
+              { name: 'Sea Salt', quantity: 12, unit: 'g' },
+              { name: 'Instant Yeast', quantity: 8, unit: 'g' }
+            ],
+            steps: [
+              { stepNumber: 1, instruction: 'Mix all ingredients and knead for 10 minutes.', duration: 10 },
+              { stepNumber: 2, instruction: 'First rise for 1 hour in oiled bowl.', duration: 60 },
+              { stepNumber: 3, instruction: 'Stretch into pan, dimple with fingers, add toppings. Rise 30 minutes.', duration: 30 },
+              { stepNumber: 4, instruction: 'Bake at 425°F for 20-25 minutes until golden.', duration: 25 }
+            ],
+            yieldAmount: 1
+          }
+        }
+      }
+    ]
+  },
+  {
+    id: '9',
+    orderNumber: 'ORD-1009',
+    customerName: 'Jennifer Garcia',
+    customerEmail: 'jenny.garcia@example.com',
+    phone: '(555) 321-7894',
+    status: 'IN_PRODUCTION',
+    priority: 'HIGH',
+    createdAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(), // Created 12 hours ago
+    dueAt: new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString(), // Due in 6 hours
+    paymentStatus: 'PAID',
+    total: 83.88,
+    orderItems: [
+      {
+        id: 'item-9',
+        productId: 'prod-croissant',
+        productName: 'Butter Croissant',
+        quantity: 24,
+        unitPrice: 3.99,
+        total: 95.76,
+        status: 'IN_PRODUCTION',
+        madeQty: 12,
+        product: {
+          id: 'prod-croissant',
+          name: 'Butter Croissant',
+          imageUrl: '/images/croissant.jpg',
+          recipeId: 'recipe-croissant',
+          recipe: {
+            id: 'recipe-croissant',
+            name: 'Classic Butter Croissants',
+            ingredients: [
+              { name: 'All-Purpose Flour', quantity: 500, unit: 'g' },
+              { name: 'European Butter', quantity: 280, unit: 'g' },
+              { name: 'Whole Milk', quantity: 240, unit: 'ml' },
+              { name: 'Sugar', quantity: 50, unit: 'g' },
+              { name: 'Salt', quantity: 10, unit: 'g' },
+              { name: 'Instant Yeast', quantity: 10, unit: 'g' }
+            ],
+            steps: [
+              { stepNumber: 1, instruction: 'Make dough and refrigerate for 1 hour.', duration: 60 },
+              { stepNumber: 2, instruction: 'Laminate with butter using 3 letter folds. Chill 30 mins between folds.', duration: 240 },
+              { stepNumber: 3, instruction: 'Roll out and cut into triangles. Shape and proof for 2-3 hours until doubled.', duration: 150 },
+              { stepNumber: 4, instruction: 'Egg wash and bake at 400°F for 15-18 minutes until golden.', duration: 18 }
+            ],
+            yieldAmount: 12
+          }
+        }
+      }
+    ],
+    notes: 'Customer event - needs to be ready by 2pm sharp!'
   }
 ];
 
 
-type ViewMode = 'list' | 'calendar' | 'batching' | 'fulfillment';
+type ViewMode = 'list' | 'calendar' | 'batching' | 'labeling' | 'qa';
 
 const VendorOrdersPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('batching'); // Default to batching for demo
@@ -351,12 +738,135 @@ const VendorOrdersPage: React.FC = () => {
   const [showLabelModal, setShowLabelModal] = useState(false);
   const [selectedOrderForLabel, setSelectedOrderForLabel] = useState<Order | null>(null);
   const [showAddOrderWizard, setShowAddOrderWizard] = useState(false);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [packageSelections, setPackageSelections] = useState<Record<string, string>>({});
+  const [showAddPackageModal, setShowAddPackageModal] = useState(false);
+  const [currentProductForPackage, setCurrentProductForPackage] = useState<string | null>(null);
+  const [customPackageData, setCustomPackageData] = useState({
+    name: '',
+    width: '',
+    height: '',
+    depth: '',
+    material: '',
+    currentStock: '',
+    reorderPoint: '',
+    unitPrice: '',
+    supplier: ''
+  });
 
-  // Use mock data for now
-  const orders = mockOrders;
+  // Load orders from localStorage on component mount
+  React.useEffect(() => {
+    const loadOrders = () => {
+      const savedOrders = JSON.parse(localStorage.getItem('vendorOrders') || '[]');
+      if (savedOrders.length > 0) {
+        setOrders(savedOrders);
+      } else {
+        // Use mock data if no saved orders
+        setOrders(mockOrders);
+      }
+    };
+
+    loadOrders();
+
+    // Listen for new orders created from sales windows
+    const handleOrderCreated = (event: CustomEvent) => {
+      const newOrder = event.detail;
+      setOrders(prev => [newOrder, ...prev]);
+      toast.success(`New hold inventory order created: ${newOrder.orderNumber}`);
+    };
+
+    window.addEventListener('orderCreated', handleOrderCreated as EventListener);
+    
+    return () => {
+      window.removeEventListener('orderCreated', handleOrderCreated as EventListener);
+    };
+  }, []);
+
   const isLoadingOrders = false;
   const aiInsights = null;
   const isLoadingInsights = false;
+
+  // Mock packaging options - in real app, would come from inventory API
+  const [availablePackaging, setAvailablePackaging] = useState([
+    { id: 'pkg-xl-window', name: 'XL Windowed Box', size: '12x8x4', material: 'Cardboard', stock: 150, labelTemplate: 'xl-window-label' },
+    { id: 'pkg-4x4-shrink', name: '4x4 Heat Shrink Bag', size: '4x4', material: 'Heat Shrink Film', stock: 300, labelTemplate: '4x4-label' },
+    { id: 'pkg-6x4-window', name: '6x4 Windowed Box', size: '6x4x3', material: 'Cardboard', stock: 200, labelTemplate: '6x4-window-label' },
+    { id: 'pkg-small-bag', name: 'Small Paper Bag', size: '6x9', material: 'Kraft Paper', stock: 500, labelTemplate: 'small-bag-label' },
+    { id: 'pkg-medium-box', name: 'Medium Box', size: '8x8x4', material: 'Cardboard', stock: 100, labelTemplate: 'medium-box-label' },
+    { id: 'pkg-baguette-sleeve', name: 'Baguette Sleeve', size: '20x4', material: 'Paper', stock: 250, labelTemplate: 'baguette-label' }
+  ]);
+
+  const handlePackageSelect = (productId: string, packageId: string) => {
+    setPackageSelections(prev => ({
+      ...prev,
+      [productId]: packageId
+    }));
+    
+    // Deduct from packaging inventory
+    const selectedPackage = availablePackaging.find(p => p.id === packageId);
+    if (selectedPackage) {
+      // Get total quantity needed for this product
+      const totalQty = orders
+        .flatMap(o => o.orderItems)
+        .filter(item => item.productId === productId)
+        .reduce((sum, item) => sum + item.quantity, 0);
+      
+      toast.success(`Selected ${selectedPackage.name} for packaging (${totalQty} units needed)`);
+    }
+  };
+
+  const handleAddCustomPackage = () => {
+    const newPackage = {
+      id: `pkg-custom-${Date.now()}`,
+      name: customPackageData.name,
+      size: `${customPackageData.width}x${customPackageData.height}x${customPackageData.depth}`,
+      material: customPackageData.material,
+      stock: parseInt(customPackageData.currentStock) || 0,
+      labelTemplate: 'custom-label'
+    };
+
+    // Add to packaging inventory
+    setAvailablePackaging(prev => [...prev, newPackage]);
+    
+    // Save to localStorage (in real app, this would be API call)
+    const existingPackaging = JSON.parse(localStorage.getItem('packagingInventory') || '[]');
+    const inventoryItem = {
+      id: newPackage.id,
+      name: newPackage.name,
+      description: `Custom packaging - ${newPackage.size} ${newPackage.material}`,
+      category: 'packaging',
+      currentStock: parseInt(customPackageData.currentStock) || 0,
+      reorderPoint: parseInt(customPackageData.reorderPoint) || 0,
+      unit: 'units',
+      unitPrice: parseFloat(customPackageData.unitPrice) || 0,
+      supplier: customPackageData.supplier,
+      tags: ['packaging', 'custom'],
+      location: 'Packaging Storage',
+      createdAt: new Date().toISOString()
+    };
+    existingPackaging.push(inventoryItem);
+    localStorage.setItem('packagingInventory', JSON.stringify(existingPackaging));
+
+    // Select the new package for the current product
+    if (currentProductForPackage) {
+      handlePackageSelect(currentProductForPackage, newPackage.id);
+    }
+
+    toast.success(`Added custom package: ${newPackage.name} to inventory`);
+    setShowAddPackageModal(false);
+    setCustomPackageData({
+      name: '',
+      width: '',
+      height: '',
+      depth: '',
+      material: '',
+      currentStock: '',
+      reorderPoint: '',
+      unitPrice: '',
+      supplier: ''
+    });
+    setCurrentProductForPackage(null);
+  };
 
   // Calculate summary stats
   const summaryStats = {
@@ -669,12 +1179,20 @@ const VendorOrdersPage: React.FC = () => {
                   <Layers className="h-4 w-4" />
                 </Button>
                 <Button
-                  variant={viewMode === 'fulfillment' ? 'primary' : 'secondary'}
-                  onClick={() => setViewMode('fulfillment')}
+                  variant={viewMode === 'labeling' ? 'primary' : 'secondary'}
+                  onClick={() => setViewMode('labeling')}
                   className="text-xs px-2 py-1"
-                  title="Fulfillment Center"
+                  title="Labeling & Packaging"
                 >
                   <Package className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'qa' ? 'primary' : 'secondary'}
+                  onClick={() => setViewMode('qa')}
+                  className="text-xs px-2 py-1"
+                  title="Final QA Checklist"
+                >
+                  <CheckSquare className="h-4 w-4" />
                 </Button>
               </div>
               
@@ -1135,42 +1653,398 @@ const VendorOrdersPage: React.FC = () => {
               </div>
             )}
 
-            {/* Fulfillment Center View */}
-            {viewMode === 'fulfillment' && (
+            {/* Labeling & Packaging View */}
+            {viewMode === 'labeling' && (
               <div className="space-y-6">
-                {/* Fulfillment Center Header */}
+                {/* Labeling & Packaging Header */}
                 <div className="bg-gradient-to-r from-green-500 to-teal-500 rounded-lg shadow-lg p-6 text-white">
                   <div>
-                    <h2 className="text-2xl font-bold mb-2">Fulfillment Center</h2>
+                    <h2 className="text-2xl font-bold mb-2">Labeling & Packaging Center</h2>
                     <p className="text-white/90">
-                      Package individual orders, print labels, and mark complete
+                      Select packaging for each product and print labels for all units
                     </p>
                   </div>
                 </div>
 
-                {/* Fulfillment Instructions */}
+                {/* Labeling & Packaging Instructions */}
                 <Card className="p-6 bg-[#F7F2EC] shadow-md border border-gray-200">
                   <div className="flex items-start gap-4">
-                    <AlertCircle className="h-6 w-6 text-blue-600 flex-shrink-0 mt-1" />
+                    <AlertCircle className="h-6 w-6 text-green-600 flex-shrink-0 mt-1" />
                     <div>
-                      <h3 className="font-bold text-blue-900 mb-2">Fulfillment Instructions</h3>
-                      <p className="text-blue-800">
-                        Package each order individually, print customer labels, 
-                        and mark orders as ready for pickup/delivery. Check off each order as you complete it.
+                      <h3 className="font-bold text-green-900 mb-2">Packaging & Label Instructions</h3>
+                      <p className="text-green-800">
+                        This view shows total quantities by product. Select the appropriate packaging for each product type, 
+                        then print all labels. The packaging you select determines which label template will be used and 
+                        deducts from your packaging inventory.
                       </p>
                     </div>
                   </div>
                 </Card>
 
-                {/* Individual Orders for Fulfillment */}
-                {orders.map((order) => (
-                  <Card key={order.id} className="p-6 bg-[#F7F2EC] shadow-md border border-gray-200 hover:shadow-lg transition-shadow">
+                {/* Products Grouped for Packaging */}
+                {productionBatches.map((batch) => {
+                  const selectedPackage = packageSelections[batch.productId];
+                  const packageInfo = availablePackaging.find(p => p.id === selectedPackage);
+                  const needsPackageSelection = !selectedPackage;
+                  
+                  return (
+                  <Card key={batch.productId} className={`p-6 bg-white shadow-md border-2 hover:shadow-lg transition-shadow ${
+                    needsPackageSelection ? 'border-orange-300' : 'border-gray-200'
+                  }`}>
                     <div className="space-y-4">
+                      {/* Product Header */}
+                      <div className="flex items-start justify-between pb-4 border-b-2 border-gray-200">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-3">
+                            <Package className="h-8 w-8 text-green-600" />
+                            <div>
+                              <h3 className="text-xl font-bold text-gray-900">{batch.productName}</h3>
+                              <p className="text-sm text-gray-600">
+                                Total Units to Package: <span className="font-bold text-green-600">{batch.totalQuantity}</span>
+                              </p>
+                            </div>
+                          </div>
+                          {needsPackageSelection && (
+                            <div className="bg-orange-50 border border-orange-200 rounded-lg p-2 mt-2">
+                              <p className="text-xs text-orange-800 font-medium">⚠️ Package selection required</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Packaging Selection */}
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <h4 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                          <Package className="h-5 w-5" />
+                          Select Packaging Type
+                        </h4>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
+                          {availablePackaging.map((pkg) => {
+                            const isSelected = selectedPackage === pkg.id;
+                            const hasStock = pkg.stock >= batch.totalQuantity;
+                            
+                            return (
+                              <button
+                                key={pkg.id}
+                                onClick={() => handlePackageSelect(batch.productId, pkg.id)}
+                                disabled={!hasStock}
+                                className={`text-left p-3 rounded-lg border-2 transition-all ${
+                                  isSelected 
+                                    ? 'border-green-500 bg-green-50' 
+                                    : hasStock
+                                    ? 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50'
+                                    : 'border-gray-200 bg-gray-100 opacity-50 cursor-not-allowed'
+                                }`}
+                              >
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="font-semibold text-gray-900">{pkg.name}</span>
+                                  {isSelected && <CheckCircle className="h-5 w-5 text-green-600" />}
+                                </div>
+                                <div className="text-xs text-gray-600">Size: {pkg.size}</div>
+                                <div className="text-xs text-gray-600">Material: {pkg.material}</div>
+                                <div className={`text-xs font-medium mt-1 ${hasStock ? 'text-green-600' : 'text-red-600'}`}>
+                                  Stock: {pkg.stock} {hasStock ? '✓' : '⚠️ Insufficient'}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        <button
+                          onClick={() => {
+                            setCurrentProductForPackage(batch.productId);
+                            setShowAddPackageModal(true);
+                          }}
+                          className="w-full p-3 border-2 border-dashed border-blue-300 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors text-sm font-medium"
+                        >
+                          + Add Custom Package Size
+                        </button>
+
+                        {packageInfo && (
+                          <div className="mt-3 bg-green-100 border border-green-300 rounded-lg p-3">
+                            <p className="text-sm text-green-900">
+                              <strong>Selected:</strong> {packageInfo.name} ({packageInfo.size}) - 
+                              <span className="ml-1">Will use template: {packageInfo.labelTemplate}</span>
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Order Breakdown */}
+                      <details className="bg-gray-50 border border-gray-200 rounded-lg">
+                        <summary className="cursor-pointer p-4 font-semibold text-gray-900 hover:bg-gray-100">
+                          View Orders for This Product ({batch.orders.length} orders)
+                        </summary>
+                        <div className="p-4 border-t border-gray-200 space-y-2">
+                          {batch.orders.map((order, idx) => (
+                            <div key={idx} className="flex items-center justify-between bg-white p-3 rounded border border-gray-200">
+                              <div>
+                                <span className="font-medium text-gray-900">{order.orderNumber}</span>
+                                <span className="text-gray-600 ml-2">- {order.customerName}</span>
+                              </div>
+                              <div className="font-bold text-blue-600">{order.quantity} units</div>
+                            </div>
+                          ))}
+                        </div>
+                      </details>
+
+                      {/* Action Buttons */}
+                      <div className="flex items-center gap-3 pt-4 border-t border-gray-200">
+                        <Button 
+                          variant="secondary" 
+                          className="flex-1"
+                          disabled={needsPackageSelection}
+                          onClick={() => {
+                            toast.success(`Printing ${batch.totalQuantity} labels for ${batch.productName} using template: ${packageInfo?.labelTemplate}`);
+                          }}
+                        >
+                          <Printer className="h-4 w-4 mr-2" />
+                          Print All Labels ({batch.totalQuantity})
+                        </Button>
+                        <Button 
+                          className="flex-1 bg-green-600 hover:bg-green-700"
+                          disabled={needsPackageSelection}
+                          onClick={() => {
+                            toast.success(`${batch.productName} marked as labeled and packaged!`);
+                          }}
+                        >
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          Mark as Packaged
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Add Custom Package Modal */}
+            {showAddPackageModal && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+                >
+                  <div className="bg-gradient-to-r from-green-600 to-teal-600 text-white p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h2 className="text-2xl font-bold mb-2">Add Custom Package Size</h2>
+                        <p className="text-green-100">This will be added to your packaging inventory</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setShowAddPackageModal(false);
+                          setCurrentProductForPackage(null);
+                        }}
+                        className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+                        title="Close modal"
+                        aria-label="Close add package modal"
+                      >
+                        <X className="h-6 w-6" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="p-6 space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Package Name *
+                        </label>
+                        <input
+                          type="text"
+                          value={customPackageData.name}
+                          onChange={(e) => setCustomPackageData({ ...customPackageData, name: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          placeholder="e.g., Large Windowed Bread Box"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Width (inches) *
+                        </label>
+                        <input
+                          type="number"
+                          value={customPackageData.width}
+                          onChange={(e) => setCustomPackageData({ ...customPackageData, width: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          placeholder="12"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Height (inches) *
+                        </label>
+                        <input
+                          type="number"
+                          value={customPackageData.height}
+                          onChange={(e) => setCustomPackageData({ ...customPackageData, height: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          placeholder="8"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Depth (inches)
+                        </label>
+                        <input
+                          type="number"
+                          value={customPackageData.depth}
+                          onChange={(e) => setCustomPackageData({ ...customPackageData, depth: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          placeholder="4"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Material *
+                        </label>
+                        <select
+                          value={customPackageData.material}
+                          onChange={(e) => setCustomPackageData({ ...customPackageData, material: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          title="Select packaging material"
+                        >
+                          <option value="">Select material...</option>
+                          <option value="Cardboard">Cardboard</option>
+                          <option value="Kraft Paper">Kraft Paper</option>
+                          <option value="Heat Shrink Film">Heat Shrink Film</option>
+                          <option value="Plastic">Plastic</option>
+                          <option value="Wax Paper">Wax Paper</option>
+                          <option value="Foil">Foil</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Current Stock *
+                        </label>
+                        <input
+                          type="number"
+                          value={customPackageData.currentStock}
+                          onChange={(e) => setCustomPackageData({ ...customPackageData, currentStock: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          placeholder="100"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Reorder Point *
+                        </label>
+                        <input
+                          type="number"
+                          value={customPackageData.reorderPoint}
+                          onChange={(e) => setCustomPackageData({ ...customPackageData, reorderPoint: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          placeholder="25"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Unit Price *
+                        </label>
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={customPackageData.unitPrice}
+                          onChange={(e) => setCustomPackageData({ ...customPackageData, unitPrice: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          placeholder="0.50"
+                        />
+                      </div>
+
+                      <div className="col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Supplier
+                        </label>
+                        <input
+                          type="text"
+                          value={customPackageData.supplier}
+                          onChange={(e) => setCustomPackageData({ ...customPackageData, supplier: e.target.value })}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          placeholder="e.g., ABC Packaging Supply"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <p className="text-sm text-blue-900">
+                        <strong>📦 Note:</strong> This custom package will be added to your inventory under the "Packaging" category 
+                        and will be available for future orders.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 border-t p-6 flex items-center justify-end gap-3">
+                    <Button
+                      variant="secondary"
+                      onClick={() => {
+                        setShowAddPackageModal(false);
+                        setCurrentProductForPackage(null);
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      className="bg-green-600 hover:bg-green-700"
+                      onClick={handleAddCustomPackage}
+                      disabled={!customPackageData.name || !customPackageData.width || !customPackageData.height || !customPackageData.material || !customPackageData.currentStock}
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add to Inventory & Select
+                    </Button>
+                  </div>
+                </motion.div>
+              </div>
+            )}
+
+            {/* Final QA Checklist View */}
+            {viewMode === 'qa' && (
+              <div className="space-y-6">
+                {/* Final QA Header */}
+                <div className="bg-gradient-to-r from-purple-500 to-indigo-500 rounded-lg shadow-lg p-6 text-white">
+                  <div>
+                    <h2 className="text-2xl font-bold mb-2">Final QA & Customer Receipt</h2>
+                    <p className="text-white/90">
+                      Verify order accuracy, print customer receipt with thank you note
+                    </p>
+                  </div>
+                </div>
+
+                {/* QA Instructions */}
+                <Card className="p-6 bg-[#F7F2EC] shadow-md border border-gray-200">
+                  <div className="flex items-start gap-4">
+                    <CheckSquare className="h-6 w-6 text-purple-600 flex-shrink-0 mt-1" />
+                    <div>
+                      <h3 className="font-bold text-purple-900 mb-2">Quality Assurance Process</h3>
+                      <p className="text-purple-800">
+                        This is your final check before orders go to customers. Verify each item, check quality, 
+                        and print a professional receipt with your thank you message. This serves as both a QA checklist 
+                        and a customer-ready receipt.
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Individual Orders for QA */}
+                {orders.filter(order => order.status === 'READY' || order.status === 'IN_PRODUCTION').map((order) => (
+                  <Card key={order.id} className="p-6 bg-white shadow-md border border-gray-200 hover:shadow-lg transition-shadow">
+                    <div className="space-y-6">
                       {/* Order Header */}
-                      <div className="flex items-start justify-between pb-4 border-b border-gray-200">
+                      <div className="flex items-start justify-between pb-4 border-b-2 border-gray-200">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
-                            <h3 className="text-lg font-bold text-gray-900">{order.orderNumber}</h3>
+                            <h3 className="text-xl font-bold text-gray-900">{order.orderNumber}</h3>
                             <Badge className={getPriorityColor(order.priority)}>
                               {order.priority}
                             </Badge>
@@ -1178,14 +2052,18 @@ const VendorOrdersPage: React.FC = () => {
                               {order.status.replace('_', ' ')}
                             </Badge>
                           </div>
-                          <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div className="grid grid-cols-2 gap-4 text-sm mt-4">
                             <div>
                               <span className="text-gray-600">Customer:</span>
                               <span className="ml-2 font-medium text-gray-900">{order.customerName}</span>
                             </div>
                             <div>
                               <span className="text-gray-600">Phone:</span>
-                              <span className="ml-2 font-medium text-gray-900">{order.phone}</span>
+                              <span className="ml-2 font-medium text-gray-900">{order.phone || 'N/A'}</span>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">Email:</span>
+                              <span className="ml-2 font-medium text-gray-900">{order.customerEmail || 'N/A'}</span>
                             </div>
                             <div>
                               <span className="text-gray-600">Due:</span>
@@ -1193,68 +2071,195 @@ const VendorOrdersPage: React.FC = () => {
                                 {order.dueAt ? new Date(order.dueAt).toLocaleString() : 'N/A'}
                               </span>
                             </div>
-                            <div>
-                              <span className="text-gray-600">Total:</span>
-                              <span className="ml-2 font-bold text-green-600">${order.total.toFixed(2)}</span>
-                            </div>
                           </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button 
-                            variant="secondary" 
-                            className="text-sm"
-                            onClick={() => handlePrintLabel(order)}
-                          >
-                            <Printer className="h-4 w-4 mr-2" />
-                            Print Label
-                          </Button>
-                          <Button className="bg-green-500 hover:bg-green-600 text-sm">
-                            <CheckCircle className="h-4 w-4 mr-2" />
-                            Mark Complete
-                          </Button>
                         </div>
                       </div>
 
-                      {/* Order Items */}
-                      <div className="space-y-2">
-                        <h4 className="font-semibold text-gray-900">Items to Package:</h4>
-                        {order.orderItems.map((item) => (
-                          <div key={item.id} className="flex items-center justify-between bg-gray-50 p-4 rounded-lg border border-gray-200">
-                            <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
-                                <Package className="h-6 w-6 text-gray-500" />
-                              </div>
-                              <div>
-                                <div className="font-medium text-gray-900">{item.productName}</div>
-                                <div className="text-sm text-gray-600">
-                                  Quantity: <span className="font-bold text-blue-600">{item.quantity}</span>
+                      {/* QA Checklist */}
+                      <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                        <h4 className="font-semibold text-purple-900 mb-4 flex items-center gap-2">
+                          <CheckSquare className="h-5 w-5" />
+                          Quality Assurance Checklist
+                        </h4>
+                        <div className="space-y-3">
+                          {order.orderItems.map((item) => (
+                            <div key={item.id} className="bg-white rounded-lg p-4 border border-gray-200">
+                              <div className="flex items-start justify-between mb-3">
+                                <div className="flex-1">
+                                  <h5 className="font-semibold text-gray-900">{item.productName}</h5>
+                                  <p className="text-sm text-gray-600">Quantity Ordered: {item.quantity}</p>
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-sm text-gray-600">Unit Price</p>
+                                  <p className="font-bold text-gray-900">${item.unitPrice.toFixed(2)}</p>
                                 </div>
                               </div>
-                            </div>
-                            <div className="flex items-center gap-4">
-                              <div className="text-right">
-                                <div className="text-sm text-gray-600">Unit Price</div>
-                                <div className="font-medium text-gray-900">${item.unitPrice.toFixed(2)}</div>
+                              
+                              <div className="space-y-2 mt-4">
+                                <label className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    className="rounded border-gray-300 text-purple-600 focus:ring-purple-500 w-5 h-5"
+                                  />
+                                  <span className="text-sm text-gray-700">✓ Correct product selected</span>
+                                </label>
+                                <label className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    className="rounded border-gray-300 text-purple-600 focus:ring-purple-500 w-5 h-5"
+                                  />
+                                  <span className="text-sm text-gray-700">✓ Quantity verified ({item.quantity} units)</span>
+                                </label>
+                                <label className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    className="rounded border-gray-300 text-purple-600 focus:ring-purple-500 w-5 h-5"
+                                  />
+                                  <span className="text-sm text-gray-700">✓ Quality check passed</span>
+                                </label>
+                                <label className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    className="rounded border-gray-300 text-purple-600 focus:ring-purple-500 w-5 h-5"
+                                  />
+                                  <span className="text-sm text-gray-700">✓ Properly packaged</span>
+                                </label>
+                                <label className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    className="rounded border-gray-300 text-purple-600 focus:ring-purple-500 w-5 h-5"
+                                  />
+                                  <span className="text-sm text-gray-700">✓ Label attached</span>
+                                </label>
                               </div>
-                              <div className="text-right">
-                                <div className="text-sm text-gray-600">Total</div>
-                                <div className="font-bold text-gray-900">${item.total.toFixed(2)}</div>
-                              </div>
                             </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
 
-                      {/* Notes */}
+                      {/* Customer Receipt Section */}
+                      <div className="bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-200 rounded-lg p-6">
+                        <div className="text-center mb-4">
+                          <h4 className="text-xl font-bold text-gray-900 mb-1">Order Receipt</h4>
+                          <p className="text-sm text-gray-600">Customer Copy</p>
+                        </div>
+                        
+                        <div className="bg-white rounded-lg p-4 mb-4">
+                          <div className="border-b border-gray-200 pb-4 mb-4">
+                            <p className="font-semibold text-gray-900">{order.customerName}</p>
+                            <p className="text-sm text-gray-600">{order.customerEmail}</p>
+                            <p className="text-sm text-gray-600">{order.phone}</p>
+                          </div>
+                          
+                          <div className="space-y-2 mb-4">
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-600">Order Number:</span>
+                              <span className="font-mono font-bold">{order.orderNumber}</span>
+                            </div>
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-600">Order Date:</span>
+                              <span className="font-medium">{new Date(order.createdAt).toLocaleDateString()}</span>
+                            </div>
+                            {order.dueAt && (
+                              <div className="flex justify-between text-sm">
+                                <span className="text-gray-600">Pickup/Delivery:</span>
+                                <span className="font-medium">{new Date(order.dueAt).toLocaleString()}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="border-t border-gray-200 pt-4 mb-4">
+                            <h5 className="font-semibold text-gray-900 mb-3">Items:</h5>
+                            {order.orderItems.map((item) => (
+                              <div key={item.id} className="flex justify-between mb-2">
+                                <div className="flex-1">
+                                  <p className="font-medium text-gray-900">{item.productName}</p>
+                                  <p className="text-xs text-gray-500">Qty: {item.quantity} × ${item.unitPrice.toFixed(2)}</p>
+                                </div>
+                                <p className="font-semibold text-gray-900">${item.total.toFixed(2)}</p>
+                              </div>
+                            ))}
+                          </div>
+
+                          <div className="border-t-2 border-gray-300 pt-3">
+                            <div className="flex justify-between items-center">
+                              <span className="text-lg font-bold text-gray-900">Total:</span>
+                              <span className="text-2xl font-bold text-green-600">${order.total.toFixed(2)}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Thank You Note */}
+                        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg p-4 text-center">
+                          <h5 className="font-bold text-gray-900 mb-2">🎉 Thank You for Your Order!</h5>
+                          <p className="text-sm text-gray-700 leading-relaxed">
+                            We truly appreciate your support of our artisan craft. Every order helps us continue 
+                            doing what we love. We hope you enjoy these handmade goods as much as we enjoyed creating 
+                            them for you. Thank you for being a valued customer!
+                          </p>
+                          <div className="mt-3 pt-3 border-t border-yellow-200">
+                            <p className="text-xs text-gray-600 italic">
+                              Questions or concerns? Contact us anytime. We're here to help!
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex items-center gap-3 pt-4 border-t border-gray-200">
+                        <Button 
+                          variant="secondary" 
+                          className="flex-1"
+                          onClick={() => handlePrintLabel(order)}
+                        >
+                          <Printer className="h-4 w-4 mr-2" />
+                          Print QA Checklist
+                        </Button>
+                        <Button 
+                          className="flex-1 bg-purple-600 hover:bg-purple-700"
+                          onClick={() => {
+                            // TODO: Implement print receipt functionality
+                            toast.success('Printing customer receipt...');
+                          }}
+                        >
+                          <Printer className="h-4 w-4 mr-2" />
+                          Print Receipt
+                        </Button>
+                        <Button 
+                          className="flex-1 bg-green-600 hover:bg-green-700"
+                          onClick={() => {
+                            toast.success(`Order ${order.orderNumber} marked as QA approved!`);
+                          }}
+                        >
+                          <CheckCircle className="h-4 w-4 mr-2" />
+                          QA Approved
+                        </Button>
+                      </div>
+
+                      {/* Special Notes */}
                       {order.notes && (
                         <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                          <h4 className="font-semibold text-yellow-900 mb-2">Special Instructions:</h4>
+                          <h4 className="font-semibold text-yellow-900 mb-2 flex items-center gap-2">
+                            <AlertCircle className="h-5 w-5" />
+                            Special Instructions:
+                          </h4>
                           <p className="text-yellow-800">{order.notes}</p>
                         </div>
                       )}
                     </div>
                   </Card>
                 ))}
+
+                {orders.filter(order => order.status === 'READY' || order.status === 'IN_PRODUCTION').length === 0 && (
+                  <Card className="p-12 bg-[#F7F2EC] shadow-md border border-gray-200 text-center">
+                    <CheckCircle className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No Orders Ready for QA</h3>
+                    <p className="text-gray-600">
+                      Orders will appear here once they are marked as "Ready" or "In Production". 
+                      Complete your batching and labeling first.
+                    </p>
+                  </Card>
+                )}
               </div>
             )}
           </motion.div>
