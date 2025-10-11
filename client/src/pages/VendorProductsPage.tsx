@@ -1426,7 +1426,7 @@ const VendorProductsPage: React.FC = () => {
               <div className="flex items-center gap-3">
                 <Button
                   onClick={() => setShowProductWizard(true)}
-                  className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                  className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
                 >
                   <Plus className="w-4 h-4" />
                   Add Product Wizard

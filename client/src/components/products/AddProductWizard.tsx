@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
+import CravendorWizard from '../ui/CravendorWizard';
 import { useInventoryItems } from '../../hooks/useInventory';
 
 interface ProductWizardData {
@@ -380,23 +381,21 @@ const AddProductWizard: React.FC<AddProductWizardProps> = ({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-                className="text-center space-y-6"
               >
-                <div className="flex justify-center">
-                  <div className="bg-purple-100 p-6 rounded-full">
-                    <Package className="w-16 h-16 text-purple-600" />
-                  </div>
-                </div>
-                <h3 className="text-3xl font-bold text-gray-900">Welcome, traveler!</h3>
-                <p className="text-lg text-gray-700 max-w-prose mx-auto">
-                  You've entered the Product Catalog Wizard — a cozy corner of the marketplace where merchants forge their finest wares and ready them for trade.
-                </p>
-                <p className="text-lg text-gray-700 max-w-prose mx-auto">
-                  When you're prepared, click Next to begin your journey, I'll guide you through each step as you build your stall of wonders.
-                </p>
-                <Button onClick={handleStepNext} className="bg-purple-600 hover:bg-purple-700 text-white text-lg px-8 py-3 rounded-full inline-flex items-center justify-center mx-auto gap-2">
-                  Next <ArrowRight className="w-5 h-5" />
-                </Button>
+                <CravendorWizard title="Greetings, I am Cravendor the Wise!">
+                  <p className="text-lg text-gray-700">
+                    Keeper of the marketplace realms and your humble guide on this noble quest to master the <strong>Product Wizard</strong>.
+                  </p>
+                  <p className="text-lg text-gray-700">
+                    In these enchanted realms of craft and commerce, your product page's hold the power to awaken the full magic of Craved Artisan. Fear not, adventurer, for I shall walk beside you on this journey.
+                  </p>
+                  <p className="text-lg text-gray-700 font-medium text-purple-700">
+                    Now then, shall we begin your quest? Click next to embark.
+                  </p>
+                  <Button onClick={handleStepNext} className="bg-purple-600 hover:bg-purple-700 text-white text-lg px-8 py-3 rounded-full inline-flex items-center justify-center mx-auto gap-2">
+                    Next <ArrowRight className="w-5 h-5" />
+                  </Button>
+                </CravendorWizard>
               </motion.div>
             )}
 
