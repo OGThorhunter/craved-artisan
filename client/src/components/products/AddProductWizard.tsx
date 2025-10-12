@@ -32,6 +32,8 @@ interface ProductWizardData {
   batchSize?: number;
   creationTimeMinutes?: number;
   leadTimeDays?: number;
+  packageId?: string;
+  packageName?: string;
   instructions?: string;
   sops?: string;
   categoryId?: string;
@@ -81,6 +83,16 @@ const AddProductWizard: React.FC<AddProductWizardProps> = ({
   // Fetch inventory items
   const { data: inventoryItems = [] } = useInventoryItems();
   const createInventoryItem = useCreateInventoryItem();
+
+  // Mock packaging data - in real app, would come from API
+  const availablePackaging = [
+    { id: 'pkg-xl-window', name: 'XL Windowed Box', size: '12x8x4', material: 'Cardboard', labelTemplate: 'xl-window-label' },
+    { id: 'pkg-4x4-shrink', name: '4x4 Heat Shrink Bag', size: '4x4', material: 'Heat Shrink Film', labelTemplate: '4x4-label' },
+    { id: 'pkg-6x4-window', name: '6x4 Windowed Box', size: '6x4x3', material: 'Cardboard', labelTemplate: '6x4-window-label' },
+    { id: 'pkg-small-bag', name: 'Small Paper Bag', size: '6x9', material: 'Kraft Paper', labelTemplate: 'small-bag-label' },
+    { id: 'pkg-medium-box', name: 'Medium Box', size: '8x8x4', material: 'Cardboard', labelTemplate: 'medium-box-label' },
+    { id: 'pkg-baguette-sleeve', name: 'Baguette Sleeve', size: '20x4', material: 'Paper', labelTemplate: 'baguette-label' }
+  ];
   
   const [currentStep, setCurrentStep] = useState<WizardStep>('welcome');
   const [creationMethod, setCreationMethod] = useState<'manual' | 'scan' | null>(null);
@@ -1660,6 +1672,33 @@ const AddProductWizard: React.FC<AddProductWizardProps> = ({
                           Days needed before production can start (e.g., sourdough starter prep)
                         </p>
                         </div>
+
+                      <div>
+                        <label htmlFor="packageId" className="block text-sm font-medium text-gray-700 mb-2">
+                          Package Type *
+                        </label>
+                        <select
+                          id="packageId"
+                          value={productData.packageId || ''}
+                          onChange={(e) => {
+                            const selectedPkg = availablePackaging.find(p => p.id === e.target.value);
+                            updateProductData('packageId', e.target.value);
+                            updateProductData('packageName', selectedPkg?.name);
+                          }}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          title="Select package type for this product"
+                        >
+                          <option value="">Select packaging...</option>
+                          {availablePackaging.map((pkg) => (
+                            <option key={pkg.id} value={pkg.id}>
+                              {pkg.name} ({pkg.size}) - {pkg.material}
+                            </option>
+                          ))}
+                        </select>
+                        <p className="text-xs text-gray-500 mt-1">
+                          This determines which label template will be used when printing labels for orders
+                        </p>
+                      </div>
                     </>
                   )}
                         
@@ -2088,6 +2127,10 @@ const AddProductWizard: React.FC<AddProductWizardProps> = ({
                         <div>
                       <span className="font-semibold">Profit Margin:</span>
                       <p className="text-green-600 font-bold">{calculateMargin()}%</p>
+                        </div>
+                        <div>
+                      <span className="font-semibold">Package Type:</span>
+                      <p className="text-gray-700">{productData.packageName || 'Not selected'}</p>
                         </div>
                         <div>
                       <span className="font-semibold">Ingredients:</span>

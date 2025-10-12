@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, 
@@ -796,6 +796,16 @@ const VendorOrdersPage: React.FC = () => {
     { id: 'pkg-baguette-sleeve', name: 'Baguette Sleeve', size: '20x4', material: 'Paper', stock: 250, labelTemplate: 'baguette-label' }
   ]);
 
+  // Mock product package assignments - in real app, would come from product data
+  const productPackageMap: Record<string, string> = useMemo(() => ({
+    'prod-sourdough': 'pkg-xl-window',
+    'prod-croissant': 'pkg-6x4-window',
+    'prod-cinnamon-rolls': 'pkg-6x4-window',
+    'prod-focaccia': 'pkg-xl-window',
+    'prod-baguette': 'pkg-baguette-sleeve',
+    'prod-bagels': 'pkg-small-bag'
+  }), []);
+
   const handlePackageSelect = (productId: string, packageId: string) => {
     setPackageSelections(prev => ({
       ...prev,
@@ -933,6 +943,25 @@ const VendorOrdersPage: React.FC = () => {
   };
 
   const productionBatches = aggregateProductionBatch();
+
+  // Auto-select packages based on product assignments
+  useEffect(() => {
+    if (productionBatches.length > 0) {
+      const autoSelections: Record<string, string> = {};
+      productionBatches.forEach(batch => {
+        // Only auto-select if not already selected
+        if (!packageSelections[batch.productId]) {
+          const assignedPackage = productPackageMap[batch.productId];
+          if (assignedPackage) {
+            autoSelections[batch.productId] = assignedPackage;
+          }
+        }
+      });
+      if (Object.keys(autoSelections).length > 0) {
+        setPackageSelections(prev => ({ ...prev, ...autoSelections }));
+      }
+    }
+  }, [productionBatches, productPackageMap, packageSelections]);
 
   const getStatusColor = (status: string) => {
     const colors = {
@@ -1713,60 +1742,50 @@ const VendorOrdersPage: React.FC = () => {
                       </div>
 
                       {/* Packaging Selection */}
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                        <h4 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
-                          <Package className="h-5 w-5" />
-                          Select Packaging Type
-                        </h4>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-3">
-                          {availablePackaging.map((pkg) => {
-                            const isSelected = selectedPackage === pkg.id;
-                            const hasStock = pkg.stock >= batch.totalQuantity;
-                            
-                            return (
-                              <button
-                                key={pkg.id}
-                                onClick={() => handlePackageSelect(batch.productId, pkg.id)}
-                                disabled={!hasStock}
-                                className={`text-left p-3 rounded-lg border-2 transition-all ${
-                                  isSelected 
-                                    ? 'border-green-500 bg-green-50' 
-                                    : hasStock
-                                    ? 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50'
-                                    : 'border-gray-200 bg-gray-100 opacity-50 cursor-not-allowed'
-                                }`}
-                              >
-                                <div className="flex items-center justify-between mb-2">
-                                  <span className="font-semibold text-gray-900">{pkg.name}</span>
-                                  {isSelected && <CheckCircle className="h-5 w-5 text-green-600" />}
-                                </div>
-                                <div className="text-xs text-gray-600">Size: {pkg.size}</div>
-                                <div className="text-xs text-gray-600">Material: {pkg.material}</div>
-                                <div className={`text-xs font-medium mt-1 ${hasStock ? 'text-green-600' : 'text-red-600'}`}>
-                                  Stock: {pkg.stock} {hasStock ? '✓' : '⚠️ Insufficient'}
-                                </div>
-                              </button>
-                            );
-                          })}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Package Type *
+                          </label>
+                          <select
+                            value={selectedPackage || ''}
+                            onChange={(e) => handlePackageSelect(batch.productId, e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                            title="Select package type"
+                          >
+                            <option value="">Select packaging...</option>
+                            {availablePackaging.map((pkg) => {
+                              const hasStock = pkg.stock >= batch.totalQuantity;
+                              return (
+                                <option 
+                                  key={pkg.id} 
+                                  value={pkg.id}
+                                  disabled={!hasStock}
+                                >
+                                  {pkg.name} ({pkg.size}) - Stock: {pkg.stock} {hasStock ? '' : '⚠️ Insufficient'}
+                                </option>
+                              );
+                            })}
+                          </select>
+                          
+                          <button
+                            onClick={() => {
+                              setCurrentProductForPackage(batch.productId);
+                              setShowAddPackageModal(true);
+                            }}
+                            className="mt-2 text-sm text-blue-600 hover:text-blue-800 font-medium"
+                          >
+                            + Add Custom Package Size
+                          </button>
                         </div>
 
-                        <button
-                          onClick={() => {
-                            setCurrentProductForPackage(batch.productId);
-                            setShowAddPackageModal(true);
-                          }}
-                          className="w-full p-3 border-2 border-dashed border-blue-300 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors text-sm font-medium"
-                        >
-                          + Add Custom Package Size
-                        </button>
-
                         {packageInfo && (
-                          <div className="mt-3 bg-green-100 border border-green-300 rounded-lg p-3">
-                            <p className="text-sm text-green-900">
-                              <strong>Selected:</strong> {packageInfo.name} ({packageInfo.size}) - 
-                              <span className="ml-1">Will use template: {packageInfo.labelTemplate}</span>
-                            </p>
+                          <div className="bg-green-50 border border-green-300 rounded-lg p-3">
+                            <p className="text-sm font-medium text-green-900 mb-1">Selected Package:</p>
+                            <p className="text-sm text-green-800">{packageInfo.name} ({packageInfo.size})</p>
+                            <p className="text-xs text-green-700 mt-1">Material: {packageInfo.material}</p>
+                            <p className="text-xs text-green-700">Template: {packageInfo.labelTemplate}</p>
+                            <p className="text-xs text-green-700">Stock: {packageInfo.stock} available</p>
                           </div>
                         )}
                       </div>

@@ -28,7 +28,6 @@ interface SalesWindowWizardProps {
       productId: string;
       preorderQuantity: number;
       holdQuantity: number;
-      maxPreorderQuantity?: number;
     }>;
     settings: {
       allowPreorders: boolean;
@@ -65,7 +64,6 @@ const SalesWindowWizard: React.FC<SalesWindowWizardProps> = ({ isOpen, onClose, 
       productId: string;
       preorderQuantity: number;
       holdQuantity: number;
-      maxPreorderQuantity?: number;
     }>,
     settings: {
       allowPreorders: false,
@@ -809,8 +807,7 @@ const SalesWindowWizard: React.FC<SalesWindowWizardProps> = ({ isOpen, onClose, 
                                   products: [...formData.products, {
                                     productId: product.id,
                                     preorderQuantity: 0,
-                                    holdQuantity: 0,
-                                    maxPreorderQuantity: 0
+                                    holdQuantity: 0
                                   }]
                                 });
                               }
@@ -826,7 +823,7 @@ const SalesWindowWizard: React.FC<SalesWindowWizardProps> = ({ isOpen, onClose, 
                         </div>
                         
                         {isSelected && (
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-3 border-t border-gray-200">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-3 border-t border-gray-200">
                             <div>
                               <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Pre-order Quantity
@@ -870,28 +867,6 @@ const SalesWindowWizard: React.FC<SalesWindowWizardProps> = ({ isOpen, onClose, 
                                 }}
                                 className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 focus:border-transparent"
                                 placeholder="0"
-                              />
-                            </div>
-                            
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Max Pre-orders
-                              </label>
-                              <input
-                                type="number"
-                                min="0"
-                                value={existingProduct.maxPreorderQuantity || ''}
-                                onChange={(e) => {
-                                  const newProducts = formData.products.map(p => 
-                                    p.productId === product.id 
-                                      ? { ...p, maxPreorderQuantity: parseInt(e.target.value) || undefined }
-                                      : p
-                                  );
-                                  setFormData({ ...formData, products: newProducts });
-                                }}
-                                className="w-full px-2 py-1 border border-gray-300 rounded text-sm focus:ring-1 focus:ring-blue-500 focus:border-transparent"
-                                placeholder="No limit"
-                                disabled={!formData.settings.allowPreorders}
                               />
                             </div>
                           </div>
@@ -977,7 +952,6 @@ const SalesWindowWizard: React.FC<SalesWindowWizardProps> = ({ isOpen, onClose, 
                             </div>
                             <div className="text-sm text-gray-600">
                               Pre-order: {product.preorderQuantity} | Hold: {product.holdQuantity}
-                              {product.maxPreorderQuantity && ` | Max: ${product.maxPreorderQuantity}`}
                             </div>
                           </div>
                         );
