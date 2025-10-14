@@ -138,7 +138,7 @@ router.get('/search', async (req, res) => {
     });
 
     // Calculate scores for relevance/popularity sorting
-    let scoredEvents = events.map((event: any) => {
+    const scoredEvents = events.map((event: any) => {
       let score = 0;
       
       if (params.sort === 'relevance') {

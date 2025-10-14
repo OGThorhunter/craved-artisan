@@ -36,7 +36,7 @@ router.get('/search', async (req, res) => {
     const startTime = Date.now();
     
     // Build base query
-    let whereClause: any = {
+    const whereClause: any = {
       active: true,
       availableNow: params.openNow ? true : undefined,
     };
@@ -254,7 +254,7 @@ router.get('/facets', async (req, res) => {
     const params = searchQuerySchema.parse(req.query);
     
     // Build same where clause as search
-    let whereClause: any = {
+    const whereClause: any = {
       active: true,
       availableNow: params.openNow ? true : undefined,
     };

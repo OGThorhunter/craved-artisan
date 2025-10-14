@@ -31,6 +31,7 @@ import LabelProfilesPage from './pages/LabelProfilesPage';
 import TemplateEditorPage from './pages/labels/TemplateEditorPage';
 import VendorLabelManagementPage from './pages/VendorLabelManagementPage';
 import VendorLabelsPackagingPage from './pages/VendorLabelsPackagingPage';
+import PackageTemplateMappingPage from './pages/PackageTemplateMappingPage';
 import VendorRecipeCreatePage from './pages/VendorRecipeCreatePage';
 import VendorRecipeEditPage from './pages/VendorRecipeEditPage';
 import RecipeVersionHistoryPage from './pages/RecipeVersionHistoryPage';
@@ -224,6 +225,11 @@ function App() {
             <Route path="/dashboard/vendor/labels/editor">
               <ProtectedRoute role="VENDOR">
                 <TemplateEditorPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/dashboard/vendor/package-templates">
+              <ProtectedRoute role="VENDOR">
+                <PackageTemplateMappingPage />
               </ProtectedRoute>
             </Route>
             <Route path="/dashboard/vendor/events">

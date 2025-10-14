@@ -40,6 +40,14 @@ model User {
   auditLogs       AuditLog[]
   ownedAccounts   Account[]        @relation("AccountOwner")
 
+  // Promotions system relations
+  promotionUsages PromotionUsage[]
+  loyaltyPoints   CustomerLoyaltyPoints[]
+  loyaltyRedemptions LoyaltyRedemption[]
+  referralsByReferrer Referral[]    @relation("ReferralsByReferrer")
+  referralsByReferee  Referral[]    @relation("ReferralsByReferee")
+  marketingEvents MarketingEvent[]
+
   @@index([zip_code])
 }
 
@@ -92,6 +100,17 @@ model VendorProfile {
   assets                Asset[]
   // Product Import Jobs
   productImportJobs     ProductImportJob[]
+  
+  // Promotions system relations
+  campaigns             Campaign[]
+  promotions            Promotion[]
+  socialMediaPosts      SocialMediaPost[]
+  socialMediaAssets     SocialMediaAsset[]
+  contentTemplates      ContentTemplate[]
+  loyaltyPrograms       LoyaltyProgram[]
+  referralPrograms      ReferralProgram[]
+  customerSegments      CustomerSegment[]
+  marketingEvents       MarketingEvent[]
   
   // Marketplace fields
   avatarUrl             String?
@@ -181,6 +200,7 @@ model Product {
   pickup                Boolean                  @default(true)
   delivery              Boolean                  @default(false)
   ship                  Boolean                  @default(false)
+  canShipNationally     Boolean                  @default(false) // Legal to ship nationwide
   availableNow          Boolean                  @default(true)
   ratingAvg             Float                    @default(0)
   ratingCount           Int                      @default(0)
@@ -197,6 +217,7 @@ model Product {
   productImages         ProductImage[]           // Multiple images support
   productDocuments      ProductDocument[]        // SOPs, instructions, etc.
   productImports        ProductImport[]          // Import tracking
+  modificationItems     OrderModificationItem[]  // Order modification tracking
 
   @@index([vendorProfileId, active, name])
   @@index([categoryId])
@@ -256,6 +277,7 @@ model Order {
   salesWindow       SalesWindow?           @relation(fields: [salesWindowId], references: [id])
   timeline          OrderTimeline[]
   labelJobs         LabelJob[]
+  modifications     OrderModification[]
 
   @@index([userId, createdAt])
   @@index([contextType, marketId])
@@ -644,6 +666,56 @@ model OrderItem {
   @@index([vendorProfileId])
   @@index([orderId, productId])
   @@index([orderId, status])
+}
+
+model OrderModification {
+  id                String                    @id @default(cuid())
+  orderId           String
+  originalSubtotal  Float
+  originalTax       Float
+  originalShipping  Float
+  originalTotal     Float
+  newSubtotal       Float
+  newTax            Float
+  newShipping       Float
+  newTotal          Float
+  paymentAdjustment Float                     // Positive = charge customer, Negative = refund
+  status            OrderModificationStatus   @default(PENDING)
+  reason            String?
+  notes             String?
+  createdBy         String                    // User ID who made the modification
+  processedAt       DateTime?
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+  
+  order             Order                     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  items             OrderModificationItem[]
+  
+  @@index([orderId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OrderModificationItem {
+  id               String            @id @default(cuid())
+  modificationId   String
+  orderItemId      String?           // Null for new items
+  productId        String
+  productName      String
+  action           ModificationAction // ADD, REMOVE, UPDATE_QUANTITY, UPDATE_PRICE
+  originalQuantity Int?              // Null for new items
+  newQuantity      Int?              // Null for removed items
+  originalPrice    Float?            // Null for new items
+  newPrice         Float?            // Null for removed items
+  priceImpact      Float             // Total price change for this item
+  notes            String?
+  createdAt        DateTime          @default(now())
+  
+  modification     OrderModification @relation(fields: [modificationId], references: [id], onDelete: Cascade)
+  product          Product           @relation(fields: [productId], references: [id])
+  
+  @@index([modificationId])
+  @@index([orderItemId])
 }
 
 model AnalyticsEvent {
@@ -1724,6 +1796,22 @@ enum ItemStatus {
   READY
 }
 
+enum OrderModificationStatus {
+  PENDING
+  APPROVED
+  PROCESSING
+  COMPLETED
+  CANCELLED
+  FAILED
+}
+
+enum ModificationAction {
+  ADD
+  REMOVE
+  UPDATE_QUANTITY
+  UPDATE_PRICE
+}
+
 // Label Management System - Enhanced Models
 model Asset {
   id        String   @id @default(cuid())
@@ -2239,4 +2327,428 @@ model Session {
   ip        String?
   userAgent String?
   user      User     @relation(fields: [userId], references: [id])
+}
+
+// ================================
+// PROMOTIONS SYSTEM MODELS
+// ================================
+
+model Campaign {
+  id              String         @id @default(cuid())
+  vendorProfileId String
+  name            String
+  description     String?
+  type            CampaignType
+  status          CampaignStatus @default(DRAFT)
+  startDate       DateTime
+  endDate         DateTime
+  targetAudience  String?        // JSON stored as string for SQLite
+  budget          Float?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  vendor          VendorProfile  @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  promotions      Promotion[]
+  socialPosts     SocialMediaPost[]
+  analytics       CampaignAnalytics[]
+
+  @@index([vendorProfileId, status])
+  @@index([startDate, endDate])
+}
+
+enum CampaignType {
+  PROMOTIONAL
+  SEASONAL
+  PRODUCT_LAUNCH
+  CLEARANCE
+  LOYALTY
+  REFERRAL
+}
+
+enum CampaignStatus {
+  DRAFT
+  SCHEDULED
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+model Promotion {
+  id                String         @id @default(cuid())
+  campaignId        String?
+  vendorProfileId   String
+  name              String
+  description       String?
+  type              PromotionType
+  discountType      DiscountType
+  discountValue     Float
+  code              String?        @unique
+  minOrderAmount    Float?
+  maxDiscountAmount Float?
+  usageLimit        Int?
+  currentUses       Int           @default(0)
+  startDate         DateTime
+  endDate           DateTime
+  isActive          Boolean       @default(true)
+  applicableProducts String?      // JSON array stored as string
+  customerSegments  String?       // JSON array stored as string
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  campaign          Campaign?     @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  vendor            VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  usageHistory      PromotionUsage[]
+  analytics         PromotionAnalytics[]
+
+  @@index([vendorProfileId, isActive])
+  @@index([code])
+  @@index([startDate, endDate])
+}
+
+enum PromotionType {
+  DISCOUNT_CODE
+  AUTOMATIC_DISCOUNT
+  BOGO
+  FREE_SHIPPING
+  LOYALTY_BONUS
+  REFERRAL_REWARD
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  FREE_SHIPPING
+  BUY_X_GET_Y
+}
+
+model PromotionUsage {
+  id          String    @id @default(cuid())
+  promotionId String
+  userId      String
+  orderId     String?
+  usedAt      DateTime  @default(now())
+  discountAmount Float
+
+  promotion   Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([promotionId])
+  @@index([userId])
+}
+
+// ================================
+// SOCIAL MEDIA MODELS
+// ================================
+
+model SocialMediaPost {
+  id              String            @id @default(cuid())
+  campaignId      String?
+  vendorProfileId String
+  content         String
+  platforms       String            // JSON array stored as string
+  status          PostStatus        @default(DRAFT)
+  scheduledAt     DateTime?
+  publishedAt     DateTime?
+  hashtags        String?           // JSON array stored as string
+  productTags     String?           // JSON array stored as string
+  location        String?
+  mediaUrls       String?           // JSON array stored as string
+  engagementData  String?           // JSON object stored as string
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  campaign        Campaign?         @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  vendor          VendorProfile     @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  assets          SocialMediaAsset[]
+  analytics       SocialMediaAnalytics[]
+
+  @@index([vendorProfileId, status])
+  @@index([scheduledAt])
+}
+
+enum PostStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHING
+  PUBLISHED
+  FAILED
+}
+
+model SocialMediaAsset {
+  id          String          @id @default(cuid())
+  postId      String?
+  vendorProfileId String
+  name        String
+  type        AssetType
+  url         String
+  thumbnailUrl String?
+  dimensions  String?         // JSON object stored as string
+  duration    Int?            // For videos
+  size        Int             // File size in bytes
+  tags        String?         // JSON array stored as string
+  folder      String?
+  createdAt   DateTime        @default(now())
+
+  post        SocialMediaPost? @relation(fields: [postId], references: [id], onDelete: SetNull)
+  vendor      VendorProfile   @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+
+  @@index([vendorProfileId, type])
+  @@index([folder])
+}
+
+enum AssetType {
+  IMAGE
+  VIDEO
+  GIF
+}
+
+model ContentTemplate {
+  id              String        @id @default(cuid())
+  vendorProfileId String
+  name            String
+  category        String
+  content         String
+  hashtags        String?       // JSON array stored as string
+  isPublic        Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  vendor          VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+
+  @@index([vendorProfileId, category])
+}
+
+// ================================
+// VIP & LOYALTY MODELS
+// ================================
+
+model LoyaltyProgram {
+  id              String          @id @default(cuid())
+  vendorProfileId String
+  name            String
+  description     String?
+  type            LoyaltyType
+  isActive        Boolean         @default(true)
+  pointsPerDollar Float           @default(1)
+  tierThresholds  String?         // JSON object stored as string
+  rewards         String?         // JSON array stored as string
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  vendor          VendorProfile   @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  customerPoints  CustomerLoyaltyPoints[]
+  redemptions     LoyaltyRedemption[]
+
+  @@index([vendorProfileId, isActive])
+}
+
+enum LoyaltyType {
+  POINTS
+  PUNCH_CARD
+  TIER_BASED
+  HYBRID
+}
+
+model CustomerLoyaltyPoints {
+  id              String        @id @default(cuid())
+  loyaltyProgramId String
+  userId          String
+  points          Int           @default(0)
+  tierLevel       String?
+  lifetimePoints  Int           @default(0)
+  lastActivity    DateTime      @default(now())
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  loyaltyProgram  LoyaltyProgram @relation(fields: [loyaltyProgramId], references: [id], onDelete: Cascade)
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions    LoyaltyTransaction[]
+
+  @@unique([loyaltyProgramId, userId])
+  @@index([userId])
+}
+
+model LoyaltyTransaction {
+  id              String               @id @default(cuid())
+  customerPointsId String
+  type            LoyaltyTransactionType
+  points          Int
+  description     String?
+  orderId         String?
+  createdAt       DateTime             @default(now())
+
+  customerPoints  CustomerLoyaltyPoints @relation(fields: [customerPointsId], references: [id], onDelete: Cascade)
+
+  @@index([customerPointsId, createdAt])
+}
+
+enum LoyaltyTransactionType {
+  EARNED
+  REDEEMED
+  EXPIRED
+  ADJUSTED
+}
+
+model LoyaltyRedemption {
+  id              String        @id @default(cuid())
+  loyaltyProgramId String
+  userId          String
+  pointsRedeemed  Int
+  rewardType      String
+  rewardValue     Float?
+  orderId         String?
+  status          RedemptionStatus @default(PENDING)
+  redeemedAt      DateTime      @default(now())
+
+  loyaltyProgram  LoyaltyProgram @relation(fields: [loyaltyProgramId], references: [id], onDelete: Cascade)
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([loyaltyProgramId])
+  @@index([userId])
+}
+
+enum RedemptionStatus {
+  PENDING
+  APPROVED
+  FULFILLED
+  CANCELLED
+}
+
+model ReferralProgram {
+  id              String        @id @default(cuid())
+  vendorProfileId String
+  name            String
+  description     String?
+  isActive        Boolean       @default(true)
+  referrerReward  String        // JSON object stored as string
+  refereeReward   String        // JSON object stored as string
+  minimumPurchase Float?
+  expirationDays  Int?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  vendor          VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  referrals       Referral[]
+
+  @@index([vendorProfileId, isActive])
+}
+
+model Referral {
+  id              String          @id @default(cuid())
+  referralProgramId String
+  referrerId      String
+  refereeId       String?
+  refereeEmail    String?
+  code            String          @unique
+  status          ReferralStatus  @default(PENDING)
+  rewardsClaimed  Boolean         @default(false)
+  createdAt       DateTime        @default(now())
+  completedAt     DateTime?
+
+  referralProgram ReferralProgram @relation(fields: [referralProgramId], references: [id], onDelete: Cascade)
+  referrer        User            @relation("ReferralsByReferrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  referee         User?           @relation("ReferralsByReferee", fields: [refereeId], references: [id], onDelete: SetNull)
+
+  @@index([referralProgramId])
+  @@index([referrerId])
+  @@index([code])
+}
+
+enum ReferralStatus {
+  PENDING
+  COMPLETED
+  EXPIRED
+  CANCELLED
+}
+
+// ================================
+// ANALYTICS MODELS
+// ================================
+
+model CampaignAnalytics {
+  id               String    @id @default(cuid())
+  campaignId       String
+  date             DateTime
+  impressions      Int       @default(0)
+  clicks           Int       @default(0)
+  conversions      Int       @default(0)
+  revenue          Float     @default(0)
+  cost             Float     @default(0)
+  reach            Int       @default(0)
+  engagement       Int       @default(0)
+  createdAt        DateTime  @default(now())
+
+  campaign         Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@unique([campaignId, date])
+  @@index([campaignId, date])
+}
+
+model PromotionAnalytics {
+  id               String    @id @default(cuid())
+  promotionId      String
+  date             DateTime
+  views            Int       @default(0)
+  uses             Int       @default(0)
+  revenue          Float     @default(0)
+  discountGiven    Float     @default(0)
+  conversionRate   Float     @default(0)
+  createdAt        DateTime  @default(now())
+
+  promotion        Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+
+  @@unique([promotionId, date])
+  @@index([promotionId, date])
+}
+
+model SocialMediaAnalytics {
+  id               String          @id @default(cuid())
+  postId           String
+  platform         SocialPlatform
+  date             DateTime
+  impressions      Int             @default(0)
+  reach            Int             @default(0)
+  likes            Int             @default(0)
+  comments         Int             @default(0)
+  shares           Int             @default(0)
+  clicks           Int             @default(0)
+  engagementRate   Float           @default(0)
+  createdAt        DateTime        @default(now())
+
+  post             SocialMediaPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@unique([postId, platform, date])
+  @@index([postId, date])
+}
+
+model CustomerSegment {
+  id              String        @id @default(cuid())
+  vendorProfileId String
+  name            String
+  description     String?
+  criteria        String        // JSON object stored as string
+  customerCount   Int           @default(0)
+  lastUpdated     DateTime      @default(now())
+  createdAt       DateTime      @default(now())
+
+  vendor          VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+
+  @@index([vendorProfileId])
+}
+
+model MarketingEvent {
+  id              String        @id @default(cuid())
+  vendorProfileId String?
+  userId          String?
+  eventType       String
+  eventData       String        // JSON object stored as string
+  sessionId       String?
+  timestamp       DateTime      @default(now())
+
+  vendor          VendorProfile? @relation(fields: [vendorProfileId], references: [id], onDelete: SetNull)
+  user            User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([vendorProfileId, eventType, timestamp])
+  @@index([userId, timestamp])
 }

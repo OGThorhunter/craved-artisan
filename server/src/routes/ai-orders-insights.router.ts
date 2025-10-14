@@ -131,7 +131,7 @@ async function analyzeRushOrders(orders: any[]): Promise<any[]> {
 
   for (const order of orders) {
     let rushScore = 0;
-    let reasons = [];
+    const reasons = [];
     let suggestedStation = 'PREP';
     let etaMins = 60;
 
@@ -330,7 +330,7 @@ async function generatePrepPlans(orders: any[]): Promise<any[]> {
       // Estimate prep time based on item complexity
       let prepTime = 15; // Base prep time
       let cookTime = 30; // Base cook time
-      let coolTime = 15; // Base cool time
+      const coolTime = 15; // Base cool time
       let packTime = 10; // Base pack time
       
       // Adjust based on quantity

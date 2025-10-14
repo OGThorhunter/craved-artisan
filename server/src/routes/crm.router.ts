@@ -15,12 +15,12 @@ import {
 export const crmRouter = Router();
 
 // Mock data storage (in production, this would be database)
-let customers: Customer[] = [];
+const customers: Customer[] = [];
 let contacts: Contact[] = [];
 let opportunities: Opportunity[] = [];
 let tasks: Task[] = [];
-let templates: Template[] = [];
-let campaigns: Campaign[] = [];
+const templates: Template[] = [];
+const campaigns: Campaign[] = [];
 
 // CUSTOMER MANAGEMENT ENDPOINTS
 

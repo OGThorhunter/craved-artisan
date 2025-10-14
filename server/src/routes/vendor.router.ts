@@ -58,7 +58,7 @@ const mockVendorProducts = [
 ];
 
 // In-memory storage for orders (in a real app, this would be a database)
-let ordersStorage: any[] = [
+const ordersStorage: any[] = [
   {
     id: 'order-1',
     orderNumber: 'ORD-2025-001',

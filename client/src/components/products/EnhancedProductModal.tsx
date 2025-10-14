@@ -17,6 +17,9 @@ import {
   Eye
 } from 'lucide-react';
 import Button from '../ui/Button';
+import { ProductLabelProfileSelector } from './ProductLabelProfileSelector';
+import { VariantLabelOverrides } from './VariantLabelOverrides';
+import { LabelProfileHierarchyViewer } from '../labels/LabelProfileHierarchyViewer';
 
 // Types
 interface InventoryItem {
@@ -74,9 +77,18 @@ interface EnhancedProduct {
   tags: string[];
   allergenFlags: string[];
   active: boolean;
+  labelProfileId?: string;
   ingredients: ProductIngredient[];
   images: ProductImage[];
   documents: ProductDocument[];
+  variants: Array<{
+    id: string;
+    name: string;
+    price: number;
+    stock: number;
+    attributes: Record<string, string>;
+    labelProfileId?: string;
+  }>;
   // Classes/Training specific fields
   availableSeats?: number;
   costPerSeat?: number;
@@ -128,9 +140,11 @@ const EnhancedProductModal: React.FC<EnhancedProductModalProps> = ({
     tags: [],
     allergenFlags: [],
     active: true,
+    labelProfileId: undefined,
     ingredients: [],
     images: [],
     documents: [],
+    variants: [],
     // Classes/Training specific fields
     availableSeats: undefined,
     costPerSeat: undefined,
@@ -171,9 +185,11 @@ const EnhancedProductModal: React.FC<EnhancedProductModalProps> = ({
         tags: [],
         allergenFlags: [],
         active: true,
+        labelProfileId: undefined,
         ingredients: [],
         images: [],
         documents: [],
+        variants: [],
         // Classes/Training specific fields
         availableSeats: undefined,
         costPerSeat: undefined,
@@ -267,6 +283,10 @@ const EnhancedProductModal: React.FC<EnhancedProductModalProps> = ({
 
   const handleRemoveAllergen = (allergen: string) => {
     setFormData(prev => ({ ...prev, allergenFlags: prev.allergenFlags.filter(a => a !== allergen) }));
+  };
+
+  const handleVariantsUpdate = (variants: EnhancedProduct['variants']) => {
+    setFormData(prev => ({ ...prev, variants }));
   };
 
 
@@ -418,16 +438,91 @@ const EnhancedProductModal: React.FC<EnhancedProductModalProps> = ({
               </div>
             </div>
 
-            <div className="flex items-center gap-4">
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={formData.active}
-                  onChange={(e) => handleInputChange('active', e.target.checked)}
-                  className="mr-2"
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="flex items-center gap-4">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={formData.active}
+                    onChange={(e) => handleInputChange('active', e.target.checked)}
+                    className="mr-2"
+                  />
+                  <span className="text-sm text-gray-700">Active product</span>
+                </label>
+              </div>
+
+              {/* Label Profile Selector */}
+              <ProductLabelProfileSelector
+                selectedProfileId={formData.labelProfileId}
+                onProfileSelect={(profileId) => handleInputChange('labelProfileId', profileId)}
+              />
+            </div>
+
+            {/* Simple Variant Management for Testing */}
+            <div className="border-t border-gray-200 pt-4">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-medium text-gray-900">Product Variants</h4>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newVariant = {
+                      id: `variant-${Date.now()}`,
+                      name: `Variant ${formData.variants.length + 1}`,
+                      price: formData.price,
+                      stock: 0,
+                      attributes: { size: 'Medium' }
+                    };
+                    setFormData(prev => ({ ...prev, variants: [...prev.variants, newVariant] }));
+                  }}
+                  className="flex items-center space-x-1 px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add Variant</span>
+                </button>
+              </div>
+
+              {formData.variants.length > 0 && (
+                <div className="space-y-2 mb-4">
+                  {formData.variants.map((variant, index) => (
+                    <div key={variant.id} className="flex items-center justify-between p-2 border border-gray-200 rounded">
+                      <span className="text-sm">{variant.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData(prev => ({ 
+                            ...prev, 
+                            variants: prev.variants.filter((_, i) => i !== index)
+                          }));
+                        }}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Variant Label Overrides */}
+              {formData.variants.length > 0 && (
+                <VariantLabelOverrides
+                  variants={formData.variants}
+                  onVariantUpdate={handleVariantsUpdate}
+                  defaultLabelProfileId={formData.labelProfileId}
                 />
-                <span className="text-sm text-gray-700">Active product</span>
-              </label>
+              )}
+
+              {/* Label Profile Hierarchy Viewer */}
+              <div className="border-t border-gray-200 pt-4">
+                <LabelProfileHierarchyViewer
+                  product={{
+                    ...formData,
+                    id: formData.id || 'new-product'
+                  } as any}
+                  variant={formData.variants.length > 0 ? formData.variants[0] : undefined}
+                  showActions={true}
+                />
+              </div>
             </div>
 
             {/* Classes/Training specific fields */}

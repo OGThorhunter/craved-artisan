@@ -268,7 +268,7 @@ router.get('/unit-convert', requireVendorAuth, async (req, res) => {
     }
 
     // Get material density if materialId provided
-    let density = null;
+    const density = null;
     if (materialId) {
       const material = await prisma.inventoryItem.findFirst({
         where: { id: materialId as string },
@@ -321,6 +321,7 @@ router.get('/unit-convert', requireVendorAuth, async (req, res) => {
 });
 
 export default router;
+
 
 
 

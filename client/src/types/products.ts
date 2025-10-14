@@ -125,6 +125,15 @@ export interface Product {
   relatedProducts?: string[];
   customFields?: Record<string, any>;
   
+  // Label System Integration
+  labelProfileId?: string;
+  labelProfile?: {
+    id: string;
+    name: string;
+    description?: string;
+    engine: 'PDF' | 'ZPL' | 'TSPL' | 'BrotherQL';
+  };
+  
   // Enhanced Production Fields
   unit?: string;
   minStockLevel?: number;
@@ -150,6 +159,15 @@ export interface ProductVariant {
   price: number;
   stock: number;
   attributes: Record<string, string>;
+  
+  // Label System Integration
+  labelProfileId?: string; // Override the product's default label profile
+  labelProfile?: {
+    id: string;
+    name: string;
+    description?: string;
+    engine: 'PDF' | 'ZPL' | 'TSPL' | 'BrotherQL';
+  };
 }
 
 export interface CreateProductForm {

@@ -9,11 +9,14 @@ import {
   X,
   Save,
   Download,
-  Upload
+  Upload,
+  Sparkles
 } from 'lucide-react';
 import type { LabelTemplate } from '../../types/labels';
 import { labelService } from '../../services/labelService';
 import LabelDesigner from './LabelDesigner';
+import { TemplatePresetBrowser } from './TemplatePresetBrowser';
+import { TemplateImportExportModal } from './TemplateImportExportModal';
 
 interface LabelTemplateManagerProps {
   isOpen: boolean;
@@ -33,6 +36,9 @@ const LabelTemplateManager: React.FC<LabelTemplateManagerProps> = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [showDesigner, setShowDesigner] = useState(false);
   const [designerTemplate, setDesignerTemplate] = useState<LabelTemplate | null>(null);
+  const [showPresets, setShowPresets] = useState(false);
+  const [showImportExport, setShowImportExport] = useState(false);
+  const [importExportMode, setImportExportMode] = useState<'import' | 'export'>('export');
 
   useEffect(() => {
     if (isOpen) {
@@ -59,6 +65,36 @@ const LabelTemplateManager: React.FC<LabelTemplateManagerProps> = ({
     };
     setEditingTemplate(newTemplate);
     setIsEditing(true);
+  };
+
+  const handleUsePreset = async (template: LabelTemplate) => {
+    try {
+      await labelService.saveTemplate(template);
+      await loadTemplates();
+      setShowPresets(false);
+    } catch (error) {
+      console.error('Failed to save preset template:', error);
+    }
+  };
+
+  const handleImportTemplates = async (importedTemplates: LabelTemplate[]) => {
+    try {
+      // In a real implementation, would process the imported templates
+      await loadTemplates();
+      setShowImportExport(false);
+    } catch (error) {
+      console.error('Failed to import templates:', error);
+    }
+  };
+
+  const handleShowExport = () => {
+    setImportExportMode('export');
+    setShowImportExport(true);
+  };
+
+  const handleShowImport = () => {
+    setImportExportMode('import');
+    setShowImportExport(true);
   };
 
   const handleEdit = (template: LabelTemplate) => {
@@ -139,6 +175,22 @@ const LabelTemplateManager: React.FC<LabelTemplateManagerProps> = ({
           </div>
           <div className="flex items-center space-x-2">
             <button
+              onClick={handleShowImport}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Import Templates"
+              aria-label="Import Templates"
+            >
+              <Upload className="h-5 w-5" />
+            </button>
+            <button
+              onClick={handleShowExport}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              title="Export Templates"
+              aria-label="Export Templates"
+            >
+              <Download className="h-5 w-5" />
+            </button>
+            <button
               onClick={() => setIsEditing(false)}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               title="Settings"
@@ -163,6 +215,13 @@ const LabelTemplateManager: React.FC<LabelTemplateManagerProps> = ({
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h4 className="text-lg font-medium text-gray-900">Templates</h4>
+                <button
+                  onClick={() => setShowPresets(true)}
+                  className="flex items-center space-x-2 px-3 py-2 text-sm bg-brand-green text-white rounded-md hover:bg-brand-green/90 mr-2"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  <span>Use Preset</span>
+                </button>
                 <button
                   onClick={handleCreateNew}
                   className="flex items-center space-x-2 px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
@@ -479,6 +538,25 @@ const LabelTemplateManager: React.FC<LabelTemplateManagerProps> = ({
               </div>
             </div>
           </div>
+        )}
+
+        {/* Template Preset Browser */}
+        {showPresets && (
+          <TemplatePresetBrowser
+            onSelectPreset={handleUsePreset}
+            onClose={() => setShowPresets(false)}
+            currentUserId="user"
+          />
+        )}
+
+        {/* Template Import/Export Modal */}
+        {showImportExport && (
+          <TemplateImportExportModal
+            templates={templates}
+            onImport={handleImportTemplates}
+            onClose={() => setShowImportExport(false)}
+            mode={importExportMode}
+          />
         )}
 
         {/* Label Designer Modal */}

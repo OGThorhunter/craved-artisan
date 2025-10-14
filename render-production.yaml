@@ -1,0 +1,164 @@
+# Production Deployment Configuration for Render
+# Optimized for Promotions System with Social Media Integration
+
+services:
+  # Backend API Service
+  - type: web
+    name: craved-artisan-api
+    runtime: node
+    plan: pro # Upgraded for social media API performance
+    region: ohio
+    env: node
+    repo: https://github.com/yourusername/craved-artisan.git
+    rootDir: ./server
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    healthCheckPath: /api/health
+    
+    # Environment Variables
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: DATABASE_URL
+        fromDatabase:
+          name: craved-artisan-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: craved-artisan-redis
+          type: redis
+          property: connectionString
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: FACEBOOK_APP_ID
+        sync: false  # Set manually in Render dashboard
+      - key: FACEBOOK_APP_SECRET
+        sync: false  # Set manually in Render dashboard
+      - key: STRIPE_SECRET_KEY
+        sync: false  # Set manually in Render dashboard
+      - key: CORS_ORIGIN
+        value: https://craved-artisan-frontend.onrender.com
+      - key: CDN_BASE_URL
+        value: https://craved-artisan-media.s3.amazonaws.com
+      - key: ENABLE_REAL_SOCIAL_PUBLISHING
+        value: true
+      - key: ENABLE_AB_TESTING  
+        value: true
+      - key: ENABLE_ML_RECOMMENDATIONS
+        value: true
+
+  # Frontend Service
+  - type: web
+    name: craved-artisan-frontend
+    runtime: node
+    plan: pro
+    region: ohio
+    env: node
+    repo: https://github.com/yourusername/craved-artisan.git
+    rootDir: ./client
+    buildCommand: npm install && npm run build
+    startCommand: npm run preview -- --host 0.0.0.0 --port $PORT
+    publishPath: ./dist
+    
+    # Environment Variables
+    envVars:
+      - key: VITE_API_URL
+        value: https://craved-artisan-api.onrender.com
+      - key: VITE_FACEBOOK_APP_ID
+        sync: false  # Set manually
+      - key: VITE_STRIPE_PUBLISHABLE_KEY
+        sync: false  # Set manually
+      - key: VITE_ENVIRONMENT
+        value: production
+
+# Database Service
+databases:
+  - name: craved-artisan-db
+    plan: pro
+    databaseName: craved_artisan_prod
+    user: craved_artisan_user
+    region: ohio
+    # Optimized for promotions system with social media data
+    ipAllowList: []  # Open to Render services
+
+# Redis Service for Caching
+  - name: craved-artisan-redis
+    plan: pro
+    region: ohio
+    type: redis
+    # Used for promotions caching and session storage
+
+# Background Jobs Service (for scheduled social media posts)
+  - type: worker
+    name: craved-artisan-worker  
+    runtime: node
+    plan: starter
+    region: ohio
+    env: node
+    repo: https://github.com/yourusername/craved-artisan.git
+    rootDir: ./server
+    buildCommand: npm install && npm run build
+    startCommand: npm run worker # Need to create this script
+    
+    # Same environment variables as main API
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: craved-artisan-db  
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          name: craved-artisan-redis
+          type: redis
+          property: connectionString
+      - key: FACEBOOK_APP_ID
+        sync: false
+      - key: FACEBOOK_APP_SECRET
+        sync: false
+
+# Auto-deploy configuration  
+deploy:
+  branch: main
+  buildFilter:
+    paths:
+      - server/**
+      - client/**
+      - prisma/**
+      - package.json
+      - package-lock.json
+    ignoredPaths:
+      - docs/**
+      - *.md
+      - test-*.ps1
+
+# Health checks and monitoring
+healthCheck:
+  path: /api/health
+  interval: 30s
+  timeout: 10s
+  unhealthyThreshold: 3
+  healthyThreshold: 2
+
+# Scaling configuration for promotions system load
+scaling:
+  minInstances: 1
+  maxInstances: 3
+  targetCPUPercent: 70
+  targetMemoryPercent: 80
+
+# Security headers for production
+headers:
+  - path: /*
+    headers:
+      - key: X-Frame-Options
+        value: DENY
+      - key: X-Content-Type-Options  
+        value: nosniff
+      - key: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - key: Permissions-Policy
+        value: camera=(), microphone=(), geolocation=()

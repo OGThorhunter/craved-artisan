@@ -1,24 +1,43 @@
-// Types for Sales Windows
+// Types for Sales Windows - Aligned with Backend Prisma Models
 export interface SalesWindow {
   id: string;
+  vendorId: string;
+  type: 'PARK_PICKUP' | 'DELIVERY' | 'CONSIGNMENT' | 'WHOLESALE' | 'MARKET' | 'PORCH_PICKUP' | 'KIOSK_PICKUP' | 'SERVICE_GREENFIELD';
   name: string;
   description?: string;
-  status: 'SCHEDULED' | 'OPEN' | 'CLOSED' | 'ARCHIVED';
-  isEvergreen: boolean;
-  startDate?: string;
-  endDate?: string;
-  timezone: string;
-  channels: SalesChannel[];
-  products: WindowProduct[];
-  settings: WindowSettings;
-  marketId?: string;
-  marketEvent?: MarketEvent;
+  status: 'DRAFT' | 'SCHEDULED' | 'OPEN' | 'CLOSED' | 'FULFILLED' | 'CANCELLED';
+  
+  // Location
+  location_name?: string;
+  address_text?: string;
+  
+  // Timing - aligned with backend fields
+  preorder_open_at?: string;
+  preorder_close_at?: string;
+  fulfill_start_at?: string;
+  fulfill_end_at?: string;
+  recurrence_rrule?: string;
+  
+  // Capacity
+  capacity_total?: number;
+  max_items_total?: number;
+  auto_close_when_full?: boolean;
+  
+  // Additional fields for frontend compatibility
+  channels?: SalesChannel[]; // For backward compatibility
+  products?: WindowProduct[]; // For backward compatibility
+  settings?: WindowSettings; // For backward compatibility
+  
+  // Backend relations
+  metrics?: SalesWindowMetric;
+  slots?: SalesWindowSlot[];
+  
   createdAt: string;
   updatedAt: string;
 }
 
 export interface SalesChannel {
-  type: 'MEETUP_PICKUP' | 'DELIVERY' | 'DROP_OFF_LOCATION' | 'MARKET' | 'CUSTOM';
+  type: 'PARK_PICKUP' | 'DELIVERY' | 'CONSIGNMENT' | 'WHOLESALE' | 'MARKET' | 'PORCH_PICKUP' | 'KIOSK_PICKUP' | 'SERVICE_GREENFIELD';
   config: ChannelConfig;
 }
 
@@ -104,5 +123,34 @@ export interface SalesWindowStats {
   draftWindows: number;
   closedWindows: number;
   totalRevenue: number;
+}
+
+// Backend-aligned interfaces
+export interface SalesWindowMetric {
+  id: string;
+  salesWindowId: string;
+  orders_count: number;
+  items_count: number;
+  gross: number;
+  refunds: number;
+  net: number;
+}
+
+export interface SalesWindowSlot {
+  id: string;
+  salesWindowId: string;
+  starts_at: string;
+  ends_at: string;
+  capacity: number;
+  reserved_count: number;
+}
+
+export interface SalesWindowProduct {
+  id: string;
+  salesWindowId: string;
+  productId: string;
+  price_override?: number;
+  qty_limit_per_customer?: number;
+  active: boolean;
 }
 

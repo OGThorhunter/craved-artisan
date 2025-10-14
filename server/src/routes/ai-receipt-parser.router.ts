@@ -479,8 +479,8 @@ const mockAIParseShoppingList = async (text: string): Promise<ParsedShoppingList
 };
 
 // In-memory storage for parsed documents (in production, use database)
-let parsedReceipts: ParsedReceipt[] = [];
-let parsedShoppingLists: ParsedShoppingList[] = [];
+const parsedReceipts: ParsedReceipt[] = [];
+const parsedShoppingLists: ParsedShoppingList[] = [];
 
 // POST /api/ai-receipt-parser/parse-receipt - Parse receipt from text or image
 aiReceiptParserRouter.post('/ai-receipt-parser/parse-receipt', upload.single('image'), async (req, res) => {

@@ -6,8 +6,7 @@ import {
   Database,
   Home,
   ClipboardList,
-  Percent,
-  Printer
+  Percent
 } from 'lucide-react';
 
 const navItems = [
@@ -17,7 +16,6 @@ const navItems = [
   { label: 'Products', href: '/dashboard/vendor/products', icon: Package },
   { label: 'Sales Windows', href: '/dashboard/vendor/sales-windows', icon: ShoppingCart },
   { label: 'Orders', href: '/dashboard/vendor/orders', icon: ClipboardList },
-  { label: 'Labels', href: '/dashboard/vendor/labels', icon: Printer },
   { label: 'Promotions', href: '/dashboard/vendor/promotions', icon: Percent },
 ];
 

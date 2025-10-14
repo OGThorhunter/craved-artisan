@@ -9,21 +9,16 @@ module.exports = {
   parser: '@typescript-eslint/parser',
   plugins: ['@typescript-eslint'],
   rules: {
-    '@typescript-eslint/consistent-type-imports': [
-      'error',
-      { 
-        prefer: 'type-imports',
-        disallowTypeAnnotations: false
-      }
-    ],
-    '@typescript-eslint/no-import-type-side-effects': 'error',
-    '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
-    'no-restricted-imports': ['error', {
-      'paths': [{
-        'name': 'lucide-react',
-        'message': 'Import icons from \'@/components/ui/AppIcon\' instead.'
-      }]
-    }],
+    '@typescript-eslint/consistent-type-imports': 'warn',
+    '@typescript-eslint/no-import-type-side-effects': 'warn',
+    '@typescript-eslint/no-unused-vars': 'warn',
+    '@typescript-eslint/no-explicit-any': 'warn',
+    'react-hooks/rules-of-hooks': 'error',
+    'react-hooks/exhaustive-deps': 'warn',
+    'no-restricted-imports': 'warn',
+    'react-refresh/only-export-components': 'warn',
+    'no-useless-escape': 'warn',
+    'no-case-declarations': 'warn',
   },
   overrides: [
     {

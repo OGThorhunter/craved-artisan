@@ -618,4 +618,543 @@ router.get('/:id/timeline', isVendorOwnerOrAdmin, async (req, res) => {
   }
 });
 
+// Order modification endpoints
+const OrderModificationSchema = z.object({
+  orderId: z.string(),
+  originalSubtotal: z.number(),
+  originalTax: z.number(),
+  originalShipping: z.number(),
+  originalTotal: z.number(),
+  newSubtotal: z.number(),
+  newTax: z.number(),
+  newShipping: z.number(),
+  newTotal: z.number(),
+  paymentAdjustment: z.number(),
+  reason: z.string().optional(),
+  notes: z.string().optional(),
+  items: z.array(z.object({
+    orderItemId: z.string().optional(),
+    productId: z.string(),
+    productName: z.string(),
+    action: z.enum(['ADD', 'REMOVE', 'UPDATE_QUANTITY', 'UPDATE_PRICE']),
+    originalQuantity: z.number().optional(),
+    newQuantity: z.number().optional(),
+    originalPrice: z.number().optional(),
+    newPrice: z.number().optional(),
+    priceImpact: z.number(),
+    notes: z.string().optional(),
+  })),
+});
+
+// POST /api/orders/:id/modify - Create order modification
+router.post('/:id/modify', isVendorOwnerOrAdmin, async (req, res) => {
+  try {
+    const orderId = req.params.id;
+    const vendorProfileId = req.vendorProfileId;
+    const userId = req.userId;
+    
+    // Validate request body
+    const validatedData = OrderModificationSchema.parse(req.body);
+    
+    // Verify order exists and belongs to vendor
+    const order = await prisma.order.findFirst({
+      where: {
+        id: orderId,
+        vendorProfileId: vendorProfileId,
+      },
+      include: {
+        orderItems: true,
+      },
+    });
+
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    // Create the order modification record
+    const modification = await prisma.orderModification.create({
+      data: {
+        orderId: orderId,
+        originalSubtotal: validatedData.originalSubtotal,
+        originalTax: validatedData.originalTax,
+        originalShipping: validatedData.originalShipping,
+        originalTotal: validatedData.originalTotal,
+        newSubtotal: validatedData.newSubtotal,
+        newTax: validatedData.newTax,
+        newShipping: validatedData.newShipping,
+        newTotal: validatedData.newTotal,
+        paymentAdjustment: validatedData.paymentAdjustment,
+        status: 'PENDING',
+        reason: validatedData.reason,
+        notes: validatedData.notes,
+        createdBy: userId,
+        items: {
+          create: validatedData.items.map(item => ({
+            orderItemId: item.orderItemId,
+            productId: item.productId,
+            productName: item.productName,
+            action: item.action,
+            originalQuantity: item.originalQuantity,
+            newQuantity: item.newQuantity,
+            originalPrice: item.originalPrice,
+            newPrice: item.newPrice,
+            priceImpact: item.priceImpact,
+            notes: item.notes,
+          })),
+        },
+      },
+      include: {
+        items: true,
+      },
+    });
+
+    // Apply modifications to the order and update inventory
+    const updatedOrderItems = [];
+    const inventoryUpdates = [];
+    
+    for (const modItem of validatedData.items) {
+      if (modItem.action === 'ADD') {
+        // Add new item
+        const newOrderItem = await prisma.orderItem.create({
+          data: {
+            orderId: orderId,
+            productId: modItem.productId,
+            vendorProfileId: vendorProfileId,
+            productName: modItem.productName,
+            quantity: modItem.newQuantity || 0,
+            unitPrice: modItem.newPrice || 0,
+            total: (modItem.newQuantity || 0) * (modItem.newPrice || 0),
+            status: 'QUEUED',
+            madeQty: 0,
+          },
+        });
+        updatedOrderItems.push(newOrderItem);
+        
+        // Reserve inventory for new item
+        inventoryUpdates.push({
+          productId: modItem.productId,
+          quantityChange: -(modItem.newQuantity || 0), // Negative = reserve
+          action: 'RESERVE',
+          reason: `Order modification - added item to order ${order.orderNumber}`,
+        });
+        
+      } else if (modItem.action === 'REMOVE' && modItem.orderItemId) {
+        // Get original item before deletion for inventory update
+        const originalItem = await prisma.orderItem.findUnique({
+          where: { id: modItem.orderItemId },
+        });
+        
+        // Remove item
+        await prisma.orderItem.delete({
+          where: { id: modItem.orderItemId },
+        });
+        
+        // Release inventory for removed item
+        if (originalItem) {
+          inventoryUpdates.push({
+            productId: originalItem.productId,
+            quantityChange: originalItem.quantity, // Positive = release
+            action: 'RELEASE',
+            reason: `Order modification - removed item from order ${order.orderNumber}`,
+          });
+        }
+        
+      } else if (modItem.action === 'UPDATE_QUANTITY' && modItem.orderItemId) {
+        // Update quantity
+        const updatedItem = await prisma.orderItem.update({
+          where: { id: modItem.orderItemId },
+          data: {
+            quantity: modItem.newQuantity || 0,
+            total: (modItem.newQuantity || 0) * (modItem.originalPrice || 0),
+          },
+        });
+        updatedOrderItems.push(updatedItem);
+        
+        // Adjust inventory reservation
+        const quantityDiff = (modItem.newQuantity || 0) - (modItem.originalQuantity || 0);
+        if (quantityDiff !== 0) {
+          inventoryUpdates.push({
+            productId: modItem.productId,
+            quantityChange: -quantityDiff, // Negative = reserve more, Positive = release
+            action: quantityDiff > 0 ? 'RESERVE' : 'RELEASE',
+            reason: `Order modification - quantity changed for order ${order.orderNumber}`,
+          });
+        }
+        
+      } else if (modItem.action === 'UPDATE_PRICE' && modItem.orderItemId) {
+        // Update price (no inventory impact)
+        const updatedItem = await prisma.orderItem.update({
+          where: { id: modItem.orderItemId },
+          data: {
+            unitPrice: modItem.newPrice || 0,
+            total: (modItem.originalQuantity || 0) * (modItem.newPrice || 0),
+          },
+        });
+        updatedOrderItems.push(updatedItem);
+      }
+    }
+
+    // Process inventory updates
+    for (const invUpdate of inventoryUpdates) {
+      try {
+        // Check if inventory item exists
+        const inventoryItem = await prisma.inventoryItem.findFirst({
+          where: {
+            productId: invUpdate.productId,
+            vendorProfileId: vendorProfileId,
+          },
+        });
+
+        if (inventoryItem) {
+          // Update existing inventory
+          await prisma.inventoryItem.update({
+            where: { id: inventoryItem.id },
+            data: {
+              reservedQty: {
+                increment: invUpdate.action === 'RESERVE' ? Math.abs(invUpdate.quantityChange) : -Math.abs(invUpdate.quantityChange),
+              },
+            },
+          });
+
+          // Create inventory movement record
+          await prisma.inventoryMovement.create({
+            data: {
+              inventoryItemId: inventoryItem.id,
+              type: invUpdate.action === 'RESERVE' ? 'RESERVED' : 'RELEASED',
+              quantity: Math.abs(invUpdate.quantityChange),
+              reason: invUpdate.reason,
+              referenceId: orderId,
+              referenceType: 'ORDER_MODIFICATION',
+            },
+          });
+        } else {
+          // Create new inventory item if it doesn't exist
+          const newInventoryItem = await prisma.inventoryItem.create({
+            data: {
+              vendorProfileId: vendorProfileId,
+              productId: invUpdate.productId,
+              currentQty: 0,
+              reservedQty: invUpdate.action === 'RESERVE' ? Math.abs(invUpdate.quantityChange) : 0,
+              reorderPoint: 0,
+              maxQty: 1000, // Default max
+            },
+          });
+
+          // Create inventory movement record
+          await prisma.inventoryMovement.create({
+            data: {
+              inventoryItemId: newInventoryItem.id,
+              type: invUpdate.action === 'RESERVE' ? 'RESERVED' : 'RELEASED',
+              quantity: Math.abs(invUpdate.quantityChange),
+              reason: invUpdate.reason,
+              referenceId: orderId,
+              referenceType: 'ORDER_MODIFICATION',
+            },
+          });
+        }
+      } catch (inventoryError) {
+        console.warn('Inventory update failed:', inventoryError);
+        // Continue with order modification even if inventory update fails
+      }
+    }
+
+    // Update order totals
+    const updatedOrder = await prisma.order.update({
+      where: { id: orderId },
+      data: {
+        subtotal: validatedData.newSubtotal,
+        tax: validatedData.newTax,
+        shipping: validatedData.newShipping,
+        total: validatedData.newTotal,
+      },
+      include: {
+        orderItems: true,
+      },
+    });
+
+    // Mark modification as completed
+    await prisma.orderModification.update({
+      where: { id: modification.id },
+      data: {
+        status: 'COMPLETED',
+        processedAt: new Date(),
+      },
+    });
+
+    // Process payment adjustment with Stripe
+    let paymentResult = null;
+    if (Math.abs(validatedData.paymentAdjustment) >= 0.50) { // Minimum amount for Stripe processing
+      try {
+        paymentResult = await processStripePaymentAdjustment({
+          orderId: orderId,
+          paymentIntentId: order.paymentIntentId,
+          adjustmentAmount: validatedData.paymentAdjustment,
+          orderNumber: order.orderNumber,
+          customerEmail: order.customerEmail || updatedOrder.user?.email,
+        });
+      } catch (paymentError) {
+        console.warn('Payment processing failed:', paymentError);
+        // Continue with order modification but flag payment as failed
+        await prisma.orderModification.update({
+          where: { id: modification.id },
+          data: {
+            status: 'COMPLETED',
+            notes: `${modification.notes || ''}\n\nPayment processing failed: ${paymentError.message}`,
+          },
+        });
+      }
+    }
+
+    // Send email notification to customer
+    try {
+      await sendOrderModificationEmail({
+        customerEmail: order.customerEmail || updatedOrder.user?.email,
+        customerName: order.customerName || updatedOrder.user?.name,
+        orderNumber: order.orderNumber,
+        modification: modification,
+        updatedOrder: updatedOrder,
+        paymentAdjustment: validatedData.paymentAdjustment,
+        paymentResult: paymentResult,
+      });
+    } catch (emailError) {
+      console.warn('Failed to send email notification:', emailError);
+      // Continue even if email fails
+    }
+
+    res.json({
+      success: true,
+      modification: modification,
+      updatedOrder: updatedOrder,
+    });
+  } catch (error) {
+    console.error('Order modification error:', error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: 'Invalid request data', details: error.errors });
+    }
+    res.status(500).json({ error: 'Failed to modify order' });
+  }
+});
+
+// GET /api/orders/:id/modifications - Get order modification history
+router.get('/:id/modifications', isVendorOwnerOrAdmin, async (req, res) => {
+  try {
+    const orderId = req.params.id;
+    const vendorProfileId = req.vendorProfileId;
+    
+    // Verify order exists and belongs to vendor
+    const order = await prisma.order.findFirst({
+      where: {
+        id: orderId,
+        vendorProfileId: vendorProfileId,
+      },
+    });
+
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    const modifications = await prisma.orderModification.findMany({
+      where: { orderId: orderId },
+      include: {
+        items: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    res.json(modifications);
+  } catch (error) {
+    console.error('Get order modifications error:', error);
+    res.status(500).json({ error: 'Failed to get order modifications' });
+  }
+});
+
+// POST /api/orders/:id/calculate-adjustment - Preview order changes
+router.post('/:id/calculate-adjustment', isVendorOwnerOrAdmin, async (req, res) => {
+  try {
+    const orderId = req.params.id;
+    const vendorProfileId = req.vendorProfileId;
+    
+    // Validate request body (same schema as modify)
+    const validatedData = OrderModificationSchema.parse(req.body);
+    
+    // Verify order exists and belongs to vendor
+    const order = await prisma.order.findFirst({
+      where: {
+        id: orderId,
+        vendorProfileId: vendorProfileId,
+      },
+    });
+
+    if (!order) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    // Calculate the preview without saving
+    const preview = {
+      originalTotals: {
+        subtotal: validatedData.originalSubtotal,
+        tax: validatedData.originalTax,
+        shipping: validatedData.originalShipping,
+        total: validatedData.originalTotal,
+      },
+      newTotals: {
+        subtotal: validatedData.newSubtotal,
+        tax: validatedData.newTax,
+        shipping: validatedData.newShipping,
+        total: validatedData.newTotal,
+      },
+      paymentAdjustment: validatedData.paymentAdjustment,
+      adjustmentType: validatedData.paymentAdjustment > 0 ? 'charge' : 'refund',
+      itemChanges: validatedData.items.length,
+    };
+
+    res.json(preview);
+  } catch (error) {
+    console.error('Calculate adjustment error:', error);
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: 'Invalid request data', details: error.errors });
+    }
+    res.status(500).json({ error: 'Failed to calculate adjustment' });
+  }
+});
+
+// Stripe payment processing service
+async function processStripePaymentAdjustment(params: {
+  orderId: string;
+  paymentIntentId?: string;
+  adjustmentAmount: number;
+  orderNumber: string;
+  customerEmail?: string;
+}) {
+  const { orderId, paymentIntentId, adjustmentAmount, orderNumber, customerEmail } = params;
+  
+  // Mock Stripe integration - in a real implementation, you would:
+  // 1. Import Stripe SDK
+  // 2. Initialize with secret key
+  // 3. Process actual refunds/charges
+  
+  console.log('Processing Stripe payment adjustment:', {
+    orderId,
+    paymentIntentId,
+    adjustmentAmount,
+    orderNumber,
+    customerEmail,
+  });
+
+  if (adjustmentAmount > 0) {
+    // Additional charge needed
+    console.log(`Creating additional charge of $${adjustmentAmount.toFixed(2)} for order ${orderNumber}`);
+    
+    // In real implementation:
+    // const paymentIntent = await stripe.paymentIntents.create({
+    //   amount: Math.round(adjustmentAmount * 100), // Convert to cents
+    //   currency: 'usd',
+    //   customer: customerId,
+    //   metadata: {
+    //     orderId: orderId,
+    //     type: 'order_modification_charge'
+    //   }
+    // });
+    
+    return {
+      type: 'charge',
+      amount: adjustmentAmount,
+      status: 'succeeded', // Mock success
+      paymentIntentId: `pi_mock_${Date.now()}`,
+      message: `Additional charge of $${adjustmentAmount.toFixed(2)} processed successfully`,
+    };
+    
+  } else if (adjustmentAmount < 0) {
+    // Refund needed
+    const refundAmount = Math.abs(adjustmentAmount);
+    console.log(`Processing refund of $${refundAmount.toFixed(2)} for order ${orderNumber}`);
+    
+    // In real implementation:
+    // const refund = await stripe.refunds.create({
+    //   payment_intent: paymentIntentId,
+    //   amount: Math.round(refundAmount * 100), // Convert to cents
+    //   metadata: {
+    //     orderId: orderId,
+    //     type: 'order_modification_refund'
+    //   }
+    // });
+    
+    return {
+      type: 'refund',
+      amount: refundAmount,
+      status: 'succeeded', // Mock success
+      refundId: `re_mock_${Date.now()}`,
+      message: `Refund of $${refundAmount.toFixed(2)} processed successfully`,
+    };
+  }
+  
+  return null; // No payment adjustment needed
+}
+
+// Email notification service
+async function sendOrderModificationEmail(params: {
+  customerEmail?: string;
+  customerName?: string;
+  orderNumber: string;
+  modification: any;
+  updatedOrder: any;
+  paymentAdjustment: number;
+  paymentResult?: any;
+}) {
+  const { customerEmail, customerName, orderNumber, modification, updatedOrder, paymentAdjustment, paymentResult } = params;
+  
+  if (!customerEmail) {
+    console.warn('No customer email provided for order modification notification');
+    return;
+  }
+
+  // Simple email template
+  const emailSubject = `Order ${orderNumber} has been updated`;
+  const emailBody = `
+    Dear ${customerName || 'Customer'},
+
+    Your order ${orderNumber} has been modified. Here are the details:
+
+    ${paymentAdjustment > 0 
+      ? `Additional charge: $${paymentAdjustment.toFixed(2)}${paymentResult ? ` (${paymentResult.message})` : ''}`
+      : paymentAdjustment < 0
+      ? `Refund amount: $${Math.abs(paymentAdjustment).toFixed(2)}${paymentResult ? ` (${paymentResult.message})` : ''}`
+      : 'No payment adjustment required'
+    }
+
+    Original Total: $${modification.originalTotal.toFixed(2)}
+    New Total: $${modification.newTotal.toFixed(2)}
+
+    Item Changes:
+    ${modification.items.map((item: any) => {
+      if (item.action === 'ADD') return `+ Added: ${item.productName} (${item.newQuantity})`;
+      if (item.action === 'REMOVE') return `- Removed: ${item.productName}`;
+      if (item.action === 'UPDATE_QUANTITY') return `• ${item.productName}: ${item.originalQuantity} → ${item.newQuantity}`;
+      if (item.action === 'UPDATE_PRICE') return `• ${item.productName}: $${item.originalPrice?.toFixed(2)} → $${item.newPrice?.toFixed(2)}`;
+      return '';
+    }).filter(Boolean).join('\n    ')}
+
+    ${modification.reason ? `Reason: ${modification.reason}` : ''}
+
+    If you have any questions about these changes, please contact us.
+
+    Thank you for your business!
+  `;
+
+  // In a real implementation, you would use a proper email service like:
+  // - SendGrid
+  // - AWS SES
+  // - Nodemailer with SMTP
+  // - Resend
+  
+  console.log('Email notification (mock):', {
+    to: customerEmail,
+    subject: emailSubject,
+    body: emailBody.trim(),
+  });
+
+  // Mock successful email send
+  return Promise.resolve();
+}
+
 export default router;

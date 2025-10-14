@@ -33,6 +33,12 @@ import systemMessagesRouter from './routes/system-messages.router';
 import aiReceiptRouter from './routes/ai-receipt.router';
 import aiSystemMessagesRouter from './routes/ai-system-messages.router';
 
+// Promotions System Routes
+import { promotionsRouter } from './routes/promotions.router';
+import { socialMediaRouter } from './routes/social-media.router';
+import { loyaltyRouter } from './routes/loyalty.router';
+import { promotionsAnalyticsRouter } from './routes/promotions-analytics.router';
+
 // Settings & Account Hub Routes
 import settingsRouter from './routes/settings';
 import stripeWebhooksRouter from './routes/webhooks/stripe';
@@ -164,6 +170,12 @@ app.use('/api/vendor/system-messages', systemMessagesRouter);
 app.use('/api/ai/receipt', aiReceiptRouter);
 app.use('/api/ai/insights', aiInsightsRouter);
 app.use('/api/ai/system-messages', aiSystemMessagesRouter);
+
+// Promotions System Routes
+app.use('/api/vendor/promotions', promotionsRouter);
+app.use('/api/vendor/social-media', socialMediaRouter);
+app.use('/api/vendor/loyalty', loyaltyRouter);
+app.use('/api/vendor/promotions-analytics', promotionsAnalyticsRouter);
 
 // Orders Management Routes
 app.use('/api/vendor/orders', ordersManagementRouter);

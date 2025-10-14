@@ -14,12 +14,11 @@ import {
 } from 'lucide-react';
 import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
 
-// Import consolidated promotion components
-import CampaignsTab from '../components/promotions/CampaignsTab';
-import SocialMediaTab from '../components/promotions/SocialMediaTab';
-import SchedulerAutomationTab from '../components/promotions/SchedulerAutomationTab';
-import AnalyticsTab from '../components/promotions/AnalyticsTab';
-import LoyaltyReferralsTab from '../components/promotions/LoyaltyReferralsTab';
+// Import consolidated promotion components - eliminates duplicate functionality
+import ConsolidatedCampaignManager from '../components/promotions/ConsolidatedCampaignManager';
+import ConsolidatedSocialMediaManager from '../components/promotions/ConsolidatedSocialMediaManager';
+import ConsolidatedAnalyticsManager from '../components/promotions/ConsolidatedAnalyticsManager';
+import ConsolidatedVIPManager from '../components/promotions/ConsolidatedVIPManager';
 
 // Types
 interface Promotion {
@@ -651,97 +650,34 @@ const VendorPromotionsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Tab Content */}
+        {/* Consolidated Tab Content - eliminates duplicate components and API calls */}
           <div className="space-y-6">
             {activeTab === 'campaigns' && (
-              <CampaignsTab
-                promotions={promotions}
-                onPromotionCreate={handlePromotionCreate}
-                onPromotionUpdate={handlePromotionUpdate}
-                onPromotionDelete={handlePromotionDelete}
-                onPromotionAction={(action, id) => console.log('Promotion action:', action, id)}
-                onTemplateSelect={(template) => console.log('Select template:', template)}
-                onBulkAction={(action) => console.log('Bulk action:', action)}
-                selectedPromotions={[]}
-                onSelectPromotion={(id) => console.log('Select promotion:', id)}
-                onSelectAll={() => console.log('Select all')}
-                isLoading={false}
-              />
+              <ConsolidatedCampaignManager />
             )}
 
             {activeTab === 'social-media' && (
-              <SocialMediaTab
-                posts={[]}
-                assets={[]}
-                threads={[]}
-                analytics={{}}
-                onPostCreate={(post) => console.log('Create post:', post)}
-                onPostUpdate={(post) => console.log('Update post:', post)}
-                onPostDelete={(id) => console.log('Delete post:', id)}
-                onPostSchedule={(id, time) => console.log('Schedule post:', id, time)}
-                onAssetUpload={(asset) => console.log('Upload asset:', asset)}
-                onThreadReply={(threadId, reply) => console.log('Reply to thread:', threadId, reply)}
-                onThreadAssign={(threadId, assignee) => console.log('Assign thread:', threadId, assignee)}
-                isLoading={false}
-              />
+              <ConsolidatedSocialMediaManager />
             )}
 
             {activeTab === 'scheduler-automation' && (
-              <SchedulerAutomationTab
-                schedules={[]}
-                automations={[]}
-                onScheduleCreate={(schedule) => console.log('Create schedule:', schedule)}
-                onScheduleUpdate={(schedule) => console.log('Update schedule:', schedule)}
-                onScheduleDelete={(id) => console.log('Delete schedule:', id)}
-                onAutomationCreate={(automation) => console.log('Create automation:', automation)}
-                onAutomationUpdate={(automation) => console.log('Update automation:', automation)}
-                onAutomationToggle={(id, status) => console.log('Toggle automation:', id, status)}
-                onConflictResolve={(conflict) => console.log('Resolve conflict:', conflict)}
-                isLoading={false}
-              />
+              <div className="text-center py-12">
+                <Calendar className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 p-4 text-gray-400" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Scheduler & Automation</h3>
+                <p className="text-gray-600 mb-4">Advanced scheduling and automation features coming soon</p>
+                <p className="text-sm text-gray-500">
+                  This will include campaign scheduling, automated promotion rules, 
+                  recurring campaigns, and conflict detection.
+                </p>
+              </div>
             )}
 
         {activeTab === 'analytics' && (
-              <AnalyticsTab
-                analytics={{
-                  impressions: 0,
-                  clicks: 0,
-                  redemptions: 0,
-                  revenue: 0,
-                  conversionRate: 0,
-                  aovShift: 0,
-                  topPromotions: [],
-                  funnelData: []
-                }}
-                abTests={[]}
-                onReportGenerate={(type) => console.log('Generate report:', type)}
-                onABTestCreate={(test) => console.log('Create A/B test:', test)}
-                onABTestUpdate={(test) => console.log('Update A/B test:', test)}
-                onABTestRun={(id) => console.log('Run A/B test:', id)}
-                onInsightAction={(id, action) => console.log('Insight action:', id, action)}
-                onExportData={(format) => console.log('Export data:', format)}
-                timeRange="30d"
-                onTimeRangeChange={(range) => console.log('Time range changed:', range)}
-                isLoading={false}
-              />
+              <ConsolidatedAnalyticsManager />
             )}
 
             {activeTab === 'loyalty-referrals' && (
-              <LoyaltyReferralsTab
-                loyaltyPrograms={[]}
-                referralPrograms={[]}
-                customers={[]}
-                onLoyaltyCreate={(program) => console.log('Create loyalty program:', program)}
-                onLoyaltyUpdate={(program) => console.log('Update loyalty program:', program)}
-                onLoyaltyDelete={(id) => console.log('Delete loyalty program:', id)}
-                onReferralCreate={(program) => console.log('Create referral program:', program)}
-                onReferralUpdate={(program) => console.log('Update referral program:', program)}
-                onReferralDelete={(id) => console.log('Delete referral program:', id)}
-                onCustomerAction={(customerId, action) => console.log('Customer action:', customerId, action)}
-                onAIGenerate={(type) => console.log('AI generate:', type)}
-                onExportData={(format) => console.log('Export data:', format)}
-                isLoading={false}
-              />
+              <ConsolidatedVIPManager />
             )}
           </div>
         </div>

@@ -155,7 +155,7 @@ router.put('/:id', isCoordinator, async (req, res) => {
     }
 
     // Update slug if title changed
-    let updateData: any = { ...data };
+    const updateData: any = { ...data };
     if (data.title && data.title !== existingEvent.title) {
       let slug = generateSlug(data.title);
       let counter = 1;

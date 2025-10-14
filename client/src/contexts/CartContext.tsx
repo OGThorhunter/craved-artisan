@@ -18,8 +18,14 @@ interface CartContextType {
   clearCart: () => void;
   getTotalItems: () => number;
   getTotalPrice: () => number;
+  getSubtotal: () => number;
+  getTax: (subtotal?: number) => number;
+  getShipping: (subtotal?: number) => number;
+  getTotal: () => number;
+  checkout: (userId: string, prediction?: any) => Promise<any>;
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
+  state: { items: CartItem[] };
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -87,6 +93,46 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     return items.reduce((total, item) => total + (item.price * item.quantity), 0);
   }, [items]);
 
+  const getSubtotal = useCallback(() => {
+    return items.reduce((total, item) => total + (item.price * item.quantity), 0);
+  }, [items]);
+
+  const getTax = useCallback((subtotal?: number) => {
+    const baseAmount = subtotal ?? getSubtotal();
+    const taxRate = 0.0875; // 8.75% tax rate - can be made configurable
+    return baseAmount * taxRate;
+  }, [getSubtotal]);
+
+  const getShipping = useCallback((subtotal?: number) => {
+    const baseAmount = subtotal ?? getSubtotal();
+    if (baseAmount >= 50) return 0; // Free shipping over $50
+    return 5.99; // Standard shipping rate
+  }, [getSubtotal]);
+
+  const getTotal = useCallback(() => {
+    const subtotal = getSubtotal();
+    const tax = getTax(subtotal);
+    const shipping = getShipping(subtotal);
+    return subtotal + tax + shipping;
+  }, [getSubtotal, getTax, getShipping]);
+
+  const checkout = useCallback(async (userId: string, prediction?: any) => {
+    // Basic checkout implementation - can be extended
+    const orderData = {
+      userId,
+      items,
+      subtotal: getSubtotal(),
+      tax: getTax(),
+      shipping: getShipping(),
+      total: getTotal(),
+      prediction
+    };
+    
+    // This would typically make an API call to create the order
+    console.log('Checkout data:', orderData);
+    return { id: 'temp-order-id', ...orderData };
+  }, [items, getSubtotal, getTax, getShipping, getTotal]);
+
   const value: CartContextType = {
     items,
     addItem,
@@ -95,8 +141,14 @@ export const CartProvider: React.FC<CartProviderProps> = ({ children }) => {
     clearCart,
     getTotalItems,
     getTotalPrice,
+    getSubtotal,
+    getTax,
+    getShipping,
+    getTotal,
+    checkout,
     isOpen,
     setIsOpen,
+    state: { items },
   };
 
   return (
