@@ -142,3 +142,196 @@ export interface ApplicationsListResponse {
     total: number;
   };
 }
+
+// API Client Functions
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
+
+/**
+ * Fetch coordinator's events
+ */
+export async function fetchCoordinatorEvents(): Promise<Event[]> {
+  const response = await fetch(`${API_BASE}/events/coordinator`, {
+    credentials: 'include',
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch coordinator events: ${response.statusText}`);
+  }
+  
+  const data = await response.json();
+  return Array.isArray(data) ? data : data.data || [];
+}
+
+/**
+ * Fetch all events (paginated)
+ */
+export async function fetchEvents(params?: {
+  status?: string;
+  page?: number;
+  limit?: number;
+}): Promise<EventsListResponse> {
+  const searchParams = new URLSearchParams();
+  if (params?.status) searchParams.set('status', params.status);
+  if (params?.page) searchParams.set('page', String(params.page));
+  if (params?.limit) searchParams.set('limit', String(params.limit));
+  
+  const response = await fetch(`${API_BASE}/events?${searchParams}`, {
+    credentials: 'include',
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch events: ${response.statusText}`);
+  }
+  
+  return response.json();
+}
+
+/**
+ * Fetch single event by ID
+ */
+export async function fetchEvent(id: string): Promise<Event> {
+  const response = await fetch(`${API_BASE}/events/${id}`, {
+    credentials: 'include',
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch event: ${response.statusText}`);
+  }
+  
+  const data = await response.json();
+  return data.success ? data.data : data;
+}
+
+/**
+ * Create a new event
+ */
+export async function createEvent(event: CreateEventRequest): Promise<Event> {
+  const response = await fetch(`${API_BASE}/events`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(event),
+  });
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: response.statusText }));
+    throw new Error(error.message || 'Failed to create event');
+  }
+  
+  const data = await response.json();
+  return data.success ? data.data : data;
+}
+
+/**
+ * Update an existing event
+ */
+export async function updateEvent(id: string, updates: Partial<CreateEventRequest>): Promise<Event> {
+  const response = await fetch(`${API_BASE}/events/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(updates),
+  });
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: response.statusText }));
+    throw new Error(error.message || 'Failed to update event');
+  }
+  
+  const data = await response.json();
+  return data.success ? data.data : data;
+}
+
+/**
+ * Delete an event
+ */
+export async function deleteEvent(id: string): Promise<void> {
+  const response = await fetch(`${API_BASE}/events/${id}`, {
+    method: 'DELETE',
+    credentials: 'include',
+  });
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: response.statusText }));
+    throw new Error(error.message || 'Failed to delete event');
+  }
+}
+
+/**
+ * Publish an event
+ */
+export async function publishEvent(id: string): Promise<Event> {
+  const response = await fetch(`${API_BASE}/events/${id}/publish`, {
+    method: 'POST',
+    credentials: 'include',
+  });
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: response.statusText }));
+    throw new Error(error.message || 'Failed to publish event');
+  }
+  
+  const data = await response.json();
+  return data.success ? data.data : data;
+}
+
+/**
+ * Unpublish an event
+ */
+export async function unpublishEvent(id: string): Promise<Event> {
+  const response = await fetch(`${API_BASE}/events/${id}/unpublish`, {
+    method: 'POST',
+    credentials: 'include',
+  });
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: response.statusText }));
+    throw new Error(error.message || 'Failed to unpublish event');
+  }
+  
+  const data = await response.json();
+  return data.success ? data.data : data;
+}
+
+/**
+ * Fetch vendor applications for coordinator's events
+ */
+export async function fetchApplications(eventId?: string): Promise<Application[]> {
+  const url = eventId 
+    ? `${API_BASE}/events/${eventId}/applications`
+    : `${API_BASE}/events/applications`;
+    
+  const response = await fetch(url, {
+    credentials: 'include',
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Failed to fetch applications: ${response.statusText}`);
+  }
+  
+  const data = await response.json();
+  return Array.isArray(data) ? data : data.data || [];
+}
+
+/**
+ * Update vendor application status
+ */
+export async function updateApplicationStatus(
+  applicationId: string,
+  status: 'PENDING' | 'APPROVED' | 'DENIED' | 'WITHDRAWN',
+  message?: string
+): Promise<Application> {
+  const response = await fetch(`${API_BASE}/events/applications/${applicationId}/status`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ status, message }),
+  });
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: response.statusText }));
+    throw new Error(error.message || 'Failed to update application status');
+  }
+  
+  return response.json();
+}

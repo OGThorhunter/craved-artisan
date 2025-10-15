@@ -49,6 +49,7 @@ import ordersViewsRouter from './routes/orders-views.router';
 import ordersPrintingRouter from './routes/orders-printing.router';
 import ordersCustomFieldsRouter from './routes/orders-custom-fields.router';
 import aiOrdersInsightsRouter from './routes/ai-orders-insights.router';
+import customerOrdersRouter from './routes/customer-orders.router';
 
 // Label Management Routes
 import labelsManagementRouter from './routes/labels-management.router';
@@ -70,6 +71,14 @@ import eventsDetailRouter from './routes/events-detail.router';
 import eventsManagementRouter from './routes/events-management.router';
 import eventsCoordinatorRouter from './routes/events-coordinator.router';
 
+// Legal & Coordinator Routes
+import legalRouter from './routes/legal';
+import coordinatorRouter from './routes/coordinator';
+
+// Check-in & Refunds/Payouts Routes
+import checkinRouter from './routes/checkin.router';
+import refundsPayoutsRouter from './routes/refunds-payouts.router';
+
 // Admin Routes
 import adminOverviewRouter from './routes/admin-overview.router';
 import adminSLORouter from './routes/admin-slo.router';
@@ -89,9 +98,15 @@ app.use(helmet({ crossOriginResourcePolicy: false }));
 
 // CORS middleware - must come before session middleware
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://[::1]:5173'], // Frontend URL (IPv4 and IPv6)
+  origin: [
+    'http://localhost:5173', 
+    'http://[::1]:5173',
+    // Render production URLs (will be set via env vars)
+    ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
+    ...(process.env.NODE_ENV === 'production' ? ['https://cravedartisan-web.onrender.com'] : [])
+  ],
   credentials: true, // Allow cookies
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
@@ -109,6 +124,10 @@ app.get('/api/health', (_req, res) => {
 
 // Auth routes
 app.use('/api/auth', authRoutes);
+
+// Legal & Coordinator routes
+app.use('/api/legal', legalRouter);
+app.use('/api/coordinator', coordinatorRouter);
 
 // Pulse routes
 // app.use('/api', pulseRouter); // Temporarily disabled to debug
@@ -184,6 +203,11 @@ app.use('/api/vendor/orders', ordersPrintingRouter);
 app.use('/api/vendor/order-field-defs', ordersCustomFieldsRouter);
 app.use('/api/ai/insights', aiOrdersInsightsRouter);
 
+// Customer Routes
+import customerRouter from './routes/customer.router';
+app.use('/api/customer', customerRouter);
+app.use('/api/orders', customerOrdersRouter);
+
 // Label Management Routes
 app.use('/api/vendor/labels', labelsManagementRouter);
 app.use('/api/vendor/labels', labelsSmartQueueRouter);
@@ -203,6 +227,10 @@ app.use('/api/events', eventsSearchRouter);
 app.use('/api/events', eventsDetailRouter);
 app.use('/api/events', eventsManagementRouter);
 app.use('/api/events', eventsCoordinatorRouter);
+
+// Check-in & Refunds/Payouts Routes
+app.use('/api/checkin', checkinRouter);
+app.use('/api/refunds-payouts', refundsPayoutsRouter);
 
 // Admin Routes
 app.use('/api/admin', adminOverviewRouter);

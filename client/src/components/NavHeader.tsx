@@ -6,6 +6,7 @@ import { Menu, X, ShoppingCart, Search, Bell, MapPin, MessageCircle, Send, X as 
 import logonobg from '/images/logonobg.png';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
+import { useNotifications } from '../contexts/NotificationContext';
 import { CartDropdown } from './CartDropdown';
 import { useZip } from '../contexts/ZipContext';
 
@@ -13,6 +14,7 @@ export default function NavHeader() {
   const { user, isAuthenticated, logout } = useAuth();
   const { zip, updateZip, isValidZip, isUsingLocation, setUsingLocation } = useZip();
   const { getTotalItems, setIsOpen: setCartOpen } = useCart();
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
   const [location] = useLocation();
   const [zipInput, setZipInput] = useState(zip);
   const [isMobileOpen, setMobileOpen] = useState(false);
@@ -38,6 +40,33 @@ export default function NavHeader() {
     }
   ]);
   const [isTyping, setIsTyping] = useState(false);
+
+  // Helper function to format notification timestamp
+  const formatTimestamp = (date: Date) => {
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
+    if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    if (days < 7) return `${days} day${days > 1 ? 's' : ''} ago`;
+    return date.toLocaleDateString();
+  };
+
+  // Helper function to get notification icon
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case 'production': return '🔔';
+      case 'order': return '📦';
+      case 'inventory': return '📊';
+      case 'delivery': return '🚚';
+      case 'system': return '⚙️';
+      default: return '📬';
+    }
+  };
 
   // Determine user role from auth context
   const role = user?.role?.toLowerCase() || 'guest';
@@ -423,10 +452,12 @@ export default function NavHeader() {
               title="Notifications"
             >
               <Bell className="h-5 w-5 text-[#2C2C2C] cursor-pointer" />
-              {/* Notification badge - you can add notification count here */}
-              <span className="absolute -top-1 -right-1 bg-[#5B6E02] text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                2
-              </span>
+              {/* Notification badge with real unread count */}
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-[#5B6E02] text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
             </button>
             {isNotificationsOpen && (
               <div 
@@ -446,55 +477,75 @@ export default function NavHeader() {
               >
                 <h3 className="font-semibold mb-3 flex items-center justify-between">
                   Notifications
-                  <span className="text-sm text-gray-500">2 new</span>
+                  {unreadCount > 0 && (
+                    <span className="text-sm text-gray-500">{unreadCount} new</span>
+                  )}
                 </h3>
                 
                 {/* Notifications Preview */}
-                <div className="space-y-3 max-h-48 overflow-y-auto">
-                  <div className="flex items-start gap-3 p-2 bg-white rounded">
-                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-xs">📦</span>
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {notifications.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <Bell className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-sm">No notifications</p>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">Order Shipped!</p>
-                      <p className="text-xs text-gray-500">Your order #1234 has been shipped and will arrive tomorrow.</p>
-                      <p className="text-xs text-[#5B6E02] mt-1">2 hours ago</p>
-                    </div>
-                    <div className="w-2 h-2 bg-[#5B6E02] rounded-full flex-shrink-0"></div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3 p-2 bg-white rounded">
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-xs">🎪</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">New Event Near You</p>
-                      <p className="text-xs text-gray-500">Locust Grove Farmers Market this Saturday at 9 AM.</p>
-                      <p className="text-xs text-[#5B6E02] mt-1">1 day ago</p>
-                    </div>
-                    <div className="w-2 h-2 bg-[#5B6E02] rounded-full flex-shrink-0"></div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3 p-2 bg-white/50 rounded">
-                    <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-xs">🥖</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">New Product Available</p>
-                      <p className="text-xs text-gray-500">Rustic Bakes just added fresh sourdough to their menu.</p>
-                      <p className="text-xs text-gray-500 mt-1">3 days ago</p>
-                    </div>
-                  </div>
+                  ) : (
+                    notifications.slice(0, 10).map((notification) => (
+                      <div 
+                        key={notification.id}
+                        onClick={() => {
+                          markAsRead(notification.id);
+                          if (notification.actionUrl) {
+                            window.location.href = notification.actionUrl;
+                          }
+                        }}
+                        className={`flex items-start gap-3 p-2 rounded cursor-pointer hover:bg-white/80 transition-colors ${
+                          notification.read ? 'bg-white/50' : 'bg-white'
+                        }`}
+                      >
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                          notification.priority === 'high' ? 'bg-red-100' :
+                          notification.priority === 'medium' ? 'bg-yellow-100' :
+                          'bg-blue-100'
+                        }`}>
+                          <span className="text-xs">{getNotificationIcon(notification.type)}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium">{notification.title}</p>
+                          <p className="text-xs text-gray-500 line-clamp-2">{notification.message}</p>
+                          <p className={`text-xs mt-1 ${notification.read ? 'text-gray-500' : 'text-[#5B6E02] font-medium'}`}>
+                            {formatTimestamp(notification.timestamp)}
+                          </p>
+                        </div>
+                        {!notification.read && (
+                          <div className="w-2 h-2 bg-[#5B6E02] rounded-full flex-shrink-0 mt-2"></div>
+                        )}
+                      </div>
+                    ))
+                  )}
                 </div>
                 
-                <div className="mt-3 pt-3 border-t border-[#5B6E02]/30">
-                  <Link 
-                    href="/notifications" 
-                    className="w-full bg-[#5B6E02] text-white py-2 px-3 rounded text-sm text-center hover:bg-[#4A5A01] transition-colors block"
-                  >
-                    View All Notifications
-                  </Link>
-                </div>
+                {notifications.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-[#5B6E02]/30 flex gap-2">
+                    {unreadCount > 0 && (
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          markAllAsRead();
+                        }}
+                        className="flex-1 bg-gray-200 text-gray-700 py-2 px-3 rounded text-sm text-center hover:bg-gray-300 transition-colors"
+                      >
+                        Mark all read
+                      </button>
+                    )}
+                    <Link 
+                      href="/notifications" 
+                      className="flex-1 bg-[#5B6E02] text-white py-2 px-3 rounded text-sm text-center hover:bg-[#4A5A01] transition-colors block"
+                    >
+                      View All
+                    </Link>
+                  </div>
+                )}
               </div>
                           )}
           </div>

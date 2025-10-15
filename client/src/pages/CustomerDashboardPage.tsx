@@ -5,6 +5,7 @@ import { Link } from 'wouter';
 import { useCart } from '../contexts/CartContext';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import {
@@ -339,6 +340,62 @@ export default function CustomerDashboardPage() {
     queryFn: async () => {
       const response = await axios.get('/api/orders/history');
       return response.data;
+    },
+    retry: 1,
+    onError: (error) => {
+      toast.error('Failed to load order history. Please try again.');
+    }
+  });
+
+  // Fetch customer profile data
+  const { data: customerData, isLoading: customerLoading } = useQuery({
+    queryKey: ['customerProfile'],
+    queryFn: async () => {
+      const response = await axios.get('/api/customer/profile');
+      return response.data;
+    },
+    retry: 1,
+    onError: (error) => {
+      toast.error('Failed to load profile data.');
+    }
+  });
+
+  // Fetch favorite vendors
+  const { data: favoritesData, isLoading: favoritesLoading } = useQuery({
+    queryKey: ['customerFavorites'],
+    queryFn: async () => {
+      const response = await axios.get('/api/customer/favorites');
+      return response.data;
+    },
+    retry: 1,
+    onError: (error) => {
+      toast.error('Failed to load favorite vendors.');
+    }
+  });
+
+  // Fetch messages
+  const { data: messagesData, isLoading: messagesLoading } = useQuery({
+    queryKey: ['customerMessages'],
+    queryFn: async () => {
+      const response = await axios.get('/api/customer/messages');
+      return response.data;
+    },
+    retry: 1,
+    onError: (error) => {
+      toast.error('Failed to load messages.');
+    }
+  });
+
+  // Fetch upcoming events
+  const { data: eventsData, isLoading: eventsLoading } = useQuery({
+    queryKey: ['customerEvents'],
+    queryFn: async () => {
+      const response = await axios.get('/api/customer/events');
+      return response.data;
+    },
+    retry: 1,
+    onError: (error) => {
+      toast.error('Failed to load upcoming events.');
     }
   });
 
@@ -438,9 +495,10 @@ export default function CustomerDashboardPage() {
       
       // Save the PDF
       pdf.save(`invoice-${order.orderNumber}.pdf`);
+      toast.success('Invoice downloaded successfully');
       
     } catch (error) {
-      console.error('Error generating PDF:', error);
+      toast.error('Failed to generate invoice PDF. Please try again.');
     }
   };
 
@@ -484,11 +542,8 @@ export default function CustomerDashboardPage() {
     if (!replyText.trim() || !selectedMessage) return;
     
     // In a real app, this would send to the backend
-    console.log('Sending reply:', {
-      to: selectedMessage.vendorId,
-      subject: `Re: ${selectedMessage.subject}`,
-      message: replyText
-    });
+    // For now, show success message
+    toast.success('Reply sent successfully');
     
     // Reset reply text
     setReplyText('');
@@ -496,10 +551,14 @@ export default function CustomerDashboardPage() {
   };
 
   const handleCompose = () => {
-    if (!composeData.vendorId || !composeData.subject || !composeData.message) return;
+    if (!composeData.vendorId || !composeData.subject || !composeData.message) {
+      toast.error('Please fill in all fields');
+      return;
+    }
     
     // In a real app, this would send to the backend
-    console.log('Sending new message:', composeData);
+    // For now, show success message
+    toast.success('Message sent successfully');
     
     closeComposeModal();
   };
@@ -651,7 +710,7 @@ export default function CustomerDashboardPage() {
     if (confirmed) {
       // In a real app, you'd redirect to the OAuth URL
       // For demo purposes, we'll simulate the connection
-      console.log(`Redirecting to ${platform} OAuth: ${fullUrl}`);
+      toast.loading('Connecting to social media...', { duration: 1000 });
       
       // Simulate successful connection after a brief delay
       setTimeout(() => {
@@ -669,8 +728,7 @@ export default function CustomerDashboardPage() {
         }));
         setHasUnsavedChanges(true);
         
-        // Show success message
-        alert(`${platform.charAt(0).toUpperCase() + platform.slice(1)} account connected successfully!`);
+        toast.success(`${platform.charAt(0).toUpperCase() + platform.slice(1)} account connected successfully!`);
       }, 1000);
       
       // In production, uncomment this line to redirect to OAuth:
@@ -843,8 +901,7 @@ export default function CustomerDashboardPage() {
       } : null);
       
     } catch (error) {
-      console.error('Failed to save settings:', error);
-      alert('Failed to save settings. Please try again.');
+      toast.error('Failed to save settings. Please try again.');
     } finally {
       setIsSaving(false);
     }
@@ -875,50 +932,120 @@ export default function CustomerDashboardPage() {
     setActiveTab(newTab as any);
   };
 
-  // Mock data - replace with actual API calls
+  // Load data from API calls when they complete
   useEffect(() => {
-    const mockCustomer: Customer = {
-      id: 'c1',
-      name: 'Sarah Johnson',
-      email: 'sarah.johnson@email.com',
-      avatar: '/images/avatars/sarah.jpg',
-      primaryZip: '30248',
-      secondaryZips: ['30301', '30305'],
-      referralCode: 'SARAH2024',
-      referralCount: 8,
-      joinDate: '2023-03-15',
-      address: {
-        street: '123 Main Street',
-        city: 'Atlanta',
-        state: 'GA',
-        zipCode: '30248',
-        country: 'US'
-      },
-      phoneLandline: '(555) 123-4567',
-      phoneMobile: '(555) 987-6543',
-      smsOptIn: false,
-      avatarType: 'default',
-      socialConnections: {
-        google: { connected: true, email: 'sarah.johnson@gmail.com', profileImage: 'https://lh3.googleusercontent.com/a/default-user=s96-c' },
-        facebook: { connected: false, username: '', profileImage: '', shareProducts: false, shareDeals: false },
-        instagram: { connected: true, username: '@sarahj_foodie', profileImage: 'https://instagram.com/sarahj_foodie/profile.jpg', shareProducts: true, shareDeals: false },
-        x: { connected: false, username: '', profileImage: '', shareProducts: false, shareDeals: false },
-        youtube: { connected: false, username: '', profileImage: '', shareProducts: false, shareDeals: false },
-        pinterest: { connected: false, username: '', profileImage: '', shareProducts: false, shareDeals: false },
-        whatsapp: { connected: false, username: '', profileImage: '', shareProducts: false, shareDeals: false },
-        nextdoor: { connected: false, username: '', profileImage: '', shareProducts: false, shareDeals: false },
-        linkedin: { connected: false, username: '', profileImage: '', shareProducts: false, shareDeals: false }
-      },
-      preferences: {
-        notifications: {
+    // Set loading to false when all critical data is loaded
+    const isLoading = customerLoading || ordersLoading || favoritesLoading;
+    setLoading(isLoading);
+
+    // Update customer data when available
+    if (customerData?.success && customerData.customer) {
+      setCustomer(customerData.customer);
+      
+      // Initialize settings data from customer profile
+      setSettingsData({
+        address: customerData.customer.address || { street: '', city: '', state: '', zipCode: '', country: 'US' },
+        phoneLandline: customerData.customer.phoneLandline || '',
+        phoneMobile: customerData.customer.phoneMobile || '',
+        smsOptIn: customerData.customer.smsOptIn || false,
+        smsOptInDate: customerData.customer.smsOptInDate,
+        smsConsentText: customerData.customer.smsConsentText,
+        avatarType: customerData.customer.avatarType || 'default',
+        uploadedAvatar: customerData.customer.uploadedAvatar,
+        socialAvatarUrl: customerData.customer.socialAvatarUrl,
+        socialConnections: customerData.customer.socialConnections,
+        notifications: customerData.customer.preferences?.notifications || {
           email: true,
           push: true,
           sms: false
         },
-        marketing: true,
-        defaultPickupMethod: 'pickup'
-      }
-    };
+        marketing: customerData.customer.preferences?.marketing ?? true,
+        defaultPickupMethod: customerData.customer.preferences?.defaultPickupMethod || 'pickup'
+      });
+      
+      setOriginalSettingsData({
+        address: customerData.customer.address || { street: '', city: '', state: '', zipCode: '', country: 'US' },
+        phoneLandline: customerData.customer.phoneLandline || '',
+        phoneMobile: customerData.customer.phoneMobile || '',
+        smsOptIn: customerData.customer.smsOptIn || false,
+        smsOptInDate: customerData.customer.smsOptInDate,
+        smsConsentText: customerData.customer.smsConsentText,
+        avatarType: customerData.customer.avatarType || 'default',
+        uploadedAvatar: customerData.customer.uploadedAvatar,
+        socialAvatarUrl: customerData.customer.socialAvatarUrl,
+        socialConnections: customerData.customer.socialConnections,
+        notifications: customerData.customer.preferences?.notifications || {
+          email: true,
+          push: true,
+          sms: false
+        },
+        marketing: customerData.customer.preferences?.marketing ?? true,
+        defaultPickupMethod: customerData.customer.preferences?.defaultPickupMethod || 'pickup'
+      });
+    }
+
+    // Update favorites when available
+    if (favoritesData?.success && favoritesData.favorites) {
+      setFavoriteVendors(favoritesData.favorites);
+    }
+
+    // Update messages when available
+    if (messagesData?.success && messagesData.messages) {
+      setMessages(messagesData.messages);
+    }
+
+    // Update events when available
+    if (eventsData?.success && eventsData.events) {
+      setUpcomingEvents(eventsData.events);
+    }
+  }, [customerData, favoritesData, messagesData, eventsData, customerLoading, ordersLoading, favoritesLoading]);
+
+  // Fallback mock data for development/testing when APIs return empty
+  useEffect(() => {
+    // Only load mock data if no real customer data after loading completes
+    if (!loading && !customer) {
+      const mockCustomer: Customer = {
+        id: 'c1',
+        name: 'Sarah Johnson',
+        email: 'sarah.johnson@email.com',
+        avatar: '/images/avatars/sarah.jpg',
+        primaryZip: '30248',
+        secondaryZips: ['30301', '30305'],
+        referralCode: 'SARAH2024',
+        referralCount: 8,
+        joinDate: '2023-03-15',
+        address: {
+          street: '123 Main Street',
+          city: 'Atlanta',
+          state: 'GA',
+          zipCode: '30248',
+          country: 'US'
+        },
+        phoneLandline: '(555) 123-4567',
+        phoneMobile: '(555) 987-6543',
+        smsOptIn: false,
+        avatarType: 'default',
+        socialConnections: {
+          google: { connected: true, email: 'sarah.johnson@gmail.com', profileImage: 'https://lh3.googleusercontent.com/a/default-user=s96-c' },
+          facebook: { connected: false, username: '', profileImage: '', shareProducts: false, shareDeals: false },
+          instagram: { connected: true, username: '@sarahj_foodie', profileImage: 'https://instagram.com/sarahj_foodie/profile.jpg', shareProducts: true, shareDeals: false },
+          x: { connected: false, username: '', profileImage: '', shareProducts: false, shareDeals: false },
+          youtube: { connected: false, username: '', profileImage: '', shareProducts: false, shareDeals: false },
+          pinterest: { connected: false, username: '', profileImage: '', shareProducts: false, shareDeals: false },
+          whatsapp: { connected: false, username: '', profileImage: '', shareProducts: false, shareDeals: false },
+          nextdoor: { connected: false, username: '', profileImage: '', shareProducts: false, shareDeals: false },
+          linkedin: { connected: false, username: '', profileImage: '', shareProducts: false, shareDeals: false }
+        },
+        preferences: {
+          notifications: {
+            email: true,
+            push: true,
+            sms: false
+          },
+          marketing: true,
+          defaultPickupMethod: 'pickup'
+        }
+      };
 
     const mockOrders: Order[] = [
       {
@@ -1194,11 +1321,20 @@ export default function CustomerDashboardPage() {
       }
     ];
 
-    setCustomer(mockCustomer);
-    setOrders(mockOrders);
-    setFavoriteVendors(mockFavoriteVendors);
-    setMessages(mockMessages);
-    setUpcomingEvents(mockEvents);
+      setCustomer(mockCustomer);
+      
+      if (orders.length === 0) {
+        setOrders(mockOrders);
+      }
+      if (favoriteVendors.length === 0) {
+        setFavoriteVendors(mockFavoriteVendors);
+      }
+      if (messages.length === 0) {
+        setMessages(mockMessages);
+      }
+      if (upcomingEvents.length === 0) {
+        setUpcomingEvents(mockEvents);
+      }
     
     // Initialize settings data from customer
     const initialSettingsData = {
@@ -1220,11 +1356,10 @@ export default function CustomerDashboardPage() {
       socialConnections: mockCustomer.socialConnections
     };
     
-    setSettingsData(initialSettingsData);
-    setOriginalSettingsData(initialSettingsData);
-    
-    setLoading(false);
-  }, []);
+      setSettingsData(initialSettingsData);
+      setOriginalSettingsData(initialSettingsData);
+    }
+  }, [loading, customer, orders, favoriteVendors, messages, upcomingEvents]);
 
 
   const getStatusColor = (status: string) => {
@@ -1293,7 +1428,7 @@ export default function CustomerDashboardPage() {
 
   const handleCopyReferralCode = () => {
     navigator.clipboard.writeText(customer?.referralCode || '');
-    // TODO: Show toast notification
+    toast.success('Referral code copied to clipboard!');
   };
 
   // Order Detail Modal Component

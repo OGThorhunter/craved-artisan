@@ -21,9 +21,20 @@ model User {
   created_at      DateTime         @default(now())
   updated_at      DateTime         @updatedAt
   deletedAt       DateTime?
+  
+  // OAuth fields
+  oauthProvider   String?
+  oauthProviderId String?
+  
+  // Profile completion
+  profileCompleted Boolean         @default(false)
+  emailVerified    Boolean         @default(false)
+  emailVerifiedAt  DateTime?
+  
   analyticsEvents AnalyticsEvent[]
   orders          Order[]
   vendorProfile   VendorProfile?
+  coordinatorProfile EventCoordinatorProfile?
   
   // Marketplace relations
   favoriteVendors FavoriteVendor[]
@@ -47,8 +58,12 @@ model User {
   referralsByReferrer Referral[]    @relation("ReferralsByReferrer")
   referralsByReferee  Referral[]    @relation("ReferralsByReferee")
   marketingEvents MarketingEvent[]
+  
+  // Legal agreements
+  agreements      UserAgreement[]
 
   @@index([zip_code])
+  @@index([oauthProvider, oauthProviderId])
 }
 
 model VendorProfile {
@@ -129,6 +144,29 @@ model VendorProfile {
   @@index([city, state])
   @@index([marketplaceTags])
   @@index([ratingAvg])
+}
+
+model EventCoordinatorProfile {
+  id                    String    @id @default(cuid())
+  userId                String    @unique
+  organizationName      String
+  bio                   String?
+  imageUrl              String?
+  slug                  String    @unique
+  stripeAccountId       String?
+  stripeAccountStatus   String?
+  stripeOnboardingUrl   String?
+  phone                 String?
+  website               String?
+  socialLinks           String?   // JSON: {facebook, instagram, twitter, etc}
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  events                Event[]
+  
+  @@index([slug])
+  @@index([userId])
 }
 
 model Product {
@@ -1947,6 +1985,7 @@ model Event {
   updatedAt     DateTime @updatedAt
   
   // Relations
+  coordinator   EventCoordinatorProfile @relation(fields: [coordinatorId], references: [id])
   stalls        EventStall[]
   vendors       EventVendor[]
   perks         EventPerk[]
@@ -2751,4 +2790,40 @@ model MarketingEvent {
 
   @@index([vendorProfileId, eventType, timestamp])
   @@index([userId, timestamp])
+}
+
+// ================================
+// LEGAL DOCUMENTS & AGREEMENTS
+// ================================
+
+model LegalDocument {
+  id          String   @id @default(cuid())
+  type        String   // 'TOS', 'PRIVACY', 'AI_DISCLAIMER', 'DATA_LIABILITY', 'VENDOR_AGREEMENT', 'COORDINATOR_AGREEMENT'
+  version     String   // e.g., "1.0", "1.1"
+  title       String
+  content     String   // Full agreement text
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  
+  agreements  UserAgreement[]
+  
+  @@unique([type, version])
+  @@index([type, isActive])
+}
+
+model UserAgreement {
+  id              String   @id @default(cuid())
+  userId          String
+  documentId      String
+  documentType    String
+  documentVersion String
+  acceptedAt      DateTime @default(now())
+  ipAddress       String?
+  userAgent       String?
+  
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  document        LegalDocument   @relation(fields: [documentId], references: [id])
+  
+  @@index([userId, documentType])
+  @@index([documentId])
 }

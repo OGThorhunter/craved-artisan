@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
 import { ZipProvider } from './contexts/ZipContext';
+import { NotificationProvider } from './contexts/NotificationContext';
 import { Layout } from './components/Layout';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
@@ -86,8 +87,9 @@ function App() {
     <AuthProvider>
       <CartProvider>
         <ZipProvider>
-        <Router>
-            <Layout>
+          <NotificationProvider>
+            <Router>
+              <Layout>
             <Switch>
             <Route path="/" component={HomePage} />
             <Route path="/test">
@@ -379,12 +381,13 @@ function App() {
           
           {/* Catch-all route for unhandled routes */}
           <Route component={NotFound} />
-        </Switch>
-      </Layout>
-      <Toaster position="top-right" />
-    </Router>
-    </ZipProvider>
-    </CartProvider>
+              </Switch>
+            </Layout>
+            <Toaster position="top-right" />
+          </Router>
+        </NotificationProvider>
+      </ZipProvider>
+      </CartProvider>
     </AuthProvider>
   );
 }

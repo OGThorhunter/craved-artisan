@@ -529,7 +529,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
             </div>
           )}
         </div>
-      )}
+      {'}'})
 
       {/* Task Details Modal */}
       {showTaskDetails && selectedTask && (
@@ -1068,7 +1068,7 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
             </div>
           </div>
         </div>
-      )}
+      {'}'})
 
       {/* Edit Task Modal */}
       {showTaskEdit && editingTask && (

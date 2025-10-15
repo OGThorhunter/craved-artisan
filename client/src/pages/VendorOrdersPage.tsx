@@ -36,6 +36,7 @@ import Card from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Input } from '../components/ui/Input';
 import { toast } from 'react-hot-toast';
+import { useNotifications } from '../contexts/NotificationContext';
 import SystemMessagesDrawer from '../components/inventory/SystemMessagesDrawer';
 import AIInsightsDrawer from '../components/inventory/AIInsightsDrawer';
 import SimpleLabelPrintModal from '../components/labels/SimpleLabelPrintModal';
@@ -754,6 +755,7 @@ type ViewMode = 'list' | 'calendar' | 'production-kitchen' | 'packaging-center' 
 type PackagingSubMode = 'overview' | 'labels' | 'packaging-assignment';
 
 const VendorOrdersPage: React.FC = () => {
+  const { addNotification } = useNotifications();
   const [, setLocation] = useLocation();
   const [viewMode, setViewMode] = useState<ViewMode>('list'); // Start with list view
   const [packagingSubMode, setPackagingSubMode] = useState<PackagingSubMode>('overview');
@@ -881,13 +883,13 @@ const VendorOrdersPage: React.FC = () => {
     }
   };
 
-  // Check for orders that need to start production and send alerts
+  // Check for orders that need to start production and add to notifications
   React.useEffect(() => {
     if (orders.length === 0) return;
 
     orders.forEach(order => {
       if (shouldStartProduction(order) && order.status === 'CONFIRMED') {
-        // Check if we've already sent alert (use localStorage)
+        // Check if we've already sent notification (use localStorage)
         const alertKey = `production-alert-${order.id}`;
         const alreadyAlerted = localStorage.getItem(alertKey);
         
@@ -895,30 +897,26 @@ const VendorOrdersPage: React.FC = () => {
           const leadTime = order.orderItems[0]?.product.leadTimeDays || 3;
           const kitchenStart = calculateKitchenStartDate(order.dueAt!, leadTime);
           
-          toast(
-            <div className="flex flex-col gap-2">
-              <p className="font-bold text-purple-900">🔔 Production Alert</p>
-              <p className="text-sm">Order #{order.orderNumber} for {order.customerName} needs to start production today!</p>
-              <p className="text-xs text-gray-600">
-                Kitchen Start: {kitchenStart.toLocaleDateString()} | 
-                Delivery: {new Date(order.dueAt!).toLocaleDateString()}
-              </p>
-            </div>,
-            {
-              duration: 10000,
-              icon: '📅',
-              style: {
-                background: '#F3E8FF',
-                border: '2px solid #9333EA'
-              }
+          // Add notification to the notification system instead of toast
+          addNotification({
+            type: 'production',
+            title: '🔔 Production Alert',
+            message: `Order #${order.orderNumber} for ${order.customerName} needs to start production today! Kitchen Start: ${kitchenStart.toLocaleDateString()} | Delivery: ${new Date(order.dueAt!).toLocaleDateString()}`,
+            priority: 'high',
+            actionUrl: '/dashboard/vendor/orders',
+            metadata: {
+              orderId: order.id,
+              orderNumber: order.orderNumber,
+              kitchenStart: kitchenStart.toISOString(),
+              dueDate: order.dueAt
             }
-          );
+          });
           
           localStorage.setItem(alertKey, 'true');
         }
       }
     });
-  }, [orders]);
+  }, [orders, addNotification]);
 
   const isLoadingOrders = false;
   const aiInsights = null;
