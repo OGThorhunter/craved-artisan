@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { PrismaClient } from '@prisma/client';
 import { requireVendorAuth } from '../middleware/auth';
 import { validateRequest } from '../middleware/validation';
+import { invalidateProductCache, invalidateAnalyticsCache } from '../middleware/cache-invalidation';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -251,7 +252,7 @@ router.get('/:id', requireVendorAuth, async (req, res) => {
 });
 
 // POST /api/vendor/products - Create new product
-router.post('/', requireVendorAuth, validateRequest(CreateProductSchema), async (req, res) => {
+router.post('/', requireVendorAuth, invalidateProductCache, validateRequest(CreateProductSchema), async (req, res) => {
   try {
     const vendorId = req.user!.vendorProfileId;
     const data = req.body as z.infer<typeof CreateProductSchema>;
@@ -302,7 +303,7 @@ router.post('/', requireVendorAuth, validateRequest(CreateProductSchema), async 
 });
 
 // PUT /api/vendor/products/:id - Update product
-router.put('/:id', requireVendorAuth, validateRequest(UpdateProductSchema), async (req, res) => {
+router.put('/:id', requireVendorAuth, invalidateProductCache, validateRequest(UpdateProductSchema), async (req, res) => {
   try {
     const vendorId = req.user!.vendorProfileId;
     const { id } = req.params;
@@ -369,7 +370,7 @@ router.put('/:id', requireVendorAuth, validateRequest(UpdateProductSchema), asyn
 });
 
 // DELETE /api/vendor/products/:id - Delete product
-router.delete('/:id', requireVendorAuth, async (req, res) => {
+router.delete('/:id', requireVendorAuth, invalidateProductCache, async (req, res) => {
   try {
     const vendorId = req.user!.vendorProfileId;
     const { id } = req.params;
@@ -408,7 +409,7 @@ router.get('/:id/cost-rollup', requireVendorAuth, async (req, res) => {
 });
 
 // PATCH /api/vendor/products/bulk - Bulk actions
-router.patch('/bulk', requireVendorAuth, validateRequest(BulkActionSchema), async (req, res) => {
+router.patch('/bulk', requireVendorAuth, invalidateProductCache, validateRequest(BulkActionSchema), async (req, res) => {
   try {
     const vendorId = req.user!.vendorProfileId;
     const { productIds, action, categoryId, price } = req.body as z.infer<typeof BulkActionSchema>;

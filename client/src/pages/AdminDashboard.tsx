@@ -380,13 +380,100 @@ export default function AdminDashboard() {
 
   const renderCrmTab = () => (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-[#2b2b2b]">CRM</h2>
-      <Card className="p-8 text-center">
-        <Users className="h-12 w-12 text-[#4b4b4b] mx-auto mb-4" />
-        <h3 className="text-lg font-semibold text-[#2b2b2b] mb-2">Customer Relationship Management</h3>
-        <p className="text-[#4b4b4b]">
-          Vendor lifecycle, segments, and communication tools coming soon.
-        </p>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold text-[#2b2b2b]">User Management & CRM</h2>
+        <Button
+          variant="primary"
+          onClick={() => setLocation('/control/users')}
+          className="flex items-center gap-2"
+        >
+          <Users className="h-4 w-4" />
+          Manage All Users
+        </Button>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setLocation('/control/users?role=CUSTOMER')}>
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <Users className="h-6 w-6 text-blue-600" />
+            </div>
+            <div className="text-2xl font-bold text-gray-900">
+              {overview?.metrics.vendors.total || 0}
+            </div>
+          </div>
+          <div className="text-sm font-medium text-gray-700">Customers</div>
+          <div className="text-xs text-gray-500 mt-1">View & manage</div>
+        </Card>
+        
+        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setLocation('/control/users?role=VENDOR')}>
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 bg-green-100 rounded-lg">
+              <Users className="h-6 w-6 text-green-600" />
+            </div>
+            <div className="text-2xl font-bold text-gray-900">
+              {overview?.metrics.vendors.active || 0}
+            </div>
+          </div>
+          <div className="text-sm font-medium text-gray-700">Vendors</div>
+          <div className="text-xs text-gray-500 mt-1">View & manage</div>
+        </Card>
+        
+        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setLocation('/control/users?role=EVENT_COORDINATOR')}>
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 bg-purple-100 rounded-lg">
+              <Users className="h-6 w-6 text-purple-600" />
+            </div>
+            <div className="text-2xl font-bold text-gray-900">0</div>
+          </div>
+          <div className="text-sm font-medium text-gray-700">Coordinators</div>
+          <div className="text-xs text-gray-500 mt-1">View & manage</div>
+        </Card>
+        
+        <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setLocation('/control/users?onboardingStage=NEEDS_ATTENTION')}>
+          <div className="flex items-center gap-3 mb-3">
+            <div className="p-2 bg-orange-100 rounded-lg">
+              <AlertTriangle className="h-6 w-6 text-orange-600" />
+            </div>
+            <div className="text-2xl font-bold text-gray-900">0</div>
+          </div>
+          <div className="text-sm font-medium text-gray-700">Needs Attention</div>
+          <div className="text-xs text-gray-500 mt-1">Pending actions</div>
+        </Card>
+      </div>
+      
+      <Card className="p-6">
+        <h3 className="text-lg font-semibold text-[#2b2b2b] mb-4">Quick Access</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <button
+            onClick={() => setLocation('/control/users?riskScoreMin=60')}
+            className="p-4 border rounded-lg hover:bg-gray-50 text-left"
+          >
+            <div className="font-medium text-gray-900">At-Risk Users</div>
+            <div className="text-sm text-gray-600">High risk scores</div>
+          </button>
+          <button
+            onClick={() => setLocation('/control/users?stripeStatus=INCOMPLETE')}
+            className="p-4 border rounded-lg hover:bg-gray-50 text-left"
+          >
+            <div className="font-medium text-gray-900">Stripe Incomplete</div>
+            <div className="text-sm text-gray-600">Pending verification</div>
+          </button>
+          <button
+            onClick={() => setLocation('/control/users?emailVerified=false')}
+            className="p-4 border rounded-lg hover:bg-gray-50 text-left"
+          >
+            <div className="font-medium text-gray-900">Unverified Emails</div>
+            <div className="text-sm text-gray-600">Pending verification</div>
+          </button>
+          <button
+            onClick={() => setLocation('/control/users?vacationMode=true')}
+            className="p-4 border rounded-lg hover:bg-gray-50 text-left"
+          >
+            <div className="font-medium text-gray-900">On Vacation</div>
+            <div className="text-sm text-gray-600">Vendors on break</div>
+          </button>
+        </div>
       </Card>
     </div>
   );

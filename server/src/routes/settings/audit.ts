@@ -40,8 +40,13 @@ export const getAuditLogs = async (req: Request, res: Response) => {
     }
 
     const [auditLogs, total] = await Promise.all([
-      prisma.auditLog.findMany({
-        where,
+      prisma.auditEvent.findMany({
+        where: {
+          ...where,
+          // Map old field names to new ones
+          ...(where.entityType && { targetType: where.entityType }),
+          ...(where.entityId && { targetId: where.entityId })
+        },
         include: {
           actor: {
             select: {
@@ -53,11 +58,17 @@ export const getAuditLogs = async (req: Request, res: Response) => {
             }
           }
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { occurredAt: 'desc' },
         skip: offset,
         take: limit
       }),
-      prisma.auditLog.count({ where })
+      prisma.auditEvent.count({ 
+        where: {
+          ...where,
+          ...(where.entityType && { targetType: where.entityType }),
+          ...(where.entityId && { targetId: where.entityId })
+        }
+      })
     ]);
 
     res.json({
@@ -106,8 +117,12 @@ export const exportAuditLogs = async (req: Request, res: Response) => {
       ];
     }
 
-    const auditLogs = await prisma.auditLog.findMany({
-      where,
+    const auditLogs = await prisma.auditEvent.findMany({
+      where: {
+        ...where,
+        ...(where.entityType && { targetType: where.entityType }),
+        ...(where.entityId && { targetId: where.entityId })
+      },
       include: {
         actor: {
           select: {
@@ -117,21 +132,21 @@ export const exportAuditLogs = async (req: Request, res: Response) => {
           }
         }
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { occurredAt: 'desc' }
     });
 
     // Convert to CSV format
-    const csvHeader = 'Date,Action,Entity Type,Entity ID,Actor,IP Address,User Agent\n';
+    const csvHeader = 'Date,Action,Target Type,Target ID,Actor,IP Address,User Agent\n';
     const csvRows = auditLogs.map(log => {
-      const date = log.createdAt.toISOString();
+      const date = log.occurredAt.toISOString();
       const action = log.action;
-      const entityType = log.entityType;
-      const entityId = log.entityId;
-      const actor = `${log.actor.firstName} ${log.actor.lastName} (${log.actor.email})`;
-      const ip = log.ip || '';
-      const userAgent = log.userAgent || '';
+      const targetType = log.targetType || '';
+      const targetId = log.targetId || '';
+      const actor = log.actor ? `${log.actor.firstName} ${log.actor.lastName} (${log.actor.email})` : 'SYSTEM';
+      const ip = log.actorIp || '';
+      const userAgent = log.actorUa || '';
       
-      return `"${date}","${action}","${entityType}","${entityId}","${actor}","${ip}","${userAgent}"`;
+      return `"${date}","${action}","${targetType}","${targetId}","${actor}","${ip}","${userAgent}"`;
     }).join('\n');
 
     const csvContent = csvHeader + csvRows;
@@ -158,6 +173,7 @@ router.get('/', canViewSensitiveData, getAuditLogs);
 router.get('/export', canViewSensitiveData, exportAuditLogs);
 
 export const auditRoutes = router;
+
 
 
 

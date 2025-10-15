@@ -76,6 +76,31 @@ export const api = {
   }
 };
 
+// HTTP Client with Response object interface (used by legal service)
+export const httpClient = {
+  async get(path: string): Promise<Response> {
+    return await http(path, { method: 'GET' });
+  },
+  
+  async post(path: string, body?: any): Promise<Response> {
+    return await http(path, { 
+      method: 'POST', 
+      body: body ? JSON.stringify(body) : undefined 
+    });
+  },
+  
+  async put(path: string, body?: any): Promise<Response> {
+    return await http(path, { 
+      method: 'PUT', 
+      body: body ? JSON.stringify(body) : undefined 
+    });
+  },
+  
+  async delete(path: string): Promise<Response> {
+    return await http(path, { method: 'DELETE' });
+  }
+};
+
 // Legacy export for backward compatibility
 export const httpJson = {
   async get(path: string): Promise<any> {

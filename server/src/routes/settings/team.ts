@@ -5,6 +5,9 @@ import { validateRequest } from '../../middleware/validation';
 import { z } from 'zod';
 import { prisma } from '../../db';
 import { logger } from '../../logger';
+import { logEvent } from '../../utils/audit';
+import { AuditScope, ActorType, Severity } from '@prisma/client';
+import { USER_TEAM_INVITED, USER_TEAM_REMOVED, USER_ROLE_GRANTED } from '../../constants/audit-events';
 
 const router = Router();
 
@@ -160,6 +163,27 @@ export const inviteTeamMember = async (req: Request, res: Response) => {
       }
     });
 
+    // Audit log: team member invited
+    logEvent({
+      scope: AuditScope.USER,
+      action: USER_TEAM_INVITED,
+      actorId: req.user!.userId,
+      actorType: ActorType.USER,
+      actorIp: req.context?.actor.ip,
+      actorUa: req.context?.actor.ua,
+      requestId: req.context?.requestId,
+      traceId: req.context?.traceId,
+      targetType: 'AccountUser',
+      targetId: accountUser.id,
+      severity: Severity.NOTICE,
+      metadata: { 
+        invitedUserId: user.id, 
+        invitedUserEmail: email,
+        role,
+        accountId 
+      }
+    });
+
     res.json({
       success: true,
       data: accountUser,
@@ -182,6 +206,12 @@ export const updateTeamMemberRole = async (req: Request, res: Response) => {
     const { accountUserId } = req.params;
     const { role } = req.body;
 
+    // Get old role for audit diff
+    const oldAccountUser = await prisma.accountUser.findUnique({
+      where: { id: accountUserId },
+      select: { role: true, userId: true }
+    });
+
     const updatedAccountUser = await prisma.accountUser.update({
       where: {
         id: accountUserId,
@@ -198,6 +228,27 @@ export const updateTeamMemberRole = async (req: Request, res: Response) => {
             avatarUrl: true
           }
         }
+      }
+    });
+
+    // Audit log: role change
+    logEvent({
+      scope: AuditScope.USER,
+      action: USER_ROLE_GRANTED,
+      actorId: req.user!.userId,
+      actorType: ActorType.USER,
+      actorIp: req.context?.actor.ip,
+      actorUa: req.context?.actor.ua,
+      requestId: req.context?.requestId,
+      traceId: req.context?.traceId,
+      targetType: 'AccountUser',
+      targetId: accountUserId,
+      severity: Severity.WARNING,
+      diffBefore: { role: oldAccountUser?.role },
+      diffAfter: { role },
+      metadata: { 
+        userId: oldAccountUser?.userId,
+        accountId
       }
     });
 
@@ -263,6 +314,12 @@ export const removeTeamMember = async (req: Request, res: Response) => {
     const accountId = req.account!.id;
     const { accountUserId } = req.params;
 
+    // Get account user info for audit log
+    const accountUser = await prisma.accountUser.findUnique({
+      where: { id: accountUserId },
+      select: { userId: true, role: true }
+    });
+
     // Soft delete the account user
     await prisma.accountUser.update({
       where: {
@@ -270,6 +327,26 @@ export const removeTeamMember = async (req: Request, res: Response) => {
         accountId: accountId
       },
       data: { deletedAt: new Date() }
+    });
+
+    // Audit log: team member removed
+    logEvent({
+      scope: AuditScope.USER,
+      action: USER_TEAM_REMOVED,
+      actorId: req.user!.userId,
+      actorType: ActorType.USER,
+      actorIp: req.context?.actor.ip,
+      actorUa: req.context?.actor.ua,
+      requestId: req.context?.requestId,
+      traceId: req.context?.traceId,
+      targetType: 'AccountUser',
+      targetId: accountUserId,
+      severity: Severity.WARNING,
+      metadata: { 
+        removedUserId: accountUser?.userId,
+        role: accountUser?.role,
+        accountId
+      }
     });
 
     res.json({
@@ -298,6 +375,7 @@ router.put('/:accountUserId/status', canManageTeam, validateRequest(updateTeamMe
 router.delete('/:accountUserId', canManageTeam, removeTeamMember);
 
 export const teamRoutes = router;
+
 
 
 

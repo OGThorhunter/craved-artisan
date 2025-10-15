@@ -35,9 +35,13 @@ import {
   Code, Bug, GitBranch, GitCommit, GitPullRequest, GitMerge,
   Database as DatabaseIcon, HardDrive as HardDriveIcon,
   Network as NetworkIcon, Wifi as WifiIcon, Signal, SignalHigh,
-  SignalMedium, SignalLow, SignalZero, Activity as ActivityIcon3
+  SignalMedium, SignalLow, SignalZero, Activity as ActivityIcon3,
+  ShieldCheck
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import RevenueOverview from './admin/RevenueOverview';
+import UserListTable from '../components/admin/users/UserListTable';
+import UserFilters from '../components/admin/users/UserFilters';
 
 interface PlatformStats {
   activeUsers: {
@@ -73,19 +77,34 @@ interface User {
   location: string;
 }
 
-interface AuditLog {
+interface AuditEvent {
   id: string;
-  timestamp: string;
-  userId: string;
-  userName: string;
-  userRole: string;
+  occurredAt: string;
+  scope: string;
   action: string;
-  resource: string;
-  resourceId: string;
-  ipAddress: string;
-  userAgent: string;
-  details: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  actorId: string | null;
+  actorType: string;
+  actorIp: string | null;
+  targetType: string | null;
+  targetId: string | null;
+  severity: string;
+  reason: string | null;
+  requestId: string | null;
+  actor: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  } | null;
+}
+
+interface AuditFilters {
+  from?: string;
+  to?: string;
+  scope?: string;
+  action?: string;
+  severity?: string;
+  search?: string;
 }
 
 interface SupportTicket {
@@ -246,7 +265,7 @@ interface MarketplaceCuration {
 export default function AdminDashboardPage() {
   const [platformStats, setPlatformStats] = useState<PlatformStats | null>(null);
   const [users, setUsers] = useState<User[]>([]);
-  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuditEvent[]>([]);
   const [supportTickets, setSupportTickets] = useState<SupportTicket[]>([]);
   const [aiAlerts, setAiAlerts] = useState<AIAlert[]>([]);
   const [financialData, setFinancialData] = useState<FinancialData | null>(null);
@@ -259,6 +278,151 @@ export default function AdminDashboardPage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'fees' | 'audit' | 'support' | 'ai' | 'financial' | 'api' | 'staff' | 'moderation' | 'features' | 'curation' | 'theme' | 'security' | 'growth'>('overview');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showImpersonateModal, setShowImpersonateModal] = useState(false);
+  
+  // Audit logs state
+  const [auditFilters, setAuditFilters] = useState<AuditFilters>({});
+  const [showAuditFilters, setShowAuditFilters] = useState(false);
+  const [auditPage, setAuditPage] = useState(1);
+  const [auditTotalPages, setAuditTotalPages] = useState(1);
+  const [auditLoading, setAuditLoading] = useState(false);
+  
+  // Maintenance mode state
+  const [maintenanceSettings, setMaintenanceSettings] = useState<{
+    environmentMode: boolean;
+    databaseMode: boolean;
+    betaTestersCount: number;
+    notes?: string;
+  } | null>(null);
+  const [betaTesters, setBetaTesters] = useState<Array<{
+    id: string;
+    email: string;
+    name: string;
+    firstName: string;
+    lastName: string;
+    createdAt: string;
+  }>>([]);
+  const [maintenanceLoading, setMaintenanceLoading] = useState(false);
+  const [newBetaTesterEmail, setNewBetaTesterEmail] = useState('');
+
+  // Users tab state
+  const [userFilters, setUserFilters] = useState<any>({});
+  const [userSearchQuery, setUserSearchQuery] = useState('');
+
+  // Load maintenance settings
+  const loadMaintenanceSettings = async () => {
+    try {
+      const response = await fetch('/api/maintenance/admin/settings', {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const settings = await response.json();
+        setMaintenanceSettings(settings);
+      }
+    } catch (error) {
+      console.error('Failed to load maintenance settings:', error);
+    }
+  };
+
+  // Load beta testers
+  const loadBetaTesters = async () => {
+    try {
+      const response = await fetch('/api/maintenance/admin/beta-testers', {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setBetaTesters(data.betaTesters);
+      }
+    } catch (error) {
+      console.error('Failed to load beta testers:', error);
+    }
+  };
+
+  // Toggle maintenance mode
+  const toggleMaintenanceMode = async (enabled: boolean, notes?: string) => {
+    setMaintenanceLoading(true);
+    try {
+      const response = await fetch('/api/maintenance/admin/toggle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ enabled, notes }),
+      });
+      if (response.ok) {
+        await loadMaintenanceSettings();
+      }
+    } catch (error) {
+      console.error('Failed to toggle maintenance mode:', error);
+    } finally {
+      setMaintenanceLoading(false);
+    }
+  };
+
+  // Add beta tester
+  const addBetaTester = async (email: string) => {
+    try {
+      const response = await fetch('/api/maintenance/admin/beta-testers', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ email }),
+      });
+      if (response.ok) {
+        setNewBetaTesterEmail('');
+        await loadBetaTesters();
+        await loadMaintenanceSettings();
+      }
+    } catch (error) {
+      console.error('Failed to add beta tester:', error);
+    }
+  };
+
+  // Remove beta tester
+  const removeBetaTester = async (userId: string) => {
+    try {
+      const response = await fetch(`/api/maintenance/admin/beta-testers/${userId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (response.ok) {
+        await loadBetaTesters();
+        await loadMaintenanceSettings();
+      }
+    } catch (error) {
+      console.error('Failed to remove beta tester:', error);
+    }
+  };
+
+  // Handle user selection in Users tab
+  const handleUserSelect = (userId: string) => {
+    window.location.href = `/control/users/${userId}`;
+  };
+
+  // Handle user actions in Users tab
+  const handleUserAction = (userId: string, action: string) => {
+    console.log(`User action: ${action} for user: ${userId}`);
+    // Actions will be handled by the UserListTable component's modals
+  };
+
+  // Load maintenance data when features tab is active
+  useEffect(() => {
+    if (activeTab === 'features') {
+      loadMaintenanceSettings();
+      loadBetaTesters();
+    }
+  }, [activeTab]);
+
+  // Fetch audit events when audit tab is active
+  useEffect(() => {
+    if (activeTab === 'audit') {
+      fetchAuditEvents();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, auditPage, auditFilters]);
 
   // Mock data - replace with actual API calls
   useEffect(() => {
@@ -311,36 +475,8 @@ export default function AdminDashboardPage() {
       }
     ];
 
-    const mockAuditLogs: AuditLog[] = [
-      {
-        id: 'al1',
-        timestamp: '2024-02-15T11:00:00Z',
-        userId: 'u1',
-        userName: 'John Doe',
-        userRole: 'VENDOR',
-        action: 'UPDATE_PRODUCT',
-        resource: 'Product',
-        resourceId: 'p123',
-        ipAddress: '192.168.1.100',
-        userAgent: 'Mozilla/5.0...',
-        details: 'Updated product price from $10.00 to $12.00',
-        severity: 'low'
-      },
-      {
-        id: 'al2',
-        timestamp: '2024-02-15T10:45:00Z',
-        userId: 'admin1',
-        userName: 'Admin User',
-        userRole: 'ADMIN',
-        action: 'SUSPEND_USER',
-        resource: 'User',
-        resourceId: 'u3',
-        ipAddress: '10.0.0.1',
-        userAgent: 'Mozilla/5.0...',
-        details: 'Suspended user for suspicious activity',
-        severity: 'high'
-      }
-    ];
+    // Audit logs are now fetched from API when audit tab is active
+    // setAuditLogs will be called by fetchAuditEvents()
 
     const mockSupportTickets: SupportTicket[] = [
       {
@@ -545,7 +681,7 @@ export default function AdminDashboardPage() {
 
     setPlatformStats(mockPlatformStats);
     setUsers(mockUsers);
-    setAuditLogs(mockAuditLogs);
+    // setAuditLogs is now handled by fetchAuditEvents() when audit tab is active
     setSupportTickets(mockSupportTickets);
     setAiAlerts(mockAIAlerts);
     setFinancialData(mockFinancialData);
@@ -582,6 +718,104 @@ export default function AdminDashboardPage() {
       case 'critical': return 'text-red-600 bg-red-100';
       default: return 'text-gray-600 bg-gray-100';
     }
+  };
+
+  // Audit logs helper functions
+  const fetchAuditEvents = async () => {
+    try {
+      setAuditLoading(true);
+      const queryParams = new URLSearchParams({
+        page: auditPage.toString(),
+        ...auditFilters
+      } as Record<string, string>);
+
+      const response = await fetch(`/api/admin/audit?${queryParams}`, {
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setAuditLogs(data.data?.events || []);
+        setAuditTotalPages(data.data?.pagination?.pages || 1);
+      } else {
+        setAuditLogs([]);
+        setAuditTotalPages(1);
+      }
+    } catch (error) {
+      console.error('Error fetching audit events:', error);
+      setAuditLogs([]);
+      setAuditTotalPages(1);
+    } finally {
+      setAuditLoading(false);
+    }
+  };
+
+  const handleAuditExport = async () => {
+    try {
+      const response = await fetch('/api/admin/audit/export', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ ...auditFilters, format: 'csv' })
+      });
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `audit-export-${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      }
+    } catch (error) {
+      console.error('Error exporting audit events:', error);
+    }
+  };
+
+  const handleVerifyChain = async () => {
+    try {
+      const response = await fetch('/api/admin/audit/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(auditFilters)
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        alert(data.data.message);
+      }
+    } catch (error) {
+      console.error('Error verifying audit chain:', error);
+    }
+  };
+
+  const getSeverityBadge = (severity: string) => {
+    const classes = {
+      INFO: 'bg-blue-100 text-blue-800',
+      NOTICE: 'bg-green-100 text-green-800',
+      WARNING: 'bg-yellow-100 text-yellow-800',
+      CRITICAL: 'bg-red-100 text-red-800'
+    };
+    return classes[severity as keyof typeof classes] || 'bg-gray-100 text-gray-800';
+  };
+
+  const getScopeBadge = (scope: string) => {
+    const classes = {
+      AUTH: 'bg-purple-100 text-purple-800',
+      USER: 'bg-blue-100 text-blue-800',
+      REVENUE: 'bg-green-100 text-green-800',
+      ORDER: 'bg-orange-100 text-orange-800',
+      INVENTORY: 'bg-yellow-100 text-yellow-800',
+      MESSAGE: 'bg-pink-100 text-pink-800',
+      EVENT: 'bg-indigo-100 text-indigo-800',
+      CONFIG: 'bg-red-100 text-red-800',
+      PRIVACY: 'bg-gray-100 text-gray-800'
+    };
+    return classes[scope as keyof typeof classes] || 'bg-gray-100 text-gray-800';
   };
 
   const getAlertIcon = (type: string) => {
@@ -867,35 +1101,626 @@ export default function AdminDashboardPage() {
               <div className="bg-white rounded-lg p-6 border">
                 <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
                 <div className="space-y-3">
-                  {auditLogs.slice(0, 5).map((log) => (
-                    <div key={log.id} className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg">
-                      <div className={`p-2 rounded-lg ${
-                        log.severity === 'critical' ? 'bg-red-100 text-red-600' :
-                        log.severity === 'high' ? 'bg-orange-100 text-orange-600' :
-                        log.severity === 'medium' ? 'bg-yellow-100 text-yellow-600' :
-                        'bg-gray-100 text-gray-600'
-                      }`}>
-                        <Activity className="w-4 h-4" />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-medium text-sm">{log.action}</h4>
-                        <p className="text-xs text-gray-600">
-                          {log.userName} • {new Date(log.timestamp).toLocaleTimeString()}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">{log.details}</p>
-                      </div>
-                      <span className={`inline-block px-2 py-1 text-xs rounded-full ${getSeverityColor(log.severity)}`}>
-                        {log.severity}
-                      </span>
+                  {!auditLogs || auditLogs.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <FileText className="w-12 h-12 mx-auto text-gray-300 mb-2" />
+                      <p className="text-sm">No recent activity</p>
+                      <p className="text-xs text-gray-400">Audit events will appear here</p>
                     </div>
-                  ))}
+                  ) : (
+                    auditLogs.slice(0, 5).map((log) => (
+                      <div key={log.id} className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg">
+                        <div className={`p-2 rounded-lg ${
+                          log.severity === 'CRITICAL' ? 'bg-red-100 text-red-600' :
+                          log.severity === 'WARNING' ? 'bg-orange-100 text-orange-600' :
+                          log.severity === 'NOTICE' ? 'bg-yellow-100 text-yellow-600' :
+                          'bg-gray-100 text-gray-600'
+                        }`}>
+                          <Activity className="w-4 h-4" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium text-sm">{log.action}</h4>
+                          <p className="text-xs text-gray-600">
+                            {log.actor ? `${log.actor.firstName} ${log.actor.lastName}` : 'SYSTEM'} • {new Date(log.occurredAt).toLocaleTimeString()}
+                          </p>
+                          {log.targetType && (
+                            <p className="text-xs text-gray-500 mt-1">Target: {log.targetType}</p>
+                          )}
+                        </div>
+                        <span className={`inline-block px-2 py-1 text-xs rounded-full ${getSeverityBadge(log.severity)}`}>
+                          {log.severity}
+                        </span>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             </motion.div>
           )}
 
+          {/* Features Tab - Maintenance Mode Controls */}
+          {activeTab === 'features' && (
+            <motion.div
+              key="features"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              {/* Maintenance Mode Control */}
+              <div className="bg-white rounded-lg p-6 border">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Maintenance Mode</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Control site access during development and testing
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    {maintenanceSettings && (
+                      <div className="text-right">
+                        <div className={`inline-flex items-center px-3 py-1 text-sm font-medium rounded-full ${
+                          maintenanceSettings.environmentMode || maintenanceSettings.databaseMode
+                            ? 'bg-amber-100 text-amber-800'
+                            : 'bg-green-100 text-green-800'
+                        }`}>
+                          {maintenanceSettings.environmentMode || maintenanceSettings.databaseMode ? 'Active' : 'Inactive'}
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {maintenanceSettings.environmentMode ? 'Environment Override' : 'Database Control'}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {maintenanceSettings && (
+                  <div className="space-y-6">
+                    {/* Environment Override Warning */}
+                    {maintenanceSettings.environmentMode && (
+                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                        <div className="flex items-start">
+                          <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5 mr-3" />
+                          <div>
+                            <h4 className="font-medium text-amber-800">Environment Override Active</h4>
+                            <p className="text-sm text-amber-700 mt-1">
+                              Maintenance mode is controlled by the MAINTENANCE_MODE environment variable.
+                              Database toggle is disabled while environment override is active.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Database Toggle */}
+                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                      <div>
+                        <h4 className="font-medium text-gray-900">Database Toggle</h4>
+                        <p className="text-sm text-gray-600">Enable/disable maintenance mode via dashboard</p>
+                      </div>
+                      <button
+                        onClick={() => toggleMaintenanceMode(!maintenanceSettings.databaseMode)}
+                        disabled={maintenanceLoading || maintenanceSettings.environmentMode}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 ${
+                          maintenanceSettings.databaseMode ? 'bg-amber-600' : 'bg-gray-200'
+                        } ${maintenanceSettings.environmentMode ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            maintenanceSettings.databaseMode ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    {/* Notes */}
+                    {maintenanceSettings.notes && (
+                      <div className="p-4 bg-blue-50 rounded-lg">
+                        <h4 className="font-medium text-blue-900">Notes</h4>
+                        <p className="text-sm text-blue-700 mt-1">{maintenanceSettings.notes}</p>
+                      </div>
+                    )}
+
+                    {/* Beta Access Stats */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="bg-blue-50 p-4 rounded-lg">
+                        <div className="flex items-center">
+                          <Shield className="w-8 h-8 text-blue-600 mr-3" />
+                          <div>
+                            <p className="text-sm font-medium text-blue-900">Beta Testers</p>
+                            <p className="text-2xl font-bold text-blue-600">{maintenanceSettings.betaTestersCount}</p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="bg-green-50 p-4 rounded-lg">
+                        <div className="flex items-center">
+                          <UserCheck className="w-8 h-8 text-green-600 mr-3" />
+                          <div>
+                            <p className="text-sm font-medium text-green-900">Access Method</p>
+                            <p className="text-sm font-semibold text-green-600">
+                              {maintenanceSettings.environmentMode ? 'ENV + Beta Key' : 'Database + Beta Users'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="bg-purple-50 p-4 rounded-lg">
+                        <div className="flex items-center">
+                          <Key className="w-8 h-8 text-purple-600 mr-3" />
+                          <div>
+                            <p className="text-sm font-medium text-purple-900">Beta Key</p>
+                            <p className="text-sm font-semibold text-purple-600">Environment Variable</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Beta Testers Management */}
+              <div className="bg-white rounded-lg p-6 border">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Beta Testers</h3>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Manage users who can access the site during maintenance mode
+                    </p>
+                  </div>
+                </div>
+
+                {/* Add Beta Tester */}
+                <div className="mb-6">
+                  <div className="flex gap-3">
+                    <input
+                      type="email"
+                      value={newBetaTesterEmail}
+                      onChange={(e) => setNewBetaTesterEmail(e.target.value)}
+                      placeholder="Enter email address"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                    />
+                    <button
+                      onClick={() => addBetaTester(newBetaTesterEmail)}
+                      disabled={!newBetaTesterEmail || maintenanceLoading}
+                      className="px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      Add Beta Tester
+                    </button>
+                  </div>
+                </div>
+
+                {/* Beta Testers List */}
+                <div className="space-y-3">
+                  {betaTesters.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <Users className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                      <p>No beta testers added yet</p>
+                    </div>
+                  ) : (
+                    betaTesters.map((tester) => (
+                      <div key={tester.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 bg-amber-100 rounded-full flex items-center justify-center">
+                            <span className="text-sm font-medium text-amber-700">
+                              {tester.name ? tester.name.charAt(0).toUpperCase() : tester.email.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">
+                              {tester.name || `${tester.firstName || ''} ${tester.lastName || ''}`.trim() || 'Unnamed User'}
+                            </p>
+                            <p className="text-sm text-gray-600">{tester.email}</p>
+                            <p className="text-xs text-gray-500">
+                              Added {new Date(tester.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => removeBetaTester(tester.id)}
+                          disabled={maintenanceLoading}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50"
+                        >
+                          <UserMinus className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* Coming Soon Preview */}
+              <div className="bg-white rounded-lg p-6 border">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Coming Soon Page Preview</h3>
+                  <a
+                    href="/?beta=preview"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center px-3 py-2 text-sm font-medium text-amber-600 bg-amber-50 rounded-md hover:bg-amber-100 transition-colors"
+                  >
+                    <Eye className="w-4 h-4 mr-2" />
+                    Preview Page
+                  </a>
+                </div>
+                <p className="text-sm text-gray-600 mb-4">
+                  This is how the site will appear to users when maintenance mode is active.
+                  Beta testers and users with the beta key will bypass this page.
+                </p>
+                <div className="bg-gradient-to-br from-amber-50 via-white to-blue-50 rounded-lg p-8 border-2 border-dashed border-gray-200">
+                  <div className="text-center">
+                    <div className="flex items-center justify-center mb-4">
+                      <div className="bg-gradient-to-r from-amber-600 to-amber-700 p-3 rounded-xl">
+                        <Activity className="w-8 h-8 text-white" />
+                      </div>
+                      <h4 className="ml-3 text-2xl font-bold text-gray-900">Craved</h4>
+                    </div>
+                    <h5 className="text-lg font-semibold text-gray-900 mb-2">Coming Soon</h5>
+                    <p className="text-gray-600 text-sm">Where Artisans Meet Community</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Fees & Revenue Tab */}
+          {activeTab === 'fees' && (
+            <motion.div
+              key="fees"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <RevenueOverview />
+            </motion.div>
+          )}
+
+          {/* Users Tab */}
+          {activeTab === 'users' && (
+            <motion.div
+              key="users"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              {/* Stats Bar */}
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <div className="bg-white rounded-lg border border-gray-200 p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <UsersIcon className="w-5 h-5 text-blue-600" />
+                    <span className="text-sm font-medium text-gray-600">Total Users</span>
+                  </div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {platformStats ? Object.values(platformStats.activeUsers).reduce((a, b) => a + b, 0) : 0}
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg border border-gray-200 p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Shield className="w-5 h-5 text-green-600" />
+                    <span className="text-sm font-medium text-gray-600">Vendors</span>
+                  </div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {platformStats?.activeUsers.vendors || 0}
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg border border-gray-200 p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <CalendarIcon className="w-5 h-5 text-purple-600" />
+                    <span className="text-sm font-medium text-gray-600">Coordinators</span>
+                  </div>
+                  <div className="text-2xl font-bold text-purple-600">
+                    {platformStats?.activeUsers.coordinators || 0}
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg border border-gray-200 p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <AlertTriangle className="w-5 h-5 text-orange-600" />
+                    <span className="text-sm font-medium text-gray-600">At Risk</span>
+                  </div>
+                  <div className="text-2xl font-bold text-orange-600">
+                    {users.filter(u => u.suspiciousActivity).length}
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg border border-gray-200 p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <UserX className="w-5 h-5 text-red-600" />
+                    <span className="text-sm font-medium text-gray-600">Suspended</span>
+                  </div>
+                  <div className="text-2xl font-bold text-red-600">
+                    {users.filter(u => u.status === 'suspended').length}
+                  </div>
+                </div>
+              </div>
+
+              {/* Filters */}
+              <div className="bg-white rounded-lg border border-gray-200 p-4">
+                <UserFilters
+                  filters={userFilters}
+                  onFilterChange={setUserFilters}
+                  searchQuery={userSearchQuery}
+                  onSearchChange={setUserSearchQuery}
+                />
+              </div>
+
+              {/* User Table */}
+              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <UserListTable
+                  filters={userFilters}
+                  searchQuery={userSearchQuery}
+                  onUserSelect={handleUserSelect}
+                  onAction={handleUserAction}
+                />
+              </div>
+            </motion.div>
+          )}
+
+          {/* Audit Logs Tab */}
+          {activeTab === 'audit' && (
+            <motion.div
+              key="audit"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              {/* Actions Bar */}
+              <div className="bg-white rounded-lg border border-gray-200 p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <button
+                      onClick={() => setShowAuditFilters(!showAuditFilters)}
+                      className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border transition-colors ${
+                        showAuditFilters 
+                          ? 'bg-blue-50 text-blue-700 border-blue-300' 
+                          : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      <Filter className="h-4 w-4" />
+                      Filters
+                    </button>
+                    
+                    <div className="relative">
+                      <Search className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        placeholder="Search by action, entity..."
+                        className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        onChange={(e) => setAuditFilters({ ...auditFilters, search: e.target.value })}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={handleAuditExport}
+                      className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      <Download className="h-4 w-4" />
+                      Export
+                    </button>
+
+                    <button
+                      onClick={handleVerifyChain}
+                      className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      <ShieldCheck className="h-4 w-4" />
+                      Verify Chain
+                    </button>
+                  </div>
+                </div>
+
+                {/* Filters Panel */}
+                {showAuditFilters && (
+                  <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-4 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">From Date</label>
+                      <input
+                        type="datetime-local"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        onChange={(e) => setAuditFilters({ ...auditFilters, from: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">To Date</label>
+                      <input
+                        type="datetime-local"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        onChange={(e) => setAuditFilters({ ...auditFilters, to: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Scope</label>
+                      <select
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        onChange={(e) => setAuditFilters({ ...auditFilters, scope: e.target.value })}
+                      >
+                        <option value="">All Scopes</option>
+                        <option value="AUTH">Auth</option>
+                        <option value="USER">User</option>
+                        <option value="REVENUE">Revenue</option>
+                        <option value="ORDER">Order</option>
+                        <option value="INVENTORY">Inventory</option>
+                        <option value="MESSAGE">Message</option>
+                        <option value="EVENT">Event</option>
+                        <option value="CONFIG">Config</option>
+                        <option value="PRIVACY">Privacy</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Severity</label>
+                      <select
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        onChange={(e) => setAuditFilters({ ...auditFilters, severity: e.target.value })}
+                      >
+                        <option value="">All Severities</option>
+                        <option value="INFO">Info</option>
+                        <option value="NOTICE">Notice</option>
+                        <option value="WARNING">Warning</option>
+                        <option value="CRITICAL">Critical</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Events Table */}
+              <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Time
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Scope
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Action
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Actor
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Target
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Severity
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          IP
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {auditLoading ? (
+                        <tr>
+                          <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                            <div className="flex items-center justify-center gap-2">
+                              <Activity className="w-5 h-5 animate-spin" />
+                              Loading audit events...
+                            </div>
+                          </td>
+                        </tr>
+                      ) : !auditLogs || auditLogs.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="px-6 py-12 text-center text-gray-500">
+                            <div className="flex flex-col items-center gap-2">
+                              <FileText className="w-12 h-12 text-gray-300" />
+                              <p>No audit events found</p>
+                              <p className="text-sm text-gray-400">Try adjusting your filters</p>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : (
+                        auditLogs.map((event) => (
+                          <tr 
+                            key={event.id} 
+                            className="hover:bg-gray-50 transition-colors cursor-pointer"
+                          >
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {new Date(event.occurredAt).toLocaleString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit'
+                              })}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getScopeBadge(event.scope)}`}>
+                                {event.scope}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-900">
+                              {event.action}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-900">
+                              {event.actor ? (
+                                <div>
+                                  <div className="font-medium">{event.actor.firstName} {event.actor.lastName}</div>
+                                  <div className="text-xs text-gray-500">{event.actor.email}</div>
+                                </div>
+                              ) : (
+                                <span className="text-gray-500 italic">SYSTEM</span>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-900">
+                              {event.targetType && (
+                                <div>
+                                  <div className="font-medium">{event.targetType}</div>
+                                  <div className="text-xs text-gray-500 truncate max-w-xs">{event.targetId}</div>
+                                </div>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getSeverityBadge(event.severity)}`}>
+                                {event.severity}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {event.actorIp || '-'}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Pagination */}
+                {auditTotalPages > 1 && (
+                  <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200">
+                    <div className="flex-1 flex justify-between sm:hidden">
+                      <button
+                        onClick={() => setAuditPage(p => Math.max(1, p - 1))}
+                        disabled={auditPage === 1}
+                        className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Previous
+                      </button>
+                      <button
+                        onClick={() => setAuditPage(p => Math.min(auditTotalPages, p + 1))}
+                        disabled={auditPage === auditTotalPages}
+                        className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Next
+                      </button>
+                    </div>
+                    <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                      <div>
+                        <p className="text-sm text-gray-700">
+                          Page <span className="font-medium">{auditPage}</span> of{' '}
+                          <span className="font-medium">{auditTotalPages}</span>
+                        </p>
+                      </div>
+                      <div>
+                        <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                          <button
+                            onClick={() => setAuditPage(p => Math.max(1, p - 1))}
+                            disabled={auditPage === 1}
+                            className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            Previous
+                          </button>
+                          <button
+                            onClick={() => setAuditPage(p => Math.min(auditTotalPages, p + 1))}
+                            disabled={auditPage === auditTotalPages}
+                            className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            Next
+                          </button>
+                        </nav>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+
           {/* Placeholder for other tabs */}
-          {activeTab !== 'overview' && (
+          {activeTab !== 'overview' && activeTab !== 'features' && activeTab !== 'fees' && activeTab !== 'users' && activeTab !== 'audit' && (
             <motion.div
               key={activeTab}
               initial={{ opacity: 0, y: 20 }}

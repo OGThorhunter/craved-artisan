@@ -8,136 +8,167 @@ datasource db {
 }
 
 model User {
-  id              String           @id @default(cuid())
-  email           String           @unique
-  password        String
-  name            String?
-  firstName       String?
-  lastName        String?
-  phone           String?
-  zip_code        String?
-  loyalty_member  Boolean          @default(false)
-  avatarUrl       String?
-  created_at      DateTime         @default(now())
-  updated_at      DateTime         @updatedAt
-  deletedAt       DateTime?
-  
+  id             String    @id @default(cuid())
+  email          String    @unique
+  password       String
+  name           String?
+  firstName      String?
+  lastName       String?
+  phone          String?
+  zip_code       String?
+  loyalty_member Boolean   @default(false)
+  avatarUrl      String?
+  created_at     DateTime  @default(now())
+  updated_at     DateTime  @updatedAt
+  deletedAt      DateTime?
+
   // OAuth fields
   oauthProvider   String?
   oauthProviderId String?
-  
+
   // Profile completion
-  profileCompleted Boolean         @default(false)
-  emailVerified    Boolean         @default(false)
+  profileCompleted Boolean   @default(false)
+  emailVerified    Boolean   @default(false)
   emailVerifiedAt  DateTime?
-  
-  analyticsEvents AnalyticsEvent[]
-  orders          Order[]
-  vendorProfile   VendorProfile?
+
+  // Admin user management fields
+  status          UserStatus      @default(ACTIVE)
+  onboardingStage OnboardingStage @default(NOT_STARTED)
+  lastActiveAt    DateTime?
+  locale          String?         @default("en")
+  timezone        String?         @default("America/New_York")
+  mfaEnabled      Boolean         @default(false)
+  riskScore       Int             @default(0)
+  phoneVerified   Boolean         @default(false)
+  phoneVerifiedAt DateTime?
+
+  analyticsEvents    AnalyticsEvent[]
+  orders             Order[]
+  vendorProfile      VendorProfile?
   coordinatorProfile EventCoordinatorProfile?
-  
+
   // Marketplace relations
-  favoriteVendors FavoriteVendor[]
+  favoriteVendors  FavoriteVendor[]
   favoriteProducts FavoriteProduct[]
-  savedSearches   SavedSearch[]
-  searchEvents    SearchEvent[]
-  eventInterests  EventInterest[]
-  eventFavorites  EventFavorite[]
-  eventReviews    EventReview[]
+  savedSearches    SavedSearch[]
+  searchEvents     SearchEvent[]
+  eventInterests   EventInterest[]
+  eventFavorites   EventFavorite[]
+  eventReviews     EventReview[]
 
   // Settings & Account Hub relations
-  accounts        AccountUser[]
-  sessions        Session[]
-  auditLogs       AuditLog[]
-  ownedAccounts   Account[]        @relation("AccountOwner")
+  accounts      AccountUser[]
+  sessions      Session[]
+  auditEvents   AuditEvent[]
+  ownedAccounts Account[]     @relation("AccountOwner")
 
   // Promotions system relations
-  promotionUsages PromotionUsage[]
-  loyaltyPoints   CustomerLoyaltyPoints[]
-  loyaltyRedemptions LoyaltyRedemption[]
-  referralsByReferrer Referral[]    @relation("ReferralsByReferrer")
-  referralsByReferee  Referral[]    @relation("ReferralsByReferee")
-  marketingEvents MarketingEvent[]
-  
+  promotionUsages     PromotionUsage[]
+  loyaltyPoints       CustomerLoyaltyPoints[]
+  loyaltyRedemptions  LoyaltyRedemption[]
+  referralsByReferrer Referral[]              @relation("ReferralsByReferrer")
+  referralsByReferee  Referral[]              @relation("ReferralsByReferee")
+  marketingEvents     MarketingEvent[]
+
   // Legal agreements
-  agreements      UserAgreement[]
+  agreements UserAgreement[]
+
+  // Coming soon / beta access
+  betaTester Boolean @default(false)
+
+  // Admin user management relations
+  roles             UserRole[]
+  stripeAccount     StripeAccountLink?
+  taxProfile        TaxProfile?
+  securityEvents    SecurityEvent[]
+  riskFlags         RiskFlag[]
+  userNotes         UserNote[]
+  userTasks         UserTask[]         @relation("TaskUser")
+  assignedTasks     UserTask[]         @relation("TaskAssignee")
+  vacationMode      VacationMode?
+  primaryDuplicates DuplicateUser[]    @relation("PrimaryUser")
+  duplicateRecords  DuplicateUser[]    @relation("DuplicateUser")
 
   @@index([zip_code])
   @@index([oauthProvider, oauthProviderId])
+  @@index([status])
+  @@index([onboardingStage])
+  @@index([lastActiveAt])
+  @@index([riskScore])
 }
 
 model VendorProfile {
-  id                    String                @id @default(cuid())
-  userId                String                @unique
-  storeName             String
-  bio                   String?
-  imageUrl              String?
-  slug                  String                @unique
-  stripeAccountId       String?
-  stripeAccountStatus   String?
-  stripeOnboardingUrl   String?
-  minMarginPercent      Float?
-  marginOverrideEnabled Boolean               @default(false)
-  tags                  String?
-  createdAt             DateTime              @default(now())
-  updatedAt             DateTime              @updatedAt
-  analyticsEvents       AnalyticsEvent[]
-  conversations         Conversation[]
-  fulfillmentLocations  FulfillmentLocation[]
-  fulfillmentWindows    FulfillmentWindow[]
-  products              Product[]
-  printerProfiles       PrinterProfile[]
-  labelProfiles         LabelProfile[]
-  labelTemplates        LabelTemplate[]
-  labelJobs             LabelJob[]
-  eventVendors          EventVendor[]
-  user                  User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                        String                     @id @default(cuid())
+  userId                    String                     @unique
+  storeName                 String
+  bio                       String?
+  imageUrl                  String?
+  slug                      String                     @unique
+  stripeAccountId           String?
+  stripeAccountStatus       String?
+  stripeOnboardingUrl       String?
+  minMarginPercent          Float?
+  marginOverrideEnabled     Boolean                    @default(false)
+  tags                      String?
+  createdAt                 DateTime                   @default(now())
+  updatedAt                 DateTime                   @updatedAt
+  analyticsEvents           AnalyticsEvent[]
+  conversations             Conversation[]
+  fulfillmentLocations      FulfillmentLocation[]
+  fulfillmentWindows        FulfillmentWindow[]
+  products                  Product[]
+  printerProfiles           PrinterProfile[]
+  labelProfiles             LabelProfile[]
+  labelTemplates            LabelTemplate[]
+  labelJobs                 LabelJob[]
+  eventVendors              EventVendor[]
+  user                      User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
   // AI Insights relations
-  competitorPrices      ProductCompetitorPrice[]
-  priceHistory          ProductPriceHistory[]
-  inventoryItems        InventoryItem[]
-  supplierOffers        InventorySupplierOffer[]
-  purchaseOrders        InventoryPurchaseOrder[]
+  competitorPrices          ProductCompetitorPrice[]
+  priceHistory              ProductPriceHistory[]
+  inventoryItems            InventoryItem[]
+  supplierOffers            InventorySupplierOffer[]
+  purchaseOrders            InventoryPurchaseOrder[]
   // Stripe relations
-  stripePayments        StripePayment[]
+  stripePayments            StripePayment[]
   stripeBalanceTransactions StripeBalanceTransaction[]
-  stripePayouts         StripePayout[]
+  stripePayouts             StripePayout[]
   // Product system relations
-  categories            Category[]
-  subcategories         Subcategory[]
-  recipeParseJobs       RecipeParseJob[]
+  categories                Category[]
+  subcategories             Subcategory[]
+  recipeParseJobs           RecipeParseJob[]
   // System Messages
-  systemMessages        SystemMessage[]
+  systemMessages            SystemMessage[]
   // Orders Management
-  orders                Order[]
-  orderFieldDefs        OrderFieldDef[]
+  orders                    Order[]
+  orderFieldDefs            OrderFieldDef[]
   // Label Management
-  assets                Asset[]
+  assets                    Asset[]
   // Product Import Jobs
-  productImportJobs     ProductImportJob[]
-  
+  productImportJobs         ProductImportJob[]
+
   // Promotions system relations
-  campaigns             Campaign[]
-  promotions            Promotion[]
-  socialMediaPosts      SocialMediaPost[]
-  socialMediaAssets     SocialMediaAsset[]
-  contentTemplates      ContentTemplate[]
-  loyaltyPrograms       LoyaltyProgram[]
-  referralPrograms      ReferralProgram[]
-  customerSegments      CustomerSegment[]
-  marketingEvents       MarketingEvent[]
-  
+  campaigns         Campaign[]
+  promotions        Promotion[]
+  socialMediaPosts  SocialMediaPost[]
+  socialMediaAssets SocialMediaAsset[]
+  contentTemplates  ContentTemplate[]
+  loyaltyPrograms   LoyaltyProgram[]
+  referralPrograms  ReferralProgram[]
+  customerSegments  CustomerSegment[]
+  marketingEvents   MarketingEvent[]
+
   // Marketplace fields
-  avatarUrl             String?
-  coverUrl              String?
-  baseLocation          String?                  // Location as string for SQLite
-  city                  String?
-  state                 String?
-  country               String?
-  shipsNational         Boolean                  @default(false)
-  ratingAvg             Float                    @default(0)
-  ratingCount           Int                      @default(0)
-  marketplaceTags       String?                  // bakery, vegan, flowers, woodwork... (comma-separated)
+  avatarUrl       String?
+  coverUrl        String?
+  baseLocation    String? // Location as string for SQLite
+  city            String?
+  state           String?
+  country         String?
+  shipsNational   Boolean @default(false)
+  ratingAvg       Float   @default(0)
+  ratingCount     Int     @default(0)
+  marketplaceTags String? // bakery, vegan, flowers, woodwork... (comma-separated)
 
   @@index([userId])
   @@index([slug])
@@ -147,115 +178,115 @@ model VendorProfile {
 }
 
 model EventCoordinatorProfile {
-  id                    String    @id @default(cuid())
-  userId                String    @unique
-  organizationName      String
-  bio                   String?
-  imageUrl              String?
-  slug                  String    @unique
-  stripeAccountId       String?
-  stripeAccountStatus   String?
-  stripeOnboardingUrl   String?
-  phone                 String?
-  website               String?
-  socialLinks           String?   // JSON: {facebook, instagram, twitter, etc}
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
-  
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  events                Event[]
-  
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  organizationName    String
+  bio                 String?
+  imageUrl            String?
+  slug                String   @unique
+  stripeAccountId     String?
+  stripeAccountStatus String?
+  stripeOnboardingUrl String?
+  phone               String?
+  website             String?
+  socialLinks         String? // JSON: {facebook, instagram, twitter, etc}
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  events Event[]
+
   @@index([slug])
   @@index([userId])
 }
 
 model Product {
-  id                    String           @id @default(cuid())
-  vendorProfileId       String
-  type                  ProductType      @default(FOOD)
-  name                  String
-  slug                  String           @unique
-  description           String?
-  categoryId            String?
-  subcategoryId         String?
-  tags                  String?          // JSON array stored as string
-  imageUrl              String?
-  active                Boolean          @default(true)
-  price                 Float
-  baseCost              Float            @default(0)
-  laborCost             Float            @default(0)
-  targetMarginLowPct    Float            @default(30)
-  targetMarginHighPct   Float            @default(45)
-  minPrice              Float?
-  maxPrice              Float?
-  sku                   String?          @unique
-  barcode               String?
-  taxCode               String?
-  
+  id                  String      @id @default(cuid())
+  vendorProfileId     String
+  type                ProductType @default(FOOD)
+  name                String
+  slug                String      @unique
+  description         String?
+  categoryId          String?
+  subcategoryId       String?
+  tags                String? // JSON array stored as string
+  imageUrl            String?
+  active              Boolean     @default(true)
+  price               Float
+  baseCost            Float       @default(0)
+  laborCost           Float       @default(0)
+  targetMarginLowPct  Float       @default(30)
+  targetMarginHighPct Float       @default(45)
+  minPrice            Float?
+  maxPrice            Float?
+  sku                 String?     @unique
+  barcode             String?
+  taxCode             String?
+
   // Enhanced Product Management Fields
-  autoGenerateSku       Boolean          @default(true)
-  batchSize             Int?             // How many units made per batch
-  creationTimeMinutes   Int?             // Approximate time to create
-  leadTimeDays          Int?             // Days needed before starting creation process
-  instructions          String?          // Step-by-step creation instructions
-  sops                  String?          // Standard Operating Procedures (JSON)
-  nutritionInfo         String?          // Detailed nutrition information (JSON)
-  
+  autoGenerateSku     Boolean @default(true)
+  batchSize           Int? // How many units made per batch
+  creationTimeMinutes Int? // Approximate time to create
+  leadTimeDays        Int? // Days needed before starting creation process
+  instructions        String? // Step-by-step creation instructions
+  sops                String? // Standard Operating Procedures (JSON)
+  nutritionInfo       String? // Detailed nutrition information (JSON)
+
   // Food-specific fields
-  allergenFlags         String?          // JSON array stored as string
-  nutritionNotes        String?
-  
+  allergenFlags  String? // JSON array stored as string
+  nutritionNotes String?
+
   // Service-specific fields
   serviceDurationMin    Int?
   serviceCapacityPerDay Int?
   serviceLeadTimeDays   Int?
-  requiresDeposit       Boolean          @default(false)
-  
+  requiresDeposit       Boolean @default(false)
+
   // Legacy fields for backward compatibility
-  cost                  Float?
-  stock                 Int              @default(0)
-  isAvailable           Boolean          @default(true)
-  targetMargin          Float?
-  marginAlert           Boolean          @default(false)
-  alertNote             String?
-  onWatchlist           Boolean          @default(false)
-  lastAiSuggestion      DateTime?
-  aiSuggestionNote      String?
-  createdAt             DateTime         @default(now())
-  updatedAt             DateTime         @updatedAt
-  recipeId              String?
-  analyticsEvents       AnalyticsEvent[]
-  cartItems             CartItem[]
-  orderItems            OrderItem[]
-  labelJobs             LabelJob[]
-  recipe                Recipe?                  @relation(fields: [recipeId], references: [id])
-  vendor                VendorProfile            @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
-  competitorPrices      ProductCompetitorPrice[] // AI: Competitor pricing data
-  
+  cost             Float?
+  stock            Int                      @default(0)
+  isAvailable      Boolean                  @default(true)
+  targetMargin     Float?
+  marginAlert      Boolean                  @default(false)
+  alertNote        String?
+  onWatchlist      Boolean                  @default(false)
+  lastAiSuggestion DateTime?
+  aiSuggestionNote String?
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+  recipeId         String?
+  analyticsEvents  AnalyticsEvent[]
+  cartItems        CartItem[]
+  orderItems       OrderItem[]
+  labelJobs        LabelJob[]
+  recipe           Recipe?                  @relation(fields: [recipeId], references: [id])
+  vendor           VendorProfile            @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  competitorPrices ProductCompetitorPrice[] // AI: Competitor pricing data
+
   // Marketplace fields
-  thumbUrl              String?
-  isService             Boolean                  @default(false)
-  pickup                Boolean                  @default(true)
-  delivery              Boolean                  @default(false)
-  ship                  Boolean                  @default(false)
-  canShipNationally     Boolean                  @default(false) // Legal to ship nationwide
-  availableNow          Boolean                  @default(true)
-  ratingAvg             Float                    @default(0)
-  ratingCount           Int                      @default(0)
-  searchVec             String?                  // Search vector as string for SQLite
-  favoriteProducts      FavoriteProduct[]
-  priceHistory          ProductPriceHistory[]    // AI: Price change history
-  
+  thumbUrl          String?
+  isService         Boolean               @default(false)
+  pickup            Boolean               @default(true)
+  delivery          Boolean               @default(false)
+  ship              Boolean               @default(false)
+  canShipNationally Boolean               @default(false) // Legal to ship nationwide
+  availableNow      Boolean               @default(true)
+  ratingAvg         Float                 @default(0)
+  ratingCount       Int                   @default(0)
+  searchVec         String? // Search vector as string for SQLite
+  favoriteProducts  FavoriteProduct[]
+  priceHistory      ProductPriceHistory[] // AI: Price change history
+
   // New relations
-  category              Category?                @relation(fields: [categoryId], references: [id])
-  subcategory           Subcategory?             @relation(fields: [subcategoryId], references: [id])
-  variants              ProductVariant[]
-  materials             ProductMaterial[]
-  productIngredients    ProductIngredient[]      // Enhanced ingredient management
-  productImages         ProductImage[]           // Multiple images support
-  productDocuments      ProductDocument[]        // SOPs, instructions, etc.
-  productImports        ProductImport[]          // Import tracking
-  modificationItems     OrderModificationItem[]  // Order modification tracking
+  category           Category?               @relation(fields: [categoryId], references: [id])
+  subcategory        Subcategory?            @relation(fields: [subcategoryId], references: [id])
+  variants           ProductVariant[]
+  materials          ProductMaterial[]
+  productIngredients ProductIngredient[] // Enhanced ingredient management
+  productImages      ProductImage[] // Multiple images support
+  productDocuments   ProductDocument[] // SOPs, instructions, etc.
+  productImports     ProductImport[] // Import tracking
+  modificationItems  OrderModificationItem[] // Order modification tracking
 
   @@index([vendorProfileId, active, name])
   @@index([categoryId])
@@ -286,36 +317,36 @@ model Order {
   windowId          String?
   createdAt         DateTime               @default(now())
   updatedAt         DateTime               @updatedAt
-  
+
   // Extended fields for Orders Management System
-  vendorProfileId   String?
-  customerName      String?
-  customerEmail     String?
-  phone             String?
-  priority          OrderPriority          @default(MEDIUM)
-  source            String?                // 'online','pos','manual','wholesale','market'
-  salesWindowId     String?
-  expectedAt        DateTime?              // promised ready/deliver/pickup time
-  dueAt             DateTime?              // production due (can differ from expected)
-  paymentStatus     String?                // 'paid','pending','refunded','cod'
-  customFields      String?                // JSON stored as string for SQLite
-  station           String?                // current station (prep/bake/pack/etc) for KDS
-  tags              String?                // JSON array stored as string for SQLite
-  
-  analyticsEvents   AnalyticsEvent[]
-  shippingAddress   ShippingAddress?       @relation(fields: [shippingAddressId], references: [id])
-  user              User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  events            OrderEvent[]
-  fulfillments      OrderFulfillment[]
-  orderItems        OrderItem[]
-  customerVehicle   OrderCustomerVehicle?
-  
+  vendorProfileId String?
+  customerName    String?
+  customerEmail   String?
+  phone           String?
+  priority        OrderPriority @default(MEDIUM)
+  source          String? // 'online','pos','manual','wholesale','market'
+  salesWindowId   String?
+  expectedAt      DateTime? // promised ready/deliver/pickup time
+  dueAt           DateTime? // production due (can differ from expected)
+  paymentStatus   String? // 'paid','pending','refunded','cod'
+  customFields    String? // JSON stored as string for SQLite
+  station         String? // current station (prep/bake/pack/etc) for KDS
+  tags            String? // JSON array stored as string for SQLite
+
+  analyticsEvents AnalyticsEvent[]
+  shippingAddress ShippingAddress?      @relation(fields: [shippingAddressId], references: [id])
+  user            User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  events          OrderEvent[]
+  fulfillments    OrderFulfillment[]
+  orderItems      OrderItem[]
+  customerVehicle OrderCustomerVehicle?
+
   // New relations for Orders Management System
-  vendor            VendorProfile?         @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
-  salesWindow       SalesWindow?           @relation(fields: [salesWindowId], references: [id])
-  timeline          OrderTimeline[]
-  labelJobs         LabelJob[]
-  modifications     OrderModification[]
+  vendor        VendorProfile?      @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  salesWindow   SalesWindow?        @relation(fields: [salesWindowId], references: [id])
+  timeline      OrderTimeline[]
+  labelJobs     LabelJob[]
+  modifications OrderModification[]
 
   @@index([userId, createdAt])
   @@index([contextType, marketId])
@@ -380,37 +411,37 @@ model InventoryTx {
 // Enhanced Product Management Models
 
 model ProductIngredient {
-  id              String    @id @default(cuid())
+  id              String   @id @default(cuid())
   productId       String
   inventoryItemId String
-  quantity        Decimal   // Amount needed
-  unit            String    // Measurement unit (cups, grams, etc.)
-  notes           String?   // Special preparation notes
-  isOptional      Boolean   @default(false)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  
+  quantity        Decimal // Amount needed
+  unit            String // Measurement unit (cups, grams, etc.)
+  notes           String? // Special preparation notes
+  isOptional      Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
   // Relations
-  product         Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
-  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
-  
+  product       Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+
   @@unique([productId, inventoryItemId])
   @@index([productId])
   @@index([inventoryItemId])
 }
 
 model ProductImage {
-  id          String   @id @default(cuid())
-  productId   String
-  imageUrl    String
-  altText     String?
-  isPrimary   Boolean  @default(false)
-  sortOrder   Int      @default(0)
-  uploadedAt  DateTime @default(now())
-  
+  id         String   @id @default(cuid())
+  productId  String
+  imageUrl   String
+  altText    String?
+  isPrimary  Boolean  @default(false)
+  sortOrder  Int      @default(0)
+  uploadedAt DateTime @default(now())
+
   // Relations
-  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
   @@index([productId])
   @@index([isPrimary])
 }
@@ -420,53 +451,53 @@ model ProductDocument {
   productId   String
   title       String
   documentUrl String
-  type        String   // SOP, INSTRUCTION, NUTRITION, ALLERGEN, etc.
+  type        String // SOP, INSTRUCTION, NUTRITION, ALLERGEN, etc.
   description String?
   uploadedAt  DateTime @default(now())
-  
+
   // Relations
-  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
   @@index([productId])
   @@index([type])
 }
 
 model ProductImportJob {
-  id            String                @id @default(cuid())
-  vendorProfileId String
-  fileName      String
-  fileUrl       String
-  status        ProductImportStatus   @default(PENDING)
-  totalProducts Int                   @default(0)
-  processedProducts Int               @default(0)
-  failedProducts Int                  @default(0)
-  errors        String?               // JSON array of errors
-  startedAt     DateTime?
-  completedAt   DateTime?
-  createdAt     DateTime              @default(now())
-  
+  id                String              @id @default(cuid())
+  vendorProfileId   String
+  fileName          String
+  fileUrl           String
+  status            ProductImportStatus @default(PENDING)
+  totalProducts     Int                 @default(0)
+  processedProducts Int                 @default(0)
+  failedProducts    Int                 @default(0)
+  errors            String? // JSON array of errors
+  startedAt         DateTime?
+  completedAt       DateTime?
+  createdAt         DateTime            @default(now())
+
   // Relations
-  vendor        VendorProfile         @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
-  importedProducts ProductImport[]    // Track which products were created
-  
+  vendor           VendorProfile   @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  importedProducts ProductImport[] // Track which products were created
+
   @@index([vendorProfileId])
   @@index([status])
 }
 
 model ProductImport {
-  id            String           @id @default(cuid())
-  importJobId   String
-  productId     String?          // null if import failed
-  rowNumber     Int
-  originalData  String           // JSON of original row data
-  status        ImportRowStatus  @default(PENDING)
-  errors        String?          // JSON array of validation errors
-  createdAt     DateTime         @default(now())
-  
+  id           String          @id @default(cuid())
+  importJobId  String
+  productId    String? // null if import failed
+  rowNumber    Int
+  originalData String // JSON of original row data
+  status       ImportRowStatus @default(PENDING)
+  errors       String? // JSON array of validation errors
+  createdAt    DateTime        @default(now())
+
   // Relations
-  importJob     ProductImportJob @relation(fields: [importJobId], references: [id], onDelete: Cascade)
-  product       Product?         @relation(fields: [productId], references: [id], onDelete: SetNull)
-  
+  importJob ProductImportJob @relation(fields: [importJobId], references: [id], onDelete: Cascade)
+  product   Product?         @relation(fields: [productId], references: [id], onDelete: SetNull)
+
   @@index([importJobId])
   @@index([status])
 }
@@ -490,50 +521,50 @@ model InventoryItem {
   id              String    @id @default(cuid())
   vendorProfileId String
   name            String
-  category        String    // FOOD_GRADE, PACKAGING, EQUIPMENT, etc.
-  unit            String    // kg, g, ml, bottles, boxes...
+  category        String // FOOD_GRADE, PACKAGING, EQUIPMENT, etc.
+  unit            String // kg, g, ml, bottles, boxes...
   current_qty     Decimal   @default(0)
   reorder_point   Decimal   @default(0)
   preferred_qty   Decimal   @default(0)
   avg_cost        Decimal   @default(0)
   last_cost       Decimal   @default(0)
   supplier_name   String?
-  location        String?   // shelf/bin/room
+  location        String? // shelf/bin/room
   batch_number    String?
   expiry_date     DateTime?
-  tags            String?   // JSON array stored as string for SQLite
+  tags            String? // JSON array stored as string for SQLite
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
-  
+
   // Relations
-  vendor          VendorProfile                @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
-  movements       InventoryMovement[]
-  priceWatches    PriceWatch[]
-  productMaterials ProductMaterial[]
+  vendor             VendorProfile                @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  movements          InventoryMovement[]
+  priceWatches       PriceWatch[]
+  productMaterials   ProductMaterial[]
   productIngredients ProductIngredient[]
-  supplierOffers  InventorySupplierOffer[]
+  supplierOffers     InventorySupplierOffer[]
   purchaseOrderLines InventoryPurchaseOrderLine[]
-  
+
   @@index([vendorProfileId, name])
   @@index([vendorProfileId, category])
   @@index([expiry_date])
 }
 
 model InventoryMovement {
-  id              String        @id @default(cuid())
+  id              String       @id @default(cuid())
   vendorProfileId String
   inventoryItemId String
-  type            MovementType  // RECEIVE, ADJUST, CONSUME, RETURN, WASTE, DONATION, RESERVE
-  qty             Decimal       // + for receive/adjust+, - for consume/adjust-
-  unit_cost       Decimal?      // for RECEIVE (updates avg_cost via moving average)
-  refType         String?       // ORDER, PRODUCTION, WINDOW, MANUAL
+  type            MovementType // RECEIVE, ADJUST, CONSUME, RETURN, WASTE, DONATION, RESERVE
+  qty             Decimal // + for receive/adjust+, - for consume/adjust-
+  unit_cost       Decimal? // for RECEIVE (updates avg_cost via moving average)
+  refType         String? // ORDER, PRODUCTION, WINDOW, MANUAL
   refId           String?
   notes           String?
-  createdAt       DateTime      @default(now())
-  
+  createdAt       DateTime     @default(now())
+
   // Relations
-  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
-  
+  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+
   @@index([vendorProfileId, inventoryItemId, createdAt])
   @@index([refType, refId])
 }
@@ -549,18 +580,18 @@ enum MovementType {
 }
 
 model PriceWatch {
-  id              String      @id @default(cuid())
-  vendorProfileId String
-  inventoryItemId String
+  id               String      @id @default(cuid())
+  vendorProfileId  String
+  inventoryItemId  String
   target_unit_cost Decimal
-  source          WatchSource // B2B, MARKET, CUSTOM_URL
-  source_meta     String?     // JSON stored as string for SQLite
-  active          Boolean     @default(true)
-  createdAt       DateTime    @default(now())
-  
+  source           WatchSource // B2B, MARKET, CUSTOM_URL
+  source_meta      String? // JSON stored as string for SQLite
+  active           Boolean     @default(true)
+  createdAt        DateTime    @default(now())
+
   // Relations
-  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
-  
+  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+
   @@index([vendorProfileId, inventoryItemId, active])
 }
 
@@ -571,15 +602,15 @@ enum WatchSource {
 }
 
 model ReceiptParseJob {
-  id            String        @id @default(cuid())
+  id              String           @id @default(cuid())
   vendorProfileId String
-  source_type   ReceiptSource // IMAGE, PDF, TEXT
-  status        ReceiptJobStatus     // PENDING, DONE, FAILED
-  raw_text      String?
-  parsed_json   String?       // JSON stored as string for SQLite
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  
+  source_type     ReceiptSource // IMAGE, PDF, TEXT
+  status          ReceiptJobStatus // PENDING, DONE, FAILED
+  raw_text        String?
+  parsed_json     String? // JSON stored as string for SQLite
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
   @@index([vendorProfileId, createdAt])
 }
 
@@ -596,15 +627,15 @@ enum ReceiptJobStatus {
 }
 
 model ProductionPlan {
-  id            String   @id @default(cuid())
+  id              String   @id @default(cuid())
   vendorProfileId String
-  productId     String
-  qty_to_make   Int
-  planned_at    DateTime
-  status        String   // PLANNED, IN_PROGRESS, DONE, CANCELLED
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  
+  productId       String
+  qty_to_make     Int
+  planned_at      DateTime
+  status          String // PLANNED, IN_PROGRESS, DONE, CANCELLED
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
   @@index([vendorProfileId, planned_at])
   @@index([productId, status])
 }
@@ -631,7 +662,7 @@ model RecipeIngredient {
   id           String     @id @default(cuid())
   recipeId     String
   ingredientId String
-  qtyPerBatch  Float      // Keep as qtyPerBatch for schema consistency
+  qtyPerBatch  Float // Keep as qtyPerBatch for schema consistency
   wastePct     Float      @default(0)
   ingredient   Ingredient @relation(fields: [ingredientId], references: [id])
   recipe       Recipe     @relation(fields: [recipeId], references: [id])
@@ -685,20 +716,20 @@ model OrderItem {
   total           Float
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  
+
   // Extended fields for Orders Management System
-  productName     String?
-  variantName     String?
-  qty             Int?     // alias for quantity
-  subtotal        Float?   // alias for total
-  notes           String?
-  labelsJson      String?  // JSON stored as string for SQLite
-  status          ItemStatus @default(QUEUED)
-  madeQty         Int      @default(0) // partials for large batches
-  
-  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  labelJobs       LabelJob[]
+  productName String?
+  variantName String?
+  qty         Int? // alias for quantity
+  subtotal    Float? // alias for total
+  notes       String?
+  labelsJson  String? // JSON stored as string for SQLite
+  status      ItemStatus @default(QUEUED)
+  madeQty     Int        @default(0) // partials for large batches
+
+  product   Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  order     Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  labelJobs LabelJob[]
 
   @@index([orderId])
   @@index([vendorProfileId])
@@ -707,7 +738,7 @@ model OrderItem {
 }
 
 model OrderModification {
-  id                String                    @id @default(cuid())
+  id                String                  @id @default(cuid())
   orderId           String
   originalSubtotal  Float
   originalTax       Float
@@ -717,41 +748,41 @@ model OrderModification {
   newTax            Float
   newShipping       Float
   newTotal          Float
-  paymentAdjustment Float                     // Positive = charge customer, Negative = refund
-  status            OrderModificationStatus   @default(PENDING)
+  paymentAdjustment Float // Positive = charge customer, Negative = refund
+  status            OrderModificationStatus @default(PENDING)
   reason            String?
   notes             String?
-  createdBy         String                    // User ID who made the modification
+  createdBy         String // User ID who made the modification
   processedAt       DateTime?
-  createdAt         DateTime                  @default(now())
-  updatedAt         DateTime                  @updatedAt
-  
-  order             Order                     @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  items             OrderModificationItem[]
-  
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+
+  order Order                   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  items OrderModificationItem[]
+
   @@index([orderId])
   @@index([status])
   @@index([createdAt])
 }
 
 model OrderModificationItem {
-  id               String            @id @default(cuid())
+  id               String             @id @default(cuid())
   modificationId   String
-  orderItemId      String?           // Null for new items
+  orderItemId      String? // Null for new items
   productId        String
   productName      String
   action           ModificationAction // ADD, REMOVE, UPDATE_QUANTITY, UPDATE_PRICE
-  originalQuantity Int?              // Null for new items
-  newQuantity      Int?              // Null for removed items
-  originalPrice    Float?            // Null for new items
-  newPrice         Float?            // Null for removed items
-  priceImpact      Float             // Total price change for this item
+  originalQuantity Int? // Null for new items
+  newQuantity      Int? // Null for removed items
+  originalPrice    Float? // Null for new items
+  newPrice         Float? // Null for removed items
+  priceImpact      Float // Total price change for this item
   notes            String?
-  createdAt        DateTime          @default(now())
-  
-  modification     OrderModification @relation(fields: [modificationId], references: [id], onDelete: Cascade)
-  product          Product           @relation(fields: [productId], references: [id])
-  
+  createdAt        DateTime           @default(now())
+
+  modification OrderModification @relation(fields: [modificationId], references: [id], onDelete: Cascade)
+  product      Product           @relation(fields: [productId], references: [id])
+
   @@index([modificationId])
   @@index([orderItemId])
 }
@@ -1038,17 +1069,17 @@ model ShippingAddress {
 
 // Stripe Integration Models
 model StripePayment {
-  id              String    @id @default(cuid())
-  stripePaymentId String    @unique
+  id              String        @id @default(cuid())
+  stripePaymentId String        @unique
   vendorProfileId String
   orderId         String?
   amount          Float
   fee             Float
   net             Float
-  currency        String    @default("usd")
+  currency        String        @default("usd")
   status          String
   createdAt       DateTime
-  updatedAt       DateTime  @updatedAt
+  updatedAt       DateTime      @updatedAt
   vendorProfile   VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
 
   @@index([vendorProfileId, createdAt])
@@ -1056,18 +1087,18 @@ model StripePayment {
 }
 
 model StripeBalanceTransaction {
-  id                  String    @id @default(cuid())
-  stripeTransactionId String    @unique
+  id                  String        @id @default(cuid())
+  stripeTransactionId String        @unique
   vendorProfileId     String
   amount              Float
   fee                 Float
   net                 Float
-  currency            String    @default("usd")
+  currency            String        @default("usd")
   type                String
   description         String?
   source              String
   createdAt           DateTime
-  updatedAt           DateTime  @updatedAt
+  updatedAt           DateTime      @updatedAt
   vendorProfile       VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
 
   @@index([vendorProfileId, createdAt])
@@ -1075,16 +1106,16 @@ model StripeBalanceTransaction {
 }
 
 model StripePayout {
-  id              String    @id @default(cuid())
-  stripePayoutId  String    @unique
+  id              String        @id @default(cuid())
+  stripePayoutId  String        @unique
   vendorProfileId String
   amount          Float
-  currency        String    @default("usd")
+  currency        String        @default("usd")
   status          String
   description     String?
   arrivalDate     DateTime
   createdAt       DateTime
-  updatedAt       DateTime  @updatedAt
+  updatedAt       DateTime      @updatedAt
   vendorProfile   VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
 
   @@index([vendorProfileId, arrivalDate])
@@ -1119,143 +1150,143 @@ model MarketRegistration {
 }
 
 model SalesWindow {
-  id                  String   @id @default(cuid())
-  vendorId            String
-  type                SalesWindowType
-  name                String
-  description         String?
-  status              SalesWindowStatus @default(DRAFT)
+  id          String            @id @default(cuid())
+  vendorId    String
+  type        SalesWindowType
+  name        String
+  description String?
+  status      SalesWindowStatus @default(DRAFT)
 
-  location_name       String?
-  address_text        String?
-  geoPoint            String?                  // Location as string for SQLite
+  location_name String?
+  address_text  String?
+  geoPoint      String? // Location as string for SQLite
 
-  static_map_mode     StaticMapMode      @default(NONE)
-  static_map_image_url String?
+  static_map_mode              StaticMapMode @default(NONE)
+  static_map_image_url         String?
   static_map_tile_url_template String?
 
   vendor_vehicle_image_url String?
-  vendor_vehicle_plate      String?
+  vendor_vehicle_plate     String?
 
   // Delivery
-  epicenter_address   String?
-  radius_miles        Float?
-  delivery_fee_mode   DeliveryFeeMode    @default(NONE)
-  delivery_fee_json   String?            // JSON stored as string
+  epicenter_address String?
+  radius_miles      Float?
+  delivery_fee_mode DeliveryFeeMode @default(NONE)
+  delivery_fee_json String? // JSON stored as string
 
-  third_party_delivery String?           // JSON stored as string
+  third_party_delivery String? // JSON stored as string
 
   // Timing (not used for Service-Greenfield if evergreen)
-  preorder_open_at    DateTime?
-  preorder_close_at   DateTime?
-  fulfill_start_at    DateTime?
-  fulfill_end_at      DateTime?
-  recurrence_rrule    String?
-  parent_series_id    String?
+  preorder_open_at  DateTime?
+  preorder_close_at DateTime?
+  fulfill_start_at  DateTime?
+  fulfill_end_at    DateTime?
+  recurrence_rrule  String?
+  parent_series_id  String?
 
   // Service – Greenfield
-  is_always_on        Boolean @default(false)
-  scheduling_mode     SchedulingMode?
-  scheduler_config    String?            // JSON stored as string
+  is_always_on     Boolean         @default(false)
+  scheduling_mode  SchedulingMode?
+  scheduler_config String? // JSON stored as string
 
   // Capacity
-  capacity_total      Int?
-  slot_size_min       Int?
-  slot_capacity       Int?
-  max_items_total     Int?    // NEW
+  capacity_total       Int?
+  slot_size_min        Int?
+  slot_capacity        Int?
+  max_items_total      Int? // NEW
   auto_close_when_full Boolean @default(true)
 
   // Porch/Kiosk
-  porch_instructions  String?
-  kiosk_name          String?
-  kiosk_instructions  String?
+  porch_instructions String?
+  kiosk_name         String?
+  kiosk_instructions String?
 
-  policy_json         String?            // JSON stored as string
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  policy_json String? // JSON stored as string
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  products            SalesWindowProduct[]
-  slots               SalesWindowSlot[]
-  metrics             SalesWindowMetric?
-  consignment         ConsignmentLedger[]
-  wholesaleInvoices   WholesaleInvoice[]
-  qrTokens            QrToken[]
-  orders              Order[]
-  vendor              Vendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  products          SalesWindowProduct[]
+  slots             SalesWindowSlot[]
+  metrics           SalesWindowMetric?
+  consignment       ConsignmentLedger[]
+  wholesaleInvoices WholesaleInvoice[]
+  qrTokens          QrToken[]
+  orders            Order[]
+  vendor            Vendor               @relation(fields: [vendorId], references: [id], onDelete: Cascade)
 
   @@index([vendorId, status, fulfill_start_at])
 }
 
 model SalesWindowProduct {
-  id               String @id @default(cuid())
-  salesWindowId    String
-  productId        String
-  price_override   Float?
+  id                     String      @id @default(cuid())
+  salesWindowId          String
+  productId              String
+  price_override         Float?
   qty_limit_per_customer Int?
-  active           Boolean @default(true)
-  salesWindow      SalesWindow @relation(fields: [salesWindowId], references: [id], onDelete: Cascade)
+  active                 Boolean     @default(true)
+  salesWindow            SalesWindow @relation(fields: [salesWindowId], references: [id], onDelete: Cascade)
 
   @@index([salesWindowId, productId])
 }
 
 model SalesWindowSlot {
-  id               String @id @default(cuid())
-  salesWindowId    String
-  starts_at        DateTime
-  ends_at          DateTime
-  capacity         Int
-  reserved_count   Int   @default(0)
-  salesWindow      SalesWindow @relation(fields: [salesWindowId], references: [id], onDelete: Cascade)
+  id             String      @id @default(cuid())
+  salesWindowId  String
+  starts_at      DateTime
+  ends_at        DateTime
+  capacity       Int
+  reserved_count Int         @default(0)
+  salesWindow    SalesWindow @relation(fields: [salesWindowId], references: [id], onDelete: Cascade)
 
   @@index([salesWindowId, starts_at])
 }
 
 model SalesWindowMetric {
-  id            String @id @default(cuid())
-  salesWindowId String @unique
-  orders_count  Int    @default(0)
-  items_count   Int    @default(0)
-  gross         Float  @default(0)
-  refunds       Float  @default(0)
-  net           Float  @default(0)
+  id            String      @id @default(cuid())
+  salesWindowId String      @unique
+  orders_count  Int         @default(0)
+  items_count   Int         @default(0)
+  gross         Float       @default(0)
+  refunds       Float       @default(0)
+  net           Float       @default(0)
   salesWindow   SalesWindow @relation(fields: [salesWindowId], references: [id], onDelete: Cascade)
 }
 
 model ConsignmentLedger {
-  id            String @id @default(cuid())
-  salesWindowId String
-  productId     String
-  planned_qty   Int
-  sold_qty      Int   @default(0)
-  unsold_qty    Int   @default(0)
-  donated_qty   Int   @default(0)
-  returned_qty  Int   @default(0)
-  rev_share_pct Float?
+  id             String      @id @default(cuid())
+  salesWindowId  String
+  productId      String
+  planned_qty    Int
+  sold_qty       Int         @default(0)
+  unsold_qty     Int         @default(0)
+  donated_qty    Int         @default(0)
+  returned_qty   Int         @default(0)
+  rev_share_pct  Float?
   host_fee_fixed Float?
-  salesWindow   SalesWindow @relation(fields: [salesWindowId], references: [id], onDelete: Cascade)
+  salesWindow    SalesWindow @relation(fields: [salesWindowId], references: [id], onDelete: Cascade)
 
   @@index([salesWindowId])
 }
 
 model WholesaleInvoice {
-  id            String @id @default(cuid())
+  id            String                 @id @default(cuid())
   salesWindowId String
   business_name String
   terms         WholesaleTerms
-  status        InvoiceStatus @default(DRAFT)
-  subtotal      Float @default(0)
-  tax           Float @default(0)
-  shipping      Float @default(0)
-  total         Float @default(0)
+  status        InvoiceStatus          @default(DRAFT)
+  subtotal      Float                  @default(0)
+  tax           Float                  @default(0)
+  shipping      Float                  @default(0)
+  total         Float                  @default(0)
   due_date      DateTime?
-  salesWindow   SalesWindow @relation(fields: [salesWindowId], references: [id], onDelete: Cascade)
+  salesWindow   SalesWindow            @relation(fields: [salesWindowId], references: [id], onDelete: Cascade)
   lines         WholesaleInvoiceLine[]
 
   @@index([salesWindowId, status])
 }
 
 model WholesaleInvoiceLine {
-  id         String @id @default(cuid())
+  id         String           @id @default(cuid())
   invoiceId  String
   productId  String
   qty        Int
@@ -1267,9 +1298,9 @@ model WholesaleInvoiceLine {
 }
 
 model QrToken {
-  id            String @id @default(cuid())
+  id            String      @id @default(cuid())
   salesWindowId String
-  token         String  @unique
+  token         String      @unique
   kind          QrKind
   expires_at    DateTime?
   salesWindow   SalesWindow @relation(fields: [salesWindowId], references: [id], onDelete: Cascade)
@@ -1278,34 +1309,34 @@ model QrToken {
 }
 
 model OrderCustomerVehicle {
-  id      String @id @default(cuid())
-  orderId String @unique
+  id         String  @id @default(cuid())
+  orderId    String  @unique
   make_model String
-  color     String
-  plate     String?
-  notes     String?
-  walkup    Boolean @default(false)
-  order     Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  color      String
+  plate      String?
+  notes      String?
+  walkup     Boolean @default(false)
+  order      Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
 
 // Label System Models
 model PrinterProfile {
-  id            String        @id @default(cuid())
+  id              String         @id @default(cuid())
   vendorProfileId String
-  name          String
-  networkAddr   String?       // ip:port or \\server\share
-  type          PrinterType   // THERMAL | LASER | INKJET | VIRTUAL
-  engine        PrintEngine   // PDF | ZPL | EPL | ESC_POS
-  dpi           Int           @default(300)
-  maxWidthIn    Float         @default(4.0)
-  maxHeightIn   Float         @default(6.0)
-  capabilities  String?       // JSON stored as string for SQLite
-  active        Boolean       @default(true)
-  lastSeenAt    DateTime?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  labelProfiles LabelProfile[]
-  labelJobs     LabelJob[]
+  name            String
+  networkAddr     String? // ip:port or \\server\share
+  type            PrinterType // THERMAL | LASER | INKJET | VIRTUAL
+  engine          PrintEngine // PDF | ZPL | EPL | ESC_POS
+  dpi             Int            @default(300)
+  maxWidthIn      Float          @default(4.0)
+  maxHeightIn     Float          @default(6.0)
+  capabilities    String? // JSON stored as string for SQLite
+  active          Boolean        @default(true)
+  lastSeenAt      DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  labelProfiles   LabelProfile[]
+  labelJobs       LabelJob[]
 
   vendorProfile VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
 
@@ -1314,49 +1345,49 @@ model PrinterProfile {
 }
 
 model LabelProfile {
-  id              String        @id @default(cuid())
-  vendorProfileId String
+  id               String      @id @default(cuid())
+  vendorProfileId  String
   printerProfileId String
-  templateId      String?
-  name            String
-  description     String?
-  widthIn         Float         @default(4.0)
-  heightIn        Float         @default(6.0)
-  orientation     String        @default("Portrait") // Portrait|Landscape
-  cornerRadius    Float         @default(0.0)
-  background      String?       // JSON stored as string for SQLite
-  copies          Int           @default(1)
-  engine          PrintEngine   @default(ZPL)
-  status          String        @default("ACTIVE")
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  labelJobs       LabelJob[]
+  templateId       String?
+  name             String
+  description      String?
+  widthIn          Float       @default(4.0)
+  heightIn         Float       @default(6.0)
+  orientation      String      @default("Portrait") // Portrait|Landscape
+  cornerRadius     Float       @default(0.0)
+  background       String? // JSON stored as string for SQLite
+  copies           Int         @default(1)
+  engine           PrintEngine @default(ZPL)
+  status           String      @default("ACTIVE")
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  labelJobs        LabelJob[]
 
-  vendorProfile   VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
-  printerProfile  PrinterProfile @relation(fields: [printerProfileId], references: [id], onDelete: Cascade)
+  vendorProfile  VendorProfile  @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  printerProfile PrinterProfile @relation(fields: [printerProfileId], references: [id], onDelete: Cascade)
 
   @@index([vendorProfileId])
   @@index([vendorProfileId, status])
 }
 
 model LabelTemplate {
-  id              String        @id @default(cuid())
+  id              String      @id @default(cuid())
   vendorProfileId String
   labelProfileId  String?
   name            String
   description     String?
   engine          PrintEngine
-  canvasJson      String        // JSON stored as string for SQLite
-  tokensUsed      String?       // JSON array stored as string for SQLite
-  version         String        @default("1.0.0")
-  isSystem        Boolean       @default(false)
+  canvasJson      String // JSON stored as string for SQLite
+  tokensUsed      String? // JSON array stored as string for SQLite
+  version         String      @default("1.0.0")
+  isSystem        Boolean     @default(false)
   lastPublishedAt DateTime?
-  status          String        @default("DRAFT")
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  status          String      @default("DRAFT")
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
   labelJobs       LabelJob[]
 
-  vendorProfile   VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  vendorProfile VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
 
   @@index([vendorProfileId])
   @@index([labelProfileId])
@@ -1365,32 +1396,32 @@ model LabelTemplate {
 }
 
 model LabelJob {
-  id               String        @id @default(cuid())
+  id               String      @id @default(cuid())
   vendorProfileId  String
-  source           String        // 'order','batch','manual','inventory'
+  source           String // 'order','batch','manual','inventory'
   orderId          String?
   orderItemId      String?
   productId        String?
   labelProfileId   String
   templateId       String
   printerProfileId String?
-  tokensPayload    String        // JSON stored as string for SQLite
-  status           String        @default("QUEUED") // QUEUED|RENDERED|SENT|PRINTED|FAILED|CANCELLED
-  copies           Int           @default(1)
+  tokensPayload    String // JSON stored as string for SQLite
+  status           String      @default("QUEUED") // QUEUED|RENDERED|SENT|PRINTED|FAILED|CANCELLED
+  copies           Int         @default(1)
   engine           PrintEngine
   renderedAt       DateTime?
   printedAt        DateTime?
   error            String?
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
 
-  vendorProfile    VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
-  labelProfile     LabelProfile @relation(fields: [labelProfileId], references: [id])
-  labelTemplate    LabelTemplate @relation(fields: [templateId], references: [id])
-  printerProfile   PrinterProfile? @relation(fields: [printerProfileId], references: [id])
-  order            Order? @relation(fields: [orderId], references: [id])
-  orderItem        OrderItem? @relation(fields: [orderItemId], references: [id])
-  product          Product? @relation(fields: [productId], references: [id])
+  vendorProfile  VendorProfile   @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  labelProfile   LabelProfile    @relation(fields: [labelProfileId], references: [id])
+  labelTemplate  LabelTemplate   @relation(fields: [templateId], references: [id])
+  printerProfile PrinterProfile? @relation(fields: [printerProfileId], references: [id])
+  order          Order?          @relation(fields: [orderId], references: [id])
+  orderItem      OrderItem?      @relation(fields: [orderItemId], references: [id])
+  product        Product?        @relation(fields: [productId], references: [id])
 
   @@index([vendorProfileId, status])
   @@index([vendorProfileId, createdAt])
@@ -1549,92 +1580,92 @@ enum TemplateStatus {
 // AI INSIGHTS SYSTEM TABLES
 
 model ProductCompetitorPrice {
-  id             String    @id @default(cuid())
-  vendorProfileId String   // For vendor isolation
-  productId      String
-  competitorName String
-  competitorSku  String?
-  price          Float
-  currency       String    @default("USD")
-  sourceUrl      String?
-  capturedAt     DateTime  @default(now())
-  createdAt      DateTime  @default(now())
-  
+  id              String   @id @default(cuid())
+  vendorProfileId String // For vendor isolation
+  productId       String
+  competitorName  String
+  competitorSku   String?
+  price           Float
+  currency        String   @default("USD")
+  sourceUrl       String?
+  capturedAt      DateTime @default(now())
+  createdAt       DateTime @default(now())
+
   // Relations
-  vendor         VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
-  product        Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
-  
+  vendor  VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  product Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+
   @@index([vendorProfileId, productId, capturedAt(sort: Desc)])
   @@index([competitorName])
 }
 
 model ProductPriceHistory {
-  id             String    @id @default(cuid())
-  vendorProfileId String   // For vendor isolation
-  productId      String
-  oldPrice       Float?
-  newPrice       Float
-  changedBy      String    // 'vendor' | 'system' | 'ai_suggest'
-  reason         String?
-  createdAt      DateTime  @default(now())
-  
+  id              String   @id @default(cuid())
+  vendorProfileId String // For vendor isolation
+  productId       String
+  oldPrice        Float?
+  newPrice        Float
+  changedBy       String // 'vendor' | 'system' | 'ai_suggest'
+  reason          String?
+  createdAt       DateTime @default(now())
+
   // Relations
-  vendor         VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
-  product        Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
-  
+  vendor  VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  product Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+
   @@index([vendorProfileId, productId, createdAt(sort: Desc)])
 }
 
 model InventorySupplierOffer {
-  id               String    @id @default(cuid())
-  vendorProfileId  String    // For vendor isolation
-  inventoryItemId  String
-  supplierName     String
-  packSize         Int
-  unitCost         Float
-  bulkBreakQty     Int?
-  bulkUnitCost     Float?
-  shippingCostEst  Float?
-  validFrom        DateTime  @default(now())
-  validTo          DateTime?
-  sourceUrl        String?
-  createdAt        DateTime  @default(now())
-  
+  id              String    @id @default(cuid())
+  vendorProfileId String // For vendor isolation
+  inventoryItemId String
+  supplierName    String
+  packSize        Int
+  unitCost        Float
+  bulkBreakQty    Int?
+  bulkUnitCost    Float?
+  shippingCostEst Float?
+  validFrom       DateTime  @default(now())
+  validTo         DateTime?
+  sourceUrl       String?
+  createdAt       DateTime  @default(now())
+
   // Relations
-  vendor           VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
-  inventoryItem    InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
-  
+  vendor        VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+
   @@index([vendorProfileId, inventoryItemId])
   @@index([supplierName])
 }
 
 model InventoryPurchaseOrder {
-  id                  String    @id @default(cuid())
-  vendorProfileId     String    // For vendor isolation
-  status              String    @default("draft") // 'draft' | 'sent' | 'received'
-  totalEstimatedCost  Float?
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
-  
+  id                 String   @id @default(cuid())
+  vendorProfileId    String // For vendor isolation
+  status             String   @default("draft") // 'draft' | 'sent' | 'received'
+  totalEstimatedCost Float?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
   // Relations
-  vendor              VendorProfile                @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
-  lines               InventoryPurchaseOrderLine[]
-  
+  vendor VendorProfile                @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  lines  InventoryPurchaseOrderLine[]
+
   @@index([vendorProfileId, status])
 }
 
 model InventoryPurchaseOrderLine {
-  id                  String    @id @default(cuid())
-  purchaseOrderId     String
-  inventoryItemId     String
-  qty                 Int
-  unitCostEst         Float
-  createdAt           DateTime  @default(now())
-  
+  id              String   @id @default(cuid())
+  purchaseOrderId String
+  inventoryItemId String
+  qty             Int
+  unitCostEst     Float
+  createdAt       DateTime @default(now())
+
   // Relations
-  purchaseOrder       InventoryPurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
-  inventoryItem       InventoryItem          @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
-  
+  purchaseOrder InventoryPurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  inventoryItem InventoryItem          @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+
   @@index([purchaseOrderId])
   @@index([inventoryItemId])
 }
@@ -1663,89 +1694,89 @@ enum ProductType {
 
 // New Product System Models
 model Category {
-  id              String        @id @default(cuid())
+  id              String   @id @default(cuid())
   vendorProfileId String
   name            String
   parentId        String?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
   // Relations
-  vendor          VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
-  parent          Category?     @relation("CategoryHierarchy", fields: [parentId], references: [id])
-  children        Category[]    @relation("CategoryHierarchy")
-  products        Product[]
-  subcategories   Subcategory[]
-  
+  vendor        VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  parent        Category?     @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children      Category[]    @relation("CategoryHierarchy")
+  products      Product[]
+  subcategories Subcategory[]
+
   @@index([vendorProfileId])
   @@index([parentId])
 }
 
 model Subcategory {
-  id              String        @id @default(cuid())
+  id              String   @id @default(cuid())
   vendorProfileId String
   categoryId      String
   name            String
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
   // Relations
-  vendor          VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
-  category        Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  products        Product[]
-  
+  vendor   VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  category Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  products Product[]
+
   @@index([vendorProfileId])
   @@index([categoryId])
 }
 
 model ProductVariant {
-  id          String  @id @default(cuid())
-  productId   String
-  name        String
-  sku         String?
-  priceDelta  Float   @default(0)
-  isDefault   Boolean @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  id         String   @id @default(cuid())
+  productId  String
+  name       String
+  sku        String?
+  priceDelta Float    @default(0)
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
   // Relations
-  product     Product @relation(fields: [productId], references: [id], onDelete: Cascade)
-  
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
   @@index([productId])
 }
 
 model ProductMaterial {
-  id              String  @id @default(cuid())
+  id              String   @id @default(cuid())
   productId       String
   inventoryItemId String
   qty             Float
   unit            String
-  wastePct        Float   @default(0)
+  wastePct        Float    @default(0)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  
+
   // Relations
-  product         Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
-  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
-  
+  product       Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id], onDelete: Cascade)
+
   @@index([productId])
   @@index([inventoryItemId])
 }
 
 model RecipeParseJob {
-  id              String              @id @default(cuid())
+  id              String            @id @default(cuid())
   vendorProfileId String
   sourceType      RecipeSourceType
   sourceUrl       String?
-  status          RecipeParseStatus   @default(PENDING)
+  status          RecipeParseStatus @default(PENDING)
   rawText         String?
   parsedJson      Json?
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
-  
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
   // Relations
-  vendor          VendorProfile       @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
-  
+  vendor VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+
   @@index([vendorProfileId])
   @@index([status])
 }
@@ -1763,59 +1794,64 @@ enum RecipeParseStatus {
   FAILED
 }
 
-/** System Messages (replaces email) **/
+/**
+ * System Messages (replaces email) *
+ */
 model SystemMessage {
-  id        String   @id @default(cuid())
+  id              String    @id @default(cuid())
   vendorProfileId String
-  scope     String   // 'inventory', 'orders', 'products', 'pricing', 'events', etc.
-  type      String   // 'restock_alert', 'price_watch_hit', 'shortfall', 'seasonal_forecast', 'receipt_parsed', 'pricing_advice', 'stall_purchase', 'event_interest', 'question', 'event_update'
-  title     String
-  body      String
-  data      String?  // JSON stored as string for SQLite
-  readAt    DateTime?
-  createdAt DateTime @default(now())
-  /** extension point for SMS opt-in later **/
+  scope           String // 'inventory', 'orders', 'products', 'pricing', 'events', etc.
+  type            String // 'restock_alert', 'price_watch_hit', 'shortfall', 'seasonal_forecast', 'receipt_parsed', 'pricing_advice', 'stall_purchase', 'event_interest', 'question', 'event_update'
+  title           String
+  body            String
+  data            String? // JSON stored as string for SQLite
+  readAt          DateTime?
+  createdAt       DateTime  @default(now())
+  /**
+   * extension point for SMS opt-in later *
+   */
   // smsSentAt DateTime?
-  
+
   // Relations
-  vendor    VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
-  
+  vendor VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+
   @@index([vendorProfileId, createdAt])
   @@index([vendorProfileId, scope, readAt])
   @@index([type, createdAt])
 }
 
-
-/** Orders Management System - Extended Models **/
+/**
+ * Orders Management System - Extended Models *
+ */
 model OrderTimeline {
-  id         String   @id @default(cuid())
-  orderId    String
-  type       String   // 'created','status','station','note','print','label','system_message'
-  data       String?  // JSON stored as string for SQLite
-  createdAt  DateTime @default(now())
-  
+  id        String   @id @default(cuid())
+  orderId   String
+  type      String // 'created','status','station','note','print','label','system_message'
+  data      String? // JSON stored as string for SQLite
+  createdAt DateTime @default(now())
+
   // Relations
-  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
   @@index([orderId, createdAt])
   @@index([orderId, type])
 }
 
 model OrderFieldDef {
-  id        String @id @default(cuid())
+  id              String  @id @default(cuid())
   vendorProfileId String
-  key       String  // 'allergen_note','gift_message', etc.
-  label     String
-  type      String  // 'text','number','boolean','select'
-  options   String? // JSON array stored as string for SQLite
-  required  Boolean @default(false)
-  order     Int     @default(0)
-  
+  key             String // 'allergen_note','gift_message', etc.
+  label           String
+  type            String // 'text','number','boolean','select'
+  options         String? // JSON array stored as string for SQLite
+  required        Boolean @default(false)
+  order           Int     @default(0)
+
   // Relations
-  vendor    VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
-  
-  @@index([vendorProfileId, order])
+  vendor VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+
   @@unique([vendorProfileId, key])
+  @@index([vendorProfileId, order])
 }
 
 enum OrderPriority {
@@ -1854,15 +1890,15 @@ enum ModificationAction {
 model Asset {
   id        String   @id @default(cuid())
   vendorId  String
-  kind      String   // 'image','svg'
+  kind      String // 'image','svg'
   url       String
   width     Int?
   height    Int?
   createdAt DateTime @default(now())
-  
+
   // Relations
-  vendor    VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
-  
+  vendor VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
   @@index([vendorId])
   @@index([vendorId, kind])
 }
@@ -1875,38 +1911,37 @@ model Vendor {
   bio           String?
   avatarUrl     String?
   coverUrl      String?
-  baseLocation  String?   // Location as string for SQLite
+  baseLocation  String? // Location as string for SQLite
   city          String?
   state         String?
   country       String?
   shipsNational Boolean  @default(false)
   ratingAvg     Float    @default(0)
   ratingCount   Int      @default(0)
-  tags          String?  // bakery, vegan, flowers, woodwork... (comma-separated)
+  tags          String? // bakery, vegan, flowers, woodwork... (comma-separated)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-  
+
   // Relations
   favoriteVendors FavoriteVendor[]
-  salesWindows  SalesWindow[]
-  
+  salesWindows    SalesWindow[]
+
   @@index([slug])
   @@index([city, state])
   @@index([tags])
   @@index([ratingAvg])
 }
 
-
 model FavoriteVendor {
-  id       String   @id @default(cuid())
-  userId   String
-  vendorId String
+  id        String   @id @default(cuid())
+  userId    String
+  vendorId  String
   createdAt DateTime @default(now())
-  
+
   // Relations
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  vendor   Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
-  
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  vendor Vendor @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
   @@unique([userId, vendorId])
   @@index([userId])
   @@index([vendorId])
@@ -1917,11 +1952,11 @@ model FavoriteProduct {
   userId    String
   productId String
   createdAt DateTime @default(now())
-  
+
   // Relations
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
   @@unique([userId, productId])
   @@index([userId])
   @@index([productId])
@@ -1931,12 +1966,12 @@ model SavedSearch {
   id        String   @id @default(cuid())
   userId    String
   name      String
-  params    Json     // persisted filter set
+  params    Json // persisted filter set
   createdAt DateTime @default(now())
-  
+
   // Relations
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
 }
 
@@ -1948,52 +1983,52 @@ model SearchEvent {
   results   Int
   tookMs    Int
   createdAt DateTime @default(now())
-  
+
   // Relations
-  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([userId])
   @@index([createdAt])
 }
 
 // Events System Models
 model Event {
-  id            String   @id @default(cuid())
+  id            String      @id @default(cuid())
   coordinatorId String
   title         String
-  slug          String   @unique
+  slug          String      @unique
   summary       String?
   description   String?
   imageUrl      String?
-  category      String?        // farmers_market, craft_fair, popup, class, festival
-  tags          String?  // comma-separated tags
+  category      String? // farmers_market, craft_fair, popup, class, festival
+  tags          String? // comma-separated tags
   startAt       DateTime
   endAt         DateTime
   addressText   String?
-  geoPoint      String?        // Location as string for SQLite
+  geoPoint      String? // Location as string for SQLite
   city          String?
   state         String?
   country       String?
-  timezone      String         // e.g., America/New_York
-  status        EventStatus    @default(DRAFT)
-  isRecurring   Boolean        @default(false)
-  recurrence    Json?          // RRULE or rule summary
-  capacity      Int?           // overall attendee capacity (optional)
-  minStallPrice Decimal?       // quick display of lowest stall price
-  socialLinks   Json?          // {instagram,facebook,website}
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  
+  timezone      String // e.g., America/New_York
+  status        EventStatus @default(DRAFT)
+  isRecurring   Boolean     @default(false)
+  recurrence    Json? // RRULE or rule summary
+  capacity      Int? // overall attendee capacity (optional)
+  minStallPrice Decimal? // quick display of lowest stall price
+  socialLinks   Json? // {instagram,facebook,website}
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
   // Relations
-  coordinator   EventCoordinatorProfile @relation(fields: [coordinatorId], references: [id])
-  stalls        EventStall[]
-  vendors       EventVendor[]
-  perks         EventPerk[]
-  faqs          EventFaq[]
-  reviews       EventReview[]
-  interests     EventInterest[]
-  favorites     EventFavorite[]
-  
+  coordinator EventCoordinatorProfile @relation(fields: [coordinatorId], references: [id])
+  stalls      EventStall[]
+  vendors     EventVendor[]
+  perks       EventPerk[]
+  faqs        EventFaq[]
+  reviews     EventReview[]
+  interests   EventInterest[]
+  favorites   EventFavorite[]
+
   @@index([geoPoint(type: Gist)])
   @@index([startAt])
   @@index([status])
@@ -2001,125 +2036,125 @@ model Event {
   @@index([coordinatorId])
 }
 
-enum EventStatus { 
-  DRAFT 
-  PUBLISHED 
-  SOLD_OUT 
-  CANCELLED 
-  ENDED 
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  SOLD_OUT
+  CANCELLED
+  ENDED
 }
 
 model EventStall {
   id        String   @id @default(cuid())
   eventId   String
-  name      String   // e.g., "10x10 Outdoor", "Food Truck"
+  name      String // e.g., "10x10 Outdoor", "Food Truck"
   price     Decimal
   qtyTotal  Int
-  qtySold   Int       @default(0)
-  perks     String?   // power, water, shade (comma-separated)
+  qtySold   Int      @default(0)
+  perks     String? // power, water, shade (comma-separated)
   notes     String?
-  sort      Int       @default(0)
-  createdAt DateTime  @default(now())
-  
+  sort      Int      @default(0)
+  createdAt DateTime @default(now())
+
   // Relations
-  event     Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  vendors   EventVendor[]
-  
+  event   Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  vendors EventVendor[]
+
   @@index([eventId, sort])
 }
 
 model EventVendor {
-  id         String   @id @default(cuid())
-  eventId    String
-  vendorId   String
-  stallId    String?
-  status     String   @default("APPLIED") // APPLIED|APPROVED|PAID|WAITLIST|CANCELLED
-  message    String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  
+  id        String   @id @default(cuid())
+  eventId   String
+  vendorId  String
+  stallId   String?
+  status    String   @default("APPLIED") // APPLIED|APPROVED|PAID|WAITLIST|CANCELLED
+  message   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Relations
-  event      Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  stall      EventStall? @relation(fields: [stallId], references: [id], onDelete: SetNull)
-  vendor     VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
-  
+  event  Event         @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  stall  EventStall?   @relation(fields: [stallId], references: [id], onDelete: SetNull)
+  vendor VendorProfile @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+
   @@index([eventId, vendorId])
 }
 
 model EventPerk {
-  id        String   @id @default(cuid())
-  eventId   String
-  title     String
-  details   String?
-  code      String?    // promo code to redeem on-site
-  kind      String     // 'gift','coupon','raffle','badge'
-  
+  id      String  @id @default(cuid())
+  eventId String
+  title   String
+  details String?
+  code    String? // promo code to redeem on-site
+  kind    String // 'gift','coupon','raffle','badge'
+
   // Relations
-  event     Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
 }
 
 model EventInterest {
   id        String   @id @default(cuid())
   eventId   String
   userId    String?
-  emailHash String?    // guests: hash(email) for dedupe if you collect email softly
-  status    String     @default("INTERESTED") // INTERESTED|GOING
-  createdAt DateTime   @default(now())
-  
+  emailHash String? // guests: hash(email) for dedupe if you collect email softly
+  status    String   @default("INTERESTED") // INTERESTED|GOING
+  createdAt DateTime @default(now())
+
   // Relations
-  event     Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([eventId, userId])
   @@index([eventId])
 }
 
 model EventFavorite {
-  id        String @id @default(cuid())
+  id        String   @id @default(cuid())
   userId    String
   eventId   String
   createdAt DateTime @default(now())
-  
+
   // Relations
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  event     Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
   @@unique([userId, eventId])
 }
 
 model EventReview {
-  id        String @id @default(cuid())
+  id        String   @id @default(cuid())
   eventId   String
   userId    String
   rating    Int
   body      String?
   createdAt DateTime @default(now())
-  
+
   // Relations
-  event     Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@index([eventId])
 }
 
 model EventFaq {
-  id        String @id @default(cuid())
-  eventId   String
-  q         String
-  a         String
-  order     Int @default(0)
-  
+  id      String @id @default(cuid())
+  eventId String
+  q       String
+  a       String
+  order   Int    @default(0)
+
   // Relations
-  event     Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
   @@index([eventId, order])
 }
 
 model AdminAudit {
   id        String   @id @default(cuid())
   adminId   String
-  action    String   // 'vendor.suspend', 'order.refund', 'feature-flag.update'
-  target    String?  // composite 'Vendor:abc123'
+  action    String // 'vendor.suspend', 'order.refund', 'feature-flag.update'
+  target    String? // composite 'Vendor:abc123'
   payload   Json?
   ip        String?
   createdAt DateTime @default(now())
@@ -2131,9 +2166,9 @@ model AdminAudit {
 
 model SystemCheck {
   id        String   @id @default(cuid())
-  kind      String   // 'http', 'queue', 'db', 'stripe', 'storage'
+  kind      String // 'http', 'queue', 'db', 'stripe', 'storage'
   name      String
-  status    String   // 'OK','WARN','CRIT','MUTED'
+  status    String // 'OK','WARN','CRIT','MUTED'
   value     Float?
   unit      String?
   details   Json?
@@ -2148,7 +2183,7 @@ model FeatureFlag {
   id        String   @id @default(cuid())
   key       String   @unique
   enabled   Boolean  @default(false)
-  rules     Json?    // audience, % rollout
+  rules     Json? // audience, % rollout
   notes     String?
   updatedAt DateTime @updatedAt
 
@@ -2158,12 +2193,12 @@ model FeatureFlag {
 model Incident {
   id        String    @id @default(cuid())
   title     String
-  severity  String    // SEV1..SEV4
-  status    String    // OPEN, MITIGATED, CLOSED
+  severity  String // SEV1..SEV4
+  status    String // OPEN, MITIGATED, CLOSED
   startedAt DateTime  @default(now())
   endedAt   DateTime?
-  timeline  Json?     // updates
-  affected  String?   // services keys (comma-separated)
+  timeline  Json? // updates
+  affected  String? // services keys (comma-separated)
   runbookId String?
 
   @@index([status])
@@ -2175,7 +2210,7 @@ model VendorSegment {
   id          String   @id @default(cuid())
   name        String   @unique
   description String
-  criteria    String   // JSON object with segment criteria
+  criteria    String // JSON object with segment criteria
   vendorCount Int      @default(0)
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
@@ -2186,176 +2221,219 @@ model VendorSegment {
 
 // Settings & Account Hub Models
 model Account {
-  id              String   @id @default(cuid())
-  name            String
-  slug            String   @unique
-  logoUrl         String?
-  primaryEmail    String
-  primaryPhone    String?
-  taxId           String?
-  addressId       String?
-  address         Address? @relation(fields: [addressId], references: [id])
-  ownerId         String
-  owner           User     @relation("AccountOwner", fields: [ownerId], references: [id])
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  deletedAt       DateTime?
-  users           AccountUser[]
-  socials         SocialLink[]
-  documents       Document[]
-  auditLogs       AuditLog[]
-  billingProfile  BillingProfile?
-  subscriptions   Subscription[]
-  invoices        Invoice[]
+  id             String          @id @default(cuid())
+  name           String
+  slug           String          @unique
+  logoUrl        String?
+  primaryEmail   String
+  primaryPhone   String?
+  taxId          String?
+  addressId      String?
+  address        Address?        @relation(fields: [addressId], references: [id])
+  ownerId        String
+  owner          User            @relation("AccountOwner", fields: [ownerId], references: [id])
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  deletedAt      DateTime?
+  users          AccountUser[]
+  socials        SocialLink[]
+  documents      Document[]
+  billingProfile BillingProfile?
+  subscriptions  Subscription[]
+  invoices       Invoice[]
 }
 
-
 model AccountUser {
-  id         String   @id @default(cuid())
-  accountId  String
-  userId     String
-  role       AccountRole
-  status     EmploymentStatus @default(ACTIVE)
-  title      String?
-  workEmail  String?
-  workPhone  String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  deletedAt  DateTime?
-  account    Account  @relation(fields: [accountId], references: [id])
-  user       User     @relation(fields: [userId], references: [id])
+  id        String           @id @default(cuid())
+  accountId String
+  userId    String
+  role      AccountRole
+  status    EmploymentStatus @default(ACTIVE)
+  title     String?
+  workEmail String?
+  workPhone String?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  deletedAt DateTime?
+  account   Account          @relation(fields: [accountId], references: [id])
+  user      User             @relation(fields: [userId], references: [id])
+
   @@unique([accountId, userId])
 }
 
-enum AccountRole { 
-  OWNER 
-  ADMIN 
-  STAFF 
-  VIEWER 
+enum AccountRole {
+  OWNER
+  ADMIN
+  STAFF
+  VIEWER
 }
 
-enum EmploymentStatus { 
-  ACTIVE 
-  ON_LEAVE 
-  TERMINATED 
+enum EmploymentStatus {
+  ACTIVE
+  ON_LEAVE
+  TERMINATED
 }
 
 model Address {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   name      String?
   line1     String
   line2     String?
   city      String
   state     String
   postal    String
-  country   String   @default("US")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  country   String    @default("US")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
   accounts  Account[]
 }
 
 model SocialLink {
-  id         String   @id @default(cuid())
-  accountId  String
-  platform   SocialPlatform
-  url        String
-  handle     String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  account    Account  @relation(fields: [accountId], references: [id])
+  id        String         @id @default(cuid())
+  accountId String
+  platform  SocialPlatform
+  url       String
+  handle    String?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  account   Account        @relation(fields: [accountId], references: [id])
 }
 
-enum SocialPlatform { 
-  FACEBOOK 
-  INSTAGRAM 
-  TIKTOK 
-  YOUTUBE 
-  PINTEREST 
-  X 
-  THREADS 
-  WEBSITE 
-  OTHER 
+enum SocialPlatform {
+  FACEBOOK
+  INSTAGRAM
+  TIKTOK
+  YOUTUBE
+  PINTEREST
+  X
+  THREADS
+  WEBSITE
+  OTHER
 }
 
 model Document {
-  id          String   @id @default(cuid())
-  accountId   String
-  title       String
-  category    DocCategory
-  storageKey  String
-  mimeType    String
-  sizeBytes   Int
-  uploadedBy  String
-  signedAt    DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  account     Account  @relation(fields: [accountId], references: [id])
+  id         String      @id @default(cuid())
+  accountId  String
+  title      String
+  category   DocCategory
+  storageKey String
+  mimeType   String
+  sizeBytes  Int
+  uploadedBy String
+  signedAt   DateTime?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  account    Account     @relation(fields: [accountId], references: [id])
 }
 
-enum DocCategory { 
-  CONTRACT 
-  POLICY 
-  LICENSE 
-  INSURANCE 
-  MISC 
+enum DocCategory {
+  CONTRACT
+  POLICY
+  LICENSE
+  INSURANCE
+  MISC
 }
 
 model BillingProfile {
-  id                String   @id @default(cuid())
-  accountId         String   @unique
-  stripeCustomerId  String?
-  currency          String   @default("USD")
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  account           Account  @relation(fields: [accountId], references: [id])
-}
-
-model Subscription {
   id               String   @id @default(cuid())
-  accountId        String
-  stripeSubId      String   @unique
-  status           SubStatus
-  planName         String
-  currentPeriodEnd DateTime
+  accountId        String   @unique
+  stripeCustomerId String?
+  currency         String   @default("USD")
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   account          Account  @relation(fields: [accountId], references: [id])
 }
 
-enum SubStatus { 
-  ACTIVE 
-  PAST_DUE 
-  CANCELED 
-  TRIALING 
-  INCOMPLETE 
+model Subscription {
+  id               String    @id @default(cuid())
+  accountId        String
+  stripeSubId      String    @unique
+  status           SubStatus
+  planName         String
+  currentPeriodEnd DateTime
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  account          Account   @relation(fields: [accountId], references: [id])
+}
+
+enum SubStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  TRIALING
+  INCOMPLETE
 }
 
 model Invoice {
-  id              String   @id @default(cuid())
+  id              String        @id @default(cuid())
   accountId       String
-  stripeInvoiceId String   @unique
+  stripeInvoiceId String        @unique
   amountDueCents  Int
   amountPaidCents Int
   status          InvoiceStatus
   hostedUrl       String?
-  createdAt       DateTime @default(now())
-  account         Account  @relation(fields: [accountId], references: [id])
+  createdAt       DateTime      @default(now())
+  account         Account       @relation(fields: [accountId], references: [id])
 }
 
+model AuditEvent {
+  id            String     @id @default(cuid())
+  occurredAt    DateTime   @default(now())
+  actorId       String?    // null = system
+  actorType     ActorType  // USER | SYSTEM | WEBHOOK
+  actorIp       String?
+  actorUa       String?
+  requestId     String?    // x-request-id
+  traceId       String?    // for multi-service traces (optional)
+  scope         AuditScope // AUTH | USER | REVENUE | ORDER | INVENTORY | MESSAGE | EVENT | CONFIG | PRIVACY
+  action        String     // stable code: e.g., USER_ROLE_GRANTED
+  targetType    String     // e.g., "User" | "Order" | "FeeSchedule"
+  targetId      String?    // the entity id
+  reason        String?    // human-entered justification (required on sensitive ops)
+  severity      Severity   // INFO | NOTICE | WARNING | CRITICAL
+  // Diffs: never store raw PII values; use redacted fields and structured deltas
+  diffBefore    Json?      // redacted snapshot
+  diffAfter     Json?      // redacted snapshot
+  metadata      Json?      // IDs, codes, counts; never store secrets
+  // Tamper-evident chain
+  prevHash      String?    // SHA-256(previous row canonical payload)
+  selfHash      String     // SHA-256(this row canonical payload inc. prevHash)
+  // Multi-tenant future-proof (if needed)
+  tenantId      String?
+  createdAt     DateTime   @default(now())
+  
+  actor         User?      @relation(fields: [actorId], references: [id])
+  
+  @@index([scope, action, occurredAt])
+  @@index([targetType, targetId, occurredAt])
+  @@index([actorId, occurredAt])
+  @@index([requestId])
+  @@index([traceId])
+}
 
-model AuditLog {
-  id          String   @id @default(cuid())
-  accountId   String
-  actorUserId String
-  action      String
-  entityType  String
-  entityId    String
-  diffJson    Json?
-  ip          String?
-  userAgent   String?
-  createdAt   DateTime @default(now())
-  account     Account  @relation(fields: [accountId], references: [id])
-  actor       User     @relation(fields: [actorUserId], references: [id])
+enum ActorType {
+  USER
+  SYSTEM
+  WEBHOOK
+}
+
+enum AuditScope {
+  AUTH
+  USER
+  REVENUE
+  ORDER
+  INVENTORY
+  MESSAGE
+  EVENT
+  CONFIG
+  PRIVACY
+}
+
+enum Severity {
+  INFO
+  NOTICE
+  WARNING
+  CRITICAL
 }
 
 model Session {
@@ -2381,15 +2459,15 @@ model Campaign {
   status          CampaignStatus @default(DRAFT)
   startDate       DateTime
   endDate         DateTime
-  targetAudience  String?        // JSON stored as string for SQLite
+  targetAudience  String? // JSON stored as string for SQLite
   budget          Float?
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 
-  vendor          VendorProfile  @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
-  promotions      Promotion[]
-  socialPosts     SocialMediaPost[]
-  analytics       CampaignAnalytics[]
+  vendor      VendorProfile       @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  promotions  Promotion[]
+  socialPosts SocialMediaPost[]
+  analytics   CampaignAnalytics[]
 
   @@index([vendorProfileId, status])
   @@index([startDate, endDate])
@@ -2414,31 +2492,31 @@ enum CampaignStatus {
 }
 
 model Promotion {
-  id                String         @id @default(cuid())
-  campaignId        String?
-  vendorProfileId   String
-  name              String
-  description       String?
-  type              PromotionType
-  discountType      DiscountType
-  discountValue     Float
-  code              String?        @unique
-  minOrderAmount    Float?
-  maxDiscountAmount Float?
-  usageLimit        Int?
-  currentUses       Int           @default(0)
-  startDate         DateTime
-  endDate           DateTime
-  isActive          Boolean       @default(true)
-  applicableProducts String?      // JSON array stored as string
-  customerSegments  String?       // JSON array stored as string
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  id                 String        @id @default(cuid())
+  campaignId         String?
+  vendorProfileId    String
+  name               String
+  description        String?
+  type               PromotionType
+  discountType       DiscountType
+  discountValue      Float
+  code               String?       @unique
+  minOrderAmount     Float?
+  maxDiscountAmount  Float?
+  usageLimit         Int?
+  currentUses        Int           @default(0)
+  startDate          DateTime
+  endDate            DateTime
+  isActive           Boolean       @default(true)
+  applicableProducts String? // JSON array stored as string
+  customerSegments   String? // JSON array stored as string
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
 
-  campaign          Campaign?     @relation(fields: [campaignId], references: [id], onDelete: SetNull)
-  vendor            VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
-  usageHistory      PromotionUsage[]
-  analytics         PromotionAnalytics[]
+  campaign     Campaign?            @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  vendor       VendorProfile        @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  usageHistory PromotionUsage[]
+  analytics    PromotionAnalytics[]
 
   @@index([vendorProfileId, isActive])
   @@index([code])
@@ -2462,15 +2540,15 @@ enum DiscountType {
 }
 
 model PromotionUsage {
-  id          String    @id @default(cuid())
-  promotionId String
-  userId      String
-  orderId     String?
-  usedAt      DateTime  @default(now())
+  id             String   @id @default(cuid())
+  promotionId    String
+  userId         String
+  orderId        String?
+  usedAt         DateTime @default(now())
   discountAmount Float
 
-  promotion   Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  promotion Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([promotionId])
   @@index([userId])
@@ -2481,26 +2559,26 @@ model PromotionUsage {
 // ================================
 
 model SocialMediaPost {
-  id              String            @id @default(cuid())
+  id              String     @id @default(cuid())
   campaignId      String?
   vendorProfileId String
   content         String
-  platforms       String            // JSON array stored as string
-  status          PostStatus        @default(DRAFT)
+  platforms       String // JSON array stored as string
+  status          PostStatus @default(DRAFT)
   scheduledAt     DateTime?
   publishedAt     DateTime?
-  hashtags        String?           // JSON array stored as string
-  productTags     String?           // JSON array stored as string
+  hashtags        String? // JSON array stored as string
+  productTags     String? // JSON array stored as string
   location        String?
-  mediaUrls       String?           // JSON array stored as string
-  engagementData  String?           // JSON object stored as string
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  mediaUrls       String? // JSON array stored as string
+  engagementData  String? // JSON object stored as string
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
 
-  campaign        Campaign?         @relation(fields: [campaignId], references: [id], onDelete: SetNull)
-  vendor          VendorProfile     @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
-  assets          SocialMediaAsset[]
-  analytics       SocialMediaAnalytics[]
+  campaign  Campaign?              @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  vendor    VendorProfile          @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  assets    SocialMediaAsset[]
+  analytics SocialMediaAnalytics[]
 
   @@index([vendorProfileId, status])
   @@index([scheduledAt])
@@ -2515,22 +2593,22 @@ enum PostStatus {
 }
 
 model SocialMediaAsset {
-  id          String          @id @default(cuid())
-  postId      String?
+  id              String    @id @default(cuid())
+  postId          String?
   vendorProfileId String
-  name        String
-  type        AssetType
-  url         String
-  thumbnailUrl String?
-  dimensions  String?         // JSON object stored as string
-  duration    Int?            // For videos
-  size        Int             // File size in bytes
-  tags        String?         // JSON array stored as string
-  folder      String?
-  createdAt   DateTime        @default(now())
+  name            String
+  type            AssetType
+  url             String
+  thumbnailUrl    String?
+  dimensions      String? // JSON object stored as string
+  duration        Int? // For videos
+  size            Int // File size in bytes
+  tags            String? // JSON array stored as string
+  folder          String?
+  createdAt       DateTime  @default(now())
 
-  post        SocialMediaPost? @relation(fields: [postId], references: [id], onDelete: SetNull)
-  vendor      VendorProfile   @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  post   SocialMediaPost? @relation(fields: [postId], references: [id], onDelete: SetNull)
+  vendor VendorProfile    @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
 
   @@index([vendorProfileId, type])
   @@index([folder])
@@ -2543,17 +2621,17 @@ enum AssetType {
 }
 
 model ContentTemplate {
-  id              String        @id @default(cuid())
+  id              String   @id @default(cuid())
   vendorProfileId String
   name            String
   category        String
   content         String
-  hashtags        String?       // JSON array stored as string
-  isPublic        Boolean       @default(false)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  hashtags        String? // JSON array stored as string
+  isPublic        Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  vendor          VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  vendor VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
 
   @@index([vendorProfileId, category])
 }
@@ -2563,21 +2641,21 @@ model ContentTemplate {
 // ================================
 
 model LoyaltyProgram {
-  id              String          @id @default(cuid())
+  id              String      @id @default(cuid())
   vendorProfileId String
   name            String
   description     String?
   type            LoyaltyType
-  isActive        Boolean         @default(true)
-  pointsPerDollar Float           @default(1)
-  tierThresholds  String?         // JSON object stored as string
-  rewards         String?         // JSON array stored as string
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  isActive        Boolean     @default(true)
+  pointsPerDollar Float       @default(1)
+  tierThresholds  String? // JSON object stored as string
+  rewards         String? // JSON array stored as string
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 
-  vendor          VendorProfile   @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
-  customerPoints  CustomerLoyaltyPoints[]
-  redemptions     LoyaltyRedemption[]
+  vendor         VendorProfile           @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  customerPoints CustomerLoyaltyPoints[]
+  redemptions    LoyaltyRedemption[]
 
   @@index([vendorProfileId, isActive])
 }
@@ -2590,34 +2668,34 @@ enum LoyaltyType {
 }
 
 model CustomerLoyaltyPoints {
-  id              String        @id @default(cuid())
+  id               String   @id @default(cuid())
   loyaltyProgramId String
-  userId          String
-  points          Int           @default(0)
-  tierLevel       String?
-  lifetimePoints  Int           @default(0)
-  lastActivity    DateTime      @default(now())
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  userId           String
+  points           Int      @default(0)
+  tierLevel        String?
+  lifetimePoints   Int      @default(0)
+  lastActivity     DateTime @default(now())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
-  loyaltyProgram  LoyaltyProgram @relation(fields: [loyaltyProgramId], references: [id], onDelete: Cascade)
-  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  transactions    LoyaltyTransaction[]
+  loyaltyProgram LoyaltyProgram       @relation(fields: [loyaltyProgramId], references: [id], onDelete: Cascade)
+  user           User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions   LoyaltyTransaction[]
 
   @@unique([loyaltyProgramId, userId])
   @@index([userId])
 }
 
 model LoyaltyTransaction {
-  id              String               @id @default(cuid())
+  id               String                 @id @default(cuid())
   customerPointsId String
-  type            LoyaltyTransactionType
-  points          Int
-  description     String?
-  orderId         String?
-  createdAt       DateTime             @default(now())
+  type             LoyaltyTransactionType
+  points           Int
+  description      String?
+  orderId          String?
+  createdAt        DateTime               @default(now())
 
-  customerPoints  CustomerLoyaltyPoints @relation(fields: [customerPointsId], references: [id], onDelete: Cascade)
+  customerPoints CustomerLoyaltyPoints @relation(fields: [customerPointsId], references: [id], onDelete: Cascade)
 
   @@index([customerPointsId, createdAt])
 }
@@ -2630,18 +2708,18 @@ enum LoyaltyTransactionType {
 }
 
 model LoyaltyRedemption {
-  id              String        @id @default(cuid())
+  id               String           @id @default(cuid())
   loyaltyProgramId String
-  userId          String
-  pointsRedeemed  Int
-  rewardType      String
-  rewardValue     Float?
-  orderId         String?
-  status          RedemptionStatus @default(PENDING)
-  redeemedAt      DateTime      @default(now())
+  userId           String
+  pointsRedeemed   Int
+  rewardType       String
+  rewardValue      Float?
+  orderId          String?
+  status           RedemptionStatus @default(PENDING)
+  redeemedAt       DateTime         @default(now())
 
-  loyaltyProgram  LoyaltyProgram @relation(fields: [loyaltyProgramId], references: [id], onDelete: Cascade)
-  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  loyaltyProgram LoyaltyProgram @relation(fields: [loyaltyProgramId], references: [id], onDelete: Cascade)
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([loyaltyProgramId])
   @@index([userId])
@@ -2655,35 +2733,35 @@ enum RedemptionStatus {
 }
 
 model ReferralProgram {
-  id              String        @id @default(cuid())
+  id              String   @id @default(cuid())
   vendorProfileId String
   name            String
   description     String?
-  isActive        Boolean       @default(true)
-  referrerReward  String        // JSON object stored as string
-  refereeReward   String        // JSON object stored as string
+  isActive        Boolean  @default(true)
+  referrerReward  String // JSON object stored as string
+  refereeReward   String // JSON object stored as string
   minimumPurchase Float?
   expirationDays  Int?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  vendor          VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
-  referrals       Referral[]
+  vendor    VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  referrals Referral[]
 
   @@index([vendorProfileId, isActive])
 }
 
 model Referral {
-  id              String          @id @default(cuid())
+  id                String         @id @default(cuid())
   referralProgramId String
-  referrerId      String
-  refereeId       String?
-  refereeEmail    String?
-  code            String          @unique
-  status          ReferralStatus  @default(PENDING)
-  rewardsClaimed  Boolean         @default(false)
-  createdAt       DateTime        @default(now())
-  completedAt     DateTime?
+  referrerId        String
+  refereeId         String?
+  refereeEmail      String?
+  code              String         @unique
+  status            ReferralStatus @default(PENDING)
+  rewardsClaimed    Boolean        @default(false)
+  createdAt         DateTime       @default(now())
+  completedAt       DateTime?
 
   referralProgram ReferralProgram @relation(fields: [referralProgramId], references: [id], onDelete: Cascade)
   referrer        User            @relation("ReferralsByReferrer", fields: [referrerId], references: [id], onDelete: Cascade)
@@ -2706,87 +2784,87 @@ enum ReferralStatus {
 // ================================
 
 model CampaignAnalytics {
-  id               String    @id @default(cuid())
-  campaignId       String
-  date             DateTime
-  impressions      Int       @default(0)
-  clicks           Int       @default(0)
-  conversions      Int       @default(0)
-  revenue          Float     @default(0)
-  cost             Float     @default(0)
-  reach            Int       @default(0)
-  engagement       Int       @default(0)
-  createdAt        DateTime  @default(now())
+  id          String   @id @default(cuid())
+  campaignId  String
+  date        DateTime
+  impressions Int      @default(0)
+  clicks      Int      @default(0)
+  conversions Int      @default(0)
+  revenue     Float    @default(0)
+  cost        Float    @default(0)
+  reach       Int      @default(0)
+  engagement  Int      @default(0)
+  createdAt   DateTime @default(now())
 
-  campaign         Campaign  @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  campaign Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
 
   @@unique([campaignId, date])
   @@index([campaignId, date])
 }
 
 model PromotionAnalytics {
-  id               String    @id @default(cuid())
-  promotionId      String
-  date             DateTime
-  views            Int       @default(0)
-  uses             Int       @default(0)
-  revenue          Float     @default(0)
-  discountGiven    Float     @default(0)
-  conversionRate   Float     @default(0)
-  createdAt        DateTime  @default(now())
+  id             String   @id @default(cuid())
+  promotionId    String
+  date           DateTime
+  views          Int      @default(0)
+  uses           Int      @default(0)
+  revenue        Float    @default(0)
+  discountGiven  Float    @default(0)
+  conversionRate Float    @default(0)
+  createdAt      DateTime @default(now())
 
-  promotion        Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  promotion Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
 
   @@unique([promotionId, date])
   @@index([promotionId, date])
 }
 
 model SocialMediaAnalytics {
-  id               String          @id @default(cuid())
-  postId           String
-  platform         SocialPlatform
-  date             DateTime
-  impressions      Int             @default(0)
-  reach            Int             @default(0)
-  likes            Int             @default(0)
-  comments         Int             @default(0)
-  shares           Int             @default(0)
-  clicks           Int             @default(0)
-  engagementRate   Float           @default(0)
-  createdAt        DateTime        @default(now())
+  id             String         @id @default(cuid())
+  postId         String
+  platform       SocialPlatform
+  date           DateTime
+  impressions    Int            @default(0)
+  reach          Int            @default(0)
+  likes          Int            @default(0)
+  comments       Int            @default(0)
+  shares         Int            @default(0)
+  clicks         Int            @default(0)
+  engagementRate Float          @default(0)
+  createdAt      DateTime       @default(now())
 
-  post             SocialMediaPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  post SocialMediaPost @relation(fields: [postId], references: [id], onDelete: Cascade)
 
   @@unique([postId, platform, date])
   @@index([postId, date])
 }
 
 model CustomerSegment {
-  id              String        @id @default(cuid())
+  id              String   @id @default(cuid())
   vendorProfileId String
   name            String
   description     String?
-  criteria        String        // JSON object stored as string
-  customerCount   Int           @default(0)
-  lastUpdated     DateTime      @default(now())
-  createdAt       DateTime      @default(now())
+  criteria        String // JSON object stored as string
+  customerCount   Int      @default(0)
+  lastUpdated     DateTime @default(now())
+  createdAt       DateTime @default(now())
 
-  vendor          VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
+  vendor VendorProfile @relation(fields: [vendorProfileId], references: [id], onDelete: Cascade)
 
   @@index([vendorProfileId])
 }
 
 model MarketingEvent {
-  id              String        @id @default(cuid())
+  id              String   @id @default(cuid())
   vendorProfileId String?
   userId          String?
   eventType       String
-  eventData       String        // JSON object stored as string
+  eventData       String // JSON object stored as string
   sessionId       String?
-  timestamp       DateTime      @default(now())
+  timestamp       DateTime @default(now())
 
-  vendor          VendorProfile? @relation(fields: [vendorProfileId], references: [id], onDelete: SetNull)
-  user            User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  vendor VendorProfile? @relation(fields: [vendorProfileId], references: [id], onDelete: SetNull)
+  user   User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([vendorProfileId, eventType, timestamp])
   @@index([userId, timestamp])
@@ -2797,16 +2875,16 @@ model MarketingEvent {
 // ================================
 
 model LegalDocument {
-  id          String   @id @default(cuid())
-  type        String   // 'TOS', 'PRIVACY', 'AI_DISCLAIMER', 'DATA_LIABILITY', 'VENDOR_AGREEMENT', 'COORDINATOR_AGREEMENT'
-  version     String   // e.g., "1.0", "1.1"
-  title       String
-  content     String   // Full agreement text
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  
-  agreements  UserAgreement[]
-  
+  id        String   @id @default(cuid())
+  type      String // 'TOS', 'PRIVACY', 'AI_DISCLAIMER', 'DATA_LIABILITY', 'VENDOR_AGREEMENT', 'COORDINATOR_AGREEMENT'
+  version   String // e.g., "1.0", "1.1"
+  title     String
+  content   String // Full agreement text
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  agreements UserAgreement[]
+
   @@unique([type, version])
   @@index([type, isActive])
 }
@@ -2820,10 +2898,383 @@ model UserAgreement {
   acceptedAt      DateTime @default(now())
   ipAddress       String?
   userAgent       String?
-  
-  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  document        LegalDocument   @relation(fields: [documentId], references: [id])
-  
+
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  document LegalDocument @relation(fields: [documentId], references: [id])
+
   @@index([userId, documentType])
   @@index([documentId])
+}
+
+// ================================
+// NEWSLETTER SUBSCRIPTIONS
+// ================================
+
+model NewsletterSubscription {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  status         String    @default("active") // 'active', 'unsubscribed'
+  subscribedAt   DateTime  @default(now())
+  unsubscribedAt DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([email])
+  @@index([status])
+}
+
+// ================================
+// ADMIN USER MANAGEMENT MODELS
+// ================================
+
+// Multi-role support for users
+model UserRole {
+  id        String   @id @default(cuid())
+  userId    String
+  role      String // CUSTOMER, VENDOR, B2B_VENDOR, EVENT_COORDINATOR, DROPOFF_MANAGER, SUPER_ADMIN
+  scopes    String? // JSON array of granular permissions
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, role])
+  @@index([userId])
+  @@index([role])
+}
+
+// Stripe Connect account linking
+model StripeAccountLink {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  accountId       String    @unique
+  payoutsEnabled  Boolean   @default(false)
+  requirementsDue String? // JSON array of requirements
+  tosAcceptedAt   DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([accountId])
+  @@index([payoutsEnabled])
+}
+
+// Tax profile for compliance
+model TaxProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  nexusStates String? // JSON array of states with tax nexus
+  w9Status    String? // NOT_SUBMITTED, PENDING, APPROVED, REJECTED
+  taxJarId    String?
+  documents   String? // JSON array of document references
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([w9Status])
+}
+
+// Security events tracking
+model SecurityEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String // LOGIN, LOGOUT, FAILED_LOGIN, PASSWORD_CHANGE, MFA_ENABLED, MFA_DISABLED, SUSPICIOUS_ACTIVITY
+  ip        String?
+  userAgent String?
+  metadata  String? // JSON for additional context
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type, createdAt])
+  @@index([type])
+}
+
+// Risk flags for users
+model RiskFlag {
+  id         String    @id @default(cuid())
+  userId     String
+  code       String // CHARGEBACK, SPAM, DUPLICATE, FRAUD_SUSPECTED, HIGH_REFUND_RATE
+  severity   String // LOW, MEDIUM, HIGH, CRITICAL
+  notes      String?
+  resolvedAt DateTime?
+  resolvedBy String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, code])
+  @@index([severity])
+  @@index([resolvedAt])
+}
+
+// Admin audit trail - using existing AdminAudit model at line 2151
+
+// Admin notes on users
+model UserNote {
+  id         String   @id @default(cuid())
+  userId     String
+  authorId   String // Admin who wrote the note
+  content    String
+  visibility String   @default("ADMIN_ONLY") // ADMIN_ONLY, STAFF, SUPPORT
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([authorId])
+}
+
+// Tasks assigned to users or staff
+model UserTask {
+  id          String    @id @default(cuid())
+  userId      String // User this task relates to
+  assignedTo  String? // Staff member assigned to this task
+  title       String
+  description String?
+  dueDate     DateTime?
+  status      String    @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED, CANCELLED
+  priority    String    @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  completedAt DateTime?
+
+  user     User  @relation("TaskUser", fields: [userId], references: [id], onDelete: Cascade)
+  assignee User? @relation("TaskAssignee", fields: [assignedTo], references: [id], onDelete: SetNull)
+
+  @@index([userId, status])
+  @@index([assignedTo, status])
+  @@index([dueDate])
+}
+
+// Vacation mode for vendors
+model VacationMode {
+  id            String    @id @default(cuid())
+  userId        String    @unique
+  enabled       Boolean   @default(false)
+  startDate     DateTime?
+  endDate       DateTime?
+  reason        String?
+  adminOverride Boolean   @default(false)
+  autoResume    Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([enabled])
+  @@index([endDate])
+}
+
+// Duplicate user tracking and merges
+model DuplicateUser {
+  id          String   @id @default(cuid())
+  primaryId   String // User kept after merge
+  duplicateId String // User merged/removed
+  mergedAt    DateTime @default(now())
+  mergedBy    String // Admin who performed the merge
+  mergeLog    String? // JSON with merge details
+
+  primaryUser   User @relation("PrimaryUser", fields: [primaryId], references: [id], onDelete: Cascade)
+  duplicateUser User @relation("DuplicateUser", fields: [duplicateId], references: [id], onDelete: Cascade)
+
+  @@index([primaryId])
+  @@index([duplicateId])
+  @@index([mergedAt])
+}
+
+// ================================
+// ADMIN USER MANAGEMENT ENUMS
+// ================================
+
+enum UserStatus {
+  ACTIVE
+  PENDING
+  SUSPENDED
+  SOFT_DELETED
+}
+
+enum OnboardingStage {
+  NOT_STARTED
+  IN_PROGRESS
+  NEEDS_ATTENTION
+  COMPLETE
+}
+
+// ================================
+// FEES & REVENUE SYSTEM MODELS
+// ================================
+
+model FeeSchedule {
+  id            String    @id @default(cuid())
+  name          String
+  scope         FeeScope
+  scopeRefId    String? // vendorId, eventId, categoryId, etc.
+  takeRateBps   Int? // e.g., 1000 = 10%
+  feeFloorCents Int? // minimum fee in cents
+  feeCapCents   Int? // maximum fee in cents
+  activeFrom    DateTime
+  activeTo      DateTime?
+  createdAt     DateTime  @default(now())
+  createdById   String
+  version       Int
+  
+  @@index([scope, scopeRefId])
+  @@index([activeFrom, activeTo])
+  @@index([createdAt])
+}
+
+enum FeeScope {
+  GLOBAL
+  ROLE
+  VENDOR
+  EVENT
+  CATEGORY
+  ORDER
+}
+
+model PlatformPromo {
+  id             String     @id @default(cuid())
+  code           String     @unique
+  appliesTo      PromoScope
+  percentOffBps  Int? // basis points (e.g., 1000 = 10%)
+  amountOffCents Int? // fixed amount in cents
+  startsAt       DateTime
+  endsAt         DateTime?
+  audienceTag    String? // JSON array for segmenting
+  maxRedemptions Int?
+  currentUses    Int        @default(0)
+  createdAt      DateTime   @default(now())
+  
+  @@index([code])
+  @@index([startsAt, endsAt])
+}
+
+enum PromoScope {
+  PLATFORM_FEE
+  SUBSCRIPTION
+  EVENT
+}
+
+model LedgerEntry {
+  id             String     @id @default(cuid())
+  occurredAt     DateTime   @default(now())
+  type           LedgerType
+  amountCents    Int // positive=credit to platform, negative=debit
+  currency       String     @default("usd")
+  userId         String? // vendor/coordinator/customer actor
+  orderId        String?
+  eventId        String?
+  payoutId       String?
+  stripeChargeId String?
+  metadata       Json? // additional context
+  createdById    String // system or admin id
+  createdAt      DateTime   @default(now())
+  
+  @@index([userId, occurredAt])
+  @@index([orderId])
+  @@index([type, occurredAt])
+  @@index([occurredAt])
+}
+
+enum LedgerType {
+  ORDER_FEE
+  PROCESSING_FEE
+  EVENT_FEE
+  SUBSCRIPTION_FEE
+  PAYOUT
+  REFUND
+  DISPUTE_HOLD
+  DISPUTE_WIN
+  DISPUTE_LOSS
+  ADJUSTMENT
+  PROMO_APPLIED
+  TAX_COLLECTED
+}
+
+model RevenuePayout {
+  id             String       @id @default(cuid())
+  userId         String
+  grossCents     Int
+  feeCents       Int // Stripe payout fee, if any
+  netCents       Int
+  status         PayoutStatus
+  expectedDate   DateTime?
+  completedAt    DateTime?
+  stripePayoutId String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  
+  @@index([userId, status])
+  @@index([expectedDate])
+  @@index([stripePayoutId])
+}
+
+enum PayoutStatus {
+  PENDING
+  IN_TRANSIT
+  PAID
+  CANCELED
+  FAILED
+}
+
+model PlatformSubscription {
+  id                 String               @id @default(cuid())
+  userId             String
+  planId             String
+  status             SubscriptionStatus
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  cancelAtPeriodEnd  Boolean              @default(false)
+  stripeSubId        String?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  
+  @@index([userId, status])
+  @@index([stripeSubId])
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  TRIALING
+}
+
+model RevenueSnapshot {
+  id                     String   @id @default(cuid())
+  date                   DateTime @unique
+  gmvCents               Int      @default(0) // Gross Merchandise Volume
+  platformRevenueCents   Int      @default(0)
+  marketplaceFeeCents    Int      @default(0)
+  eventFeeCents          Int      @default(0)
+  subscriptionFeeCents   Int      @default(0)
+  processingCostCents    Int      @default(0)
+  refundsCents           Int      @default(0)
+  disputesCents          Int      @default(0)
+  netRevenueCents        Int      @default(0)
+  takeRateBps            Int      @default(0) // basis points
+  payoutsPendingCents    Int      @default(0)
+  payoutsInTransitCents  Int      @default(0)
+  payoutsCompletedCents  Int      @default(0)
+  taxCollectedCents      Int      @default(0)
+  createdAt              DateTime @default(now())
+  
+  @@index([date])
+}
+
+model RevenuePolicy {
+  id                   String   @id @default(cuid())
+  key                  String   @unique
+  value                String // JSON value
+  description          String?
+  updatedBy            String
+  updatedAt            DateTime @updatedAt
+  createdAt            DateTime @default(now())
+  
+  @@index([key])
 }

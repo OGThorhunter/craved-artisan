@@ -6,6 +6,9 @@ import { z } from 'zod';
 import { prisma } from '../../db';
 import { logger } from '../../logger';
 import bcrypt from 'bcryptjs';
+import { logEvent } from '../../utils/audit';
+import { AuditScope, ActorType, Severity } from '@prisma/client';
+import { USER_OWNERSHIP_TRANSFERRED, ACCOUNT_DELETED } from '../../constants/audit-events';
 
 const router = Router();
 
@@ -191,6 +194,7 @@ router.post('/transfer-ownership', requireOwner, validateRequest(transferOwnersh
 router.post('/close-account', requireOwner, validateRequest(closeAccountSchema), closeAccount);
 
 export const dangerZoneRoutes = router;
+
 
 
 

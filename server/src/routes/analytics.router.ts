@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { PrismaClient } from '@prisma/client';
 import { logger } from '../logger';
 import { getNextPayout, getLast30DaysFees, reconcileStripePayments } from '../services/stripeReconciliation';
+import { cacheService } from '../services/cache';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -54,7 +55,7 @@ const BusinessSnapshotQuerySchema = z.object({
   dateTo: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
 });
 
-// Business Snapshot endpoint
+// Business Snapshot endpoint with Redis caching
 router.get('/vendor/analytics/snapshot', async (req, res) => {
   try {
     console.log('🔍 [DEBUG] Business Snapshot endpoint called');
@@ -68,6 +69,23 @@ router.get('/vendor/analytics/snapshot', async (req, res) => {
     // Authenticate and get vendor profile
     const vendorProfile = await authenticateVendor(req);
 
+    // Check cache first
+    const cacheParams = { dateFrom, dateTo };
+    const cached = await cacheService.getCachedVendorAnalytics(
+      vendorProfile.id,
+      'snapshot',
+      cacheParams
+    );
+
+    if (cached) {
+      logger.info({ 
+        vendorProfileId: vendorProfile.id,
+        dateFrom,
+        dateTo 
+      }, '⚡ Serving business snapshot from cache');
+      return res.json(cached);
+    }
+
     // Convert dates to Date objects
     const startDate = new Date(dateFrom);
     const endDate = new Date(dateTo);
@@ -79,7 +97,7 @@ router.get('/vendor/analytics/snapshot', async (req, res) => {
       dateTo,
       startDate: startDate.toISOString(),
       endDate: endDate.toISOString()
-    }, 'Fetching business snapshot data');
+    }, 'Fetching business snapshot data from database');
 
     // Calculate date ranges for comparison (previous period)
     const periodLength = endDate.getTime() - startDate.getTime();
@@ -119,6 +137,15 @@ router.get('/vendor/analytics/snapshot', async (req, res) => {
       netSales: salesMetrics.netSales,
       funnelStages: funnelData.stages.length
     }, 'Business snapshot data calculated successfully');
+
+    // Cache the result for 5 minutes (300 seconds)
+    await cacheService.cacheVendorAnalytics(
+      vendorProfile.id,
+      'snapshot',
+      snapshotData,
+      cacheParams,
+      300 // 5 minutes TTL
+    );
 
     res.json(snapshotData);
 

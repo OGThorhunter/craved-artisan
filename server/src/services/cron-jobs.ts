@@ -1,6 +1,7 @@
 import cron from 'node-cron';
 import { systemHealth } from './system-health';
 import { logger } from '../logger';
+import { verifyAuditChain } from '../jobs/audit-verify';
 
 export class CronJobService {
   private static instance: CronJobService;
@@ -46,6 +47,24 @@ export class CronJobService {
         logger.info('System cleanup completed');
       } catch (error) {
         logger.error('System cleanup failed:', error);
+      }
+    });
+
+    // Audit chain verification every Sunday at 2 AM
+    this.scheduleJob('audit-verification', '0 2 * * 0', async () => {
+      try {
+        logger.info('Running weekly audit chain verification...');
+        const result = await verifyAuditChain();
+        
+        if (!result.isValid) {
+          logger.error({
+            ...result,
+            message: 'CRITICAL: Audit chain integrity compromised!',
+          }, 'Audit chain verification failed');
+          // TODO: Send alert email/Slack notification
+        }
+      } catch (error) {
+        logger.error('Audit verification job failed:', error);
       }
     });
 
@@ -104,6 +123,7 @@ export class CronJobService {
 
 // Export singleton instance
 export const cronJobs = CronJobService.getInstance();
+
 
 
 

@@ -1,10 +1,13 @@
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
+import passport from 'passport';
 import { logger } from './logger';
-import { sessionMiddleware, attachUser } from './middleware/session-simple';
+import { sessionMiddleware, attachUser } from './middleware/session-redis';
+import { requestContext } from './middleware/request-context';
 import { cronJobs } from './services/cron-jobs';
 import authRoutes from './routes/auth';
+import oauthRoutes from './routes/oauth';
 import { pulseRouter } from './routes/pulse.router';
 import { vendorRouter } from './routes/vendor.router';
 import { ingredientsRouter } from './routes/ingredients.router';
@@ -65,6 +68,9 @@ import marketplaceEmbeddingsRouter from './routes/marketplace-embeddings.router'
 // Contact Routes
 import contactRouter from './routes/contact.router';
 
+// Newsletter Routes
+import { newsletterRouter } from './routes/newsletter.router';
+
 // Events Routes
 import eventsSearchRouter from './routes/events-search.router';
 import eventsDetailRouter from './routes/events-detail.router';
@@ -74,6 +80,9 @@ import eventsCoordinatorRouter from './routes/events-coordinator.router';
 // Legal & Coordinator Routes
 import legalRouter from './routes/legal';
 import coordinatorRouter from './routes/coordinator';
+
+// Maintenance Routes
+import maintenanceRouter from './routes/maintenance.router';
 
 // Check-in & Refunds/Payouts Routes
 import checkinRouter from './routes/checkin.router';
@@ -89,6 +98,9 @@ import adminMarketplaceRouter from './routes/admin-marketplace.router';
 import adminTrustSafetyRouter from './routes/admin-trust-safety.router';
 import adminGrowthSocialRouter from './routes/admin-growth-social.router';
 import adminSecurityComplianceRouter from './routes/admin-security-compliance.router';
+import adminUsersRouter from './routes/admin-users.router';
+import adminAuditRouter from './routes/admin-audit.router';
+import adminRevenueRouter from './routes/admin-revenue.router';
 
 const app = express();
 const PORT = Number(process.env.PORT || 3001);
@@ -117,6 +129,13 @@ app.use(express.urlencoded({ extended: true }));
 app.use(sessionMiddleware);
 app.use(attachUser);
 
+// Request context middleware (for audit logging)
+app.use(requestContext);
+
+// Passport middleware (after session)
+app.use(passport.initialize());
+app.use(passport.session());
+
 // Health check
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true, ts: Date.now(), message: 'Session-based auth server running' });
@@ -124,10 +143,17 @@ app.get('/api/health', (_req, res) => {
 
 // Auth routes
 app.use('/api/auth', authRoutes);
+app.use('/api/oauth', oauthRoutes);
 
 // Legal & Coordinator routes
 app.use('/api/legal', legalRouter);
 app.use('/api/coordinator', coordinatorRouter);
+
+// Newsletter routes
+app.use('/api/newsletter', newsletterRouter);
+
+// Maintenance routes
+app.use('/api/maintenance', maintenanceRouter);
 
 // Pulse routes
 // app.use('/api', pulseRouter); // Temporarily disabled to debug
@@ -242,6 +268,9 @@ app.use('/api/admin', adminMarketplaceRouter);
 app.use('/api/admin', adminTrustSafetyRouter);
 app.use('/api/admin', adminGrowthSocialRouter);
 app.use('/api/admin', adminSecurityComplianceRouter);
+app.use('/api/admin/users', adminUsersRouter);
+app.use('/api/admin/audit', adminAuditRouter);
+app.use('/api/admin/revenue', adminRevenueRouter);
 
 // Settings & Account Hub routes
 app.use('/api/settings', settingsRouter);

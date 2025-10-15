@@ -1,56 +1,6 @@
 import { logger } from '../logger';
-
-// Mock Redis client for development
-// In production, this would use actual Redis
-class MockRedisClient {
-  private data: Map<string, { value: any; expiry?: number }> = new Map();
-
-  async get(key: string): Promise<string | null> {
-    const item = this.data.get(key);
-    if (!item) return null;
-    
-    if (item.expiry && Date.now() > item.expiry) {
-      this.data.delete(key);
-      return null;
-    }
-    
-    return typeof item.value === 'string' ? item.value : JSON.stringify(item.value);
-  }
-
-  async set(key: string, value: any, options?: { EX?: number; PX?: number }): Promise<string> {
-    const expiry = options?.EX ? Date.now() + (options.EX * 1000) : 
-                   options?.PX ? Date.now() + options.PX : undefined;
-    
-    this.data.set(key, { value, expiry });
-    return 'OK';
-  }
-
-  async del(key: string): Promise<number> {
-    return this.data.delete(key) ? 1 : 0;
-  }
-
-  async exists(key: string): Promise<number> {
-    return this.data.has(key) ? 1 : 0;
-  }
-
-  async flushall(): Promise<string> {
-    this.data.clear();
-    return 'OK';
-  }
-
-  async keys(pattern: string): Promise<string[]> {
-    const regex = new RegExp(pattern.replace(/\*/g, '.*'));
-    return Array.from(this.data.keys()).filter(key => regex.test(key));
-  }
-
-  async ttl(key: string): Promise<number> {
-    const item = this.data.get(key);
-    if (!item || !item.expiry) return -1;
-    
-    const remaining = Math.ceil((item.expiry - Date.now()) / 1000);
-    return remaining > 0 ? remaining : -2;
-  }
-}
+import { getRedisClient, isRedisConnected } from '../config/redis';
+import type Redis from 'ioredis';
 
 export interface CacheOptions {
   ttl?: number; // Time to live in seconds
@@ -69,7 +19,7 @@ export interface CacheStats {
 
 export class CacheService {
   private static instance: CacheService;
-  private client: MockRedisClient;
+  private client: Redis;
   private stats = {
     hits: 0,
     misses: 0,
@@ -84,7 +34,8 @@ export class CacheService {
   }
 
   constructor() {
-    this.client = new MockRedisClient();
+    this.client = getRedisClient();
+    logger.info('✅ CacheService initialized with Redis client');
   }
 
   // Get cached value
@@ -93,13 +44,15 @@ export class CacheService {
       const value = await this.client.get(key);
       if (value === null) {
         this.stats.misses++;
+        logger.debug({ key }, '📊 Cache miss');
         return null;
       }
       
       this.stats.hits++;
+      logger.debug({ key }, '✅ Cache hit');
       return JSON.parse(value);
     } catch (error) {
-      logger.error(`Cache get error for key ${key}:`, error);
+      logger.error({ error, key }, '❌ Cache get error');
       this.stats.misses++;
       return null;
     }
@@ -110,24 +63,31 @@ export class CacheService {
     try {
       const { ttl = 3600, tags = [] } = options;
       
-      // Store the main value
-      await this.client.set(key, value, { EX: ttl });
+      const stringValue = JSON.stringify(value);
+      
+      // Store the main value with TTL
+      if (ttl > 0) {
+        await this.client.setex(key, ttl, stringValue);
+      } else {
+        await this.client.set(key, stringValue);
+      }
       
       // Store tag associations for invalidation
       if (tags.length > 0) {
         for (const tag of tags) {
           const tagKey = `tag:${tag}`;
-          const existingKeys = await this.get<string[]>(tagKey) || [];
-          if (!existingKeys.includes(key)) {
-            existingKeys.push(key);
-            await this.client.set(tagKey, existingKeys, { EX: ttl });
+          await this.client.sadd(tagKey, key);
+          // Set expiry on tag key as well
+          if (ttl > 0) {
+            await this.client.expire(tagKey, ttl);
           }
         }
       }
       
+      logger.debug({ key, ttl, tags }, '💾 Cache set');
       return true;
     } catch (error) {
-      logger.error(`Cache set error for key ${key}:`, error);
+      logger.error({ error, key }, '❌ Cache set error');
       return false;
     }
   }
@@ -136,9 +96,10 @@ export class CacheService {
   async del(key: string): Promise<boolean> {
     try {
       const result = await this.client.del(key);
+      logger.debug({ key, deleted: result > 0 }, '🗑️  Cache delete');
       return result > 0;
     } catch (error) {
-      logger.error(`Cache delete error for key ${key}:`, error);
+      logger.error({ error, key }, '❌ Cache delete error');
       return false;
     }
   }
@@ -150,21 +111,44 @@ export class CacheService {
       
       for (const tag of tags) {
         const tagKey = `tag:${tag}`;
-        const keys = await this.get<string[]>(tagKey) || [];
         
-        for (const key of keys) {
-          if (await this.del(key)) {
-            deletedCount++;
-          }
+        // Get all keys associated with this tag
+        const keys = await this.client.smembers(tagKey);
+        
+        if (keys.length > 0) {
+          // Delete all keys
+          const result = await this.client.del(...keys);
+          deletedCount += result;
+          
+          logger.info({ tag, keysDeleted: result }, '🔄 Cache invalidated by tag');
         }
         
         // Delete the tag key itself
-        await this.del(tagKey);
+        await this.client.del(tagKey);
       }
       
       return deletedCount;
     } catch (error) {
-      logger.error(`Cache invalidation error for tags ${tags.join(', ')}:`, error);
+      logger.error({ error, tags }, '❌ Cache invalidation error');
+      return 0;
+    }
+  }
+
+  // Invalidate cache by pattern
+  async invalidateByPattern(pattern: string): Promise<number> {
+    try {
+      const keys = await this.client.keys(pattern);
+      
+      if (keys.length === 0) {
+        return 0;
+      }
+      
+      const result = await this.client.del(...keys);
+      logger.info({ pattern, keysDeleted: result }, '🔄 Cache invalidated by pattern');
+      
+      return result;
+    } catch (error) {
+      logger.error({ error, pattern }, '❌ Cache invalidation by pattern error');
       return 0;
     }
   }
@@ -175,7 +159,7 @@ export class CacheService {
       const result = await this.client.exists(key);
       return result > 0;
     } catch (error) {
-      logger.error(`Cache exists error for key ${key}:`, error);
+      logger.error({ error, key }, '❌ Cache exists error');
       return false;
     }
   }
@@ -185,19 +169,20 @@ export class CacheService {
     try {
       return await this.client.ttl(key);
     } catch (error) {
-      logger.error(`Cache TTL error for key ${key}:`, error);
+      logger.error({ error, key }, '❌ Cache TTL error');
       return -1;
     }
   }
 
-  // Clear all cache
+  // Clear all cache (use with caution!)
   async clear(): Promise<boolean> {
     try {
       await this.client.flushall();
       this.stats.evictions++;
+      logger.warn('⚠️  All cache cleared');
       return true;
     } catch (error) {
-      logger.error('Cache clear error:', error);
+      logger.error({ error }, '❌ Cache clear error');
       return false;
     }
   }
@@ -205,7 +190,13 @@ export class CacheService {
   // Get cache statistics
   async getStats(): Promise<CacheStats> {
     try {
-      const totalKeys = (await this.client.keys('*')).length;
+      const dbSize = await this.client.dbsize();
+      const info = await this.client.info('memory');
+      
+      // Parse memory usage from info string
+      const memoryMatch = info.match(/used_memory:(\d+)/);
+      const memoryUsage = memoryMatch ? parseInt(memoryMatch[1], 10) : 0;
+      
       const hitRate = this.stats.hits + this.stats.misses > 0 
         ? (this.stats.hits / (this.stats.hits + this.stats.misses)) * 100 
         : 0;
@@ -214,19 +205,19 @@ export class CacheService {
         hits: this.stats.hits,
         misses: this.stats.misses,
         hitRate: Math.round(hitRate * 100) / 100,
-        totalKeys,
-        memoryUsage: 0, // Mock value
+        totalKeys: dbSize,
+        memoryUsage,
         evictions: this.stats.evictions
       };
     } catch (error) {
-      logger.error('Cache stats error:', error);
+      logger.error({ error }, '❌ Cache stats error');
       return {
-        hits: 0,
-        misses: 0,
+        hits: this.stats.hits,
+        misses: this.stats.misses,
         hitRate: 0,
         totalKeys: 0,
         memoryUsage: 0,
-        evictions: 0
+        evictions: this.stats.evictions
       };
     }
   }
@@ -234,11 +225,17 @@ export class CacheService {
   // Cache middleware for Express routes
   cacheMiddleware(ttl: number = 300, tags: string[] = []) {
     return async (req: any, res: any, next: any) => {
+      // Only cache GET requests
+      if (req.method !== 'GET') {
+        return next();
+      }
+      
       const key = `route:${req.method}:${req.originalUrl}`;
       
       try {
         const cached = await this.get(key);
         if (cached) {
+          logger.debug({ key }, '⚡ Serving from cache');
           return res.json(cached);
         }
         
@@ -248,14 +245,14 @@ export class CacheService {
         // Override res.json to cache the response
         res.json = (data: any) => {
           this.set(key, data, { ttl, tags }).catch(error => {
-            logger.error('Cache middleware set error:', error);
+            logger.error({ error }, '❌ Cache middleware set error');
           });
           return originalJson(data);
         };
         
         next();
       } catch (error) {
-        logger.error('Cache middleware error:', error);
+        logger.error({ error }, '❌ Cache middleware error');
         next();
       }
     };
@@ -269,6 +266,16 @@ export class CacheService {
       .join(':');
     
     return `admin:${prefix}${sortedParams ? `:${sortedParams}` : ''}`;
+  }
+
+  // Generate cache key for vendor analytics
+  generateAnalyticsKey(vendorId: string, endpoint: string, params: Record<string, any> = {}): string {
+    const sortedParams = Object.keys(params)
+      .sort()
+      .map(key => `${key}:${params[key]}`)
+      .join(':');
+    
+    return `analytics:${vendorId}:${endpoint}${sortedParams ? `:${sortedParams}` : ''}`;
   }
 
   // Cache admin metrics
@@ -295,6 +302,42 @@ export class CacheService {
     
     return this.invalidateByTags(tags);
   }
+
+  // Cache vendor analytics
+  async cacheVendorAnalytics(
+    vendorId: string,
+    endpoint: string,
+    data: any,
+    params: Record<string, any> = {},
+    ttl: number = 300
+  ): Promise<boolean> {
+    const key = this.generateAnalyticsKey(vendorId, endpoint, params);
+    return this.set(key, data, { ttl, tags: [`vendor:${vendorId}`, 'analytics', endpoint] });
+  }
+
+  // Get cached vendor analytics
+  async getCachedVendorAnalytics<T>(
+    vendorId: string,
+    endpoint: string,
+    params: Record<string, any> = {}
+  ): Promise<T | null> {
+    const key = this.generateAnalyticsKey(vendorId, endpoint, params);
+    return this.get<T>(key);
+  }
+
+  // Invalidate vendor cache (when orders/products change)
+  async invalidateVendorCache(vendorId: string, scope?: string): Promise<number> {
+    const tags = [`vendor:${vendorId}`];
+    if (scope) tags.push(scope);
+    
+    logger.info({ vendorId, scope }, '🔄 Invalidating vendor cache');
+    return this.invalidateByTags(tags);
+  }
+
+  // Check Redis connection status
+  isConnected(): boolean {
+    return isRedisConnected();
+  }
 }
 
 // Export singleton instance
@@ -311,6 +354,7 @@ export function Cache(ttl: number = 300, tags: string[] = []) {
       try {
         const cached = await cacheService.get(cacheKey);
         if (cached) {
+          logger.debug({ cacheKey }, '⚡ Method cache hit');
           return cached;
         }
         
@@ -319,7 +363,7 @@ export function Cache(ttl: number = 300, tags: string[] = []) {
         
         return result;
       } catch (error) {
-        logger.error(`Cache decorator error for ${propertyName}:`, error);
+        logger.error({ error, propertyName }, '❌ Cache decorator error');
         return method.apply(this, args);
       }
     };
@@ -327,26 +371,3 @@ export function Cache(ttl: number = 300, tags: string[] = []) {
     return descriptor;
   };
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

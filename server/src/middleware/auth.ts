@@ -5,12 +5,14 @@ declare global {
   namespace Express {
     interface Request {
       user?: {
+        id: string;
         userId: string;
         email: string;
         role: string;
-        vendorProfileId?: string;
+        vendorProfileId: string;
         isAuthenticated: boolean;
         lastActivity: Date;
+        betaTester?: boolean;
       };
     }
   }
@@ -46,6 +48,25 @@ export const requireVendorAuth = (req: Request, res: Response, next: NextFunctio
   // For now, set a mock vendorProfileId
   // In a real implementation, this would come from the database
   req.user.vendorProfileId = req.user.userId; // Using userId as vendorProfileId for mock
+  
+  return next();
+};
+
+// Middleware to require admin authentication
+export const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
+  if (!req.user?.isAuthenticated) {
+    return res.status(401).json({ 
+      success: false, 
+      message: 'Authentication required' 
+    });
+  }
+  
+  if (req.user.role !== 'ADMIN') {
+    return res.status(403).json({ 
+      success: false, 
+      message: 'Admin access required' 
+    });
+  }
   
   return next();
 };

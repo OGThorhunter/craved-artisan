@@ -52,8 +52,27 @@ export default defineConfig({
     exclude: ['zod/v4/core'],
   },
   build: {
+    // Enable strict checking
+    sourcemap: true,
+    minify: 'esbuild',
+    target: 'esnext',
+    // Fail build on import/export errors
     rollupOptions: {
       external: ['zod/v4/core'],
+      onwarn(warning, warn) {
+        // Catch missing export errors early
+        if (warning.code === 'MISSING_EXPORT') {
+          throw new Error(`Missing export: ${warning.message}`);
+        }
+        if (warning.code === 'UNRESOLVED_IMPORT') {
+          throw new Error(`Unresolved import: ${warning.message}`);
+        }
+        warn(warning);
+      },
     },
+  },
+  // Enhanced development experience
+  esbuild: {
+    logOverride: { 'this-is-undefined-in-esm': 'silent' }
   },
 });

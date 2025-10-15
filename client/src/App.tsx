@@ -5,9 +5,11 @@ import { CartProvider } from './contexts/CartContext';
 import { ZipProvider } from './contexts/ZipContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { Layout } from './components/Layout';
+import MaintenanceGate from './components/MaintenanceGate';
 import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
+import VerifyEmailPage from './pages/VerifyEmailPage';
 import { JoinPage } from './pages/JoinPage';
 import { JoinVendorPage } from './pages/JoinVendorPage';
 import { JoinCustomerPage } from './pages/JoinCustomerPage';
@@ -61,6 +63,8 @@ import EventsSearchPage from './pages/EventsSearchPage';
 import EventsHomePage from './pages/EventsHomePage';
 import EventsCoordinatorConsole from './pages/EventsCoordinatorConsole';
 import AdminDashboard from './pages/AdminDashboard';
+import UsersListPage from './pages/control/UsersListPage';
+import UserDetailPage from './pages/control/UserDetailPage';
 import VendorWatchlistPage from './pages/VendorWatchlistPage';
 import VendorSalesWindowsPage from './pages/VendorSalesWindowsPage';
 import VendorDeliveryBatchingPage from './pages/VendorDeliveryBatchingPage';
@@ -82,14 +86,19 @@ import ProtectedRoute from './components/ProtectedRoute';
 import ArtisanSourdoughGeorgiaPage from './pages/seo/ArtisanSourdoughGeorgiaPage';
 import TopHandmadeSoapsAtlantaPage from './pages/seo/TopHandmadeSoapsAtlantaPage';
 
+// Legal pages
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import TermsOfServicePage from './pages/TermsOfServicePage';
+
 function App() {
   return (
     <AuthProvider>
-      <CartProvider>
-        <ZipProvider>
-          <NotificationProvider>
-            <Router>
-              <Layout>
+      <MaintenanceGate>
+        <CartProvider>
+          <ZipProvider>
+            <NotificationProvider>
+              <Router>
+                <Layout>
             <Switch>
             <Route path="/" component={HomePage} />
             <Route path="/test">
@@ -103,6 +112,7 @@ function App() {
             </Route>
             <Route path="/login" component={LoginPage} />
             <Route path="/signup" component={SignupPage} />
+            <Route path="/verify-email" component={VerifyEmailPage} />
             <Route path="/join" component={JoinPage} />
             <Route path="/join/vendor" component={JoinVendorPage} />
             <Route path="/join/customer" component={JoinCustomerPage} />
@@ -124,12 +134,16 @@ function App() {
             <Route path="/marketplace/vendor/:slug" component={MarketplaceVendorPage} />
             <Route path="/about" component={AboutPage} />
             <Route path="/contact" component={ContactPage} />
+            <Route path="/privacy" component={PrivacyPolicyPage} />
+            <Route path="/terms" component={TermsOfServicePage} />
             <Route path="/community" component={CommunityPage} />
             <Route path="/events" component={EventsHomePage} />
             <Route path="/events/search" component={EventsSearchPage} />
             <Route path="/events/:slug" component={EventDetailPage} />
             <Route path="/events/coordinator" component={EventsCoordinatorConsole} />
             <Route path="/admin" component={AdminDashboard} />
+            <Route path="/control/users" component={UsersListPage} />
+            <Route path="/control/users/:id" component={UserDetailPage} />
             <Route path="/search" component={AdvancedSearchPage} />
             <Route path="/help" component={KnowledgeBasePage} />
             <Route path="/recipes" component={RecipeToolPage} />
@@ -388,6 +402,7 @@ function App() {
         </NotificationProvider>
       </ZipProvider>
       </CartProvider>
+      </MaintenanceGate>
     </AuthProvider>
   );
 }

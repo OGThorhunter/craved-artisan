@@ -1,12 +1,14 @@
 import { Router } from 'express';
 import bcrypt from 'bcrypt';
 import { z } from 'zod';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, AuditScope, ActorType, Severity } from '@prisma/client';
 import { logger } from '../logger';
 import { requireAuth } from '../middleware/session-simple';
 import { passwordSchema, emailSchema, nameSchema, generateSlug } from '../utils/validation';
 import { generateVerificationToken, verifyEmailToken, sendVerificationEmail, sendWelcomeEmail } from '../services/email';
 import type { LoginRequest, RegisterRequest, AuthResponse, AuthenticatedRequest } from '../types/session';
+import { logEvent } from '../utils/audit';
+import { AUTH_LOGIN_SUCCESS, AUTH_LOGIN_FAIL, AUTH_LOGOUT, USER_CREATED } from '../constants/audit-events';
 
 const prisma = new PrismaClient();
 
@@ -22,7 +24,12 @@ const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
   name: z.string().min(2),
-  role: z.enum(['VENDOR', 'CUSTOMER'])
+  role: z.enum(['VENDOR', 'CUSTOMER', 'EVENT_COORDINATOR']),
+  agreements: z.array(z.object({
+    documentId: z.string(),
+    documentType: z.string(),
+    documentVersion: z.string()
+  })).optional()
 });
 
 // Login route
@@ -65,16 +72,34 @@ router.post('/login', async (req, res) => {
       
       logger.info({ email, userId: req.session.userId }, 'User logged in');
       
+      // Audit log: successful login
+      logEvent({
+        scope: AuditScope.AUTH,
+        action: AUTH_LOGIN_SUCCESS,
+        actorId: req.session.userId,
+        actorType: ActorType.USER,
+        actorIp: req.context?.actor.ip,
+        actorUa: req.context?.actor.ua,
+        requestId: req.context?.requestId,
+        traceId: req.context?.traceId,
+        targetType: 'User',
+        targetId: req.session.userId,
+        severity: Severity.INFO,
+        metadata: { email, role: req.session.role }
+      });
+      
       return res.json({
         success: true,
         message: 'Login successful',
         user: {
+          id: req.session.userId,
           userId: req.session.userId,
           email: req.session.email,
           role: req.session.role,
           vendorProfileId: req.session.vendorProfileId,
           isAuthenticated: true,
-          lastActivity: new Date()
+          lastActivity: new Date(),
+          betaTester: false
         }
       });
     }
@@ -107,12 +132,14 @@ router.post('/login', async (req, res) => {
         success: true,
         message: 'Login successful',
         user: {
+          id: req.session.userId,
           userId: req.session.userId,
           email: req.session.email,
           role: req.session.role,
           vendorProfileId: req.session.vendorProfileId,
           isAuthenticated: true,
-          lastActivity: new Date()
+          lastActivity: new Date(),
+          betaTester: false
         }
       });
     }
@@ -145,12 +172,14 @@ router.post('/login', async (req, res) => {
         success: true,
         message: 'Login successful',
         user: {
+          id: req.session.userId,
           userId: req.session.userId,
           email: req.session.email,
           role: req.session.role,
           vendorProfileId: req.session.vendorProfileId,
           isAuthenticated: true,
-          lastActivity: new Date()
+          lastActivity: new Date(),
+          betaTester: false
         }
       });
     }
@@ -183,12 +212,14 @@ router.post('/login', async (req, res) => {
         success: true,
         message: 'Login successful',
         user: {
+          id: req.session.userId,
           userId: req.session.userId,
           email: req.session.email,
           role: req.session.role,
           vendorProfileId: req.session.vendorProfileId,
           isAuthenticated: true,
-          lastActivity: new Date()
+          lastActivity: new Date(),
+          betaTester: false
         }
       });
     }
@@ -221,12 +252,14 @@ router.post('/login', async (req, res) => {
         success: true,
         message: 'Login successful',
         user: {
+          id: req.session.userId,
           userId: req.session.userId,
           email: req.session.email,
           role: req.session.role,
           vendorProfileId: req.session.vendorProfileId,
           isAuthenticated: true,
-          lastActivity: new Date()
+          lastActivity: new Date(),
+          betaTester: false
         }
       });
     }
@@ -259,16 +292,31 @@ router.post('/login', async (req, res) => {
         success: true,
         message: 'Login successful',
         user: {
+          id: req.session.userId,
           userId: req.session.userId,
           email: req.session.email,
           role: req.session.role,
           vendorProfileId: req.session.vendorProfileId,
           isAuthenticated: true,
-          lastActivity: new Date()
+          lastActivity: new Date(),
+          betaTester: false
         }
       });
     }
 
+    // Audit log: failed login
+    logEvent({
+      scope: AuditScope.AUTH,
+      action: AUTH_LOGIN_FAIL,
+      actorType: ActorType.USER,
+      actorIp: req.context?.actor.ip,
+      actorUa: req.context?.actor.ua,
+      requestId: req.context?.requestId,
+      traceId: req.context?.traceId,
+      severity: Severity.WARNING,
+      metadata: { email, reason: 'Invalid credentials' }
+    });
+    
     return res.status(401).json({
       success: false,
       message: 'Invalid email or password'
@@ -286,10 +334,10 @@ router.post('/login', async (req, res) => {
 // Register route
 router.post('/register', async (req, res) => {
   try {
-    const { email, password, name, role }: RegisterRequest = req.body;
+    const { email, password, name, role, agreements } = req.body;
     
     // Validate input
-    const validation = registerSchema.safeParse({ email, password, name, role });
+    const validation = registerSchema.safeParse({ email, password, name, role, agreements });
     if (!validation.success) {
       return res.status(400).json({
         success: false,
@@ -298,16 +346,137 @@ router.post('/register', async (req, res) => {
       });
     }
 
-    // TODO: Replace with actual database insertion
-    // For now, just return success
-    logger.info({ email, name, role }, 'User registration attempted');
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: 'User with this email already exists'
+      });
+    }
+
+    // Verify required agreements are accepted for all roles
+    const requiredTypes = ['TOS', 'PRIVACY', 'AI_DISCLAIMER', 'DATA_LIABILITY'];
+    
+    if (role === 'VENDOR') {
+      requiredTypes.push('VENDOR_AGREEMENT');
+    } else if (role === 'EVENT_COORDINATOR') {
+      requiredTypes.push('COORDINATOR_AGREEMENT');
+    }
+
+    const providedTypes = (agreements || []).map((a: any) => a.documentType);
+    const missingTypes = requiredTypes.filter(type => !providedTypes.includes(type));
+
+    if (missingTypes.length > 0) {
+      logger.warn(
+        { 
+          email,
+          role,
+          requiredTypes,
+          providedTypes,
+          missingTypes 
+        }, 
+        'Registration failed: Missing required legal agreements'
+      );
+      return res.status(400).json({
+        success: false,
+        message: 'Missing required legal agreements',
+        missingTypes,
+        requiredTypes
+      });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create user and vendor profile (if applicable) in transaction
+    const user = await prisma.$transaction(async (tx) => {
+      // Create user
+      const newUser = await tx.user.create({
+        data: {
+          email,
+          password: hashedPassword,
+          name,
+          emailVerified: false
+        }
+      });
+
+      // Create role-specific profile
+      if (role === 'VENDOR') {
+        const slug = generateSlug(name);
+        await tx.vendorProfile.create({
+          data: {
+            userId: newUser.id,
+            storeName: name,
+            slug,
+            bio: '',
+            stripeAccountStatus: 'NOT_STARTED'
+          }
+        });
+      } else if (role === 'EVENT_COORDINATOR') {
+        const slug = generateSlug(name);
+        await tx.eventCoordinatorProfile.create({
+          data: {
+            userId: newUser.id,
+            organizationName: name,
+            slug,
+            bio: '',
+            stripeAccountStatus: 'NOT_STARTED'
+          }
+        });
+      }
+
+      // Store legal agreement acceptances
+      if (agreements && agreements.length > 0) {
+        const ipAddress = req.headers['x-forwarded-for'] as string || req.socket.remoteAddress || 'unknown';
+        const userAgent = req.headers['user-agent'] || 'unknown';
+
+        await tx.userAgreement.createMany({
+          data: agreements.map((agreement: any) => ({
+            userId: newUser.id,
+            documentId: agreement.documentId,
+            documentType: agreement.documentType,
+            documentVersion: agreement.documentVersion,
+            ipAddress,
+            userAgent
+          }))
+        });
+
+        logger.info(
+          { 
+            userId: newUser.id, 
+            email: newUser.email,
+            role,
+            agreementCount: agreements.length 
+          }, 
+          'User registered and accepted legal agreements'
+        );
+      } else {
+        logger.info({ userId: newUser.id, email: newUser.email, role }, 'User registered');
+      }
+
+      return newUser;
+    });
+
+    // Send verification email if email service is configured
+    try {
+      const verificationToken = generateVerificationToken();
+      await sendVerificationEmail(email, verificationToken);
+      logger.info({ userId: user.id, email }, 'Verification email sent');
+    } catch (emailError) {
+      logger.warn({ userId: user.id, error: emailError }, 'Failed to send verification email');
+      // Don't fail registration if email fails
+    }
     
     return res.json({
       success: true,
-      message: 'Registration successful (mock)',
+      message: 'Registration successful',
       user: {
-        userId: 'mock-new-user-id',
-        email,
+        userId: user.id,
+        email: user.email,
         role,
         isAuthenticated: false,
         lastActivity: new Date()
@@ -325,6 +494,23 @@ router.post('/register', async (req, res) => {
 
 // Logout route
 router.post('/logout', requireAuth, (req: AuthenticatedRequest, res) => {
+  const userId = req.user?.userId;
+  
+  // Audit log: logout
+  logEvent({
+    scope: AuditScope.AUTH,
+    action: AUTH_LOGOUT,
+    actorId: userId,
+    actorType: ActorType.USER,
+    actorIp: req.context?.actor.ip,
+    actorUa: req.context?.actor.ua,
+    requestId: req.context?.requestId,
+    traceId: req.context?.traceId,
+    targetType: 'User',
+    targetId: userId,
+    severity: Severity.INFO
+  });
+  
   req.session.destroy((err) => {
     if (err) {
       logger.error({ error: err }, 'Logout error');
@@ -334,7 +520,7 @@ router.post('/logout', requireAuth, (req: AuthenticatedRequest, res) => {
       });
     }
     
-    logger.info({ userId: req.user?.userId }, 'User logged out');
+    logger.info({ userId }, 'User logged out');
     return res.json({
       success: true,
       message: 'Logout successful'
@@ -348,12 +534,14 @@ router.get('/session', (req, res) => {
     return res.json({
       success: true,
       user: {
+        id: req.session.userId, // Add id field for compatibility
         userId: req.session.userId,
         email: req.session.email,
         role: req.session.role,
         vendorProfileId: req.session.vendorProfileId,
         isAuthenticated: true,
-        lastActivity: new Date()
+        lastActivity: new Date(),
+        betaTester: false // Default value, can be updated based on user data
       }
     });
   }
@@ -435,12 +623,14 @@ router.post('/signup/step1', async (req, res) => {
       success: true,
       message: 'Account created successfully',
       user: {
+        id: user.id,
         userId: user.id,
         email: user.email,
         name: user.name,
         role,
         profileCompleted: false,
-        emailVerified: false
+        emailVerified: false,
+        betaTester: false
       },
       nextStep: 'profile'
     });
@@ -643,6 +833,62 @@ router.post('/verify-email', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to verify email'
+    });
+  }
+});
+
+/**
+ * POST /api/auth/resend-verification
+ * Resend verification email
+ */
+router.post('/resend-verification', requireAuth, async (req, res) => {
+  try {
+    const userId = (req.session as any)?.userId;
+    const email = (req.session as any)?.email;
+
+    if (!userId || !email) {
+      return res.status(400).json({
+        success: false,
+        message: 'No active session or email found'
+      });
+    }
+
+    // Check if user already verified
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { emailVerified: true, email: true }
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    if (user.emailVerified) {
+      return res.json({
+        success: true,
+        message: 'Email is already verified'
+      });
+    }
+
+    // Generate and send new verification token
+    const verificationToken = generateVerificationToken(userId, email);
+    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    await sendVerificationEmail(email, verificationToken, baseUrl);
+
+    logger.info({ userId, email }, 'Verification email resent');
+
+    res.json({
+      success: true,
+      message: 'Verification email sent'
+    });
+  } catch (error) {
+    logger.error({ error }, 'Resend verification error');
+    res.status(500).json({
+      success: false,
+      message: 'Failed to resend verification email'
     });
   }
 });

@@ -214,11 +214,12 @@ By clicking **"I Agree"**, you confirm that:
   },
   {
     type: 'PRIVACY',
-    version: '1.0',
+    version: '2.0',
     title: 'Privacy & Data Use Policy',
     content: `# Craved Artisan Privacy & Data Use Policy
 
 **Effective Date:** ${new Date().toLocaleDateString()}
+**Version:** 2.0
 
 ## 1. Information We Collect
 
@@ -229,6 +230,8 @@ We collect information necessary to operate and improve your experience:
 - Usage data (how you interact with our platform)
 - Location data (ZIP code for marketplace discovery)
 - Communication data (messages, support tickets)
+- Device information (browser type, IP address, operating system)
+- Behavioral data (clicks, page views, search queries)
 
 ## 2. How We Use Your Information
 
@@ -240,72 +243,167 @@ Your information is used to:
 - Provide customer support
 - Prevent fraud and enhance security
 - Comply with legal obligations
+- **AI model training and improvement** - Your usage patterns help us develop better AI-powered features
+- **Product development and feature enhancement** - We analyze how you use our platform to build better tools
+- **Business analytics and market research** - We study trends to improve our marketplace
+- **Platform optimization** - We use your data to make our platform faster and more reliable
+- **Predictive modeling** - We develop models to anticipate user needs and provide better recommendations
+- **Quality assurance and testing** - We use data to ensure our platform works correctly
+- **Personalized experiences** - We tailor content and recommendations based on your activity
 
 ## 3. Data Sharing
 
-We do **not sell your personal data** to third parties.
+We do **not sell your personal identifiable data** to third parties.
 
 We may share information with:
 - Service providers who help operate our platform (e.g., payment processors, hosting providers)
 - Other users as necessary for transactions (e.g., vendors see customer shipping addresses)
 - Law enforcement when required by law
 - Business partners with your explicit consent
+- **Analytics partners** - To better understand platform usage and improve services
+- **Research institutions** - Anonymized and aggregated data for academic research
+- **AI/ML service providers** - To enhance our artificial intelligence capabilities
+- **Business intelligence tools** - For platform performance monitoring and optimization
 
 ## 4. Data Usage Rights
 
-By continuing to use Craved Artisan, you grant us a **perpetual, non-exclusive license** to use anonymized or aggregated user data for internal business purposes including—but not limited to—platform optimization, analytics, AI-assisted features, and product improvement initiatives.
+By continuing to use Craved Artisan, you grant us comprehensive rights to use your data as follows:
 
-Individual personal data is never sold or shared for marketing purposes without your explicit consent.
+### 4.1 De-Identified and Aggregated Data
+You grant Craved Artisan a **perpetual, irrevocable, worldwide, royalty-free, non-exclusive license** to use, reproduce, modify, adapt, publish, translate, create derivative works from, distribute, and display de-identified and aggregated user data for any lawful business purpose, including but not limited to:
+- Platform optimization and performance improvement
+- Analytics and business intelligence
+- AI and machine learning model training and development
+- Product development and feature enhancement
+- Market research and competitive analysis
+- Creating benchmarks, reports, and insights
+- Developing new products and services
+
+### 4.2 Individual Data Usage
+For data that can be associated with your account:
+- We may use your data internally for all purposes described in Section 2
+- We will not sell or rent your personally identifiable information to third parties for their marketing purposes without your explicit consent
+- We may use your data to create anonymized datasets that cannot reasonably identify you
+- Once anonymized, such data is no longer considered personal data and may be used without restriction
+
+### 4.3 AI and Machine Learning
+You acknowledge and agree that:
+- Your usage data, content, and interactions may be used to train, test, and improve AI models
+- These AI models may be used across our platform and potentially in future products
+- AI-derived insights and models are our proprietary assets
+- Your contributions to AI training are provided voluntarily through platform usage
+
+### 4.4 Derivative Works
+We have the right to create derivative works, compilations, and analyses from your aggregated and de-identified data without additional compensation or attribution.
 
 ## 5. Your Data Rights
 
-You have the right to:
-- Access your personal data
-- Correct inaccurate information
+Despite our broad data usage rights, you retain the following important rights:
+
+### 5.1 Access and Portability
+- Access your personal data at any time
+- Export your data in a machine-readable format
+- Request a copy of data we hold about you
+
+### 5.2 Correction and Deletion
+- Correct inaccurate information in your profile
 - Request data deletion (subject to legal retention requirements)
-- Export your data
+- Close your account and remove your personal data
+
+### 5.3 Control and Consent
 - Opt-out of marketing communications
 - Withdraw consent for optional data processing
+- Control cookie preferences
+- Request restrictions on certain data processing
+
+### 5.4 Legal Compliance
+- Your rights under GDPR (if in the EU/EEA)
+- Your rights under CCPA (if in California)
+- Your rights under other applicable privacy laws
+
+### 5.5 Limitations
+Please note that:
+- Some data may be retained for legal, accounting, or security purposes
+- De-identified and aggregated data cannot be deleted once created
+- Deletion requests may not apply to data already incorporated into AI models
+- We may retain backup copies for disaster recovery purposes
 
 ## 6. Data Security
 
 We implement industry-standard security measures to protect your data:
-- Encryption in transit and at rest
-- Regular security audits
-- Access controls and authentication
-- Secure payment processing through Stripe
+- Encryption in transit and at rest (TLS/SSL, AES-256)
+- Regular security audits and penetration testing
+- Access controls and multi-factor authentication
+- Secure payment processing through Stripe (PCI-DSS compliant)
+- Employee training on data protection
+- Incident response and breach notification procedures
+
+However, no system is completely secure. You acknowledge that you use our platform at your own risk.
 
 ## 7. Cookies and Tracking
 
 We use cookies and similar technologies to:
-- Maintain your session
-- Remember your preferences
-- Analyze platform usage
-- Provide personalized experiences
+- Maintain your session and keep you logged in
+- Remember your preferences and settings
+- Analyze platform usage and traffic patterns
+- Provide personalized experiences and recommendations
+- Track conversion and marketing effectiveness
+- A/B test new features
+- Prevent fraud and abuse
 
-You can control cookie settings through your browser.
+You can control cookie settings through your browser, but some features may not work properly if cookies are disabled.
 
 ## 8. Data Retention
 
 We retain your data for as long as necessary to:
-- Provide our services
-- Comply with legal obligations
-- Resolve disputes
-- Enforce our agreements
+- Provide our services while your account is active
+- Comply with legal obligations (typically 7 years for financial records)
+- Resolve disputes and enforce agreements
+- Maintain security and prevent fraud
+- Support AI/ML models and analytics
+
+After account deletion, we may retain:
+- Anonymized and aggregated data indefinitely
+- Transaction records as required by law
+- Data necessary for legal claims or compliance
+- Backup copies for up to 90 days
 
 ## 9. Children's Privacy
 
-Craved Artisan is not intended for users under 18. We do not knowingly collect information from children.
+Craved Artisan is not intended for users under 18. We do not knowingly collect information from children. If we become aware of data collected from children, we will delete it promptly.
 
-## 10. Changes to This Policy
+## 10. International Data Transfers
 
-We may update this Privacy Policy from time to time. We will notify you of significant changes through the platform or via email.
+Your data may be transferred to and processed in countries other than your own. We ensure appropriate safeguards are in place for such transfers in compliance with applicable laws.
 
-## 11. Contact Us
+## 11. Changes to This Policy
 
-For privacy-related questions or to exercise your data rights, contact us at privacy@cravedartisan.com
+We may update this Privacy Policy from time to time. Material changes will be communicated through:
+- Email notification to your registered address
+- Prominent notice on our platform
+- In-app notifications
 
-By using Craved Artisan, you acknowledge that you have read and understood this Privacy & Data Use Policy.`
+Continued use after changes constitutes acceptance of the updated policy.
+
+## 12. Contact Us
+
+For privacy-related questions or to exercise your data rights:
+- **Email:** privacy@cravedartisan.com
+- **Mail:** Craved Artisan Privacy Team, Locust Grove, Georgia, USA
+- **Data Protection Officer:** legal@cravedartisan.com
+
+Response time: We aim to respond to privacy requests within 30 days.
+
+## 13. Acknowledgment
+
+By using Craved Artisan, you acknowledge that:
+- You have read and understood this Privacy & Data Use Policy
+- You agree to the data collection, usage, and sharing practices described herein
+- You grant us the licenses and rights described in Section 4
+- You understand that de-identified and aggregated data may be used without restriction
+- You accept that your usage contributes to platform improvement and AI development
+
+**This policy gives Craved Artisan broad rights to use collected data for business purposes while maintaining your fundamental privacy rights under applicable law.**`
   },
   {
     type: 'AI_DISCLAIMER',
@@ -539,549 +637,369 @@ For questions about this waiver, contact legal@cravedartisan.com
   {
     type: 'VENDOR_AGREEMENT',
     version: '1.0',
-    title: 'Vendor Services Agreement',
-    content: `# Vendor Services Agreement
+    title: 'Vendor Service Agreement',
+    content: `# 🧾 Craved Artisan — Vendor Service Agreement
+**Effective Date:** October 2025  
+**Last Updated:** October 2025  
 
-**Effective Date:** ${new Date().toLocaleDateString()}
+This **Vendor Service Agreement** ("**Agreement**") governs your participation as a vendor ("**Vendor**," "**you**," or "**your**") on the **Craved Artisan** marketplace platform, owned and operated by Craved Artisan, LLC ("**Craved Artisan**," "**we**," "**us**," or "**our**").  
 
-## 1. Vendor Relationship
+By creating a vendor account, listing products, or engaging in any commercial activity on the Craved Artisan Platform, you agree to this Agreement, along with our Terms of Service and Privacy Policy.
 
-By operating as a vendor on Craved Artisan, you acknowledge and agree that:
+---
 
-- You are an **independent business operator**, not an employee or agent of Craved Artisan
-- You are solely responsible for your business operations
-- Craved Artisan provides a marketplace platform and tools, but does not operate your business
-- You maintain full control over your products, pricing, and business decisions
+## 1. 🎯 Purpose of Agreement
+Craved Artisan operates as a **digital marketplace** that connects independent creators, bakers, farmers, artisans, and small producers with customers seeking locally made, handcrafted, or homegrown goods.  
 
-## 2. Marketplace Framework
+This Agreement establishes the terms under which Vendors may sell goods or services through the Platform while ensuring Craved Artisan remains legally protected from liabilities arising from Vendor operations.
 
-**Craved Artisan is not:**
-- A retailer, distributor, or reseller of your products
-- A guarantor of your products or services
-- Responsible for your business practices
-- A party to transactions between you and customers
+---
 
-**Craved Artisan provides:**
-- A platform to list and sell products
-- Payment processing infrastructure
-- Tools for order management and fulfillment
-- Marketing and discovery features
-- Customer communication tools
+## 2. ⚖️ Independent Vendor Status
+- You are an **independent contractor**, not an employee, agent, or representative of Craved Artisan.  
+- You are solely responsible for your business operations, taxes, permits, insurance, and compliance with all applicable federal, state, and local laws.  
+- Craved Artisan does not guarantee sales, exposure, or business success.
 
-## 3. Payment Processing
+**Plain language version:**  
+> You run your own business — we provide the digital tools and visibility, but we're not your employer or financial partner.
 
-### Stripe Connect
-- All payments are processed through **Stripe Connect**
-- You must complete Stripe onboarding to receive payments
-- Craved Artisan receives a 2% platform fee on each transaction
-- The remaining 98% is transferred directly to your Stripe account
-- Payment terms are subject to Stripe's policies
+---
 
-### Platform Fee
-- Platform fee: 2% of each transaction
-- Fee is automatically deducted during payment processing
-- Covers platform operation, payment processing, and support
-- May be adjusted with 30 days notice to vendors
+## 3. 💳 Payments & Stripe Connect
+- All transactions and payouts are managed securely through **Stripe Connect**.  
+- Craved Artisan **does not store or process** customer payment information.  
+- You must complete Stripe onboarding to sell or receive payments.  
+- Craved Artisan may collect a **service or transaction fee** from each sale to cover platform maintenance and services.  
+- Payouts are processed by Stripe directly to your linked account, subject to Stripe's terms.  
 
-## 4. Product Responsibility
+**You agree that Craved Artisan is not responsible for:**  
+- Delays in payment caused by Stripe  
+- Payment holds, account verification, or chargeback disputes  
+- Taxes owed on your earnings  
 
-You are solely responsible for:
+---
 
-### Product Quality & Safety
-- Ensuring products meet quality standards
-- Compliance with food safety regulations (if applicable)
-- Proper labeling and ingredient disclosure
-- Allergen warnings and nutrition information
-- Product freshness and expiration dates
+## 4. 🧁 Vendor Responsibilities
+As a Vendor, you agree to:
 
-### Legal Compliance
-- Obtaining required business licenses and permits
-- Health department approvals (for food vendors)
-- Tax collection and remittance
-- Labor law compliance
-- Zoning and operating regulations
-- Insurance coverage
+1. **Maintain Product Integrity**  
+   - Sell only items you have produced, created, or lawfully obtained.  
+   - Ensure all products are safe, properly labeled, and compliant with relevant laws (e.g., cottage food laws, FDA labeling requirements).  
+   - Provide accurate descriptions, images, and pricing.
 
-### Product Listings
-- Accuracy of product descriptions
-- Quality of product images
-- Honest representation of ingredients and materials
-- Accurate pricing information
-- Availability and inventory management
+2. **Fulfill Orders Promptly**  
+   - Complete and deliver all orders in a timely and professional manner.  
+   - Communicate transparently with customers about availability, delays, or substitutions.
 
-## 5. Order Fulfillment
+3. **Comply with Local Regulations**  
+   - Obtain and maintain all required licenses or permits (e.g., cottage food permits, business licenses).  
+   - Comply with all applicable health, safety, and food handling regulations.
 
-You agree to:
-- Fulfill orders in a timely manner
-- Meet promised delivery or pickup times
-- Communicate clearly about order status
-- Handle special requests professionally
-- Package products safely and appropriately
-- Resolve customer issues promptly
+4. **Customer Service**  
+   - Treat all customers respectfully.  
+   - Respond promptly to inquiries, complaints, and refund requests.
 
-## 6. Customer Service
+5. **Taxes & Reporting**  
+   - Accurately report your earnings to tax authorities.  
+   - Craved Artisan may provide sales summaries for convenience but is **not a tax advisor**.
 
-You are responsible for:
-- Responding to customer inquiries
-- Handling complaints and disputes
-- Processing refunds when appropriate
-- Maintaining professional communication
-- Building positive customer relationships
+---
 
-## 7. Vacation Mode & Availability
+## 5. 🚫 Prohibited Activities
+Vendors may **not**:
 
-- You may use "Vacation Mode" to temporarily pause operations
-- Must provide advance notice for extended closures
-- Should update availability status regularly
-- Orders must be fulfilled before entering vacation mode
+- List illegal, dangerous, counterfeit, or infringing products.  
+- Misrepresent product origin, ingredients, or certifications.  
+- Engage in deceptive, abusive, or off-platform sales intended to bypass Craved fees.  
+- Use Craved Artisan data for unsolicited marketing or to contact users outside of the platform.  
+- Post defamatory, obscene, or harassing content.  
+- Sell or resell products that violate another user's intellectual property.  
 
-## 8. Prohibited Activities
+Violation of these policies may result in **immediate suspension or termination** of your vendor account.
 
-Vendors may not:
-- Sell prohibited or illegal items
-- Misrepresent products or ingredients
-- Engage in deceptive practices
-- Manipulate reviews or ratings
-- Coordinate with other vendors to fix prices
-- Use the platform for unauthorized marketing
-- Collect customer data for external use
+---
 
-## 9. Intellectual Property
+## 6. 🧾 Pricing, Refunds & Returns
+- Vendors set their own prices, shipping fees, and refund policies.  
+- All refund or exchange requests are handled **directly between vendor and customer**.  
+- Craved Artisan may, at its discretion, mediate disputes but is **not obligated** to do so.  
+- If repeated disputes or complaints arise, Craved Artisan may suspend your listings or account.
 
-You retain ownership of:
-- Your brand name and trademarks
-- Product recipes and formulations (trade secrets)
-- Original photos and content
+---
 
-You grant Craved Artisan:
-- Right to display your content on the platform
-- Right to use your name and images for marketing
-- Right to feature your products in promotional materials
+## 7. 🧠 AI Features & Automation Disclaimer
+Craved Artisan provides AI-assisted tools to help vendors with product listings, analytics, and labeling.  
 
-## 10. Indemnification
+You acknowledge that:
+- AI-generated content is **for convenience only** and may contain inaccuracies.  
+- Vendors are fully responsible for verifying the accuracy, legality, and compliance of all listings, labels, and communications.  
+- Craved Artisan is **not liable** for damages, losses, or claims arising from AI outputs.
 
-You agree to indemnify Craved Artisan from:
-- Customer disputes or claims related to your products
-- Regulatory actions or violations
-- Product liability claims
-- Intellectual property infringement
-- Food safety incidents
-- Personal injury or property damage
-- Breach of this agreement
+---
 
-## 11. Insurance Requirements
+## 8. 🏷️ Labeling & Food Safety
+For food vendors, you must:
+- Clearly display all required ingredient and allergen information.  
+- Follow any applicable food safety and packaging laws.  
+- Use Craved Artisan's label generator responsibly and verify accuracy before printing.  
+- Understand that Craved Artisan's labeling tool is an **aid**, not a compliance guarantee.
 
-Recommended insurance coverage:
-- General liability insurance
-- Product liability insurance
-- Business property insurance
-- Commercial auto (if delivering)
+**You agree that Craved Artisan is not responsible** for any illness, injury, or harm caused by your products.
 
-Craved Artisan may require proof of insurance for certain activities.
+---
 
-## 12. Data & Analytics
+## 9. 📦 Product Delivery, Pickup, & Drop Points
+- Vendors may use drop-off or pickup locations ("Marketplace Partners") for distribution.  
+- Vendors are responsible for ensuring the accuracy, safety, and readiness of all orders before drop-off.  
+- Craved Artisan is **not responsible** for loss, spoilage, or damage to goods at third-party locations.  
+- Vendors must adhere to designated pickup times and notify customers promptly of any changes.
 
-Craved Artisan may:
-- Collect data on sales, trends, and customer behavior
-- Use aggregated data for platform improvements
-- Provide you with analytics and insights
-- Share anonymized data with partners
+---
 
-Your individual business data remains confidential.
+## 10. 💥 Limitation of Liability
+To the fullest extent permitted by law:
+- Craved Artisan shall **not be liable** for any indirect, incidental, or consequential damages, lost profits, or loss of data.  
+- Craved Artisan's total liability in any 12-month period shall not exceed the **total fees paid to Craved Artisan** during that same period.  
 
-## 13. Termination
+You agree to **indemnify and hold harmless** Craved Artisan, its affiliates, and employees from any claims, losses, or damages resulting from:
+- Your listings, sales, or products  
+- Your breach of this Agreement or the TOS  
+- Customer or third-party disputes  
 
-Either party may terminate this agreement:
-- With 30 days written notice
-- Immediately for material breach
-- Immediately for illegal activities
+---
 
+## 11. 🔒 Data, Privacy, and Analytics
+- Craved Artisan may collect and use anonymized sales and traffic data to improve marketplace performance.  
+- Vendors grant Craved Artisan a **limited, non-exclusive license** to use logos, product images, and descriptions for marketing and promotional purposes.  
+- Personal data is handled according to the Craved Artisan Privacy Policy.
+
+---
+
+## 12. 📣 Marketing & Promotions
+- Craved Artisan may feature your products in newsletters, advertisements, or promotional campaigns.  
+- Participation in paid or premium promotions is optional.  
+- Vendors may not represent themselves as official Craved Artisan employees or partners without written approval.
+
+---
+
+## 13. ⚙️ Termination & Suspension
+Craved Artisan reserves the right to:
+- Suspend or terminate a Vendor account for violations of this Agreement or the TOS.  
+- Remove listings that violate marketplace standards.  
+- Withhold pending payouts if fraud, chargebacks, or policy violations are detected.  
+
+Vendors may terminate their account at any time via the platform's Settings panel.  
 Upon termination:
-- Complete pending orders
-- Resolve outstanding customer issues
-- Export your data within 30 days
-- Final payments processed per normal schedule
+- Outstanding orders must still be fulfilled.  
+- Craved Artisan retains the right to archive your transaction records for legal and accounting purposes.
 
-## 14. Account Suspension
+---
 
-Craved Artisan may suspend your account for:
-- Violation of platform policies
-- Customer complaints or safety concerns
-- Non-compliance with legal requirements
-- Suspicious or fraudulent activity
-- Non-payment of fees
+## 14. 🏛️ Governing Law
+This Agreement is governed by the laws of the **State of Georgia, USA**.  
+Any disputes shall be resolved through **binding arbitration** in Henry County, Georgia, unless otherwise required by law.
 
-## 15. Fee Structure
+---
 
-**Current fees:**
-- Platform fee: 2% per transaction
-- No monthly or listing fees
-- No setup fees
-- Payment processing handled by Stripe (subject to Stripe fees)
+## 15. 🧱 Entire Agreement
+This Agreement, together with the Craved Artisan **Terms of Service** and **Privacy Policy**, constitutes the entire understanding between the parties and supersedes all prior communications.
 
-**Fee changes:**
-- 30 days advance notice for fee increases
-- Continued use after notice constitutes acceptance
+---
 
-## 16. Support & Resources
+## 16. ✅ Acknowledgement
+By checking "I Agree" during the signup process, you confirm that:
+- You have read and understood this Vendor Service Agreement.  
+- You accept full responsibility for your listings, sales, and business conduct.  
+- You release Craved Artisan from all liability arising from your business operations.  
 
-Craved Artisan provides:
-- Customer support for platform issues
-- Educational resources and guides
-- Community forums and networking
-- Tools for business growth
+**Welcome to the Craved Artisan community — where independent makers thrive with integrity.**
 
-## 17. Modifications
+---
 
-Craved Artisan may modify this agreement with:
-- 30 days notice for material changes
-- Email notification to all vendors
-- Continued operation constitutes acceptance
-
-## 18. Governing Law
-
-This agreement is governed by the laws of Georgia, USA.
-
-## Acknowledgment
-
-**I acknowledge that as a Vendor on Craved Artisan:**
-
-✓ I operate as an independent business and am solely responsible for compliance with all applicable laws, taxes, and product quality standards
-
-✓ Craved Artisan provides the marketplace framework but is **not a retailer, distributor, or guarantor** of vendor products
-
-✓ I am responsible for product safety, quality, labeling, and legal compliance
-
-✓ I will maintain appropriate insurance and business licenses
-
-✓ I will fulfill orders professionally and handle customer issues responsibly
-
-✓ I accept the 2% platform fee and payment processing through Stripe Connect
-
-**Contact:** vendor-support@cravedartisan.com`
+**Version:** 1.0.0  
+**Last Updated:** October 2025`
   },
   {
     type: 'COORDINATOR_AGREEMENT',
     version: '1.0',
     title: 'Event Coordinator Agreement',
-    content: `# Event Coordinator Agreement
+    content: `# 🎪 Craved Artisan — Event Coordinator Agreement
+**Effective Date:** October 2025  
+**Last Updated:** October 2025  
 
-**Effective Date:** ${new Date().toLocaleDateString()}
+This **Event Coordinator Agreement** ("**Agreement**") governs the use of Craved Artisan's event management features by any individual or organization ("**Coordinator**," "**you**," or "**your**") who creates, manages, or facilitates an event through the Craved Artisan Platform ("**Platform**"), owned and operated by **Craved Artisan, LLC** ("**Craved Artisan**," "**we**," or "**our**").  
 
-## 1. Coordinator Relationship
+By creating an event or activating an Event Coordinator account, you agree to this Agreement, as well as the [Terms of Service](./terms-of-service.md), [Privacy Policy](./privacy-policy.md), and all applicable Craved Artisan policies.
 
-By operating as an Event Coordinator on Craved Artisan, you acknowledge and agree that:
+---
 
-- You are an **independent event organizer**, not an employee or agent of Craved Artisan
-- You are solely responsible for all aspects of event planning and execution
-- Craved Artisan provides event management tools and platform access
-- You maintain full control over your events, vendor selection, and operations
+## 1. 🎯 Purpose of Agreement
+Craved Artisan provides tools that allow event organizers, farmers' markets, community hosts, and coordinators to:
+- Create and manage events
+- Sell or allocate vendor stalls, tickets, or booth spaces
+- Display event information to vendors and customers
+- Process payments through Stripe Connect  
 
-## 2. Platform Role
+Craved Artisan acts **solely as a digital facilitator**, providing technology and communication tools.  
+You, as the Coordinator, are **fully responsible** for all event operations, compliance, and outcomes.
 
-**Craved Artisan is not:**
-- An event planner or producer
-- Responsible for event logistics or outcomes
-- A party to agreements between you and vendors
-- Liable for event cancellations, accidents, or disputes
-- An insurance provider or guarantor
+---
 
-**Craved Artisan provides:**
-- Event listing and promotion platform
-- Vendor stall/booth management tools
-- Payment processing for stall rentals
-- Customer ticket/registration management
-- Communication and coordination tools
-- Analytics and reporting features
+## 2. ⚖️ Independent Coordinator Status
+- You operate as an **independent entity**, not as an employee, agent, or partner of Craved Artisan.  
+- You are responsible for all local permits, insurance, safety measures, and regulatory compliance required for your events.  
+- Craved Artisan does not represent, endorse, or guarantee your events, attendees, or vendors.
 
-## 3. Event Coordinator Responsibilities
+**Plain version:**  
+> You run the event — Craved Artisan provides the stage, not the show.
 
-### Legal & Regulatory Compliance
+---
 
-You are solely responsible for:
-- Obtaining all required permits and licenses
-- Venue insurance and liability coverage
-- Health department approvals (if food is involved)
-- Fire marshal and safety inspections
-- Alcohol permits (if applicable)
-- Music licensing (ASCAP, BMI, etc.)
-- ADA compliance and accessibility
-- Parking and traffic management
-- Security arrangements
+## 3. 💳 Payments, Fees, and Stripe Connect
+- All payments for event registrations, vendor stalls, or ticket sales are processed securely through **Stripe Connect**.  
+- Craved Artisan **does not handle or store** payment data.  
+- Coordinators must complete Stripe onboarding to receive payouts.  
+- Craved Artisan may deduct a **platform fee** from each transaction to cover hosting, marketing, and service costs.  
+- Coordinators are responsible for all applicable **sales tax, permits, and insurance** tied to their event income.
 
-### Event Management
+**Craved Artisan is not responsible for:**
+- Delayed Stripe payouts  
+- Canceled transactions  
+- Chargebacks, refunds, or disputes between Coordinators, vendors, or customers  
 
-You must:
-- Select and approve participating vendors
-- Set clear rules and expectations
-- Manage event logistics and setup
-- Ensure vendor compliance with event rules
-- Handle event-day operations
-- Coordinate with venue management
-- Manage crowd control and safety
-- Respond to emergencies appropriately
+---
 
-### Vendor Relations
+## 4. 🧾 Coordinator Responsibilities
+By hosting or listing events on Craved Artisan, you agree to:
 
-You are responsible for:
-- Communicating event details to vendors
-- Enforcing booth/stall agreements
-- Resolving vendor disputes
-- Ensuring vendors have proper permits
-- Managing vendor check-in and setup
-- Collecting any additional vendor fees
-- Providing promised vendor amenities
+1. **Event Accuracy**
+   - Provide complete, accurate, and up-to-date details for each event (date, time, location, description, pricing, and policies).
+   - Promptly update or cancel events when necessary.
 
-## 4. Payment Processing
+2. **Vendor & Attendee Management**
+   - Ensure that vendors and attendees have clear instructions for arrival, setup, and participation.
+   - Handle all communication, approval, and placement of vendors.
 
-### Stripe Connect
-- All stall/booth payments processed through **Stripe Connect**
-- Must complete Stripe onboarding to receive payments
-- Craved Artisan receives 2% platform fee on stall rentals
-- Remaining 98% transferred to your Stripe account
-- Refund policies determined by you (within reason)
+3. **Legal & Regulatory Compliance**
+   - Obtain all necessary local permits or licenses.
+   - Follow applicable city, county, or state ordinances regarding vendor markets, food handling, and crowd safety.
+   - Maintain proper insurance for public events.
 
-### Platform Fee
-- 2% fee on all stall/booth/ticket transactions
-- Automatically deducted during processing
-- Covers platform operation and support
-- May be adjusted with 30 days notice
+4. **Safety & Liability**
+   - Provide a safe and secure environment for attendees and vendors.
+   - Craved Artisan is **not liable** for injury, theft, loss, or accidents occurring at your event.
 
-## 5. Safety & Liability
+5. **Refunds & Cancellations**
+   - Clearly state refund and cancellation policies in your event listing.
+   - Manage all refund requests and communications directly with customers or vendors.
 
-### Event Safety
+6. **Taxes & Reporting**
+   - Maintain your own business and tax records.
+   - Craved Artisan may provide transaction summaries but does not offer tax advice.
 
-You must:
-- Conduct site safety assessments
-- Implement emergency procedures
-- Provide adequate security
-- Ensure fire safety compliance
-- Have first aid available
-- Plan for weather contingencies
-- Manage capacity limits
-- Ensure proper lighting and signage
+---
 
-### Liability Insurance
+## 5. 🧠 AI & Analytics Disclaimer
+Craved Artisan may provide AI-assisted tools for event pricing, planning, or promotion.  
+These are **for convenience only** and may not reflect real-world conditions, attendance, or profitability.  
+You are solely responsible for verifying and using the insights generated by Craved's AI or analytics tools.
 
-**Required insurance coverage:**
-- General liability insurance (minimum $1M recommended)
-- Event liability insurance
-- Vendor liability requirements
-- Workers' compensation (if applicable)
-- Cancellation insurance (recommended)
+---
 
-You must provide proof of insurance upon request.
+## 6. 🚫 Prohibited Activities
+Coordinators may **not**:
+- Create fraudulent, unsafe, or misleading events.  
+- Resell or redistribute vendor spots without permission.  
+- Host events that promote illegal activity, discrimination, or violence.  
+- Use Craved Artisan to bypass fees or conduct off-platform transactions.  
+- Misrepresent themselves as employees, partners, or representatives of Craved Artisan.
 
-## 6. Event Listings
+Violations may result in **account suspension, removal of events**, or permanent termination.
 
-### Accurate Information
+---
 
-Event listings must include:
-- Accurate date, time, and location
-- Clear description of event type and activities
-- Honest representation of expected attendance
-- Transparent pricing for stalls/booths
-- Amenities and services provided
-- Cancellation and refund policies
-- Rules and requirements for vendors
-
-### Prohibited Events
-
-You may not organize events that:
-- Violate local laws or regulations
-- Promote illegal activities
-- Discriminate against protected classes
-- Create unsafe conditions
-- Misrepresent the nature of the event
-
-## 7. Vendor Management
-
-### Vendor Selection
-
-You have the right to:
-- Approve or deny vendor applications
-- Set vendor requirements and criteria
-- Determine stall/booth assignments
-- Enforce event rules and standards
-- Remove vendors for violations
-
-### Vendor Disputes
-
-You are responsible for:
-- Resolving conflicts between vendors
-- Handling vendor complaints
-- Enforcing stall/booth agreements
-- Managing vendor no-shows
-- Processing vendor refunds per your policy
-
-## 8. Customer/Attendee Management
-
-You must:
-- Provide accurate event information
-- Handle attendee inquiries
-- Manage ticket sales (if applicable)
-- Process refunds per your policy
-- Ensure customer safety
-- Respond to complaints professionally
-- Maintain event schedule
-
-## 9. Event Cancellations
-
-### Your Responsibility
-
-If you cancel an event:
-- Provide maximum advance notice
-- Refund vendors per your cancellation policy
-- Refund customers/attendees appropriately
-- Communicate clearly about cancellation reasons
-- Reschedule or offer alternatives if possible
-
-### Force Majeure
-
-For cancellations due to:
-- Severe weather
-- Natural disasters
-- Government restrictions
-- Emergencies
-
-You must still handle refunds and communications professionally, though liability may be limited per your terms.
-
-## 10. Marketing & Promotion
-
-You may:
-- Promote events through Craved Artisan
-- Use platform marketing tools
-- Create custom promotional materials
-- Use social media integration
-- Collect email lists (with consent)
-
-Craved Artisan may:
-- Feature your events in platform marketing
-- Use event photos and information
-- Include events in email newsletters
-- Promote events on social media
-
-## 11. Data & Privacy
-
-You must:
-- Comply with privacy laws (GDPR, CCPA, etc.)
-- Protect vendor and attendee data
-- Use data only for event purposes
-- Obtain consent for marketing communications
-- Provide privacy policies for data collection
-
-Craved Artisan provides:
-- Secure data storage
-- Privacy-compliant tools
-- Data export capabilities
-- Analytics and reporting
-
-## 12. Financial Obligations
-
-### Platform Fees
-- 2% on all stall/booth transactions
-- No setup or monthly fees
-- Payment processing fees (via Stripe)
-
-### Tax Responsibilities
-You are responsible for:
-- Collecting applicable taxes
-- Filing tax returns
-- Reporting event income
-- Issuing receipts to vendors
-- Compliance with local tax laws
-
-## 13. Indemnification
-
-You agree to indemnify Craved Artisan from:
-- Event-related accidents or injuries
-- Property damage at events
-- Vendor or customer disputes
-- Regulatory violations
-- Permit or licensing issues
-- Security incidents
-- Weather-related issues
-- Breach of this agreement
-- Third-party claims related to your events
-
-## 14. Insurance & Hold Harmless
-
+## 7. 🧾 Liability & Indemnification
+### 7.1 Coordinator Liability
 You agree that:
-- Craved Artisan is not liable for event outcomes
-- You hold Craved Artisan harmless from event-related claims
-- You maintain adequate insurance coverage
-- You will add Craved Artisan as additional insured (if requested)
+- Craved Artisan is not liable for injuries, accidents, losses, or damages at your event.  
+- You are fully responsible for the conduct of all vendors, staff, and attendees under your event's management.  
+- You must hold all necessary **liability insurance** covering bodily injury, property damage, or claims arising from your event.
 
-## 15. Platform Tools & Features
+### 7.2 Indemnification
+You agree to **indemnify and hold harmless** Craved Artisan, its affiliates, officers, and employees from any claims, damages, or liabilities arising from:
+- Your event operations or omissions  
+- Vendor, attendee, or customer disputes  
+- Breach of this Agreement or applicable law  
 
+---
+
+## 8. 📢 Marketing & Promotion
+- Craved Artisan may feature your event on its website, newsletters, or social media for promotional purposes.  
+- You grant Craved Artisan a **non-exclusive license** to use your event name, imagery, and descriptions for marketing related to the Platform.  
+- You may opt out of promotional use by contacting **support@cravedartisan.com**.
+
+---
+
+## 9. 🔒 Data & Privacy
+- Craved Artisan collects only data necessary for event visibility, analytics, and transactions.  
+- We do not sell personal data to third parties.  
+- Coordinators must handle all attendee or vendor information responsibly and in accordance with privacy laws.  
+- Misuse of user data may result in account termination and legal action.
+
+---
+
+## 10. 🧱 Platform Tools & Availability
 Craved Artisan provides:
-- Event creation and management tools
-- Stall/booth inventory system
-- Vendor application management
-- Layout and mapping tools (optional)
-- Check-in and attendance tracking
-- Payment processing integration
-- Analytics and reporting
-- Communication tools
+- Event management dashboards  
+- Vendor slot management  
+- Integrated messaging  
+- Analytics and performance reports  
 
-## 16. Termination
+You understand that:
+- Platform uptime is not guaranteed.  
+- Craved Artisan is not liable for loss of data, technical errors, or outages.  
+- You should maintain your own backups of event information.
 
-Either party may terminate with:
-- 30 days written notice
-- Immediate termination for material breach
-- Immediate termination for safety violations
+---
 
-Upon termination:
-- Complete all scheduled events or provide refunds
-- Export your data within 30 days
-- Resolve outstanding issues
-- Final payments processed per schedule
+## 11. ⚙️ Termination & Suspension
+Craved Artisan may suspend or terminate your account or events without notice if:
+- You violate this Agreement or the Terms of Service  
+- You engage in fraudulent or unsafe practices  
+- Your events generate repeated complaints or disputes  
 
-## 17. Account Suspension
+You may cancel your account at any time, but all pending vendor and attendee obligations must still be honored.  
+Craved Artisan retains the right to archive or retain your data for recordkeeping and compliance.
 
-Craved Artisan may suspend your account for:
-- Safety violations or incidents
-- Repeated vendor/customer complaints
-- Non-compliance with legal requirements
-- Fraudulent activity
-- Violation of platform policies
+---
 
-## 18. Modifications
+## 12. 🏛️ Governing Law
+This Agreement shall be governed by and construed in accordance with the **laws of the State of Georgia, USA**, without regard to its conflict of law rules.  
+All disputes shall be resolved through **binding arbitration in Henry County, Georgia**, unless otherwise required by applicable law.
 
-Craved Artisan may modify this agreement with 30 days notice. Continued use after notice constitutes acceptance.
+*(If Craved Artisan expands nationally, this clause may be updated to use a neutral or remote arbitration framework.)*
 
-## 19. Dispute Resolution
+---
 
-Disputes shall be resolved through:
-1. Good faith negotiation
-2. Mediation (if negotiation fails)
-3. Binding arbitration in Georgia, USA
+## 13. 📜 Entire Agreement
+This document, together with the **Craved Artisan Terms of Service** and **Privacy Policy**, constitutes the entire agreement between the parties and supersedes any prior agreements or representations.
 
-## 20. Governing Law
+---
 
-This agreement is governed by the laws of the State of Georgia, USA.
+## 14. ✅ Acknowledgement
+By checking "I Agree" or creating an event through Craved Artisan, you confirm that:
+- You have read and understood this Event Coordinator Agreement.  
+- You accept full responsibility for your events, attendees, and vendors.  
+- You release Craved Artisan from all liability arising from your event operations.  
 
-## Acknowledgment
+**Welcome to Craved Artisan — where community markets and creative gatherings come to life.**
 
-**As an Event Coordinator, I confirm that:**
+---
 
-✓ I am responsible for all legal and logistical obligations associated with my events
-
-✓ Craved Artisan acts solely as a digital facilitator and bears **no liability** for the management or outcome of hosted events
-
-✓ I will obtain all required permits, licenses, and insurance coverage
-
-✓ I will ensure participant safety and venue compliance
-
-✓ I will handle vendor and customer issues professionally
-
-✓ I accept the 2% platform fee and Stripe Connect payment processing
-
-✓ I will communicate honestly and transparently about event details
-
-✓ I understand my obligations for event cancellations and refunds
-
-**Contact:** coordinator-support@cravedartisan.com`
+**File:** \`/docs/event-coordinator-agreement.md\`  
+**Maintainer:** Craved Artisan Legal & Compliance  
+**Version:** 1.0.0  
+**Last Updated:** October 2025`
   }
 ];
 

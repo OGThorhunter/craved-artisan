@@ -21,16 +21,10 @@ type Office = {
 
 const OFFICES: Office[] = [
   {
-    city: "Atlanta",
-    lines: ["123 Peachtree St NE", "Atlanta, GA 30308"],
+    city: "Locust Grove",
+    lines: ["Locust Grove, GA 30248"],
     phone: "(404) 555-0123",
-    hours: "Mon–Fri · 9AM–6PM",
-  },
-  {
-    city: "Macon",
-    lines: ["456 Cherry St", "Macon, GA 31201"],
-    phone: "(478) 555-0456",
-    hours: "Mon–Fri · 9AM–5PM",
+    hours: "Mon–Fri · 9AM–6PM ET",
   },
 ];
 

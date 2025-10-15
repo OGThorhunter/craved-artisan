@@ -6,6 +6,9 @@ import { z } from 'zod';
 import { prisma } from '../../db';
 import { logger } from '../../logger';
 import bcrypt from 'bcryptjs';
+import { logEvent } from '../../utils/audit';
+import { AuditScope, ActorType, Severity } from '@prisma/client';
+import { AUTH_PASSWORD_CHANGED, AUTH_SESSION_TERMINATED, AUTH_MFA_ENROLLED, AUTH_MFA_REMOVED } from '../../constants/audit-events';
 
 const router = Router();
 
@@ -79,6 +82,22 @@ export const revokeSession = async (req: Request, res: Response) => {
       }
     });
 
+    // Audit log: session terminated
+    logEvent({
+      scope: AuditScope.AUTH,
+      action: AUTH_SESSION_TERMINATED,
+      actorId: userId,
+      actorType: ActorType.USER,
+      actorIp: req.context?.actor.ip,
+      actorUa: req.context?.actor.ua,
+      requestId: req.context?.requestId,
+      traceId: req.context?.traceId,
+      targetType: 'Session',
+      targetId: sessionId,
+      severity: Severity.NOTICE,
+      metadata: { terminatedSessionId: sessionId }
+    });
+
     res.json({
       success: true,
       message: 'Session revoked successfully'
@@ -128,6 +147,21 @@ export const changePassword = async (req: Request, res: Response) => {
     await prisma.user.update({
       where: { id: userId },
       data: { password: hashedNewPassword }
+    });
+
+    // Audit log: password changed
+    logEvent({
+      scope: AuditScope.AUTH,
+      action: AUTH_PASSWORD_CHANGED,
+      actorId: userId,
+      actorType: ActorType.USER,
+      actorIp: req.context?.actor.ip,
+      actorUa: req.context?.actor.ua,
+      requestId: req.context?.requestId,
+      traceId: req.context?.traceId,
+      targetType: 'User',
+      targetId: userId,
+      severity: Severity.NOTICE
     });
 
     res.json({
@@ -226,6 +260,7 @@ router.post('/2fa/enable', validateRequest(enable2FASchema), enable2FA);
 router.post('/2fa/disable', validateRequest(disable2FASchema), disable2FA);
 
 export const securityRoutes = router;
+
 
 
 
