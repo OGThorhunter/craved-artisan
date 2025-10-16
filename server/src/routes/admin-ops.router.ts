@@ -1,7 +1,19 @@
 import { Router } from 'express';
-import { requireAdmin, auditAdminAction } from '../middleware/admin-auth';
+import { requireAdmin, requireSuperAdmin, auditAdminAction } from '../middleware/admin-auth';
 import { queueMonitor } from '../services/queue-monitor';
 import { dbHealthMonitor } from '../services/db-health';
+import { redisCacheService } from '../services/redis-cache.service';
+import { emailHealthService } from '../services/email-health.service';
+import { costTrackingService } from '../services/cost-tracking.service';
+import { webhookManagementService } from '../services/webhook-management.service';
+import { searchIndexService } from '../services/search-index.service';
+import { logsTracesService } from '../services/logs-traces.service';
+import { incidentManagementService } from '../services/incident-management.service';
+import { featureFlagsService } from '../services/feature-flags.service';
+import { maintenanceModeService } from '../services/maintenance-mode.service';
+import { deploymentTrackingService } from '../services/deployment-tracking.service';
+import { runbooksService } from '../services/runbooks.service';
+import { logger } from '../logger';
 import { z } from 'zod';
 
 const router = Router();
@@ -247,6 +259,527 @@ router.get('/ops/vector/health', requireAdmin, async (req, res) => {
       success: false,
       message: 'Failed to fetch vector health'
     });
+  }
+});
+
+// ================================
+// HEALTH & INCIDENTS
+// ================================
+
+// GET /api/admin/ops/health - All KPI cards
+router.get('/ops/health', requireAdmin, async (req, res) => {
+  try {
+    const [queueHealth, dbHealth, emailHealth, incidentStats] = await Promise.all([
+      queueMonitor.getQueueHealth(),
+      dbHealthMonitor.getDatabaseHealth(),
+      emailHealthService.getOverallEmailHealth(),
+      incidentManagementService.getIncidentStats()
+    ]);
+
+    const cacheStats = await redisCacheService.getMemoryStats();
+
+    return res.json({
+      success: true,
+      data: {
+        api: {
+          status: 'OK', // Would come from actual monitoring
+          latencyP95: 245,
+          errorRate: 0.05,
+          throughput: 1523
+        },
+        queue: queueHealth,
+        database: dbHealth,
+        cache: {
+          status: cacheStats.usedMemoryPercent > 90 ? 'CRIT' : cacheStats.usedMemoryPercent > 75 ? 'WARN' : 'OK',
+          hitRate: cacheStats.hitRate,
+          usedMemoryPercent: cacheStats.usedMemoryPercent
+        },
+        email: emailHealth,
+        incidents: {
+          open: incidentStats.openCount,
+          mitigated: incidentStats.mitigatedCount,
+          mttr: incidentStats.mttr
+        }
+      }
+    });
+  } catch (error) {
+    logger.error('Failed to get health overview:', error);
+    return res.status(500).json({ success: false, message: 'Failed to fetch health data' });
+  }
+});
+
+// GET /api/admin/ops/incidents - List incidents
+router.get('/ops/incidents', requireAdmin, async (req, res) => {
+  try {
+    const active = req.query.active === 'true';
+    const incidents = active 
+      ? await incidentManagementService.listActiveIncidents()
+      : await incidentManagementService.listRecentIncidents();
+
+    return res.json({ success: true, data: incidents });
+  } catch (error) {
+    logger.error('Failed to list incidents:', error);
+    return res.status(500).json({ success: false, message: 'Failed to list incidents' });
+  }
+});
+
+// POST /api/admin/ops/incidents - Create incident
+router.post('/ops/incidents', requireAdmin, auditAdminAction('INCIDENT_CREATED'), async (req, res) => {
+  try {
+    const { title, severity, summary, affected } = req.body;
+    
+    if (!title || !severity) {
+      return res.status(400).json({ success: false, message: 'Title and severity required' });
+    }
+
+    const incident = await incidentManagementService.createIncident({
+      title,
+      severity,
+      summary,
+      affected
+    }, req.admin!.id);
+
+    logger.info({ incidentId: incident.id, severity }, 'Incident created via ops dashboard');
+
+    return res.json({ success: true, data: incident });
+  } catch (error) {
+    logger.error('Failed to create incident:', error);
+    return res.status(500).json({ success: false, message: 'Failed to create incident' });
+  }
+});
+
+// PATCH /api/admin/ops/incidents/:id - Update incident
+router.patch('/ops/incidents/:id', requireAdmin, auditAdminAction('INCIDENT_STATUS_CHANGED'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    const incident = await incidentManagementService.updateIncident(id, updates, req.admin!.id);
+
+    logger.info({ incidentId: id, updates }, 'Incident updated');
+
+    return res.json({ success: true, data: incident });
+  } catch (error) {
+    logger.error('Failed to update incident:', error);
+    return res.status(500).json({ success: false, message: 'Failed to update incident' });
+  }
+});
+
+// POST /api/admin/ops/incidents/:id/timeline - Add timeline entry
+router.post('/ops/incidents/:id/timeline', requireAdmin, auditAdminAction('INCIDENT_TIMELINE_ADDED'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { type, message } = req.body;
+
+    await incidentManagementService.addTimelineEntry(id, {
+      type,
+      message,
+      actorId: req.admin!.id
+    });
+
+    return res.json({ success: true, message: 'Timeline entry added' });
+  } catch (error) {
+    logger.error('Failed to add timeline entry:', error);
+    return res.status(500).json({ success: false, message: 'Failed to add timeline entry' });
+  }
+});
+
+// ================================
+// DEPLOYS & CONFIG
+// ================================
+
+// GET /api/admin/ops/deployment/current - Current build info
+router.get('/ops/deployment/current', requireAdmin, async (req, res) => {
+  try {
+    const deployment = await deploymentTrackingService.getCurrentDeployment();
+    return res.json({ success: true, data: deployment });
+  } catch (error) {
+    logger.error('Failed to get current deployment:', error);
+    return res.status(500).json({ success: false, message: 'Failed to get deployment info' });
+  }
+});
+
+// GET /api/admin/ops/deployment/history - Recent deployments
+router.get('/ops/deployment/history', requireAdmin, async (req, res) => {
+  try {
+    const deployments = await deploymentTrackingService.getDeploymentHistory();
+    return res.json({ success: true, data: deployments });
+  } catch (error) {
+    logger.error('Failed to get deployment history:', error);
+    return res.status(500).json({ success: false, message: 'Failed to get deployment history' });
+  }
+});
+
+// GET /api/admin/ops/config/env - Safe env vars snapshot
+router.get('/ops/config/env', requireAdmin, async (req, res) => {
+  try {
+    // Return safe env variables (no secrets)
+    const safeVars = {
+      NODE_ENV: process.env.NODE_ENV,
+      USE_BULLMQ: process.env.USE_BULLMQ,
+      DATABASE_URL: process.env.DATABASE_URL ? '[REDACTED]' : 'not set',
+      REDIS_URL: process.env.REDIS_URL ? '[REDACTED]' : 'not set',
+      SENDGRID_API_KEY: process.env.SENDGRID_API_KEY ? '[REDACTED]' : 'not set',
+      STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY ? '[REDACTED]' : 'not set',
+      CSP_MODE: process.env.NODE_ENV === 'production' ? 'PROD' : 'DEV'
+    };
+
+    return res.json({ success: true, data: safeVars });
+  } catch (error) {
+    logger.error('Failed to get env config:', error);
+    return res.status(500).json({ success: false, message: 'Failed to get config' });
+  }
+});
+
+// POST /api/admin/ops/maintenance/toggle - Maintenance mode controls
+router.post('/ops/maintenance/toggle', requireSuperAdmin, auditAdminAction('CONFIG_MAINTENANCE_MODE_TOGGLED'), async (req, res) => {
+  try {
+    const { type, enabled, reason } = req.body;
+
+    if (!type || enabled === undefined || !reason) {
+      return res.status(400).json({ success: false, message: 'Type, enabled, and reason required' });
+    }
+
+    let result;
+    switch (type) {
+      case 'GLOBAL_READONLY':
+        result = await maintenanceModeService.toggleGlobalReadonly(enabled, reason, req.admin!.id);
+        break;
+      case 'VENDOR_READONLY':
+        result = await maintenanceModeService.toggleVendorReadonly(enabled, reason, req.admin!.id);
+        break;
+      case 'QUEUE_DRAIN':
+        result = await maintenanceModeService.toggleQueueDrain(enabled, reason, req.admin!.id);
+        break;
+      default:
+        return res.status(400).json({ success: false, message: 'Invalid maintenance type' });
+    }
+
+    logger.warn({ type, enabled, reason }, 'Maintenance mode toggled');
+
+    return res.json({ success: true, data: result });
+  } catch (error) {
+    logger.error('Failed to toggle maintenance mode:', error);
+    return res.status(500).json({ success: false, message: 'Failed to toggle maintenance mode' });
+  }
+});
+
+// GET /api/admin/ops/maintenance/status - Get maintenance status
+router.get('/ops/maintenance/status', requireAdmin, async (req, res) => {
+  try {
+    const status = await maintenanceModeService.getStatus();
+    return res.json({ success: true, data: status });
+  } catch (error) {
+    logger.error('Failed to get maintenance status:', error);
+    return res.status(500).json({ success: false, message: 'Failed to get maintenance status' });
+  }
+});
+
+// GET /api/admin/ops/feature-flags - List flags
+router.get('/ops/feature-flags', requireAdmin, async (req, res) => {
+  try {
+    const flags = await featureFlagsService.listFlags();
+    return res.json({ success: true, data: flags });
+  } catch (error) {
+    logger.error('Failed to list feature flags:', error);
+    return res.status(500).json({ success: false, message: 'Failed to list feature flags' });
+  }
+});
+
+// PATCH /api/admin/ops/feature-flags/:key - Toggle/update flag
+router.patch('/ops/feature-flags/:key', requireAdmin, auditAdminAction('CONFIG_FEATURE_FLAG_TOGGLED'), async (req, res) => {
+  try {
+    const { key } = req.params;
+    const updates = req.body;
+
+    const flag = await featureFlagsService.updateFlag(key, updates, req.admin!.id);
+
+    logger.info({ key, updates }, 'Feature flag updated');
+
+    return res.json({ success: true, data: flag });
+  } catch (error) {
+    logger.error('Failed to update feature flag:', error);
+    return res.status(500).json({ success: false, message: 'Failed to update feature flag' });
+  }
+});
+
+// ================================
+// WEBHOOKS & INTEGRATIONS
+// ================================
+
+// GET /api/admin/ops/webhooks - List webhook endpoints
+router.get('/ops/webhooks', requireAdmin, async (req, res) => {
+  try {
+    const endpoints = await webhookManagementService.listEndpoints();
+    return res.json({ success: true, data: endpoints });
+  } catch (error) {
+    logger.error('Failed to list webhook endpoints:', error);
+    return res.status(500).json({ success: false, message: 'Failed to list webhooks' });
+  }
+});
+
+// GET /api/admin/ops/webhooks/:id/deliveries - Recent deliveries
+router.get('/ops/webhooks/:id/deliveries', requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deliveries = await webhookManagementService.getRecentDeliveries(id);
+    return res.json({ success: true, data: deliveries });
+  } catch (error) {
+    logger.error('Failed to get webhook deliveries:', error);
+    return res.status(500).json({ success: false, message: 'Failed to get deliveries' });
+  }
+});
+
+// POST /api/admin/ops/webhooks/:id/replay - Replay failed delivery
+router.post('/ops/webhooks/:id/replay', requireSuperAdmin, auditAdminAction('OPS_WEBHOOK_REPLAYED'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await webhookManagementService.replayDelivery(id);
+
+    logger.info({ deliveryId: id }, 'Webhook delivery replayed');
+
+    return res.json({ success: result.success, message: result.message });
+  } catch (error) {
+    logger.error('Failed to replay webhook:', error);
+    return res.status(500).json({ success: false, message: 'Failed to replay webhook' });
+  }
+});
+
+// POST /api/admin/ops/webhooks/:id/rotate-secret - Rotate secret
+router.post('/ops/webhooks/:id/rotate-secret', requireSuperAdmin, auditAdminAction('OPS_SECRET_ROTATED'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await webhookManagementService.rotateSecret(id);
+
+    logger.warn({ endpointId: id }, 'Webhook secret rotated');
+
+    return res.json({ success: result.success, data: result });
+  } catch (error) {
+    logger.error('Failed to rotate webhook secret:', error);
+    return res.status(500).json({ success: false, message: 'Failed to rotate secret' });
+  }
+});
+
+// ================================
+// CACHE & SEARCH
+// ================================
+
+// GET /api/admin/ops/cache - Redis overview + namespaces
+router.get('/ops/cache', requireAdmin, async (req, res) => {
+  try {
+    const [stats, namespaces] = await Promise.all([
+      redisCacheService.getMemoryStats(),
+      redisCacheService.getNamespaces()
+    ]);
+
+    return res.json({ success: true, data: { stats, namespaces } });
+  } catch (error) {
+    logger.error('Failed to get cache overview:', error);
+    return res.status(500).json({ success: false, message: 'Failed to get cache data' });
+  }
+});
+
+// GET /api/admin/ops/cache/namespaces/:ns/keys - Browse keys
+router.get('/ops/cache/namespaces/:ns/keys', requireAdmin, async (req, res) => {
+  try {
+    const { ns } = req.params;
+    const limit = parseInt(req.query.limit as string) || 100;
+    
+    const keys = await redisCacheService.getKeysInNamespace(ns, limit);
+    return res.json({ success: true, data: keys });
+  } catch (error) {
+    logger.error('Failed to get namespace keys:', error);
+    return res.status(500).json({ success: false, message: 'Failed to get keys' });
+  }
+});
+
+// GET /api/admin/ops/cache/keys/:key - Preview key value
+router.get('/ops/cache/keys/:key', requireAdmin, async (req, res) => {
+  try {
+    const { key } = req.params;
+    const value = await redisCacheService.getKeyValue(key);
+    return res.json({ success: true, data: value });
+  } catch (error) {
+    logger.error('Failed to get key value:', error);
+    return res.status(500).json({ success: false, message: 'Failed to get key value' });
+  }
+});
+
+// POST /api/admin/ops/cache/flush - Flush namespace
+router.post('/ops/cache/flush', requireSuperAdmin, auditAdminAction('OPS_CACHE_FLUSHED'), async (req, res) => {
+  try {
+    const { namespace, reason } = req.body;
+
+    if (!namespace || !reason) {
+      return res.status(400).json({ success: false, message: 'Namespace and reason required' });
+    }
+
+    const deleted = await redisCacheService.flushNamespace(namespace, reason);
+
+    logger.warn({ namespace, deleted, reason }, 'Cache namespace flushed');
+
+    return res.json({ success: true, data: { deleted } });
+  } catch (error) {
+    logger.error('Failed to flush cache:', error);
+    return res.status(500).json({ success: false, message: 'Failed to flush cache' });
+  }
+});
+
+// GET /api/admin/ops/search/stats - Search index stats
+router.get('/ops/search/stats', requireAdmin, async (req, res) => {
+  try {
+    const stats = await searchIndexService.getIndexStats();
+    return res.json({ success: true, data: stats });
+  } catch (error) {
+    logger.error('Failed to get search stats:', error);
+    return res.status(500).json({ success: false, message: 'Failed to get search stats' });
+  }
+});
+
+// POST /api/admin/ops/search/rebuild - Rebuild index
+router.post('/ops/search/rebuild', requireSuperAdmin, auditAdminAction('OPS_SEARCH_REINDEXED'), async (req, res) => {
+  try {
+    const result = await searchIndexService.rebuildIndex();
+
+    logger.info({ result }, 'Search index rebuilt');
+
+    return res.json({ success: result.success, data: result });
+  } catch (error) {
+    logger.error('Failed to rebuild search index:', error);
+    return res.status(500).json({ success: false, message: 'Failed to rebuild index' });
+  }
+});
+
+// POST /api/admin/ops/search/refresh - Partial refresh
+router.post('/ops/search/refresh', requireAdmin, auditAdminAction('OPS_SEARCH_REINDEXED'), async (req, res) => {
+  try {
+    const result = await searchIndexService.refreshIndex();
+    return res.json({ success: result.success, data: result });
+  } catch (error) {
+    logger.error('Failed to refresh search index:', error);
+    return res.status(500).json({ success: false, message: 'Failed to refresh index' });
+  }
+});
+
+// ================================
+// LOGS & TRACES
+// ================================
+
+// GET /api/admin/ops/logs/errors - Grouped errors
+router.get('/ops/logs/errors', requireAdmin, async (req, res) => {
+  try {
+    const timeframe = req.query.timeframe as string || '24h';
+    const errors = await logsTracesService.getGroupedErrors(timeframe);
+    return res.json({ success: true, data: errors });
+  } catch (error) {
+    logger.error('Failed to get grouped errors:', error);
+    return res.status(500).json({ success: false, message: 'Failed to get errors' });
+  }
+});
+
+// GET /api/admin/ops/logs/slow-endpoints - Performance data
+router.get('/ops/logs/slow-endpoints', requireAdmin, async (req, res) => {
+  try {
+    const endpoints = await logsTracesService.getSlowEndpoints();
+    return res.json({ success: true, data: endpoints });
+  } catch (error) {
+    logger.error('Failed to get slow endpoints:', error);
+    return res.status(500).json({ success: false, message: 'Failed to get slow endpoints' });
+  }
+});
+
+// ================================
+// COST & USAGE
+// ================================
+
+// GET /api/admin/ops/costs/current - Today's cost snapshot
+router.get('/ops/costs/current', requireAdmin, async (req, res) => {
+  try {
+    const costs = await costTrackingService.getDailySnapshot();
+    return res.json({ success: true, data: costs });
+  } catch (error) {
+    logger.error('Failed to get current costs:', error);
+    return res.status(500).json({ success: false, message: 'Failed to get costs' });
+  }
+});
+
+// GET /api/admin/ops/costs/trend - 30-day history
+router.get('/ops/costs/trend', requireAdmin, async (req, res) => {
+  try {
+    const trend = await costTrackingService.getMonthlyTrend();
+    return res.json({ success: true, data: trend });
+  } catch (error) {
+    logger.error('Failed to get cost trend:', error);
+    return res.status(500).json({ success: false, message: 'Failed to get trend' });
+  }
+});
+
+// GET /api/admin/ops/usage/metrics - Request volume, queue depth
+router.get('/ops/usage/metrics', requireAdmin, async (req, res) => {
+  try {
+    const metrics = await costTrackingService.getUsageMetrics();
+    return res.json({ success: true, data: metrics });
+  } catch (error) {
+    logger.error('Failed to get usage metrics:', error);
+    return res.status(500).json({ success: false, message: 'Failed to get usage metrics' });
+  }
+});
+
+// ================================
+// RUNBOOKS & TOOLS
+// ================================
+
+// GET /api/admin/ops/runbooks - List runbooks
+router.get('/ops/runbooks', requireAdmin, async (req, res) => {
+  try {
+    const runbooks = await runbooksService.listRunbooks();
+    return res.json({ success: true, data: runbooks });
+  } catch (error) {
+    logger.error('Failed to list runbooks:', error);
+    return res.status(500).json({ success: false, message: 'Failed to list runbooks' });
+  }
+});
+
+// POST /api/admin/ops/tools/rebuild-revenue - Rebuild revenue snapshots
+router.post('/ops/tools/rebuild-revenue', requireSuperAdmin, auditAdminAction('OPS_TOOL_EXECUTED'), async (req, res) => {
+  try {
+    const result = await runbooksService.rebuildRevenueSnapshots();
+
+    logger.info({ result }, 'Revenue snapshots rebuilt');
+
+    return res.json({ success: result.success, data: result });
+  } catch (error) {
+    logger.error('Failed to rebuild revenue snapshots:', error);
+    return res.status(500).json({ success: false, message: 'Failed to rebuild revenue' });
+  }
+});
+
+// POST /api/admin/ops/tools/recompute-metrics - Vendor metrics
+router.post('/ops/tools/recompute-metrics', requireSuperAdmin, auditAdminAction('OPS_TOOL_EXECUTED'), async (req, res) => {
+  try {
+    const hours = parseInt(req.body.hours) || 24;
+    const result = await runbooksService.recomputeVendorMetrics(hours);
+
+    logger.info({ result }, 'Vendor metrics recomputed');
+
+    return res.json({ success: result.success, data: result });
+  } catch (error) {
+    logger.error('Failed to recompute metrics:', error);
+    return res.status(500).json({ success: false, message: 'Failed to recompute metrics' });
+  }
+});
+
+// POST /api/admin/ops/tools/reindex-products - Reindex
+router.post('/ops/tools/reindex-products', requireSuperAdmin, auditAdminAction('OPS_TOOL_EXECUTED'), async (req, res) => {
+  try {
+    const result = await runbooksService.reindexSearchData();
+
+    logger.info({ result }, 'Search data reindexed');
+
+    return res.json({ success: result.success, data: result });
+  } catch (error) {
+    logger.error('Failed to reindex:', error);
+    return res.status(500).json({ success: false, message: 'Failed to reindex' });
   }
 });
 

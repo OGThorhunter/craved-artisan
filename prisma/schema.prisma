@@ -89,6 +89,15 @@ model User {
   primaryDuplicates DuplicateUser[]    @relation("PrimaryUser")
   duplicateRecords  DuplicateUser[]    @relation("DuplicateUser")
 
+  // Support system relations
+  ticketsRequested  SupportTicket[] @relation("TicketRequester")
+  ticketsAssigned   SupportTicket[] @relation("TicketAssignee")
+  ticketsRelated    SupportTicket[] @relation("TicketRelatedUser")
+  supportMessages   SupportMessage[]
+
+  // Ops relations
+  featureFlagsUpdated FeatureFlag[]
+
   @@index([zip_code])
   @@index([oauthProvider, oauthProviderId])
   @@index([status])
@@ -347,6 +356,9 @@ model Order {
   timeline      OrderTimeline[]
   labelJobs     LabelJob[]
   modifications OrderModification[]
+  
+  // Support system relations
+  supportTickets SupportTicket[]
 
   @@index([userId, createdAt])
   @@index([contextType, marketId])
@@ -2180,14 +2192,28 @@ model SystemCheck {
 }
 
 model FeatureFlag {
-  id        String   @id @default(cuid())
-  key       String   @unique
-  enabled   Boolean  @default(false)
-  rules     Json? // audience, % rollout
-  notes     String?
-  updatedAt DateTime @updatedAt
+  id                String    @id @default(cuid())
+  key               String    @unique
+  enabled           Boolean   @default(false)
+  scope             FlagScope @default(GLOBAL) // global|admin|vendor|customer
+  rolloutPercentage Int       @default(100) // 0-100
+  rules             Json? // audience, % rollout
+  notes             String?
+  updatedById       String?
+  updatedBy         User?     @relation(fields: [updatedById], references: [id])
+  updatedAt         DateTime  @updatedAt
+  createdAt         DateTime  @default(now())
 
   @@index([enabled])
+  @@index([scope])
+  @@index([updatedById])
+}
+
+enum FlagScope {
+  GLOBAL
+  ADMIN
+  VENDOR
+  CUSTOMER
 }
 
 model Incident {
@@ -2427,6 +2453,8 @@ enum AuditScope {
   EVENT
   CONFIG
   PRIVACY
+  SUPPORT
+  OPS
 }
 
 enum Severity {
@@ -3277,4 +3305,230 @@ model RevenuePolicy {
   createdAt            DateTime @default(now())
   
   @@index([key])
+}
+
+// ================================
+// SUPPORT TICKETING SYSTEM
+// ================================
+
+model SupportTicket {
+  id              String         @id @default(cuid())
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  subject         String
+  description     String
+  status          TicketStatus
+  severity        TicketSeverity
+  category        TicketCategory
+  subcategory     String?
+  requesterId     String?
+  requesterRole   String?
+  assignedToId    String?
+  relatedUserId   String?
+  relatedOrderId  String?
+  relatedEventId  String?
+  relatedPayoutId String?
+  source          TicketSource   // EMAIL | CHAT | DASHBOARD | SYSTEM
+  slaDueAt        DateTime?
+  tags            String?        // JSON array
+  auditTrail      String?        // JSON log
+  metadata        String?        // JSON
+  
+  messages        SupportMessage[]
+  requester       User?          @relation("TicketRequester", fields: [requesterId], references: [id])
+  assignedTo      User?          @relation("TicketAssignee", fields: [assignedToId], references: [id])
+  relatedUser     User?          @relation("TicketRelatedUser", fields: [relatedUserId], references: [id])
+  relatedOrder    Order?         @relation(fields: [relatedOrderId], references: [id])
+  
+  @@index([status])
+  @@index([severity])
+  @@index([category])
+  @@index([assignedToId])
+  @@index([requesterId])
+  @@index([slaDueAt])
+  @@index([createdAt])
+}
+
+model SupportMessage {
+  id          String   @id @default(cuid())
+  ticketId    String
+  senderId    String?
+  senderRole  String?
+  body        String
+  attachments String?  // JSON
+  internal    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  
+  ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  sender      User?         @relation(fields: [senderId], references: [id])
+  
+  @@index([ticketId])
+  @@index([createdAt])
+}
+
+enum TicketStatus { 
+  OPEN 
+  PENDING 
+  AWAITING_VENDOR 
+  RESOLVED 
+  CLOSED 
+  ESCALATED 
+}
+
+enum TicketSeverity { 
+  LOW 
+  NORMAL 
+  HIGH 
+  CRITICAL 
+}
+
+enum TicketCategory { 
+  ACCOUNT 
+  ORDER 
+  PAYMENT 
+  INVENTORY 
+  EVENT 
+  TECH 
+  COMPLIANCE 
+  FEEDBACK 
+  OTHER 
+}
+
+enum TicketSource { 
+  EMAIL 
+  CHAT 
+  DASHBOARD 
+  SYSTEM 
+}
+
+// ================================
+// OPS MANAGEMENT MODELS
+// ================================
+
+model WebhookEndpoint {
+  id            String   @id @default(cuid())
+  provider      String // STRIPE, SENDGRID, TAXJAR, MAP_PROVIDER
+  url           String
+  secret        String? // Encrypted webhook secret
+  isActive      Boolean  @default(true)
+  lastDelivery  DateTime?
+  lastStatus    Int? // HTTP status code
+  lastError     String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  deliveries WebhookDelivery[]
+  
+  @@index([provider])
+  @@index([isActive])
+  @@index([lastDelivery])
+}
+
+model WebhookDelivery {
+  id           String   @id @default(cuid())
+  endpointId   String
+  eventType    String
+  payload      String // JSON payload
+  status       Int // HTTP status code
+  response     String?
+  attemptCount Int      @default(1)
+  idempotencyKey String?
+  deliveredAt  DateTime @default(now())
+  durationMs   Int?
+  
+  endpoint WebhookEndpoint @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+  
+  @@index([endpointId, deliveredAt])
+  @@index([status])
+  @@index([idempotencyKey])
+}
+
+model CacheNamespace {
+  id          String   @id @default(cuid())
+  namespace   String   @unique // kpi:*, vendorDash:*, session:*, etc.
+  description String?
+  keyPattern  String // Pattern for keys in this namespace
+  ttlSeconds  Int? // Default TTL for this namespace
+  createdAt   DateTime @default(now())
+  
+  @@index([namespace])
+}
+
+model CostSnapshot {
+  id                   String   @id @default(cuid())
+  date                 DateTime @unique @default(now())
+  renderCostCents      Int      @default(0)
+  redisCostCents       Int      @default(0)
+  databaseCostCents    Int      @default(0)
+  sendGridCostCents    Int      @default(0)
+  stripeFeesCents      Int      @default(0)
+  storageCostCents     Int      @default(0)
+  totalCostCents       Int      @default(0)
+  requestVolume        Int      @default(0)
+  queueDepthAvg        Int      @default(0)
+  createdAt            DateTime @default(now())
+  
+  @@index([date])
+}
+
+model Runbook {
+  id            String   @id @default(cuid())
+  title         String
+  incidentType  String // Maps to incident severity or category
+  content       String // Markdown content with steps
+  priority      Int      @default(0) // Display order
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([incidentType])
+  @@index([isActive])
+}
+
+model MaintenanceWindow {
+  id              String    @id @default(cuid())
+  type            MaintenanceType
+  status          MaintenanceStatus @default(SCHEDULED)
+  reason          String
+  affectedServices String? // JSON array of service names
+  scheduledStart  DateTime
+  scheduledEnd    DateTime
+  actualStart     DateTime?
+  actualEnd       DateTime?
+  createdById     String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@index([status])
+  @@index([scheduledStart])
+}
+
+enum MaintenanceType {
+  GLOBAL_READONLY
+  VENDOR_READONLY
+  QUEUE_DRAIN
+  DATABASE_MAINTENANCE
+  DEPLOYMENT
+}
+
+enum MaintenanceStatus {
+  SCHEDULED
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+model DeploymentRecord {
+  id          String   @id @default(cuid())
+  gitSha      String
+  gitBranch   String   @default("main")
+  gitAuthor   String?
+  environment String   @default("production") // production, staging, development
+  deployedBy  String? // User ID or system
+  notes       String?
+  deployedAt  DateTime @default(now())
+  
+  @@index([deployedAt])
+  @@index([environment])
+  @@index([gitSha])
 }

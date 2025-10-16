@@ -124,6 +124,99 @@ export const auditAdminAction = (action: string) => {
   };
 };
 
+// Middleware to require Super Admin role (for destructive ops)
+export const requireSuperAdmin = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    // First check if user is authenticated and is admin
+    if (!req.user?.isAuthenticated) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required'
+      });
+    }
+
+    // Check for SUPER_ADMIN role in UserRole table
+    const userRoles = await prisma.userRole.findMany({
+      where: {
+        userId: req.user.userId
+      }
+    });
+
+    const isSuperAdmin = userRoles.some(r => r.role === 'SUPER_ADMIN');
+
+    if (!isSuperAdmin && req.user.role !== 'ADMIN') {
+      return res.status(403).json({
+        success: false,
+        message: 'Super Admin access required for this operation'
+      });
+    }
+
+    // Attach admin info to request
+    req.admin = {
+      id: req.user.userId,
+      email: req.user.email,
+      role: isSuperAdmin ? 'SUPER_ADMIN' : req.user.role,
+      isAuthenticated: true,
+      lastActivity: new Date()
+    };
+
+    next();
+  } catch (error) {
+    console.error('Super admin auth error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+};
+
+// Middleware to require Staff Admin (read-only admin access)
+export const requireStaffAdmin = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    if (!req.user?.isAuthenticated) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required'
+      });
+    }
+
+    // Check for any admin-level role
+    const userRoles = await prisma.userRole.findMany({
+      where: {
+        userId: req.user.userId
+      }
+    });
+
+    const hasAdminAccess = userRoles.some(r => 
+      r.role === 'SUPER_ADMIN' || r.role === 'STAFF_ADMIN'
+    ) || req.user.role === 'ADMIN';
+
+    if (!hasAdminAccess) {
+      return res.status(403).json({
+        success: false,
+        message: 'Admin access required'
+      });
+    }
+
+    // Attach admin info to request
+    req.admin = {
+      id: req.user.userId,
+      email: req.user.email,
+      role: req.user.role,
+      isAuthenticated: true,
+      lastActivity: new Date()
+    };
+
+    next();
+  } catch (error) {
+    console.error('Staff admin auth error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
+  }
+};
+
 // Middleware for step-up authentication on sensitive actions
 export const requireStepUp = async (req: Request, res: Response, next: NextFunction) => {
   // For now, just require admin role

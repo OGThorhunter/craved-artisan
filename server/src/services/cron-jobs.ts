@@ -68,6 +68,30 @@ export class CronJobService {
       }
     });
 
+    // Support SLA checks every 10 minutes (fallback when BullMQ is disabled)
+    if (process.env.USE_BULLMQ !== 'true') {
+      this.scheduleJob('support-sla-check', '*/10 * * * *', async () => {
+        try {
+          logger.info('Running scheduled support SLA check (cron fallback)...');
+          const { checkSlaBreaches } = await import('../jobs/support-sla-check');
+          await checkSlaBreaches();
+        } catch (error) {
+          logger.error('Support SLA check failed:', error);
+        }
+      });
+
+      // Support auto-close checks daily at 2 AM
+      this.scheduleJob('support-auto-close', '0 2 * * *', async () => {
+        try {
+          logger.info('Running scheduled support auto-close (cron fallback)...');
+          const { autoCloseResolvedTickets } = await import('../jobs/support-auto-close');
+          await autoCloseResolvedTickets();
+        } catch (error) {
+          logger.error('Support auto-close failed:', error);
+        }
+      });
+    }
+
     logger.info(`Started ${this.jobs.size} cron jobs`);
   }
 

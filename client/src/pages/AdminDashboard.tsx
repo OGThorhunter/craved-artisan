@@ -20,6 +20,9 @@ import {
   Lock,
   ShoppingCart,
   HelpCircle,
+  Headphones,
+  FileText,
+  MessageSquare,
 } from 'lucide-react';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
@@ -47,7 +50,7 @@ const colors = {
   sub: 'text-[#4b4b4b]',
 };
 
-type TabType = 'overview' | 'revenue' | 'ops' | 'marketplace' | 'crm' | 'trust' | 'search' | 'growth' | 'security' | 'incidents' | 'settings';
+type TabType = 'overview' | 'revenue' | 'ops' | 'marketplace' | 'crm' | 'trust' | 'search' | 'growth' | 'security' | 'incidents' | 'settings' | 'support' | 'audit';
 
 interface AdminOverview {
   health: {
@@ -122,6 +125,16 @@ export default function AdminDashboard() {
   });
 
   const handleTabChange = (tab: TabType) => {
+    if (tab === 'support') {
+      setLocation('/control/support');
+      announce('Navigating to Support');
+      return;
+    }
+    if (tab === 'crm') {
+      setLocation('/control/users');
+      announce('Navigating to User Management');
+      return;
+    }
     setActiveTab(tab);
     announce(`Switched to ${tab} tab`);
   };
@@ -185,13 +198,13 @@ export default function AdminDashboard() {
             <Card className="p-4">
               <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                  overview.health.overall === 'OK' ? 'bg-green-100' :
-                  overview.health.overall === 'WARN' ? 'bg-yellow-100' : 'bg-red-100'
+                  overview.health?.overall === 'OK' ? 'bg-green-100' :
+                  overview.health?.overall === 'WARN' ? 'bg-yellow-100' : 'bg-red-100'
                 }`}>
-                  {getStatusIcon(overview.health.overall)}
+                  {getStatusIcon(overview.health?.overall || 'OK')}
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-[#2b2b2b]">{overview.health.overall}</p>
+                  <p className="text-2xl font-bold text-[#2b2b2b]">{overview.health?.overall || 'OK'}</p>
                   <p className="text-sm text-[#4b4b4b]">Overall Status</p>
                 </div>
               </div>
@@ -199,21 +212,21 @@ export default function AdminDashboard() {
 
             <Card className="p-4">
               <div className="text-center">
-                <p className="text-2xl font-bold text-green-600">{overview.health.summary.ok}</p>
+                <p className="text-2xl font-bold text-green-600">{overview.health?.summary?.ok || 0}</p>
                 <p className="text-sm text-[#4b4b4b]">Healthy</p>
               </div>
             </Card>
 
             <Card className="p-4">
               <div className="text-center">
-                <p className="text-2xl font-bold text-yellow-600">{overview.health.summary.warn}</p>
+                <p className="text-2xl font-bold text-yellow-600">{overview.health?.summary?.warn || 0}</p>
                 <p className="text-sm text-[#4b4b4b]">Warnings</p>
               </div>
             </Card>
 
             <Card className="p-4">
               <div className="text-center">
-                <p className="text-2xl font-bold text-red-600">{overview.health.summary.crit}</p>
+                <p className="text-2xl font-bold text-red-600">{overview.health?.summary?.crit || 0}</p>
                 <p className="text-sm text-[#4b4b4b]">Critical</p>
               </div>
             </Card>
@@ -221,7 +234,7 @@ export default function AdminDashboard() {
         )}
 
         {/* Health Checks Detail */}
-        {overview?.health.checks && (
+        {overview?.health?.checks && overview.health.checks.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {overview.health.checks.map((check, index) => (
               <motion.div
@@ -265,7 +278,7 @@ export default function AdminDashboard() {
                   <Users className="h-5 w-5 text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-[#2b2b2b]">{overview.metrics.vendors.total}</p>
+                  <p className="text-2xl font-bold text-[#2b2b2b]">{overview.metrics?.vendors?.total || 0}</p>
                   <p className="text-sm text-[#4b4b4b]">Total Vendors</p>
                 </div>
               </div>
@@ -277,7 +290,7 @@ export default function AdminDashboard() {
                   <ShoppingCart className="h-5 w-5 text-green-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-[#2b2b2b]">{overview.metrics.orders.total}</p>
+                  <p className="text-2xl font-bold text-[#2b2b2b]">{overview.metrics?.orders?.total || 0}</p>
                   <p className="text-sm text-[#4b4b4b]">Total Orders</p>
                 </div>
               </div>
@@ -290,7 +303,7 @@ export default function AdminDashboard() {
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-[#2b2b2b]">
-                    {formatCurrency(overview.metrics.revenue.total)}
+                    {formatCurrency(overview.metrics?.revenue?.total || 0)}
                   </p>
                   <p className="text-sm text-[#4b4b4b]">Total Revenue</p>
                 </div>
@@ -303,7 +316,7 @@ export default function AdminDashboard() {
                   <MessageSquare className="h-5 w-5 text-purple-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-[#2b2b2b]">{overview.metrics.messages.unread}</p>
+                  <p className="text-2xl font-bold text-[#2b2b2b]">{overview.metrics?.messages?.unread || 0}</p>
                   <p className="text-sm text-[#4b4b4b]">Unread Messages</p>
                 </div>
               </div>
@@ -318,41 +331,53 @@ export default function AdminDashboard() {
           <div>
             <h3 className="text-lg font-semibold text-[#2b2b2b] mb-4">Recent Orders</h3>
             <div className="space-y-3">
-              {overview.recentActivity.orders.map((order: any) => (
-                <Card key={order.id} className="p-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-[#2b2b2b]">Order #{order.id.slice(-8)}</p>
-                      <p className="text-sm text-[#4b4b4b]">{order.vendor?.storeName}</p>
+              {overview.recentActivity.orders && overview.recentActivity.orders.length > 0 ? (
+                overview.recentActivity.orders.map((order: any) => (
+                  <Card key={order.id} className="p-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-[#2b2b2b]">Order #{order.id.slice(-8)}</p>
+                        <p className="text-sm text-[#4b4b4b]">{order.vendor?.storeName}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium text-[#2b2b2b]">
+                          {formatCurrency(order.totalAmount)}
+                        </p>
+                        <p className="text-sm text-[#4b4b4b]">{formatDate(order.createdAt)}</p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-medium text-[#2b2b2b]">
-                        {formatCurrency(order.totalAmount)}
-                      </p>
-                      <p className="text-sm text-[#4b4b4b]">{formatDate(order.createdAt)}</p>
-                    </div>
-                  </div>
+                  </Card>
+                ))
+              ) : (
+                <Card className="p-3">
+                  <p className="text-sm text-[#4b4b4b]">No recent orders</p>
                 </Card>
-              ))}
+              )}
             </div>
           </div>
 
           <div>
             <h3 className="text-lg font-semibold text-[#2b2b2b] mb-4">Recent Vendors</h3>
             <div className="space-y-3">
-              {overview.recentActivity.vendors.map((vendor: any) => (
-                <Card key={vendor.id} className="p-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium text-[#2b2b2b]">{vendor.storeName}</p>
-                      <p className="text-sm text-[#4b4b4b]">{vendor.city}, {vendor.state}</p>
+              {overview.recentActivity.vendors && overview.recentActivity.vendors.length > 0 ? (
+                overview.recentActivity.vendors.map((vendor: any) => (
+                  <Card key={vendor.id} className="p-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium text-[#2b2b2b]">{vendor.storeName}</p>
+                        <p className="text-sm text-[#4b4b4b]">{vendor.city}, {vendor.state}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm text-[#4b4b4b]">{formatDate(vendor.createdAt)}</p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm text-[#4b4b4b]">{formatDate(vendor.createdAt)}</p>
-                    </div>
-                  </div>
+                  </Card>
+                ))
+              ) : (
+                <Card className="p-3">
+                  <p className="text-sm text-[#4b4b4b]">No recent vendors</p>
                 </Card>
-              ))}
+              )}
             </div>
           </div>
         </div>
@@ -558,6 +583,8 @@ export default function AdminDashboard() {
     { id: 'ops', label: 'Ops', icon: Activity },
     { id: 'marketplace', label: 'Marketplace', icon: Globe },
     { id: 'crm', label: 'CRM', icon: Users },
+    { id: 'support', label: 'Support', icon: Headphones },
+    { id: 'audit', label: 'Audit Logs', icon: FileText },
     { id: 'trust', label: 'Trust & Safety', icon: Shield },
     { id: 'search', label: 'Search & AI', icon: Search },
     { id: 'growth', label: 'Growth', icon: TrendingUp },
@@ -642,7 +669,7 @@ export default function AdminDashboard() {
           <div className="flex gap-6">
             {/* Sidebar */}
             <div className="w-64 flex-shrink-0">
-              <nav className="space-y-1">
+              <nav className="space-y-1" role="navigation" aria-label="Admin dashboard navigation">
                 {tabs.map(tab => {
                   const Icon = tab.icon;
                   return (
@@ -656,8 +683,7 @@ export default function AdminDashboard() {
                           : 'text-[#4b4b4b] hover:bg-white/50'
                       }`}
                       aria-label={`Switch to ${tab.label} tab`}
-                      aria-selected={activeTab === tab.id}
-                      role="tab"
+                      aria-current={activeTab === tab.id ? 'page' : undefined}
                     >
                       <Icon className="h-4 w-4" />
                       {tab.label}

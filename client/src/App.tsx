@@ -45,7 +45,6 @@ import PulsePage from './pages/dashboard/vendor/PulsePage';
 import SettingsPage from './pages/SettingsPage';
 
 import DemoStorefrontPage from './pages/vendor/DemoStorefrontPage';
-import AdminDashboardPage from './pages/AdminDashboardPage';
 import EventCoordinatorDashboardPage from './pages/EventCoordinatorDashboardPage';
 import DropoffDashboardPage from './pages/DropoffDashboardPage';
 import InventoryPage from './pages/inventory/InventoryPage';
@@ -65,6 +64,7 @@ import EventsCoordinatorConsole from './pages/EventsCoordinatorConsole';
 import AdminDashboard from './pages/AdminDashboard';
 import UsersListPage from './pages/control/UsersListPage';
 import UserDetailPage from './pages/control/UserDetailPage';
+import SupportPage from './pages/control/SupportPage';
 import VendorWatchlistPage from './pages/VendorWatchlistPage';
 import VendorSalesWindowsPage from './pages/VendorSalesWindowsPage';
 import VendorDeliveryBatchingPage from './pages/VendorDeliveryBatchingPage';
@@ -141,9 +141,16 @@ function App() {
             <Route path="/events/search" component={EventsSearchPage} />
             <Route path="/events/:slug" component={EventDetailPage} />
             <Route path="/events/coordinator" component={EventsCoordinatorConsole} />
-            <Route path="/admin" component={AdminDashboard} />
+            <Route path="/admin">
+              {() => {
+                window.location.href = '/dashboard/admin';
+                return null;
+              }}
+            </Route>
             <Route path="/control/users" component={UsersListPage} />
             <Route path="/control/users/:id" component={UserDetailPage} />
+            <Route path="/control/support" component={SupportPage} />
+            <Route path="/control/support/:id" component={SupportPage} />
             <Route path="/search" component={AdvancedSearchPage} />
             <Route path="/help" component={KnowledgeBasePage} />
             <Route path="/recipes" component={RecipeToolPage} />
@@ -190,7 +197,7 @@ function App() {
             </Route>
             <Route path="/dashboard/admin">
               <ProtectedRoute role="ADMIN">
-                <AdminDashboardPage />
+                <AdminDashboard />
               </ProtectedRoute>
             </Route>
             <Route path="/dashboard/vendor/site-settings">
@@ -347,7 +354,7 @@ function App() {
             </Route>
             <Route path="/dashboard/admin">
               <ProtectedRoute role="ADMIN">
-                <AdminDashboardPage />
+                <AdminDashboard />
               </ProtectedRoute>
             </Route>
             <Route path="/dashboard/event-coordinator">

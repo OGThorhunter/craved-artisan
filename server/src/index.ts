@@ -101,6 +101,7 @@ import adminSecurityComplianceRouter from './routes/admin-security-compliance.ro
 import adminUsersRouter from './routes/admin-users.router';
 import adminAuditRouter from './routes/admin-audit.router';
 import adminRevenueRouter from './routes/admin-revenue.router';
+import adminSupportRouter from './routes/admin-support.router';
 
 const app = express();
 const PORT = Number(process.env.PORT || 3001);
@@ -271,6 +272,7 @@ app.use('/api/admin', adminSecurityComplianceRouter);
 app.use('/api/admin/users', adminUsersRouter);
 app.use('/api/admin/audit', adminAuditRouter);
 app.use('/api/admin/revenue', adminRevenueRouter);
+app.use('/api/admin/support', adminSupportRouter);
 
 // Settings & Account Hub routes
 app.use('/api/settings', settingsRouter);
@@ -283,9 +285,35 @@ app.listen(PORT, () => {
   logger.info(`🔐 Auth endpoints: http://localhost:${PORT}/api/auth`);
   logger.info(`📊 Pulse endpoints: http://localhost:${PORT}/api/vendor/:vendorId/pulse`);
   logger.info(`👑 Admin dashboard: http://localhost:${PORT}/admin`);
+  logger.info(`🎫 Support system: http://localhost:${PORT}/api/admin/support`);
   
   // Start cron jobs
   cronJobs.startAllJobs();
+  
+  // Initialize support system workers
+  if (process.env.USE_BULLMQ === 'true') {
+    import('./jobs/support-sla-check').then(({ initSlaCheckWorker, scheduleSlaChecks }) => {
+      initSlaCheckWorker();
+      scheduleSlaChecks();
+    });
+    
+    import('./jobs/support-auto-close').then(({ initAutoCloseWorker, scheduleAutoClose }) => {
+      initAutoCloseWorker();
+      scheduleAutoClose();
+    });
+    
+    import('./jobs/support-email-queue').then(({ initEmailWorker }) => {
+      initEmailWorker();
+    });
+    
+    import('./jobs/support-ai-triage').then(({ initAITriageWorker }) => {
+      initAITriageWorker();
+    });
+    
+    logger.info('✅ Support system BullMQ workers initialized');
+  } else {
+    logger.info('⚙️  Support system using node-cron fallback (BullMQ disabled)');
+  }
 });
 
 // Graceful shutdown
