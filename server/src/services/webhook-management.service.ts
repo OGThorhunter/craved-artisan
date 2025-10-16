@@ -25,7 +25,7 @@ class WebhookManagementService {
         secret: e.secret ? '***masked***' : null
       }));
     } catch (error) {
-      logger.error('Failed to list webhook endpoints:', error);
+      logger.error({ error }, 'Failed to list webhook endpoints');
       throw error;
     }
   }
@@ -47,7 +47,7 @@ class WebhookManagementService {
 
       return deliveries;
     } catch (error) {
-      logger.error('Failed to get recent deliveries:', error);
+      logger.error({ error }, 'Failed to get recent deliveries');
       throw error;
     }
   }
@@ -75,7 +75,7 @@ class WebhookManagementService {
         message: 'Webhook delivery replayed successfully'
       };
     } catch (error) {
-      logger.error('Failed to replay delivery:', error);
+      logger.error({ error }, 'Failed to replay delivery');
       return {
         success: false,
         message: String(error)
@@ -117,7 +117,7 @@ class WebhookManagementService {
         instructions
       };
     } catch (error) {
-      logger.error('Failed to rotate secret:', error);
+      logger.error({ error }, 'Failed to rotate secret');
       return {
         success: false,
         instructions: String(error)
@@ -156,7 +156,7 @@ class WebhookManagementService {
         successRate
       };
     } catch (error) {
-      logger.error('Failed to get webhook health dashboard:', error);
+      logger.error({ error }, 'Failed to get webhook health dashboard');
       throw error;
     }
   }

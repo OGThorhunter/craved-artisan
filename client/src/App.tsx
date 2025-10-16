@@ -42,7 +42,6 @@ import BatchPricingPage from './pages/BatchPricingPage';
 import VendorEventsPage from './pages/vendor/VendorEventsPage';
 import VendorFinancialsPage from './pages/vendor/VendorFinancialsPage';
 import PulsePage from './pages/dashboard/vendor/PulsePage';
-import SettingsPage from './pages/SettingsPage';
 
 import DemoStorefrontPage from './pages/vendor/DemoStorefrontPage';
 import EventCoordinatorDashboardPage from './pages/EventCoordinatorDashboardPage';
@@ -65,6 +64,7 @@ import AdminDashboard from './pages/AdminDashboard';
 import UsersListPage from './pages/control/UsersListPage';
 import UserDetailPage from './pages/control/UserDetailPage';
 import SupportPage from './pages/control/SupportPage';
+import SettingsPage from './pages/admin/SettingsPage';
 import VendorWatchlistPage from './pages/VendorWatchlistPage';
 import VendorSalesWindowsPage from './pages/VendorSalesWindowsPage';
 import VendorDeliveryBatchingPage from './pages/VendorDeliveryBatchingPage';
@@ -151,6 +151,7 @@ function App() {
             <Route path="/control/users/:id" component={UserDetailPage} />
             <Route path="/control/support" component={SupportPage} />
             <Route path="/control/support/:id" component={SupportPage} />
+            <Route path="/control/settings" component={SettingsPage} />
             <Route path="/search" component={AdvancedSearchPage} />
             <Route path="/help" component={KnowledgeBasePage} />
             <Route path="/recipes" component={RecipeToolPage} />

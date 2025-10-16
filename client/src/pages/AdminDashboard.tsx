@@ -31,12 +31,14 @@ import SEOHead from '../components/SEOHead';
 import SLODashboard from '../components/SLODashboard';
 import SystemMessagesDrawer from '../components/SystemMessagesDrawer';
 import RevenueDashboard from '../components/RevenueDashboard';
+import { RevenueOverview } from './admin/RevenueOverview';
 import OperationsDashboard from '../components/OperationsDashboard';
 import MarketplaceDashboard from '../components/MarketplaceDashboard';
 import TrustSafetyDashboard from '../components/TrustSafetyDashboard';
 import GrowthSocialDashboard from '../components/GrowthSocialDashboard';
 import SecurityComplianceDashboard from '../components/SecurityComplianceDashboard';
 import KeyboardShortcutsModal from '../components/KeyboardShortcutsModal';
+import HealthIncidentsViewNew from '../components/ops/HealthIncidentsViewNew';
 import { useAccessibilityAnnouncement, useFocusManagement, useReducedMotion } from '../services/accessibility';
 
 const colors = {
@@ -130,9 +132,14 @@ export default function AdminDashboard() {
       announce('Navigating to Support');
       return;
     }
-    if (tab === 'crm') {
-      setLocation('/control/users');
-      announce('Navigating to User Management');
+    if (tab === 'settings') {
+      setLocation('/control/settings');
+      announce('Navigating to Settings');
+      return;
+    }
+    if (tab === 'audit') {
+      setLocation('/control/audit');
+      announce('Navigating to Audit Logs');
       return;
     }
     setActiveTab(tab);
@@ -387,7 +394,7 @@ export default function AdminDashboard() {
 
   const renderRevenueTab = () => (
     <div className="space-y-6">
-      <RevenueDashboard />
+      <RevenueOverview />
     </div>
   );
 
@@ -534,18 +541,7 @@ export default function AdminDashboard() {
     </div>
   );
 
-  const renderIncidentsTab = () => (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-[#2b2b2b]">Incidents & Runbooks</h2>
-      <Card className="p-8 text-center">
-        <AlertTriangle className="h-12 w-12 text-[#4b4b4b] mx-auto mb-4" />
-        <h3 className="text-lg font-semibold text-[#2b2b2b] mb-2">Incident Management</h3>
-        <p className="text-[#4b4b4b]">
-          Incident tracking, runbooks, and postmortems coming soon.
-        </p>
-      </Card>
-    </div>
-  );
+  const renderIncidentsTab = () => <HealthIncidentsViewNew />;
 
   const renderSettingsTab = () => (
     <div className="space-y-6">

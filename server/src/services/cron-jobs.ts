@@ -2,6 +2,9 @@ import cron from 'node-cron';
 import { systemHealth } from './system-health';
 import { logger } from '../logger';
 import { verifyAuditChain } from '../jobs/audit-verify';
+import { costTrackingService } from './cost-tracking.service';
+import { maintenanceModeService } from './maintenance-mode.service';
+import { profitLossService } from './profit-loss.service';
 
 export class CronJobService {
   private static instance: CronJobService;
@@ -65,6 +68,42 @@ export class CronJobService {
         }
       } catch (error) {
         logger.error('Audit verification job failed:', error);
+      }
+    });
+
+    // Daily cost snapshot at 1 AM
+    this.scheduleJob('cost-snapshot', '0 1 * * *', async () => {
+      try {
+        logger.info('Creating daily cost snapshot...');
+        await costTrackingService.createDailySnapshot();
+        logger.info('Daily cost snapshot created successfully');
+      } catch (error) {
+        logger.error('Cost snapshot job failed:', error);
+      }
+    });
+
+    // Monthly P&L generation on 1st of each month at 3 AM
+    this.scheduleJob('monthly-pl', '0 3 1 * *', async () => {
+      try {
+        logger.info('Generating monthly P&L snapshot...');
+        
+        // Generate P&L for the previous month
+        const now = new Date();
+        const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        
+        await profitLossService.generateMonthlyPL(lastMonth);
+        logger.info({ month: lastMonth }, 'Monthly P&L snapshot generated successfully');
+      } catch (error) {
+        logger.error('Monthly P&L generation job failed:', error);
+      }
+    });
+
+    // Auto-complete expired maintenance windows every 5 minutes
+    this.scheduleJob('maintenance-auto-complete', '*/5 * * * *', async () => {
+      try {
+        await maintenanceModeService.autoCompleteExpired();
+      } catch (error) {
+        logger.error('Maintenance auto-complete job failed:', error);
       }
     });
 

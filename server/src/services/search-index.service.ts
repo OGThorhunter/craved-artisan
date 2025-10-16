@@ -35,7 +35,7 @@ class SearchIndexService {
         indexHealth
       };
     } catch (error) {
-      logger.error('Failed to get search index stats:', error);
+      logger.error({ error }, 'Failed to get search index stats:', error);
       throw error;
     }
   }
@@ -106,7 +106,7 @@ class SearchIndexService {
         documentsIndexed: indexed
       };
     } catch (error) {
-      logger.error('Failed to rebuild search index:', error);
+      logger.error({ error }, 'Failed to rebuild search index:', error);
       return {
         success: false,
         message: String(error),
@@ -177,7 +177,7 @@ class SearchIndexService {
         documentsRefreshed: refreshed
       };
     } catch (error) {
-      logger.error('Failed to refresh search index:', error);
+      logger.error({ error }, 'Failed to refresh search index:', error);
       return {
         success: false,
         message: String(error),
@@ -229,7 +229,7 @@ class SearchIndexService {
         issues
       };
     } catch (error) {
-      logger.error('Failed to monitor search index health:', error);
+      logger.error({ error }, 'Failed to monitor search index health:', error);
       return {
         status: 'CRIT',
         issues: ['Failed to check index health']

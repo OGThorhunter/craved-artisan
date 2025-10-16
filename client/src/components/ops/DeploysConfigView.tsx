@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { GitBranch, Calendar, User, Settings, Shield, AlertTriangle } from 'lucide-react';
+import { GitBranch, Calendar, User, Settings, Shield, AlertTriangle, Activity } from 'lucide-react';
 import Card from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import Button from '../ui/Button';

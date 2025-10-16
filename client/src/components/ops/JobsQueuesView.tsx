@@ -122,20 +122,7 @@ export default function JobsQueuesView() {
         </div>
       )}
 
-      {/* Driver Indicator */}
-      <Card className="p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-[#4b4b4b]">Queue Driver</p>
-            <p className="text-lg font-medium text-[#2b2b2b]">
-              {process.env.USE_BULLMQ === 'true' ? 'BullMQ (Production)' : 'node-cron (Development)'}
-            </p>
-          </div>
-          <Badge variant={process.env.USE_BULLMQ === 'true' ? 'success' : 'warning'}>
-            {process.env.USE_BULLMQ === 'true' ? 'Production Ready' : 'Dev Mode'}
-          </Badge>
-        </div>
-      </Card>
+      {/* Driver Indicator - Removed client-side process.env access */}
 
       {/* Queue Details */}
       <div>

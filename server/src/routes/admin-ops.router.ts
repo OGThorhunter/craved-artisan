@@ -14,6 +14,7 @@ import { maintenanceModeService } from '../services/maintenance-mode.service';
 import { deploymentTrackingService } from '../services/deployment-tracking.service';
 import { runbooksService } from '../services/runbooks.service';
 import { logger } from '../logger';
+import { prisma } from '../db';
 import { z } from 'zod';
 
 const router = Router();
@@ -269,14 +270,43 @@ router.get('/ops/vector/health', requireAdmin, async (req, res) => {
 // GET /api/admin/ops/health - All KPI cards
 router.get('/ops/health', requireAdmin, async (req, res) => {
   try {
-    const [queueHealth, dbHealth, emailHealth, incidentStats] = await Promise.all([
-      queueMonitor.getQueueHealth(),
-      dbHealthMonitor.getDatabaseHealth(),
-      emailHealthService.getOverallEmailHealth(),
-      incidentManagementService.getIncidentStats()
-    ]);
+    // Try each service individually to identify which one is failing
+    let queueHealth, dbHealth, emailHealth, incidentStats, cacheStats;
+    
+    try {
+      queueHealth = await queueMonitor.getQueueHealth();
+    } catch (error) {
+      logger.error('Queue health check failed:', error);
+      queueHealth = { status: 'CRIT', totalQueues: 0, healthyQueues: 0, warningQueues: 0, criticalQueues: 0, totalJobs: 0, failedJobs: 0, avgWaitTime: 0 };
+    }
 
-    const cacheStats = await redisCacheService.getMemoryStats();
+    try {
+      dbHealth = await dbHealthMonitor.getDatabaseHealth();
+    } catch (error) {
+      logger.error('Database health check failed:', error);
+      dbHealth = { status: 'CRIT', connectionHealth: 'CRIT', cacheHealth: 'CRIT', queryHealth: 'CRIT', summary: { connections: 0, cacheHitRatio: 0, slowQueries: 0, deadlocks: 0 } };
+    }
+
+    try {
+      emailHealth = await emailHealthService.getOverallEmailHealth();
+    } catch (error) {
+      logger.error('Email health check failed:', error);
+      emailHealth = { status: 'CRIT', providers: [] };
+    }
+
+    try {
+      incidentStats = await incidentManagementService.getIncidentStats();
+    } catch (error) {
+      logger.error('Incident stats check failed:', error);
+      incidentStats = { openCount: 0, mitigatedCount: 0, closedLast30Days: 0, mttr: 0, severity: { sev1: 0, sev2: 0, sev3: 0, sev4: 0 } };
+    }
+
+    try {
+      cacheStats = await redisCacheService.getMemoryStats();
+    } catch (error) {
+      logger.error('Cache stats check failed:', error);
+      cacheStats = { usedMemory: 0, maxMemory: 0, usedMemoryPercent: 0, evictedKeys: 0, hitRate: 0, missRate: 0 };
+    }
 
     return res.json({
       success: true,
@@ -365,7 +395,7 @@ router.patch('/ops/incidents/:id', requireAdmin, auditAdminAction('INCIDENT_STAT
   }
 });
 
-// POST /api/admin/ops/incidents/:id/timeline - Add timeline entry
+// POST /api/admin/ops/incidents/:id/timeline - Add timeline entry (Legacy)
 router.post('/ops/incidents/:id/timeline', requireAdmin, auditAdminAction('INCIDENT_TIMELINE_ADDED'), async (req, res) => {
   try {
     const { id } = req.params;
@@ -381,6 +411,121 @@ router.post('/ops/incidents/:id/timeline', requireAdmin, auditAdminAction('INCID
   } catch (error) {
     logger.error('Failed to add timeline entry:', error);
     return res.status(500).json({ success: false, message: 'Failed to add timeline entry' });
+  }
+});
+
+// GET /api/admin/ops/incidents/kpis - Get incident KPIs
+router.get('/ops/incidents/kpis', requireAdmin, async (req, res) => {
+  try {
+    const kpis = await incidentManagementService.getIncidentKPIs();
+    return res.json({ success: true, data: kpis });
+  } catch (error) {
+    logger.error('Failed to get incident KPIs:', error);
+    return res.status(500).json({ success: false, message: 'Failed to get KPIs' });
+  }
+});
+
+// GET /api/admin/ops/incidents/search - Search incidents with filters
+router.get('/ops/incidents/search', requireAdmin, async (req, res) => {
+  try {
+    const filters: any = {};
+    
+    if (req.query.status) filters.status = (req.query.status as string).split(',');
+    if (req.query.severity) filters.severity = (req.query.severity as string).split(',');
+    if (req.query.ownerId) filters.ownerId = req.query.ownerId as string;
+    if (req.query.services) filters.services = (req.query.services as string).split(',');
+    if (req.query.tags) filters.tags = (req.query.tags as string).split(',');
+    if (req.query.startDate) filters.startDate = new Date(req.query.startDate as string);
+    if (req.query.endDate) filters.endDate = new Date(req.query.endDate as string);
+    if (req.query.hasPostmortem !== undefined) filters.hasPostmortem = req.query.hasPostmortem === 'true';
+
+    const incidents = await incidentManagementService.searchIncidents(filters);
+    return res.json({ success: true, data: incidents });
+  } catch (error) {
+    logger.error('Failed to search incidents:', error);
+    return res.json({ success: false, message: 'Failed to search incidents' });
+  }
+});
+
+// GET /api/admin/ops/incidents/:id/events - Get incident events
+router.get('/ops/incidents/:id/events', requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const events = await incidentManagementService.getEvents(id);
+    return res.json({ success: true, data: events });
+  } catch (error) {
+    logger.error('Failed to get incident events:', error);
+    return res.status(500).json({ success: false, message: 'Failed to get events' });
+  }
+});
+
+// POST /api/admin/ops/incidents/:id/events - Add event to incident
+router.post('/ops/incidents/:id/events', requireAdmin, auditAdminAction('INCIDENT_EVENT_ADDED'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { type, summary, details, attachments } = req.body;
+
+    if (!type || !summary) {
+      return res.status(400).json({ success: false, message: 'Type and summary required' });
+    }
+
+    const event = await incidentManagementService.addEvent(id, {
+      type,
+      summary,
+      details,
+      attachments
+    }, req.admin!.id);
+
+    logger.info({ incidentId: id, eventType: type }, 'Incident event added');
+
+    return res.json({ success: true, data: event });
+  } catch (error) {
+    logger.error('Failed to add incident event:', error);
+    return res.status(500).json({ success: false, message: 'Failed to add event' });
+  }
+});
+
+// POST /api/admin/ops/incidents/:id/reopen - Reopen closed incident
+router.post('/ops/incidents/:id/reopen', requireAdmin, auditAdminAction('INCIDENT_REOPENED'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reason } = req.body;
+
+    if (!reason) {
+      return res.status(400).json({ success: false, message: 'Reason required' });
+    }
+
+    const incident = await incidentManagementService.reopenIncident(id, reason, req.admin!.id);
+
+    logger.info({ incidentId: id, reason }, 'Incident reopened');
+
+    return res.json({ success: true, data: incident });
+  } catch (error) {
+    logger.error('Failed to reopen incident:', error);
+    return res.status(500).json({ success: false, message: 'Failed to reopen incident' });
+  }
+});
+
+// POST /api/admin/ops/incidents/:id/postmortem - Save postmortem
+router.post('/ops/incidents/:id/postmortem', requireAdmin, auditAdminAction('INCIDENT_POSTMORTEM_SAVED'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { whatHappened, rootCause, contributingFactors, lessonsLearned, actionItems } = req.body;
+
+    const postmortem = await incidentManagementService.savePostmortem(id, {
+      whatHappened,
+      rootCause,
+      contributingFactors,
+      lessonsLearned,
+      actionItems
+    }, req.admin!.id);
+
+    logger.info({ incidentId: id, postmortemId: postmortem.id }, 'Post-mortem saved');
+
+    return res.json({ success: true, data: postmortem });
+  } catch (error) {
+    logger.error('Failed to save postmortem:', error);
+    return res.status(500).json({ success: false, message: 'Failed to save postmortem' });
   }
 });
 
@@ -737,6 +882,165 @@ router.get('/ops/runbooks', requireAdmin, async (req, res) => {
   } catch (error) {
     logger.error('Failed to list runbooks:', error);
     return res.status(500).json({ success: false, message: 'Failed to list runbooks' });
+  }
+});
+
+// GET /api/admin/ops/runbooks/search - Search runbooks
+router.get('/ops/runbooks/search', requireAdmin, async (req, res) => {
+  try {
+    const filters: any = {};
+    
+    if (req.query.service) filters.service = req.query.service as string;
+    if (req.query.severityFit) filters.severityFit = req.query.severityFit as string;
+    if (req.query.tags) filters.tags = (req.query.tags as string).split(',');
+    if (req.query.ownerId) filters.ownerId = req.query.ownerId as string;
+    if (req.query.needsReview !== undefined) filters.needsReview = req.query.needsReview === 'true';
+    if (req.query.query) filters.query = req.query.query as string;
+
+    const runbooks = await runbooksService.searchRunbooks(filters);
+    return res.json({ success: true, data: runbooks });
+  } catch (error) {
+    logger.error('Failed to search runbooks:', error);
+    return res.status(500).json({ success: false, message: 'Failed to search runbooks' });
+  }
+});
+
+// GET /api/admin/ops/runbooks/:id - Get runbook detail
+router.get('/ops/runbooks/:id', requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const runbook = await runbooksService.getRunbook(id);
+    return res.json({ success: true, data: runbook });
+  } catch (error) {
+    logger.error('Failed to get runbook:', error);
+    return res.status(500).json({ success: false, message: 'Failed to get runbook' });
+  }
+});
+
+// POST /api/admin/ops/runbooks - Create runbook
+router.post('/ops/runbooks', requireAdmin, auditAdminAction('RUNBOOK_CREATED'), async (req, res) => {
+  try {
+    const runbookData = req.body;
+
+    if (!runbookData.title || !runbookData.contentMarkdown) {
+      return res.status(400).json({ success: false, message: 'Title and content required' });
+    }
+
+    const runbook = await runbooksService.createRunbook(runbookData, req.admin!.id);
+
+    logger.info({ runbookId: runbook.id, title: runbookData.title }, 'Runbook created');
+
+    return res.json({ success: true, data: runbook });
+  } catch (error) {
+    logger.error('Failed to create runbook:', error);
+    return res.status(500).json({ success: false, message: 'Failed to create runbook' });
+  }
+});
+
+// PUT /api/admin/ops/runbooks/:id - Update runbook
+router.put('/ops/runbooks/:id', requireAdmin, auditAdminAction('RUNBOOK_UPDATED'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    const runbook = await runbooksService.updateRunbook(id, updates, req.admin!.id);
+
+    logger.info({ runbookId: id }, 'Runbook updated');
+
+    return res.json({ success: true, data: runbook });
+  } catch (error) {
+    logger.error('Failed to update runbook:', error);
+    return res.status(500).json({ success: false, message: 'Failed to update runbook' });
+  }
+});
+
+// POST /api/admin/ops/runbooks/:id/review - Mark runbook as reviewed
+router.post('/ops/runbooks/:id/review', requireAdmin, auditAdminAction('RUNBOOK_REVIEWED'), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const runbook = await runbooksService.markReviewed(id, req.admin!.id);
+
+    logger.info({ runbookId: id }, 'Runbook marked as reviewed');
+
+    return res.json({ success: true, data: runbook });
+  } catch (error) {
+    logger.error('Failed to mark runbook as reviewed:', error);
+    return res.status(500).json({ success: false, message: 'Failed to mark as reviewed' });
+  }
+});
+
+// POST /api/admin/ops/runbooks/:id/execute - Start runbook execution
+router.post('/ops/runbooks/:id/execute', requireAdmin, auditAdminAction('RUNBOOK_EXECUTED'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { incidentId } = req.body;
+
+    const execution = await runbooksService.startExecution(id, req.admin!.id, incidentId);
+
+    logger.info({ runbookId: id, executionId: execution.id, incidentId }, 'Runbook execution started');
+
+    return res.json({ success: true, data: execution });
+  } catch (error) {
+    logger.error('Failed to start runbook execution:', error);
+    return res.status(500).json({ success: false, message: 'Failed to start execution' });
+  }
+});
+
+// POST /api/admin/ops/runbooks/:id/attach - Attach runbook to incident
+router.post('/ops/runbooks/:id/attach', requireAdmin, auditAdminAction('RUNBOOK_ATTACHED_TO_INCIDENT'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { incidentId } = req.body;
+
+    if (!incidentId) {
+      return res.status(400).json({ success: false, message: 'Incident ID required' });
+    }
+
+    await runbooksService.attachToIncident(id, incidentId, req.admin!.id);
+
+    logger.info({ runbookId: id, incidentId }, 'Runbook attached to incident');
+
+    return res.json({ success: true, message: 'Runbook attached successfully' });
+  } catch (error) {
+    logger.error('Failed to attach runbook:', error);
+    return res.status(500).json({ success: false, message: 'Failed to attach runbook' });
+  }
+});
+
+// GET /api/admin/ops/runbook-executions/:id - Get execution status
+router.get('/ops/runbook-executions/:id', requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const execution = await prisma.runbookExecution.findUnique({
+      where: { id },
+      include: {
+        runbook: true,
+        startedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      }
+    });
+
+    if (!execution) {
+      return res.status(404).json({ success: false, message: 'Execution not found' });
+    }
+
+    return res.json({ 
+      success: true, 
+      data: {
+        ...execution,
+        steps: execution.steps ? JSON.parse(execution.steps) : []
+      }
+    });
+  } catch (error) {
+    logger.error('Failed to get execution status:', error);
+    return res.status(500).json({ success: false, message: 'Failed to get execution' });
   }
 });
 

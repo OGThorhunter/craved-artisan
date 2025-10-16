@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
   Activity,
@@ -123,6 +123,7 @@ type OpsSubView = 'health' | 'deploys' | 'jobs' | 'webhooks' | 'cache' | 'databa
 export default function OperationsDashboard() {
   const [selectedView, setSelectedView] = useState<OpsSubView>('health');
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  const [selectedQueue, setSelectedQueue] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   // Fetch health KPI data for top bar

@@ -67,7 +67,7 @@ class LogsTracesService {
 
       return errors;
     } catch (error) {
-      logger.error('Failed to get grouped errors:', error);
+      logger.error({ error }, 'Failed to get grouped errors:', error);
       throw error;
     }
   }
@@ -123,7 +123,7 @@ class LogsTracesService {
         .sort((a, b) => b.p95 - a.p95)
         .slice(0, limit);
     } catch (error) {
-      logger.error('Failed to get slow endpoints:', error);
+      logger.error({ error }, 'Failed to get slow endpoints:', error);
       throw error;
     }
   }
@@ -138,7 +138,7 @@ class LogsTracesService {
 
       return [];
     } catch (error) {
-      logger.error('Failed to get trace samples:', error);
+      logger.error({ error }, 'Failed to get trace samples:', error);
       throw error;
     }
   }
@@ -209,7 +209,7 @@ class LogsTracesService {
 
       return filtered.slice(0, limit);
     } catch (error) {
-      logger.error('Failed to search logs:', error);
+      logger.error({ error }, 'Failed to search logs:', error);
       throw error;
     }
   }

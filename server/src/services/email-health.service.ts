@@ -65,7 +65,7 @@ class EmailHealthService {
         complaintRate: last24hStats.complaintRate
       };
     } catch (error) {
-      logger.error('Failed to get SendGrid health:', error);
+      logger.error({ error }, 'Failed to get SendGrid health');
       throw error;
     }
   }
@@ -84,7 +84,7 @@ class EmailHealthService {
 
       return waiting + delayed;
     } catch (error) {
-      logger.error('Failed to get email queue backlog:', error);
+      logger.error({ error }, 'Failed to get email queue backlog');
       return 0;
     }
   }
@@ -164,7 +164,7 @@ class EmailHealthService {
         providers
       };
     } catch (error) {
-      logger.error('Failed to get overall email health:', error);
+      logger.error({ error }, 'Failed to get overall email health');
       throw error;
     }
   }

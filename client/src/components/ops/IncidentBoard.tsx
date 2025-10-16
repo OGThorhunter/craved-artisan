@@ -210,6 +210,7 @@ export default function IncidentBoard({ incidents }: IncidentBoardProps) {
             <button
               onClick={() => setShowCreateDialog(false)}
               className="absolute top-4 right-4 text-[#4b4b4b] hover:text-[#2b2b2b]"
+              aria-label="Close dialog"
             >
               <X className="h-5 w-5" />
             </button>
@@ -231,13 +232,15 @@ export default function IncidentBoard({ incidents }: IncidentBoardProps) {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-[#2b2b2b] mb-2">
+                <label htmlFor="incident-severity" className="block text-sm font-medium text-[#2b2b2b] mb-2">
                   Severity <span className="text-red-500">*</span>
                 </label>
                 <select
+                  id="incident-severity"
                   value={createForm.severity}
                   onChange={(e) => setCreateForm({ ...createForm, severity: e.target.value })}
                   className="w-full px-3 py-2 border border-[#7F232E]/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7F232E]/30"
+                  aria-label="Select incident severity"
                 >
                   <option value="SEV1">SEV1 - Critical (System Down)</option>
                   <option value="SEV2">SEV2 - High (Major Feature Impaired)</option>

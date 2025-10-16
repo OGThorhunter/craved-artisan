@@ -63,7 +63,7 @@ class RedisCacheService {
 
       return namespaces.sort((a, b) => b.keyCount - a.keyCount);
     } catch (error) {
-      logger.error('Failed to get cache namespaces:', error);
+      logger.error({ error }, 'Failed to get cache namespaces');
       throw error;
     }
   }
@@ -78,7 +78,7 @@ class RedisCacheService {
       
       return keys.slice(0, limit);
     } catch (error) {
-      logger.error(`Failed to get keys in namespace ${namespace}:`, error);
+      logger.error({ error, namespace }, 'Failed to get keys in namespace');
       throw error;
     }
   }
@@ -114,7 +114,7 @@ class RedisCacheService {
 
       return { type, value, ttl };
     } catch (error) {
-      logger.error(`Failed to get key value for ${key}:`, error);
+      logger.error({ error, key }, 'Failed to get key value');
       throw error;
     }
   }
@@ -145,7 +145,7 @@ class RedisCacheService {
       logger.info({ namespace, deleted, reason }, 'Flushed cache namespace');
       return deleted;
     } catch (error) {
-      logger.error(`Failed to flush namespace ${namespace}:`, error);
+      logger.error({ error, namespace }, 'Failed to flush namespace');
       throw error;
     }
   }
@@ -181,7 +181,7 @@ class RedisCacheService {
         missRate
       };
     } catch (error) {
-      logger.error('Failed to get memory stats:', error);
+      logger.error({ error }, 'Failed to get memory stats');
       throw error;
     }
   }
@@ -203,7 +203,7 @@ class RedisCacheService {
         evictionPolicy
       };
     } catch (error) {
-      logger.error('Failed to get eviction stats:', error);
+      logger.error({ error }, 'Failed to get eviction stats');
       throw error;
     }
   }
@@ -235,7 +235,7 @@ class RedisCacheService {
 
       return hotKeys.slice(0, limit);
     } catch (error) {
-      logger.error('Failed to get hot keys:', error);
+      logger.error({ error }, 'Failed to get hot keys');
       throw error;
     }
   }

@@ -84,7 +84,7 @@ export default function HealthIncidentsView() {
               <span className="text-sm text-[#4b4b4b]">/ 99.9% target</span>
             </div>
             <div className="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div className="h-full bg-green-500" style={{ width: '99.95%' }}></div>
+              <div className="h-full bg-green-500 w-full"></div>
             </div>
           </Card>
 
@@ -95,7 +95,7 @@ export default function HealthIncidentsView() {
               <span className="text-sm text-[#4b4b4b]">/ 500ms target</span>
             </div>
             <div className="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div className="h-full bg-green-500" style={{ width: '51%' }}></div>
+              <div className="h-full bg-green-500 w-1/2"></div>
             </div>
           </Card>
 
@@ -106,7 +106,7 @@ export default function HealthIncidentsView() {
               <span className="text-sm text-[#4b4b4b]">remaining</span>
             </div>
             <div className="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div className="h-full bg-green-500" style={{ width: '85%' }}></div>
+              <div className="h-full bg-green-500 w-5/6"></div>
             </div>
           </Card>
         </div>

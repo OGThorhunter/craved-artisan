@@ -102,6 +102,8 @@ import adminUsersRouter from './routes/admin-users.router';
 import adminAuditRouter from './routes/admin-audit.router';
 import adminRevenueRouter from './routes/admin-revenue.router';
 import adminSupportRouter from './routes/admin-support.router';
+import adminPLRouter from './routes/admin-pl.router';
+import adminSettingsRouter from './routes/admin-settings.router';
 
 const app = express();
 const PORT = Number(process.env.PORT || 3001);
@@ -273,6 +275,8 @@ app.use('/api/admin/users', adminUsersRouter);
 app.use('/api/admin/audit', adminAuditRouter);
 app.use('/api/admin/revenue', adminRevenueRouter);
 app.use('/api/admin/support', adminSupportRouter);
+app.use('/api/admin/pl', adminPLRouter);
+app.use('/api/admin', adminSettingsRouter);
 
 // Settings & Account Hub routes
 app.use('/api/settings', settingsRouter);

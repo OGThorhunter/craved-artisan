@@ -55,7 +55,7 @@ class MaintenanceModeService {
 
       return window;
     } catch (error) {
-      logger.error('Failed to enable maintenance mode:', error);
+      logger.error({ error }, 'Failed to enable maintenance mode:', error);
       throw error;
     }
   }
@@ -86,7 +86,7 @@ class MaintenanceModeService {
 
       logger.info({ windowId, type: window.type }, 'Maintenance mode disabled');
     } catch (error) {
-      logger.error('Failed to disable maintenance mode:', error);
+      logger.error({ error }, 'Failed to disable maintenance mode:', error);
       throw error;
     }
   }
@@ -112,7 +112,7 @@ class MaintenanceModeService {
 
       return this.inMemoryStatus;
     } catch (error) {
-      logger.error('Failed to get maintenance status:', error);
+      logger.error({ error }, 'Failed to get maintenance status:', error);
       throw error;
     }
   }
@@ -197,7 +197,7 @@ class MaintenanceModeService {
 
       return windows;
     } catch (error) {
-      logger.error('Failed to get maintenance history:', error);
+      logger.error({ error }, 'Failed to get maintenance history:', error);
       throw error;
     }
   }
@@ -232,7 +232,7 @@ class MaintenanceModeService {
         logger.info({ windowId: window.id, type: window.type }, 'Auto-completed expired maintenance window');
       }
     } catch (error) {
-      logger.error('Failed to auto-complete expired windows:', error);
+      logger.error({ error }, 'Failed to auto-complete expired windows:', error);
     }
   }
 

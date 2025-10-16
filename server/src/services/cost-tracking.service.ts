@@ -68,7 +68,7 @@ class CostTrackingService {
       
       return Math.floor(monthlyCostCents / 30);
     } catch (error) {
-      logger.error('Failed to calculate Redis costs:', error);
+      logger.error({ error }, 'Failed to calculate Redis costs');
       return 0;
     }
   }
@@ -90,7 +90,7 @@ class CostTrackingService {
       
       return Math.floor(monthlyCostCents / 30);
     } catch (error) {
-      logger.error('Failed to calculate database costs:', error);
+      logger.error({ error }, 'Failed to calculate database costs');
       return 0;
     }
   }
@@ -125,7 +125,7 @@ class CostTrackingService {
       
       return Math.floor(monthlyCostCents / 30);
     } catch (error) {
-      logger.error('Failed to calculate SendGrid costs:', error);
+      logger.error({ error }, 'Failed to calculate SendGrid costs');
       return 0;
     }
   }
@@ -151,7 +151,7 @@ class CostTrackingService {
 
       return Math.abs(fees._sum.amountCents || 0);
     } catch (error) {
-      logger.error('Failed to get Stripe fees:', error);
+      logger.error({ error }, 'Failed to get Stripe fees');
       return 0;
     }
   }
@@ -235,7 +235,7 @@ class CostTrackingService {
         totalCostCents
       };
     } catch (error) {
-      logger.error('Failed to get daily cost snapshot:', error);
+      logger.error({ error }, 'Failed to get daily cost snapshot');
       throw error;
     }
   }
@@ -273,7 +273,7 @@ class CostTrackingService {
         }
       }));
     } catch (error) {
-      logger.error('Failed to get monthly cost trend:', error);
+      logger.error({ error }, 'Failed to get monthly cost trend');
       throw error;
     }
   }
@@ -291,7 +291,7 @@ class CostTrackingService {
         cacheHitRate: 92.5 // percentage
       };
     } catch (error) {
-      logger.error('Failed to get usage metrics:', error);
+      logger.error({ error }, 'Failed to get usage metrics');
       throw error;
     }
   }
@@ -350,7 +350,206 @@ class CostTrackingService {
 
       logger.info({ totalCostCents, date: today }, 'Created daily cost snapshot');
     } catch (error) {
-      logger.error('Failed to create daily cost snapshot:', error);
+      logger.error({ error }, 'Failed to create daily cost snapshot');
+      throw error;
+    }
+  }
+
+  /**
+   * Update manual cost overrides for a specific date
+   */
+  async updateManualCosts(
+    date: Date,
+    costs: {
+      manualRenderCostCents?: number;
+      manualRedisCostCents?: number;
+      manualDatabaseCostCents?: number;
+      manualSendGridCostCents?: number;
+      manualStorageCostCents?: number;
+      otherCostsCents?: number;
+      otherCostsNote?: string;
+    },
+    adminId: string
+  ): Promise<void> {
+    try {
+      const targetDate = new Date(date);
+      targetDate.setHours(0, 0, 0, 0);
+
+      // Get existing snapshot
+      const existing = await prisma.costSnapshot.findFirst({
+        where: {
+          date: {
+            gte: targetDate,
+            lt: new Date(targetDate.getTime() + 24 * 60 * 60 * 1000),
+          },
+        },
+      });
+
+      if (!existing) {
+        throw new Error('Cost snapshot not found for this date');
+      }
+
+      const before = {
+        manualRenderCostCents: existing.manualRenderCostCents,
+        manualRedisCostCents: existing.manualRedisCostCents,
+        manualDatabaseCostCents: existing.manualDatabaseCostCents,
+        manualSendGridCostCents: existing.manualSendGridCostCents,
+        manualStorageCostCents: existing.manualStorageCostCents,
+        otherCostsCents: existing.otherCostsCents,
+      };
+
+      await prisma.costSnapshot.update({
+        where: { id: existing.id },
+        data: {
+          ...costs,
+          updatedBy: adminId,
+          updatedAt: new Date(),
+        },
+      });
+
+      logger.info(
+        {
+          date: targetDate,
+          adminId,
+          before,
+          after: costs,
+        },
+        'Manual cost overrides updated'
+      );
+    } catch (error) {
+      logger.error({ error, date, adminId }, 'Failed to update manual costs');
+      throw error;
+    }
+  }
+
+  /**
+   * Get effective costs for a date (manual overrides take precedence)
+   */
+  async getEffectiveCosts(date: Date): Promise<CostBreakdown> {
+    try {
+      const targetDate = new Date(date);
+      targetDate.setHours(0, 0, 0, 0);
+
+      const snapshot = await prisma.costSnapshot.findFirst({
+        where: {
+          date: {
+            gte: targetDate,
+            lt: new Date(targetDate.getTime() + 24 * 60 * 60 * 1000),
+          },
+        },
+      });
+
+      if (!snapshot) {
+        throw new Error('Cost snapshot not found for this date');
+      }
+
+      // Use manual overrides if available, otherwise use estimates
+      const renderCostCents = snapshot.manualRenderCostCents ?? snapshot.renderCostCents;
+      const redisCostCents = snapshot.manualRedisCostCents ?? snapshot.redisCostCents;
+      const databaseCostCents = snapshot.manualDatabaseCostCents ?? snapshot.databaseCostCents;
+      const sendGridCostCents = snapshot.manualSendGridCostCents ?? snapshot.sendGridCostCents;
+      const storageCostCents = snapshot.manualStorageCostCents ?? snapshot.storageCostCents;
+      const stripeFeesCents = snapshot.stripeFeesCents;
+      const otherCostsCents = snapshot.otherCostsCents || 0;
+
+      const totalCostCents = 
+        renderCostCents +
+        redisCostCents +
+        databaseCostCents +
+        sendGridCostCents +
+        stripeFeesCents +
+        storageCostCents +
+        otherCostsCents;
+
+      return {
+        renderCostCents,
+        redisCostCents,
+        databaseCostCents,
+        sendGridCostCents,
+        stripeFeesCents,
+        storageCostCents,
+        totalCostCents,
+      };
+    } catch (error) {
+      logger.error({ error, date }, 'Failed to get effective costs');
+      throw error;
+    }
+  }
+
+  /**
+   * Aggregate costs for a month
+   */
+  async getCostsForMonth(month: Date): Promise<{
+    hostingCostCents: number;
+    redisCostCents: number;
+    databaseCostCents: number;
+    emailCostCents: number;
+    storageCostCents: number;
+    paymentProcessingCostCents: number;
+    otherCostsCents: number;
+    totalCostCents: number;
+  }> {
+    try {
+      const startOfMonth = new Date(month.getFullYear(), month.getMonth(), 1);
+      const endOfMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0, 23, 59, 59, 999);
+
+      const snapshots = await prisma.costSnapshot.findMany({
+        where: {
+          date: {
+            gte: startOfMonth,
+            lte: endOfMonth,
+          },
+        },
+      });
+
+      let hostingCostCents = 0;
+      let redisCostCents = 0;
+      let databaseCostCents = 0;
+      let emailCostCents = 0;
+      let storageCostCents = 0;
+      let paymentProcessingCostCents = 0;
+      let otherCostsCents = 0;
+
+      for (const snapshot of snapshots) {
+        hostingCostCents += snapshot.manualRenderCostCents ?? snapshot.renderCostCents;
+        redisCostCents += snapshot.manualRedisCostCents ?? snapshot.redisCostCents;
+        databaseCostCents += snapshot.manualDatabaseCostCents ?? snapshot.databaseCostCents;
+        emailCostCents += snapshot.manualSendGridCostCents ?? snapshot.sendGridCostCents;
+        storageCostCents += snapshot.manualStorageCostCents ?? snapshot.storageCostCents;
+        paymentProcessingCostCents += snapshot.stripeFeesCents;
+        otherCostsCents += snapshot.otherCostsCents || 0;
+      }
+
+      const totalCostCents = 
+        hostingCostCents +
+        redisCostCents +
+        databaseCostCents +
+        emailCostCents +
+        storageCostCents +
+        paymentProcessingCostCents +
+        otherCostsCents;
+
+      logger.info(
+        {
+          month: startOfMonth,
+          snapshotCount: snapshots.length,
+          totalCostCents,
+        },
+        'Aggregated costs for month'
+      );
+
+      return {
+        hostingCostCents,
+        redisCostCents,
+        databaseCostCents,
+        emailCostCents,
+        storageCostCents,
+        paymentProcessingCostCents,
+        otherCostsCents,
+        totalCostCents,
+      };
+    } catch (error) {
+      logger.error({ error, month }, 'Failed to get costs for month');
       throw error;
     }
   }

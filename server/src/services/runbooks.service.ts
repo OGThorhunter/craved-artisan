@@ -8,6 +8,51 @@ export interface RunbookExecutionResult {
   duration: number; // in ms
 }
 
+export interface RunbookCreate {
+  title: string;
+  incidentType: string;
+  service?: string[];
+  tags?: string[];
+  severityFit?: string[];
+  contentMarkdown: string;
+  executable?: boolean;
+  bindings?: any;
+  estimatedDuration?: number;
+  requiredRoles?: string;
+  prerequisites?: string;
+  rollbackPlan?: string;
+  ownerId?: string;
+  reviewCadenceDays?: number;
+  priority?: number;
+}
+
+export interface RunbookUpdate {
+  title?: string;
+  incidentType?: string;
+  service?: string[];
+  tags?: string[];
+  severityFit?: string[];
+  contentMarkdown?: string;
+  executable?: boolean;
+  bindings?: any;
+  estimatedDuration?: number;
+  requiredRoles?: string;
+  prerequisites?: string;
+  rollbackPlan?: string;
+  ownerId?: string;
+  reviewCadenceDays?: number;
+  priority?: number;
+}
+
+export interface RunbookSearchFilters {
+  service?: string;
+  severityFit?: string;
+  tags?: string[];
+  ownerId?: string;
+  needsReview?: boolean;
+  query?: string;
+}
+
 class RunbooksService {
   /**
    * List all runbooks
@@ -18,14 +63,94 @@ class RunbooksService {
         where: {
           isActive: true
         },
+        include: {
+          owner: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              avatarUrl: true
+            }
+          }
+        },
         orderBy: {
           priority: 'asc'
         }
       });
 
-      return runbooks;
+      return runbooks.map(r => ({
+        ...r,
+        service: r.service ? r.service.split(',') : [],
+        tags: r.tags ? r.tags.split(',') : [],
+        severityFit: r.severityFit ? r.severityFit.split(',') : [],
+        bindings: r.bindings ? JSON.parse(r.bindings) : null
+      }));
     } catch (error) {
-      logger.error('Failed to list runbooks:', error);
+      logger.error({ error }, 'Failed to list runbooks');
+      throw error;
+    }
+  }
+
+  /**
+   * Get runbook by ID
+   */
+  async getRunbook(runbookId: string): Promise<any> {
+    try {
+      const runbook = await prisma.runbook.findUnique({
+        where: { id: runbookId },
+        include: {
+          owner: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              avatarUrl: true
+            }
+          },
+          incidents: {
+            select: {
+              id: true,
+              title: true,
+              severity: true,
+              status: true,
+              startedAt: true
+            },
+            take: 10,
+            orderBy: { startedAt: 'desc' }
+          },
+          executions: {
+            include: {
+              startedBy: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true
+                }
+              }
+            },
+            orderBy: { startedAt: 'desc' },
+            take: 10
+          }
+        }
+      });
+
+      if (!runbook) {
+        throw new Error('Runbook not found');
+      }
+
+      return {
+        ...runbook,
+        service: runbook.service ? runbook.service.split(',') : [],
+        tags: runbook.tags ? runbook.tags.split(',') : [],
+        severityFit: runbook.severityFit ? runbook.severityFit.split(',') : [],
+        bindings: runbook.bindings ? JSON.parse(runbook.bindings) : null,
+        executions: runbook.executions.map(e => ({
+          ...e,
+          steps: e.steps ? JSON.parse(e.steps) : []
+        }))
+      };
+    } catch (error) {
+      logger.error({ error, runbookId }, 'Failed to get runbook');
       throw error;
     }
   }
@@ -44,7 +169,303 @@ class RunbooksService {
 
       return runbook;
     } catch (error) {
-      logger.error(`Failed to get runbook for ${incidentType}:`, error);
+      logger.error({ error, incidentType }, 'Failed to get runbook for incident type');
+      throw error;
+    }
+  }
+
+  /**
+   * Create new runbook
+   */
+  async createRunbook(data: RunbookCreate, createdById: string): Promise<any> {
+    try {
+      const runbook = await prisma.runbook.create({
+        data: {
+          title: data.title,
+          incidentType: data.incidentType,
+          service: data.service ? data.service.join(',') : null,
+          tags: data.tags ? data.tags.join(',') : null,
+          severityFit: data.severityFit ? data.severityFit.join(',') : null,
+          contentMarkdown: data.contentMarkdown,
+          executable: data.executable ?? false,
+          bindings: data.bindings ? JSON.stringify(data.bindings) : null,
+          estimatedDuration: data.estimatedDuration,
+          requiredRoles: data.requiredRoles,
+          prerequisites: data.prerequisites,
+          rollbackPlan: data.rollbackPlan,
+          ownerId: data.ownerId,
+          reviewCadenceDays: data.reviewCadenceDays ?? 90,
+          priority: data.priority ?? 0,
+          version: 1
+        },
+        include: {
+          owner: true
+        }
+      });
+
+      logger.info({ runbookId: runbook.id, title: data.title }, 'Runbook created');
+
+      return runbook;
+    } catch (error) {
+      logger.error({ error }, 'Failed to create runbook');
+      throw error;
+    }
+  }
+
+  /**
+   * Update runbook
+   */
+  async updateRunbook(runbookId: string, data: RunbookUpdate, updatedById: string): Promise<any> {
+    try {
+      const updateData: any = {};
+
+      if (data.title !== undefined) updateData.title = data.title;
+      if (data.incidentType !== undefined) updateData.incidentType = data.incidentType;
+      if (data.service !== undefined) updateData.service = data.service.join(',');
+      if (data.tags !== undefined) updateData.tags = data.tags.join(',');
+      if (data.severityFit !== undefined) updateData.severityFit = data.severityFit.join(',');
+      if (data.contentMarkdown !== undefined) {
+        updateData.contentMarkdown = data.contentMarkdown;
+        // Increment version on content change
+        const current = await prisma.runbook.findUnique({ where: { id: runbookId } });
+        if (current) {
+          updateData.version = current.version + 1;
+        }
+      }
+      if (data.executable !== undefined) updateData.executable = data.executable;
+      if (data.bindings !== undefined) updateData.bindings = JSON.stringify(data.bindings);
+      if (data.estimatedDuration !== undefined) updateData.estimatedDuration = data.estimatedDuration;
+      if (data.requiredRoles !== undefined) updateData.requiredRoles = data.requiredRoles;
+      if (data.prerequisites !== undefined) updateData.prerequisites = data.prerequisites;
+      if (data.rollbackPlan !== undefined) updateData.rollbackPlan = data.rollbackPlan;
+      if (data.ownerId !== undefined) updateData.ownerId = data.ownerId;
+      if (data.reviewCadenceDays !== undefined) updateData.reviewCadenceDays = data.reviewCadenceDays;
+      if (data.priority !== undefined) updateData.priority = data.priority;
+
+      const runbook = await prisma.runbook.update({
+        where: { id: runbookId },
+        data: updateData,
+        include: {
+          owner: true
+        }
+      });
+
+      logger.info({ runbookId, updatedBy: updatedById }, 'Runbook updated');
+
+      return runbook;
+    } catch (error) {
+      logger.error({ error }, 'Failed to update runbook');
+      throw error;
+    }
+  }
+
+  /**
+   * Mark runbook as reviewed
+   */
+  async markReviewed(runbookId: string, reviewedById: string): Promise<any> {
+    try {
+      const runbook = await prisma.runbook.update({
+        where: { id: runbookId },
+        data: {
+          lastReviewedAt: new Date()
+        },
+        include: {
+          owner: true
+        }
+      });
+
+      logger.info({ runbookId, reviewedBy: reviewedById }, 'Runbook marked as reviewed');
+
+      return runbook;
+    } catch (error) {
+      logger.error({ error }, 'Failed to mark runbook as reviewed');
+      throw error;
+    }
+  }
+
+  /**
+   * Search runbooks with filters
+   */
+  async searchRunbooks(filters: RunbookSearchFilters): Promise<any[]> {
+    try {
+      const where: any = {
+        isActive: true
+      };
+
+      if (filters.ownerId) {
+        where.ownerId = filters.ownerId;
+      }
+
+      const runbooks = await prisma.runbook.findMany({
+        where,
+        include: {
+          owner: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              avatarUrl: true
+            }
+          }
+        },
+        orderBy: {
+          priority: 'asc'
+        }
+      });
+
+      let filtered = runbooks;
+
+      // Filter by service
+      if (filters.service) {
+        filtered = filtered.filter(r => {
+          if (!r.service) return false;
+          return r.service.split(',').includes(filters.service!);
+        });
+      }
+
+      // Filter by severity fit
+      if (filters.severityFit) {
+        filtered = filtered.filter(r => {
+          if (!r.severityFit) return false;
+          return r.severityFit.split(',').includes(filters.severityFit!);
+        });
+      }
+
+      // Filter by tags
+      if (filters.tags && filters.tags.length > 0) {
+        filtered = filtered.filter(r => {
+          if (!r.tags) return false;
+          const tags = r.tags.split(',');
+          return filters.tags!.some(t => tags.includes(t));
+        });
+      }
+
+      // Filter by needs review
+      if (filters.needsReview) {
+        filtered = filtered.filter(r => {
+          if (!r.lastReviewedAt || !r.reviewCadenceDays) return true;
+          const daysSinceReview = (Date.now() - r.lastReviewedAt.getTime()) / (1000 * 60 * 60 * 24);
+          return daysSinceReview > r.reviewCadenceDays;
+        });
+      }
+
+      // Filter by search query
+      if (filters.query) {
+        const query = filters.query.toLowerCase();
+        filtered = filtered.filter(r =>
+          r.title.toLowerCase().includes(query) ||
+          r.contentMarkdown.toLowerCase().includes(query) ||
+          (r.tags && r.tags.toLowerCase().includes(query))
+        );
+      }
+
+      return filtered.map(r => ({
+        ...r,
+        service: r.service ? r.service.split(',') : [],
+        tags: r.tags ? r.tags.split(',') : [],
+        severityFit: r.severityFit ? r.severityFit.split(',') : [],
+        bindings: r.bindings ? JSON.parse(r.bindings) : null
+      }));
+    } catch (error) {
+      logger.error({ error }, 'Failed to search runbooks');
+      throw error;
+    }
+  }
+
+  /**
+   * Start runbook execution
+   */
+  async startExecution(runbookId: string, startedById: string, incidentId?: string): Promise<any> {
+    try {
+      const execution = await prisma.runbookExecution.create({
+        data: {
+          runbookId,
+          incidentId,
+          startedById,
+          steps: JSON.stringify([])
+        },
+        include: {
+          runbook: true,
+          startedBy: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
+          }
+        }
+      });
+
+      logger.info({ runbookId, executionId: execution.id, incidentId }, 'Runbook execution started');
+
+      return execution;
+    } catch (error) {
+      logger.error({ error }, 'Failed to start runbook execution');
+      throw error;
+    }
+  }
+
+  /**
+   * Update execution step
+   */
+  async updateExecutionStep(executionId: string, stepIndex: number, stepData: any): Promise<any> {
+    try {
+      const execution = await prisma.runbookExecution.findUnique({
+        where: { id: executionId }
+      });
+
+      if (!execution) {
+        throw new Error('Execution not found');
+      }
+
+      const steps = execution.steps ? JSON.parse(execution.steps) : [];
+      steps[stepIndex] = {
+        ...stepData,
+        completedAt: new Date()
+      };
+
+      const updated = await prisma.runbookExecution.update({
+        where: { id: executionId },
+        data: {
+          steps: JSON.stringify(steps)
+        }
+      });
+
+      logger.info({ executionId, stepIndex }, 'Execution step updated');
+
+      return updated;
+    } catch (error) {
+      logger.error({ error }, 'Failed to update execution step');
+      throw error;
+    }
+  }
+
+  /**
+   * Attach runbook to incident
+   */
+  async attachToIncident(runbookId: string, incidentId: string, attachedById: string): Promise<void> {
+    try {
+      // Update incident with runbook link
+      await prisma.incident.update({
+        where: { id: incidentId },
+        data: {
+          runbookId
+        }
+      });
+
+      // Create incident event
+      await prisma.incidentEvent.create({
+        data: {
+          incidentId,
+          type: 'ACTION',
+          summary: 'Runbook attached',
+          createdById: attachedById
+        }
+      });
+
+      logger.info({ runbookId, incidentId }, 'Runbook attached to incident');
+    } catch (error) {
+      logger.error({ error }, 'Failed to attach runbook to incident');
       throw error;
     }
   }
@@ -167,7 +588,7 @@ class RunbooksService {
         duration
       };
     } catch (error) {
-      logger.error('Failed to rebuild revenue snapshots:', error);
+      logger.error({ error }, 'Failed to rebuild revenue snapshots');
       return {
         success: false,
         message: 'Failed to rebuild revenue snapshots',
@@ -228,7 +649,7 @@ class RunbooksService {
         duration
       };
     } catch (error) {
-      logger.error('Failed to recompute vendor metrics:', error);
+      logger.error({ error }, 'Failed to recompute vendor metrics');
       return {
         success: false,
         message: 'Failed to recompute vendor metrics',
@@ -280,7 +701,7 @@ class RunbooksService {
         duration
       };
     } catch (error) {
-      logger.error('Failed to resend verification emails:', error);
+      logger.error({ error }, 'Failed to resend verification emails');
       return {
         success: false,
         message: 'Failed to resend verification emails',
@@ -318,7 +739,7 @@ class RunbooksService {
         duration
       };
     } catch (error) {
-      logger.error('Failed to reindex search data:', error);
+      logger.error({ error }, 'Failed to reindex search data');
       return {
         success: false,
         message: 'Failed to reindex search data',
@@ -374,7 +795,7 @@ class RunbooksService {
         duration
       };
     } catch (error) {
-      logger.error('Failed to trigger SAR export:', error);
+      logger.error({ error }, 'Failed to trigger SAR export');
       return {
         success: false,
         message: 'Failed to trigger SAR export',
@@ -477,18 +898,24 @@ class RunbooksService {
 
     try {
       for (const runbook of defaults) {
-        await prisma.runbook.upsert({
+        // Check if runbook with this incidentType already exists
+        const existing = await prisma.runbook.findFirst({
           where: {
-            title: runbook.title
-          },
-          update: {},
-          create: runbook
+            incidentType: runbook.incidentType,
+            isActive: true
+          }
         });
+
+        if (!existing) {
+          await prisma.runbook.create({
+            data: runbook
+          });
+        }
       }
 
       logger.info('Default runbooks initialized');
     } catch (error) {
-      logger.error('Failed to initialize default runbooks:', error);
+      logger.error({ error }, 'Failed to initialize default runbooks');
     }
   }
 }

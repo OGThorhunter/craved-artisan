@@ -32,7 +32,7 @@ class FeatureFlagsService {
 
       return flags;
     } catch (error) {
-      logger.error('Failed to list feature flags:', error);
+      logger.error({ error }, 'Failed to list feature flags');
       throw error;
     }
   }
@@ -57,7 +57,7 @@ class FeatureFlagsService {
 
       return flag;
     } catch (error) {
-      logger.error(`Failed to get feature flag ${key}:`, error);
+      logger.error({ error, key }, 'Failed to get feature flag');
       throw error;
     }
   }
@@ -96,7 +96,7 @@ class FeatureFlagsService {
 
       return flag;
     } catch (error) {
-      logger.error(`Failed to toggle feature flag ${key}:`, error);
+      logger.error({ error, key }, 'Failed to toggle feature flag');
       throw error;
     }
   }
@@ -136,7 +136,7 @@ class FeatureFlagsService {
 
       return flag;
     } catch (error) {
-      logger.error(`Failed to update feature flag ${key}:`, error);
+      logger.error({ error, key }, 'Failed to update feature flag');
       throw error;
     }
   }
@@ -192,7 +192,7 @@ class FeatureFlagsService {
 
       return true;
     } catch (error) {
-      logger.error(`Failed to check feature flag ${key}:`, error);
+      logger.error({ error, key }, 'Failed to check feature flag');
       return false;
     }
   }
@@ -216,7 +216,7 @@ class FeatureFlagsService {
 
       return resolved;
     } catch (error) {
-      logger.error('Failed to get flags for user:', error);
+      logger.error({ error }, 'Failed to get flags for user');
       return {};
     }
   }
@@ -232,7 +232,7 @@ class FeatureFlagsService {
 
       logger.info({ key }, 'Feature flag deleted');
     } catch (error) {
-      logger.error(`Failed to delete feature flag ${key}:`, error);
+      logger.error({ error, key }, 'Failed to delete feature flag');
       throw error;
     }
   }
@@ -293,7 +293,7 @@ class FeatureFlagsService {
 
       logger.info('Default feature flags initialized');
     } catch (error) {
-      logger.error('Failed to initialize default feature flags:', error);
+      logger.error({ error }, 'Failed to initialize default feature flags');
     }
   }
 

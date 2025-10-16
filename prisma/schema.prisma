@@ -97,6 +97,15 @@ model User {
 
   // Ops relations
   featureFlagsUpdated FeatureFlag[]
+  ownedIncidents      Incident[]
+  incidentEvents      IncidentEvent[]
+  postmortemsCreated  Postmortem[]
+  ownedRunbooks       Runbook[]
+  runbookExecutions   RunbookExecution[]
+
+  // Settings & Configuration relations
+  configSettingsUpdated  ConfigSetting[]       @relation("ConfigUpdater")
+  complianceDocsUploaded ComplianceDocument[]
 
   @@index([zip_code])
   @@index([oauthProvider, oauthProviderId])
@@ -2217,19 +2226,68 @@ enum FlagScope {
 }
 
 model Incident {
-  id        String    @id @default(cuid())
-  title     String
-  severity  String // SEV1..SEV4
-  status    String // OPEN, MITIGATED, CLOSED
-  startedAt DateTime  @default(now())
-  endedAt   DateTime?
-  timeline  Json? // updates
-  affected  String? // services keys (comma-separated)
-  runbookId String?
+  id                 String    @id @default(cuid())
+  title              String
+  severity           String // SEV1..SEV4
+  status             String // OPEN, MITIGATED, CLOSED
+  startedAt          DateTime  @default(now())
+  mitigatedAt        DateTime?
+  closedAt           DateTime?
+  endedAt            DateTime? // Deprecated - use closedAt
+  timeline           Json? // Legacy - use IncidentEvent instead
+  affected           String? // services keys (comma-separated)
+  tags               String? // comma-separated tags
+  summary            String?
+  ownerId            String?
+  runbookId          String?
+  slaMitigateMinutes Int? // SLA target for mitigation in minutes
+  slaCloseMinutes    Int? // SLA target for closure in minutes
+  
+  owner       User?            @relation(fields: [ownerId], references: [id])
+  runbook     Runbook?         @relation(fields: [runbookId], references: [id])
+  events      IncidentEvent[]
+  postmortem  Postmortem?
 
   @@index([status])
   @@index([severity])
   @@index([startedAt])
+  @@index([ownerId])
+  @@index([runbookId])
+}
+
+model IncidentEvent {
+  id          String   @id @default(cuid())
+  incidentId  String
+  type        String // NOTE, ACTION, UPDATE, MITIGATION, IMPACT, ROOT_CAUSE
+  summary     String
+  details     String?
+  attachments String? // JSON array
+  createdById String
+  createdAt   DateTime @default(now())
+  
+  incident  Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  createdBy User     @relation(fields: [createdById], references: [id])
+  
+  @@index([incidentId])
+  @@index([createdAt])
+}
+
+model Postmortem {
+  id                   String   @id @default(cuid())
+  incidentId           String   @unique
+  whatHappened         String?
+  rootCause            String?
+  contributingFactors  String?
+  lessonsLearned       String?
+  actionItems          String? // JSON array of {description, owner, dueDate, status}
+  createdById          String
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  
+  incident  Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  createdBy User     @relation(fields: [createdById], references: [id])
+  
+  @@index([incidentId])
 }
 
 model VendorSegment {
@@ -3466,23 +3524,117 @@ model CostSnapshot {
   totalCostCents       Int      @default(0)
   requestVolume        Int      @default(0)
   queueDepthAvg        Int      @default(0)
+  
+  // Manual overrides for actual costs
+  manualRenderCostCents   Int?
+  manualRedisCostCents    Int?
+  manualDatabaseCostCents Int?
+  manualSendGridCostCents Int?
+  manualStorageCostCents  Int?
+  otherCostsCents         Int      @default(0)
+  otherCostsNote          String?
+  updatedBy               String?
+  
   createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
   
   @@index([date])
 }
 
+model StaffMember {
+  id            String    @id @default(cuid())
+  role          String
+  salaryCents   Int
+  startDate     DateTime
+  endDate       DateTime?
+  isActive      Boolean   @default(true)
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  @@index([isActive, startDate])
+  @@index([endDate])
+}
+
+model ProfitLossSnapshot {
+  id                         String   @id @default(cuid())
+  month                      DateTime @unique
+  
+  // Revenue (from RevenueSnapshot)
+  totalRevenueCents          Int      @default(0)
+  
+  // Operating Costs (from CostSnapshot + manual overrides)
+  hostingCostCents           Int      @default(0)
+  redisCostCents             Int      @default(0)
+  databaseCostCents          Int      @default(0)
+  emailCostCents             Int      @default(0)
+  storageCostCents           Int      @default(0)
+  paymentProcessingCostCents Int      @default(0)
+  otherCostsCents            Int      @default(0)
+  
+  // Staff Costs
+  staffCostCents             Int      @default(0)
+  staffCount                 Int      @default(0)
+  
+  // Calculations
+  totalCostCents             Int      @default(0)
+  grossProfitCents           Int      @default(0)
+  netProfitCents             Int      @default(0)
+  profitMarginPercent        Float    @default(0)
+  
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
+  
+  @@index([month])
+}
+
 model Runbook {
-  id            String   @id @default(cuid())
-  title         String
-  incidentType  String // Maps to incident severity or category
-  content       String // Markdown content with steps
-  priority      Int      @default(0) // Display order
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                String   @id @default(cuid())
+  title             String
+  incidentType      String // Maps to incident severity or category
+  service           String? // comma-separated services
+  tags              String? // comma-separated tags
+  severityFit       String? // comma-separated SEV1, SEV2, etc
+  contentMarkdown   String // Markdown content with steps
+  executable        Boolean  @default(false) // Has automation bindings
+  version           Int      @default(1)
+  ownerId           String?
+  lastReviewedAt    DateTime?
+  reviewCadenceDays Int?     @default(90)
+  bindings          String? // JSON for automation actions
+  estimatedDuration Int? // Estimated duration in minutes
+  requiredRoles     String? // comma-separated roles
+  prerequisites     String?
+  rollbackPlan      String?
+  priority          Int      @default(0) // Display order
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  owner      User?               @relation(fields: [ownerId], references: [id])
+  incidents  Incident[]
+  executions RunbookExecution[]
   
   @@index([incidentType])
   @@index([isActive])
+  @@index([ownerId])
+}
+
+model RunbookExecution {
+  id          String    @id @default(cuid())
+  runbookId   String
+  incidentId  String?
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+  startedById String
+  steps       String? // JSON with timestamps & actors per step
+  
+  runbook   Runbook   @relation(fields: [runbookId], references: [id], onDelete: Cascade)
+  startedBy User      @relation(fields: [startedById], references: [id])
+  
+  @@index([runbookId])
+  @@index([incidentId])
+  @@index([startedAt])
 }
 
 model MaintenanceWindow {
@@ -3531,4 +3683,67 @@ model DeploymentRecord {
   @@index([deployedAt])
   @@index([environment])
   @@index([gitSha])
+}
+
+// ================================
+// SETTINGS & CONFIGURATION
+// ================================
+
+model ConfigSetting {
+  id          String         @id @default(cuid())
+  key         String         @unique
+  value       Json // Flexible for strings, numbers, booleans, objects
+  category    ConfigCategory
+  description String?
+  isPublic    Boolean        @default(false) // Can be exposed to client
+  updatedBy   String?
+  updatedAt   DateTime       @updatedAt
+  createdAt   DateTime       @default(now())
+  
+  updater User? @relation("ConfigUpdater", fields: [updatedBy], references: [id])
+  
+  @@index([category])
+  @@index([key])
+}
+
+enum ConfigCategory {
+  PLATFORM_IDENTITY
+  AUTH_SECURITY
+  PAYMENTS_FEES
+  NOTIFICATIONS
+  AI_FEATURES
+  INTEGRATIONS
+  COMPLIANCE
+  MAINTENANCE
+}
+
+model ComplianceDocument {
+  id          String            @id @default(cuid())
+  type        ComplianceDocType
+  title       String
+  fileUrl     String? // S3 URL or null if not uploaded
+  fileName    String?
+  fileSize    Int?
+  version     String?
+  uploadedBy  String?
+  uploadedAt  DateTime?
+  expiresAt   DateTime?
+  metadata    Json?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  
+  uploader User? @relation(fields: [uploadedBy], references: [id])
+  
+  @@index([type])
+}
+
+enum ComplianceDocType {
+  TERMS_OF_SERVICE
+  PRIVACY_POLICY
+  REFUND_POLICY
+  FOOD_COMPLIANCE
+  W9_TEMPLATE
+  INSURANCE_CERT
+  ORGANIC_CERT
+  BUSINESS_LICENSE
 }

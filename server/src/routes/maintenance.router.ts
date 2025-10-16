@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { logger } from '../logger';
 import { requireAuth, requireAdmin } from '../middleware/auth';
+import { maintenanceModeService } from '../services/maintenance-mode.service';
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -9,31 +10,30 @@ const prisma = new PrismaClient();
 // Check maintenance mode status (public endpoint)
 router.get('/status', async (req, res) => {
   try {
-    // Check environment variable first
-    const envMaintenanceMode = process.env.MAINTENANCE_MODE === 'true';
+    // Use new maintenance mode service
+    const status = await maintenanceModeService.getStatus();
     
-    // Check database feature flag
-    const maintenanceFlag = await prisma.featureFlag.findUnique({
-      where: { key: 'maintenance_mode' }
-    });
-    
-    const isMaintenanceMode = envMaintenanceMode || (maintenanceFlag?.enabled ?? false);
+    const isMaintenanceMode = status.globalReadonly || status.vendorReadonly || status.queueDrain;
     
     // Log the maintenance mode check
-    logger.info({
+    logger.info('Maintenance mode status checked', {
       maintenanceMode: isMaintenanceMode,
-      envMode: envMaintenanceMode,
-      dbMode: maintenanceFlag?.enabled,
+      globalReadonly: status.globalReadonly,
+      vendorReadonly: status.vendorReadonly,
+      queueDrain: status.queueDrain,
       ip: req.ip,
       userAgent: req.headers['user-agent']
-    }, 'Maintenance mode status checked');
+    });
     
     res.json({
       maintenanceMode: isMaintenanceMode,
-      source: envMaintenanceMode ? 'environment' : 'database'
+      globalReadonly: status.globalReadonly,
+      vendorReadonly: status.vendorReadonly,
+      queueDrain: status.queueDrain,
+      activeWindows: status.activeWindows
     });
-  } catch (error) {
-    logger.error({ error: error.message }, 'Failed to check maintenance mode status');
+  } catch (error: any) {
+    logger.error({ error }, 'Failed to check maintenance mode status');
     res.status(500).json({ error: 'Failed to check maintenance mode status' });
   }
 });
@@ -81,8 +81,8 @@ router.post('/validate-access', async (req, res) => {
       hasAccess,
       accessType
     });
-  } catch (error) {
-    logger.error({ error: error.message }, 'Failed to validate beta access');
+  } catch (error: any) {
+    logger.error({ error }, 'Failed to validate beta access');
     res.status(500).json({ error: 'Failed to validate access' });
   }
 });
@@ -107,8 +107,8 @@ router.get('/admin/settings', requireAuth, requireAdmin, async (req, res) => {
       betaTestersCount,
       notes: maintenanceFlag?.notes
     });
-  } catch (error) {
-    logger.error({ error: error.message }, 'Failed to get maintenance settings');
+  } catch (error: any) {
+    logger.error({ error }, 'Failed to get maintenance settings');
     res.status(500).json({ error: 'Failed to get maintenance settings' });
   }
 });
@@ -145,8 +145,8 @@ router.post('/admin/toggle', requireAuth, requireAdmin, async (req, res) => {
       maintenanceMode: maintenanceFlag.enabled,
       notes: maintenanceFlag.notes
     });
-  } catch (error) {
-    logger.error({ error: error.message }, 'Failed to toggle maintenance mode');
+  } catch (error: any) {
+    logger.error({ error }, 'Failed to toggle maintenance mode');
     res.status(500).json({ error: 'Failed to toggle maintenance mode' });
   }
 });
@@ -168,8 +168,8 @@ router.get('/admin/beta-testers', requireAuth, requireAdmin, async (req, res) =>
     });
     
     res.json({ betaTesters });
-  } catch (error) {
-    logger.error({ error: error.message }, 'Failed to get beta testers');
+  } catch (error: any) {
+    logger.error({ error }, 'Failed to get beta testers');
     res.status(500).json({ error: 'Failed to get beta testers' });
   }
 });
@@ -220,11 +220,11 @@ router.post('/admin/beta-testers', requireAuth, requireAdmin, async (req, res) =
     }, 'Beta tester added by admin');
     
     res.json({ success: true, user });
-  } catch (error) {
+  } catch (error: any) {
     if (error.code === 'P2025') {
       return res.status(404).json({ error: 'User not found' });
     }
-    logger.error({ error: error.message }, 'Failed to add beta tester');
+    logger.error({ error }, 'Failed to add beta tester');
     res.status(500).json({ error: 'Failed to add beta tester' });
   }
 });
@@ -255,11 +255,11 @@ router.delete('/admin/beta-testers/:userId', requireAuth, requireAdmin, async (r
     }, 'Beta tester removed by admin');
     
     res.json({ success: true, user });
-  } catch (error) {
+  } catch (error: any) {
     if (error.code === 'P2025') {
       return res.status(404).json({ error: 'User not found' });
     }
-    logger.error({ error: error.message }, 'Failed to remove beta tester');
+    logger.error({ error }, 'Failed to remove beta tester');
     res.status(500).json({ error: 'Failed to remove beta tester' });
   }
 });

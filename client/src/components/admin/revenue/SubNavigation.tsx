@@ -1,6 +1,6 @@
 import React from 'react';
 
-type SubView = 'overview' | 'fees' | 'ledger' | 'promos' | 'payouts';
+type SubView = 'overview' | 'fees' | 'ledger' | 'promos' | 'payouts' | 'pl' | 'staff' | 'costs';
 
 interface SubNavigationProps {
   activeView: SubView;
@@ -17,6 +17,9 @@ export const SubNavigation: React.FC<SubNavigationProps> = ({
     { id: 'ledger', label: 'Ledger' },
     { id: 'promos', label: 'Promos' },
     { id: 'payouts', label: 'Payouts' },
+    { id: 'pl', label: 'P&L Dashboard' },
+    { id: 'staff', label: 'Staff' },
+    { id: 'costs', label: 'Cost Overrides' },
   ];
 
   return (

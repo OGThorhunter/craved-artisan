@@ -101,23 +101,26 @@ export default function CostUsageView() {
             <div className="space-y-4">
               {/* Simple bar chart */}
               <div className="space-y-2">
-                {trend.slice(-10).map((day: any) => (
-                  <div key={day.date} className="flex items-center gap-3">
-                    <span className="text-xs text-[#4b4b4b] w-20">
-                      {new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                    </span>
-                    <div className="flex-1 bg-gray-200 rounded-full h-6 overflow-hidden">
-                      <div
-                        className="h-full bg-[#7F232E] flex items-center justify-end pr-2"
-                        style={{ width: `${Math.min((day.totalCostCents / 10000) * 100, 100)}%` }}
-                      >
-                        <span className="text-xs text-white font-medium">
-                          {formatCost(day.totalCostCents)}
-                        </span>
+                {trend.slice(-10).map((day: any) => {
+                  const widthPercent = Math.min((day.totalCostCents / 10000) * 100, 100);
+                  const widthClass = widthPercent > 90 ? 'w-full' : widthPercent > 75 ? 'w-11/12' : widthPercent > 50 ? 'w-3/4' : widthPercent > 25 ? 'w-1/2' : 'w-1/4';
+                  
+                  return (
+                    <div key={day.date} className="flex items-center gap-3">
+                      <span className="text-xs text-[#4b4b4b] w-20">
+                        {new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </span>
+                      <div className="flex-1 bg-gray-200 rounded-full h-6 overflow-hidden relative">
+                        {/* eslint-disable-next-line react/forbid-dom-props */}
+                        <div className={`h-full bg-[#7F232E] flex items-center justify-end pr-2 absolute left-0 top-0 bottom-0`} style={{ width: `${widthPercent}%` }}>
+                          <span className="text-xs text-white font-medium">
+                            {formatCost(day.totalCostCents)}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               <div className="pt-4 border-t border-[#7F232E]/10">

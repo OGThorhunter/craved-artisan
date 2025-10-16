@@ -9,8 +9,11 @@ import FeeManager from './FeeManager';
 import RevenueLedger from './RevenueLedger';
 import PromoManager from './PromoManager';
 import PayoutsManager from './PayoutsManager';
+import PLDashboard from '../../components/admin/revenue/PLDashboard';
+import StaffManagement from '../../components/admin/revenue/StaffManagement';
+import CostOverride from '../../components/admin/revenue/CostOverride';
 
-type SubView = 'overview' | 'fees' | 'ledger' | 'promos' | 'payouts';
+type SubView = 'overview' | 'fees' | 'ledger' | 'promos' | 'payouts' | 'pl' | 'staff' | 'costs';
 
 export const RevenueOverview: React.FC = () => {
   const [activeView, setActiveView] = useState<SubView>('overview');
@@ -72,6 +75,12 @@ export const RevenueOverview: React.FC = () => {
         return <PromoManager />;
       case 'payouts':
         return <PayoutsManager />;
+      case 'pl':
+        return <PLDashboard />;
+      case 'staff':
+        return <StaffManagement />;
+      case 'costs':
+        return <CostOverride />;
       default:
         return renderOverview();
     }

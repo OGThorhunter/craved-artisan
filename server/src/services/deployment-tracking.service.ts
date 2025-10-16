@@ -54,7 +54,7 @@ class DeploymentTrackingService {
         deployedBy: 'system'
       };
     } catch (error) {
-      logger.error('Failed to get current deployment:', error);
+      logger.error({ error }, 'Failed to get current deployment');
       throw error;
     }
   }
@@ -92,7 +92,7 @@ class DeploymentTrackingService {
 
       return deployment;
     } catch (error) {
-      logger.error('Failed to record deployment:', error);
+      logger.error({ error }, 'Failed to record deployment');
       throw error;
     }
   }
@@ -111,7 +111,7 @@ class DeploymentTrackingService {
 
       return deployments;
     } catch (error) {
-      logger.error('Failed to get deployment history:', error);
+      logger.error({ error }, 'Failed to get deployment history');
       throw error;
     }
   }
