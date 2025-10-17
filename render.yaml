@@ -11,7 +11,7 @@ services:
     name: cravedartisan-api
     runtime: node
     region: oregon
-    plan: standard
+    plan: starter
     rootDir: .
     buildCommand: |
       npm ci
@@ -58,6 +58,10 @@ services:
           type: web
           name: cravedartisan-api
           property: commit
+      - key: REDIS_URL
+        sync: false # Optional: Set manually for session persistence (Upstash recommended)
+      - key: OPENAI_API_KEY
+        sync: false # Optional: Required for AI features (product suggestions, receipt parsing)
 
   # --- Client (Static)
   - type: web
