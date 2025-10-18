@@ -1,8 +1,6 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../db';
 import { logger } from '../logger';
 import { queueMonitor } from './queue-monitor';
-
-const prisma = new PrismaClient();
 
 export interface HealthCheck {
   kind: string;
