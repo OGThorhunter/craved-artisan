@@ -21,53 +21,39 @@ services:
       - key: NODE_ENV
         value: production
       - key: FRONTEND_URL
-        fromService:
-          type: static
-          name: cravedartisan-web
-          property: url
+        sync: false
       - key: BACKEND_URL
-        fromService:
-          type: web
-          name: cravedartisan-api
-          property: url
+        sync: false
       - key: DATABASE_URL
-        sync: false # Set manually in Render dashboard - using external Neon database
+        sync: false
       - key: SESSION_SECRET
         generateValue: true
       - key: ENABLE_STRIPE_TAX
         value: "true"
       - key: PLATFORM_FEE_BPS
-        value: "100" # 1.00%
+        value: "100"
       - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
         sync: false
       - key: STRIPE_WEBHOOK_SECRET
         sync: false
-      - key: SENTRY_DSN
-        sync: false
-      - key: SENTRY_RELEASE
-        fromService:
-          type: web
-          name: cravedartisan-api
-          property: commit
       - key: REDIS_URL
-        sync: false # Optional: Set manually for session persistence (Upstash recommended)
+        sync: false
       - key: OPENAI_API_KEY
-        sync: false # Optional: Required for AI features (product suggestions, receipt parsing)
+        sync: false
 
   # --- Client (Static)
   - type: web
     name: cravedartisan-web
     runtime: static
-    region: oregon
     buildCommand: |
       npm ci
       npm run -w client build
+    staticPublishPath: client/dist
     envVars:
       - key: VITE_API_BASE_URL
-        fromService:
-          type: web
-          name: cravedartisan-api
-          property: url
+        sync: false
       - key: VITE_FEATURE_LIVE_PRODUCTS
         value: "true"
       - key: VITE_FEATURE_LIVE_ANALYTICS
