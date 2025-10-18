@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLocation } from 'wouter';
 import { toast } from 'react-hot-toast';
 import { Eye, EyeOff } from 'lucide-react';
+import OAuthButtons from '../components/auth/OAuthButtons';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -70,6 +71,9 @@ const LoginPage: React.FC = () => {
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-[#F7F2EC] py-8 px-4 shadow-lg sm:rounded-lg sm:px-10 border border-[#E8CBAE]">
+          {/* Social Login Options */}
+          <OAuthButtons disabled={loading} />
+
           <form className="space-y-6" onSubmit={handleSubmit}>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-black">
@@ -131,21 +135,6 @@ const LoginPage: React.FC = () => {
               </button>
             </div>
           </form>
-
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-[#E8CBAE]" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-[#F7F2EC] text-black">Test Account</span>
-              </div>
-            </div>
-            <div className="mt-4 text-center text-sm text-black">
-              <p>Email: test@example.com</p>
-              <p>Password: password123</p>
-            </div>
-          </div>
         </div>
       </div>
     </div>
