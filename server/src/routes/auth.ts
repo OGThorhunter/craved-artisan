@@ -184,16 +184,16 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Admin login
-    if (email === 'admin@cravedartisan.com' && password === 'admin123') {
-      console.log('🔍 [DEBUG] Admin login successful, setting session data...');
+    // Super Admin login
+    if (email === 'support@cravedartisan.com' && password === 'Bigbertha#1') {
+      console.log('🔍 [DEBUG] Super Admin login successful, setting session data...');
       console.log('🔍 [DEBUG] Session ID before:', req.sessionID);
       console.log('🔍 [DEBUG] Session data before:', JSON.stringify(req.session, null, 2));
       
-      req.session.userId = 'admin-user-id';
+      req.session.userId = 'cmgwuw1y20000qus0z6ij5xjl';
       req.session.email = email;
-      req.session.role = 'ADMIN';
-      req.session.vendorProfileId = 'admin-user-id';
+      req.session.role = 'SUPER_ADMIN';
+      req.session.vendorProfileId = 'cmgwuw1y20000qus0z6ij5xjl';
       
       console.log('🔍 [DEBUG] Session data after setting:', JSON.stringify(req.session, null, 2));
       
