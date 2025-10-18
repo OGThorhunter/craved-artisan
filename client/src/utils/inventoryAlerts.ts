@@ -124,7 +124,7 @@ export function generateAlertItems(
       count: alerts.expiredItems.length,
       severity: 'high',
       action: 'Remove Items',
-      onClick: onExpiredClick,
+      onClick: onExpiredClick || undefined,
     });
   }
 
@@ -143,7 +143,7 @@ export function hasItemAlerts(item: InventoryItem): boolean {
     return expirationDate <= expiringSoonDate && expirationDate > new Date();
   })();
 
-  const isExpired = item.expirationDate && new Date(item.expirationDate) <= new Date();
+  const isExpired = item.expirationDate ? new Date(item.expirationDate) <= new Date() : false;
 
   return isLowStock || isExpiringSoon || isExpired;
 }

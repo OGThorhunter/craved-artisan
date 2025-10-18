@@ -92,17 +92,17 @@ export function toCanonical(
 ): ConversionResult {
   // Handle piece units (no conversion needed)
   if (isPieceUnit(unit)) {
-    return { qty: pieceUnits[unit].toCanonical(qty) };
+    return { qty: pieceUnits[unit]?.toCanonical(qty) || qty };
   }
 
   // Handle mass units
   if (isMassUnit(unit)) {
-    return { qty: massUnits[unit].toCanonical(qty) };
+    return { qty: massUnits[unit]?.toCanonical(qty) || qty };
   }
 
   // Handle volume units
   if (isVolumeUnit(unit)) {
-    return { qty: volumeUnits[unit].toCanonical(qty) };
+    return { qty: volumeUnits[unit]?.toCanonical(qty) || qty };
   }
 
   return { qty, note: 'unknown unit' };
@@ -116,17 +116,17 @@ export function fromCanonical(
 ): ConversionResult {
   // Handle piece units (no conversion needed)
   if (isPieceUnit(targetUnit)) {
-    return { qty: pieceUnits[targetUnit].fromCanonical(qty) };
+    return { qty: pieceUnits[targetUnit]?.fromCanonical(qty) || qty };
   }
 
   // Handle mass units
   if (isMassUnit(targetUnit)) {
-    return { qty: massUnits[targetUnit].fromCanonical(qty) };
+    return { qty: massUnits[targetUnit]?.fromCanonical(qty) || qty };
   }
 
   // Handle volume units
   if (isVolumeUnit(targetUnit)) {
-    return { qty: volumeUnits[targetUnit].fromCanonical(qty) };
+    return { qty: volumeUnits[targetUnit]?.fromCanonical(qty) || qty };
   }
 
   return { qty, note: 'unknown unit' };

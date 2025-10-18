@@ -229,22 +229,27 @@ router.get('/inventory-insights', async (req: Request, res: Response) => {
     // Generate inventory insights
     const insights = inventoryItems.map(item => {
       // Calculate daily run rate (simplified - would need actual usage data)
-      const dailyRunRate = item.currentQty > 0 ? Math.max(0.1, item.currentQty / 30) : 0.1;
+      const currentQty = Number(item.current_qty);
+      const reorderPoint = Number(item.reorder_point);
+      const lastCost = Number(item.last_cost);
+      const leadTimeDays = 7; // Default lead time if not in schema
+      
+      const dailyRunRate = currentQty > 0 ? Math.max(0.1, currentQty / 30) : 0.1;
       
       // Calculate stockout risk
       const stockoutRiskPct = Math.max(0, Math.min(100, 
-        (1 - (item.currentQty / (item.leadTimeDays * dailyRunRate))) * 100
+        (1 - (currentQty / (leadTimeDays * dailyRunRate))) * 100
       ));
 
       // Get best offer
       const bestOffer = item.supplierOffers[0] || null;
-      const savingsVsLastCostPct = bestOffer && item.lastCost 
-        ? ((item.lastCost - bestOffer.unitCost) / item.lastCost) * 100
+      const savingsVsLastCostPct = bestOffer && lastCost 
+        ? ((lastCost - bestOffer.unitCost) / lastCost) * 100
         : 0;
 
       // Calculate recommended order quantity
       const recOrderQty = Math.max(0, 
-        (item.leadTimeDays * dailyRunRate * 1.5) - item.currentQty
+        (leadTimeDays * dailyRunRate * 1.5) - currentQty
       );
 
       // Generate rationale
@@ -255,23 +260,23 @@ router.get('/inventory-insights', async (req: Request, res: Response) => {
       if (bestOffer && savingsVsLastCostPct > 10) {
         rationale.push('Significant cost savings available');
       }
-      if (item.currentQty <= item.reorderPoint) {
+      if (currentQty <= reorderPoint) {
         rationale.push('Below reorder point');
       }
 
       // Determine confidence
       let confidencePct = 60;
-      if (item.currentQty > 0) confidencePct += 10;
+      if (currentQty > 0) confidencePct += 10;
       if (bestOffer) confidencePct += 10;
-      if (item.leadTimeDays > 0) confidencePct += 10;
+      if (leadTimeDays > 0) confidencePct += 10;
       if (stockoutRiskPct > 50) confidencePct += 10;
 
       return {
         inventoryItemId: item.id,
         name: item.name,
-        currentQty: item.currentQty,
-        reorderPoint: item.reorderPoint,
-        leadTimeDays: item.leadTimeDays,
+        currentQty,
+        reorderPoint,
+        leadTimeDays,
         dailyRunRate,
         stockoutRiskPct,
         recOrderQty: Math.round(recOrderQty),

@@ -1,22 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-
-// Extend Request interface to include user
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        id: string;
-        userId: string;
-        email: string;
-        role: string;
-        vendorProfileId: string;
-        isAuthenticated: boolean;
-        lastActivity: Date;
-        betaTester?: boolean;
-      };
-    }
-  }
-}
+// Type augmentations moved to server/src/types/express.d.ts to avoid conflicts
 
 // Middleware to require authentication
 export const requireAuth = (req: Request, res: Response, next: NextFunction) => {

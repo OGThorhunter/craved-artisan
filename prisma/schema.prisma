@@ -1454,6 +1454,10 @@ model LabelJob {
 enum OrderStatus {
   PENDING
   PAID
+  CONFIRMED
+  PREPARING
+  IN_PRODUCTION
+  COMPLETED
   CANCELLED
   FAILED
   REFUNDED
@@ -1463,6 +1467,7 @@ enum Role {
   VENDOR
   ADMIN
   CUSTOMER
+  EVENT_COORDINATOR
 }
 
 enum TaxAlertType {

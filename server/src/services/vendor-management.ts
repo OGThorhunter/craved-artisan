@@ -170,7 +170,7 @@ export class VendorManagementService {
         activeSalesWindows
       };
     } catch (error) {
-      logger.error(`Failed to get vendor profile ${vendorId}:`, error);
+      logger.error(`Failed to get vendor profile ${vendorId}:`, { error, vendorId });
       return null;
     }
   }
@@ -333,7 +333,7 @@ export class VendorManagementService {
         pageCount: Math.ceil(total / pageSize)
       };
     } catch (error) {
-      logger.error('Failed to search vendors:', error);
+      logger.error('Failed to search vendors:', { error });
       return {
         vendors: [],
         total: 0,
@@ -406,7 +406,7 @@ export class VendorManagementService {
         growthMetrics
       };
     } catch (error) {
-      logger.error('Failed to get vendor analytics:', error);
+      logger.error('Failed to get vendor analytics:', { error });
       return {
         totalVendors: 0,
         activeVendors: 0,
@@ -455,7 +455,7 @@ export class VendorManagementService {
         criteria: JSON.parse(segment.criteria)
       };
     } catch (error) {
-      logger.error('Failed to create vendor segment:', error);
+      logger.error('Failed to create vendor segment:', { error });
       throw error;
     }
   }
@@ -472,7 +472,7 @@ export class VendorManagementService {
         criteria: JSON.parse(segment.criteria)
       }));
     } catch (error) {
-      logger.error('Failed to get vendor segments:', error);
+      logger.error('Failed to get vendor segments:', { error });
       return [];
     }
   }
@@ -490,7 +490,7 @@ export class VendorManagementService {
       const searchResult = await this.searchVendors(criteria);
       return searchResult.vendors;
     } catch (error) {
-      logger.error(`Failed to get vendors for segment ${segmentId}:`, error);
+      logger.error(`Failed to get vendors for segment ${segmentId}:`, { error, segmentId });
       return [];
     }
   }
@@ -501,7 +501,7 @@ export class VendorManagementService {
       const vendors = await this.getSegmentVendors(segmentId);
       return vendors.length;
     } catch (error) {
-      logger.error(`Failed to get vendor count for segment ${segmentId}:`, error);
+      logger.error(`Failed to get vendor count for segment ${segmentId}:`, { error, segmentId });
       return 0;
     }
   }
@@ -538,7 +538,7 @@ export class VendorManagementService {
         criteria: JSON.parse(segment.criteria)
       };
     } catch (error) {
-      logger.error(`Failed to update vendor segment ${segmentId}:`, error);
+      logger.error(`Failed to update vendor segment ${segmentId}:`, { error, segmentId });
       throw error;
     }
   }
@@ -551,7 +551,7 @@ export class VendorManagementService {
       });
       return true;
     } catch (error) {
-      logger.error(`Failed to delete vendor segment ${segmentId}:`, error);
+      logger.error(`Failed to delete vendor segment ${segmentId}:`, { error, segmentId });
       return false;
     }
   }
@@ -590,7 +590,7 @@ export class VendorManagementService {
         vendorCount: vendors.length
       };
     } catch (error) {
-      logger.error(`Failed to broadcast to segment ${segmentId}:`, error);
+      logger.error(`Failed to broadcast to segment ${segmentId}:`, { error, segmentId });
       return {
         success: false,
         vendorCount: 0

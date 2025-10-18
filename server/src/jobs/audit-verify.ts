@@ -134,7 +134,7 @@ export function startAuditVerificationJob() {
 
       if (!result.isValid) {
         // TODO: Send alert email/Slack notification
-        logger.critical({
+        logger.fatal({
           ...result,
           message: 'CRITICAL: Audit chain integrity compromised!',
         }, 'Audit chain verification failed');

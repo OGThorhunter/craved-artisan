@@ -1,4 +1,5 @@
-import { Queue, Worker, QueueScheduler } from 'bullmq';
+import { Queue, Worker } from 'bullmq';
+// Note: QueueScheduler removed in BullMQ v5 - functionality now built into Worker
 import { getRedisClient } from './redis';
 import { logger } from '../logger';
 

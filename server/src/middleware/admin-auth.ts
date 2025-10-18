@@ -3,20 +3,7 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-// Extend Request interface for admin
-declare global {
-  namespace Express {
-    interface Request {
-      admin?: {
-        id: string;
-        email: string;
-        role: string;
-        isAuthenticated: boolean;
-        lastActivity: Date;
-      };
-    }
-  }
-}
+// Type augmentations moved to server/src/types/express.d.ts to avoid conflicts
 
 // Admin IP allowlist (in production, this should be in environment variables)
 const ADMIN_ALLOWED_IPS = [

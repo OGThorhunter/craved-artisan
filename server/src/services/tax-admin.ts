@@ -348,7 +348,7 @@ export class TaxAdminService {
         year: document.year
       });
     } catch (error) {
-      logger.error(`Failed to add tax document for user ${userId}:`, error);
+      logger.error(`Failed to add tax document for user ${userId}:`, { error, userId });
       throw error;
     }
   }
@@ -370,7 +370,7 @@ export class TaxAdminService {
           await this.updateTaxProfile(vendor.userId);
           success++;
         } catch (error) {
-          logger.error(`Failed to sync tax profile for vendor ${vendor.userId}:`, error);
+          logger.error(`Failed to sync tax profile for vendor ${vendor.userId}:`, { error, userId: vendor.userId });
           failed++;
         }
       }
@@ -383,7 +383,7 @@ export class TaxAdminService {
       
       return { success, failed };
     } catch (error) {
-      logger.error('Tax profile batch sync error:', error);
+      logger.error('Tax profile batch sync error:', { error });
       throw error;
     }
   }

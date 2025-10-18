@@ -51,18 +51,18 @@ function levenshteinDistance(str1: string, str2: string): number {
   for (let i = 1; i <= str2.length; i++) {
     for (let j = 1; j <= str1.length; j++) {
       if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
-        matrix[i][j] = matrix[i - 1][j - 1];
+        matrix[i]![j] = matrix[i - 1]![j - 1]!;
       } else {
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1,
-          matrix[i][j - 1] + 1,
-          matrix[i - 1][j] + 1
+        matrix[i]![j] = Math.min(
+          matrix[i - 1]![j - 1]! + 1,
+          matrix[i]![j - 1]! + 1,
+          matrix[i - 1]![j]! + 1
         );
       }
     }
   }
   
-  return matrix[str2.length][str1.length];
+  return matrix[str2.length]![str1.length]!;
 }
 
 /**
@@ -152,6 +152,7 @@ export function findDuplicateGroups(
   
   for (let i = 0; i < items.length; i++) {
     const item1 = items[i];
+    if (!item1) continue;
     
     // Skip if already processed
     if (processedItems.has(item1.id)) continue;
@@ -161,6 +162,7 @@ export function findDuplicateGroups(
     // Find all items that could be duplicates of item1
     for (let j = i + 1; j < items.length; j++) {
       const item2 = items[j];
+      if (!item2) continue;
       
       // Skip if already processed
       if (processedItems.has(item2.id)) continue;
@@ -182,7 +184,9 @@ export function findDuplicateGroups(
       let confidenceCount = 0;
       
       for (let k = 1; k < duplicates.length; k++) {
-        const check = arePotentialDuplicates(item1, duplicates[k], options);
+        const duplicate = duplicates[k];
+        if (!duplicate) continue;
+        const check = arePotentialDuplicates(item1, duplicate, options);
         totalConfidence += check.confidence;
         confidenceCount++;
       }

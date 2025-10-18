@@ -25,7 +25,7 @@ export interface ModerationItem {
 
 export interface ModerationEvidence {
   id: string;
-  type: 'screenshot' | 'text' | 'url' | 'metadata';
+  type: 'screenshot' | 'text' | 'url' | 'metadata' | 'behavioral';
   content: string;
   description?: string;
   submittedBy: string;
@@ -235,7 +235,7 @@ export class TrustSafetyService {
         pageCount: Math.ceil(total / pageSize)
       };
     } catch (error) {
-      logger.error('Failed to get moderation queue:', error);
+      logger.error('Failed to get moderation queue:', { error });
       return {
         items: [],
         total: 0,
@@ -285,7 +285,7 @@ export class TrustSafetyService {
         links: mockLinks
       };
     } catch (error) {
-      logger.error('Failed to get account link graph:', error);
+      logger.error('Failed to get account link graph:', { error });
       return { nodes: [], links: [] };
     }
   }
@@ -319,7 +319,7 @@ export class TrustSafetyService {
         }
       };
     } catch (error) {
-      logger.error('Failed to get trust & safety metrics:', error);
+      logger.error('Failed to get trust & safety metrics:', { error });
       return {
         totalReports: 0,
         pendingReports: 0,
@@ -374,7 +374,7 @@ export class TrustSafetyService {
         lastRiskAssessment: new Date(Date.now() - 24 * 60 * 60 * 1000)
       };
     } catch (error) {
-      logger.error(`Failed to get user risk profile for ${userId}:`, error);
+      logger.error(`Failed to get user risk profile for ${userId}:`, { error, userId });
       return null;
     }
   }
@@ -424,7 +424,7 @@ export class TrustSafetyService {
       logger.info(`Moderation item ${moderationId} status updated to ${newStatus}`);
       return true;
     } catch (error) {
-      logger.error(`Failed to take moderation action on ${moderationId}:`, error);
+      logger.error(`Failed to take moderation action on ${moderationId}:`, { error, moderationId });
       return false;
     }
   }
@@ -439,7 +439,7 @@ export class TrustSafetyService {
       logger.info(`Account link ${linkId} status updated to ${status} by ${updatedBy}`);
       return true;
     } catch (error) {
-      logger.error(`Failed to update account link ${linkId}:`, error);
+      logger.error(`Failed to update account link ${linkId}:`, { error, linkId });
       return false;
     }
   }
@@ -478,7 +478,7 @@ export class TrustSafetyService {
         updatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000)
       };
     } catch (error) {
-      logger.error(`Failed to get moderation item ${itemId}:`, error);
+      logger.error(`Failed to get moderation item ${itemId}:`, { error, itemId });
       return null;
     }
   }
@@ -520,7 +520,7 @@ export class TrustSafetyService {
         user.email.toLowerCase().includes(query.toLowerCase())
       );
     } catch (error) {
-      logger.error('Failed to search users:', error);
+      logger.error('Failed to search users:', { error });
       return [];
     }
   }

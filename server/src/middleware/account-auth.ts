@@ -2,37 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../db';
 import { logger } from '../logger';
 
-// Extend Request interface to include account context
-declare global {
-  namespace Express {
-    interface Request {
-      account?: {
-        id: string;
-        name: string;
-        slug: string;
-        ownerId: string;
-      };
-      accountUser?: {
-        id: string;
-        role: 'OWNER' | 'ADMIN' | 'STAFF' | 'VIEWER';
-        status: 'ACTIVE' | 'ON_LEAVE' | 'TERMINATED';
-        title?: string;
-        workEmail?: string;
-        workPhone?: string;
-      };
-      user?: {
-        userId: string;
-        email: string;
-        firstName: string;
-        lastName: string;
-        phone?: string;
-        avatarUrl?: string;
-        isAuthenticated: boolean;
-        lastActivity: Date;
-      };
-    }
-  }
-}
+// Type augmentations moved to server/src/types/express.d.ts to avoid conflicts
 
 // Middleware to load account context from session or header
 export const loadAccountContext = async (req: Request, res: Response, next: NextFunction) => {
@@ -202,19 +172,22 @@ export const auditLog = (action: string, entityType: string, entityId?: string) 
     res.send = function(data: any) {
       // Log audit entry after successful response
       if (res.statusCode >= 200 && res.statusCode < 300) {
-        prisma.auditLog.create({
+        prisma.auditEvent.create({
           data: {
             accountId: req.account!.id,
-            actorUserId: req.user!.userId,
-            action: action,
-            entityType: entityType,
-            entityId: entityId || req.params.id || 'unknown',
-            diffJson: req.method !== 'GET' ? req.body : null,
-            ip: req.ip,
-            userAgent: req.get('User-Agent')
+            actorId: req.user!.userId,
+            eventType: action,
+            metadata: {
+              entityType,
+              entityId: entityId || req.params.id || 'unknown',
+              method: req.method,
+              path: req.path,
+              ip: req.ip,
+              userAgent: req.get('User-Agent')
+            }
           }
         }).catch(error => {
-          logger.error({ error }, 'Failed to create audit log');
+          logger.error({ error }, 'Failed to create audit event');
         });
       }
       

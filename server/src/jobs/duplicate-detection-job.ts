@@ -69,7 +69,7 @@ export async function duplicateDetectionJob() {
       duration
     };
   } catch (error) {
-    logger.error('❌ Duplicate detection job failed:', error);
+    logger.error({ error }, '❌ Duplicate detection job failed');
     throw error;
   }
 }
