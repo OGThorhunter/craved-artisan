@@ -27,6 +27,7 @@ Add these environment variables in the Render dashboard:
 ```bash
 NODE_ENV=production
 DATABASE_URL=postgresql://neondb_owner:npg_s5e7xQdYCApy@ep-noisy-breeze-aeoidthx-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+DIRECT_URL=postgresql://neondb_owner:npg_s5e7xQdYCApy@ep-noisy-breeze-aeoidthx-pooler.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require
 SESSION_SECRET=your-super-secret-session-key-here-minimum-32-chars
 JWT_SECRET=your-super-secret-jwt-key-here
 JWT_EXPIRES_IN=7d
@@ -95,6 +96,7 @@ curl https://craved-artisan-api.onrender.com/health
 ```bash
 # Database
 DATABASE_URL=your-neon-connection-string
+DIRECT_URL=your-neon-connection-string
 
 # Server
 NODE_ENV=production
