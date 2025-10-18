@@ -292,7 +292,9 @@ app.listen(PORT, () => {
   logger.info(`🎫 Support system: http://localhost:${PORT}/api/admin/support`);
   
   // Start cron jobs
-  cronJobs.startAllJobs();
+  cronJobs.startAllJobs().catch((error) => {
+    logger.error('Failed to start cron jobs:', error);
+  });
   
   // Initialize support system workers
   if (process.env.USE_BULLMQ === 'true') {

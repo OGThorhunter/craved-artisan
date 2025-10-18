@@ -85,9 +85,15 @@ export class SystemHealthMonitor {
     try {
       const start = Date.now();
       
-      // Test basic connectivity
-      await prisma.$queryRaw`SELECT 1`;
-      const basicTime = Date.now() - start;
+      // Test basic connectivity with retry logic
+      let basicTime = 0;
+      try {
+        await prisma.$queryRaw`SELECT 1`;
+        basicTime = Date.now() - start;
+      } catch (dbError) {
+        logger.error('Database connection test failed:', dbError);
+        throw dbError;
+      }
       
       // Get database stats
       const [connections, cacheHitRatio, slowQueries] = await Promise.all([

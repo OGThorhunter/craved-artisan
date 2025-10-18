@@ -17,8 +17,15 @@ export class CronJobService {
     return CronJobService.instance;
   }
 
-  public startAllJobs(): void {
+  public async startAllJobs(): Promise<void> {
     logger.info('Starting cron jobs...');
+    
+    // Wait for Prisma client to be ready
+    try {
+      await this.waitForDatabaseConnection();
+    } catch (error) {
+      logger.error('Database not ready, starting cron jobs anyway:', error);
+    }
 
     // System health checks every 5 minutes
     this.scheduleJob('health-checks', '*/5 * * * *', async () => {
@@ -103,7 +110,7 @@ export class CronJobService {
       try {
         await maintenanceModeService.autoCompleteExpired();
       } catch (error) {
-        logger.error('Maintenance auto-complete job failed:', error);
+        logger.error('Failed to auto-complete expired windows:', error);
       }
     });
 
@@ -132,6 +139,24 @@ export class CronJobService {
     }
 
     logger.info(`Started ${this.jobs.size} cron jobs`);
+  }
+
+  private async waitForDatabaseConnection(maxRetries: number = 10, delay: number = 1000): Promise<void> {
+    const { prisma } = await import('../db');
+    
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        await prisma.$queryRaw`SELECT 1`;
+        logger.info('✅ Database connection verified');
+        return;
+      } catch (error) {
+        logger.warn(`Database connection attempt ${i + 1}/${maxRetries} failed:`, error);
+        if (i === maxRetries - 1) {
+          throw new Error('Database connection failed after maximum retries');
+        }
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
   }
 
   public stopAllJobs(): void {
