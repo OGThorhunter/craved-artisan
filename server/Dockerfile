@@ -14,7 +14,7 @@ RUN npm run -w server build
 FROM node:20-alpine
 WORKDIR /app
 ENV NODE_ENV=production
-COPY --from=deps /app/node_modules ./node_modules
+COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/server/dist ./server/dist
 COPY --from=build /app/prisma ./prisma
 CMD ["node", "server/dist/index.js"]
