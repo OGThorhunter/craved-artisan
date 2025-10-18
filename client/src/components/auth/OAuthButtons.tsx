@@ -28,8 +28,8 @@ const OAuthButtons: React.FC<OAuthButtonsProps> = ({ disabled = false, className
       }
       
       // Redirect to OAuth provider
-      const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-      window.location.href = `${baseUrl}/oauth/${provider}`;
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+      window.location.href = `${baseUrl}/api/oauth/${provider}`;
       
     } catch (error) {
       console.error(`${provider} OAuth error:`, error);
