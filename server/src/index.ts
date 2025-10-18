@@ -139,7 +139,15 @@ app.use(requestContext);
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Health check
+// Health check endpoints
+app.get('/health', (_req, res) => {
+  res.json({ ok: true, ts: Date.now(), message: 'Session-based auth server running' });
+});
+
+app.get('/readyz', (_req, res) => {
+  res.json({ ok: true, ts: Date.now(), message: 'Session-based auth server running' });
+});
+
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true, ts: Date.now(), message: 'Session-based auth server running' });
 });
