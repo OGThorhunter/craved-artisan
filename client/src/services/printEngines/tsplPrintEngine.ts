@@ -417,6 +417,17 @@ export class TSPLPrintEngine extends BasePrintEngine {
 
     const fontInfo = fonts[fontFamily.toLowerCase()] || fonts['helvetica'];
     
+    if (!fontInfo) {
+      // Fallback to default values
+      return {
+        font: '1',
+        width: 8,
+        height: 12,
+        xMul: 1,
+        yMul: 1
+      };
+    }
+    
     // Calculate multipliers based on desired font size
     const targetSize = fontSize * 2.83; // Convert points to dots at 203 DPI
     const xMul = Math.max(1, Math.round(targetSize / fontInfo.baseHeight));

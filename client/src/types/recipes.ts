@@ -396,7 +396,14 @@ export const MOCK_RECIPES_WITH_INGREDIENTS = [
 // Cost analysis calculation functions
 export const calculateRecipeCost = (recipe: any, ingredients: any[]) => {
   let totalCost = 0;
-  const breakdown = [];
+  const breakdown: Array<{
+    ingredientId: string;
+    ingredientName: string;
+    quantity: number;
+    unit: string;
+    cost: number;
+    percentageOfTotal: number;
+  }> = [];
 
   recipe.ingredients.forEach((recipeIngredient: any) => {
     const ingredient = ingredients.find(i => i.id === recipeIngredient.ingredientId);

@@ -23,7 +23,7 @@ export interface LaborCost {
 export interface Recipe {
   id: string;
   name: string;
-  description: string;
+  description?: string;
   version: string;
   yield: number; // units produced
   yieldUnit: string;

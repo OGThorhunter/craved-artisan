@@ -211,8 +211,8 @@ export const useStableCallback = <T extends (...args: any[]) => any>(
   callback: T,
   dependencies: React.DependencyList
 ): T => {
-  const callbackRef = useRef<T>();
-  const dependenciesRef = useRef<React.DependencyList>();
+  const callbackRef = useRef<T>(callback);
+  const dependenciesRef = useRef<React.DependencyList>(dependencies);
 
   // Update callback only when dependencies change
   if (

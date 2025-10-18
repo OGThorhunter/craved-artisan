@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { Menu, X, ShoppingCart, Search, Bell, MapPin, MessageCircle, Send, X as CloseIcon } from 'lucide-react';
-import logonobg from '/images/logonobg.png';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
 import { useNotifications } from '../contexts/NotificationContext';
@@ -264,7 +263,7 @@ export default function NavHeader() {
         <div className="flex items-center space-x-6">
           <Link href="/">
             <img 
-              src={logonobg} 
+              src="/images/logonobg.png" 
               alt="Craved Artisan Logo" 
               className="h-12 w-auto object-contain max-w-[200px]"
             />

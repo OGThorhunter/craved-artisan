@@ -36,7 +36,7 @@ export interface PrintElement {
   rotation?: number; // degrees
   
   // Barcode/QR properties
-  barcodeFormat?: 'CODE128' | 'CODE39' | 'UPC' | 'EAN13' | 'QR';
+  barcodeFormat?: 'CODE128' | 'CODE39' | 'CODE93' | 'UPC' | 'EAN13' | 'EAN8' | 'QR';
   showText?: boolean;
   
   // Image properties

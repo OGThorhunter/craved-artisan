@@ -311,7 +311,7 @@ export class PDFPrintEngine extends BasePrintEngine {
       
       pdf.addImage(
         imageData,
-        undefined, // Auto-detect format
+        'PNG', // Specify format
         element.x,
         element.y,
         element.width,

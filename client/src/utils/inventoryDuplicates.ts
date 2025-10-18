@@ -38,25 +38,25 @@ function calculateSimilarity(str1: string, str2: string): number {
  * Calculate Levenshtein distance between two strings
  */
 function levenshteinDistance(str1: string, str2: string): number {
-  const matrix = [];
+  const matrix: number[][] = [];
   
   for (let i = 0; i <= str2.length; i++) {
     matrix[i] = [i];
   }
   
   for (let j = 0; j <= str1.length; j++) {
-    matrix[0][j] = j;
+    matrix[0]![j] = j;
   }
   
   for (let i = 1; i <= str2.length; i++) {
     for (let j = 1; j <= str1.length; j++) {
       if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
-        matrix[i]![j] = matrix[i - 1]![j - 1]!;
+        matrix[i]![j] = matrix[i - 1]?.[j - 1] ?? 0;
       } else {
         matrix[i]![j] = Math.min(
-          matrix[i - 1]![j - 1]! + 1,
-          matrix[i]![j - 1]! + 1,
-          matrix[i - 1]![j]! + 1
+          (matrix[i - 1]?.[j - 1] ?? 0) + 1,
+          (matrix[i]?.[j - 1] ?? 0) + 1,
+          (matrix[i - 1]?.[j] ?? 0) + 1
         );
       }
     }
@@ -199,7 +199,7 @@ export function findDuplicateGroups(
         confidence: avgConfidence,
         reason: duplicates.length > 2 ? 
           `Multiple potential duplicates found (${duplicates.length} items)` :
-          arePotentialDuplicates(item1, duplicates[1], options).reason
+          (duplicates[1] ? arePotentialDuplicates(item1, duplicates[1], options).reason : 'Duplicate found')
       });
     }
   }
