@@ -1,12 +1,19 @@
 ﻿'use client';
 
 import { useState } from 'react';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { Chrome, Facebook, Apple } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export const JoinPage = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [, setLocation] = useLocation();
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    category: '',
+    description: ''
+  });
 
   const handleSocialJoin = async (provider: 'google' | 'facebook' | 'apple') => {
     setIsLoading(true);
@@ -21,6 +28,53 @@ export const JoinPage = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Validate form
+    if (!formData.name || !formData.email || !formData.category) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    // Map category to role
+    let role: string = 'CUSTOMER';
+    switch (formData.category) {
+      case 'Vendor':
+        role = 'VENDOR';
+        break;
+      case 'B2B Vendor':
+        role = 'B2B';
+        break;
+      case 'Event Coordinator':
+        role = 'EVENT_COORDINATOR';
+        break;
+      case 'Drop-Off Location':
+        role = 'DROPOFF_MANAGER';
+        break;
+      case 'Customer':
+      default:
+        role = 'CUSTOMER';
+        break;
+    }
+
+    // Redirect to signup page with pre-filled data
+    const params = new URLSearchParams({
+      role,
+      name: formData.name,
+      email: formData.email,
+    });
+
+    setLocation(`/signup?${params.toString()}`);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
   };
 
   return (
@@ -152,43 +206,55 @@ export const JoinPage = () => {
               </div>
             </div>
             
-            <form className="space-y-6">
+            <form className="space-y-6" onSubmit={handleSubmit}>
               <div>
                 <label className="block responsive-text font-medium text-gray-700 mb-2">
-                  Full Name
+                  Full Name <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   placeholder="Your full name"
+                  required
                 />
               </div>
 
               <div>
                 <label className="block responsive-text font-medium text-gray-700 mb-2">
-                  Email Address
+                  Email Address <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   placeholder="your@email.com"
+                  required
                 />
               </div>
 
               <div>
                 <label className="block responsive-text font-medium text-gray-700 mb-2">
-                  Category
+                  Category <span className="text-red-500">*</span>
                 </label>
                 <select 
+                  name="category"
+                  value={formData.category}
+                  onChange={handleInputChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   aria-label="Select your category"
+                  required
                 >
-                  <option>Select your category</option>
-                  <option>Customer</option>
-                  <option>Vendor</option>
-                  <option>B2B Vendor</option>
-                  <option>Event Coordinator</option>
-                  <option>Drop-Off Location</option>
+                  <option value="">Select your category</option>
+                  <option value="Customer">Customer</option>
+                  <option value="Vendor">Vendor</option>
+                  <option value="B2B Vendor">B2B Vendor</option>
+                  <option value="Event Coordinator">Event Coordinator</option>
+                  <option value="Drop-Off Location">Drop-Off Location</option>
                 </select>
                 <div className="mt-2 text-center">
                   <a 
@@ -205,9 +271,12 @@ export const JoinPage = () => {
 
               <div>
                 <label className="block responsive-text font-medium text-gray-700 mb-2">
-                  Tell us about your craft
+                  Tell us about your craft (optional)
                 </label>
                 <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleInputChange}
                   rows={4}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   placeholder="Describe your craft, experience, and what makes your work unique..."
@@ -216,9 +285,10 @@ export const JoinPage = () => {
 
               <button
                 type="submit"
-                className="w-full btn-primary text-lg py-4"
+                disabled={isLoading}
+                className="w-full btn-primary text-lg py-4 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Apply to Join
+                {isLoading ? 'Processing...' : 'Continue to Sign Up'}
               </button>
             </form>
 

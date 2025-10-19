@@ -154,10 +154,10 @@ export const JoinCoordinatorPage = () => {
         <span>Ready to bring your community together?</span>
         <div className="flex gap-4">
           <Link
-            href="/join"
+            href="/signup?role=EVENT_COORDINATOR"
             className="bg-white text-brand-green responsive-button rounded shadow hover:bg-gray-100 transition"
           >
-            Get Started
+            Get Started as Event Coordinator
           </Link>
           <a
             href="mailto:support@cravedartisan.com?subject=Event%20Coordinator%20Questions"

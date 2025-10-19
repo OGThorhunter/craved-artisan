@@ -184,10 +184,10 @@ export const JoinDropoffPage = () => {
         <span>Ready to become a community hub?</span>
         <div className="flex gap-4">
           <Link
-            href="/join"
+            href="/signup?role=DROPOFF_MANAGER"
             className="bg-white text-brand-green responsive-button rounded shadow hover:bg-gray-100 transition"
           >
-            Get Started
+            Get Started as Drop-Off Location
           </Link>
           <a
             href="mailto:support@cravedartisan.com?subject=Drop-Off%20Location%20Questions"

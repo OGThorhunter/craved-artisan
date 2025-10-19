@@ -143,10 +143,10 @@ export const JoinCustomerPage = () => {
         <span>Ready to discover local artisans?</span>
         <div className="flex gap-4">
           <Link
-            href="/join"
+            href="/signup?role=CUSTOMER"
             className="bg-white text-brand-green responsive-button rounded shadow hover:bg-gray-100 transition"
           >
-            Get Started
+            Get Started as a Customer
           </Link>
           <a
             href="mailto:support@cravedartisan.com?subject=Customer%20Questions"

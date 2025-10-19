@@ -141,10 +141,10 @@ export const JoinVendorPage = () => {
         <span>Ready to start selling?</span>
         <div className="flex gap-4">
           <Link
-            href="/join"
+            href="/signup?role=VENDOR"
             className="bg-white text-brand-green responsive-button rounded shadow hover:bg-gray-100 transition"
           >
-            Get Started
+            Get Started as a Vendor
           </Link>
           <a
             href="mailto:support@cravedartisan.com?subject=Vendor%20Questions"

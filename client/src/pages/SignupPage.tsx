@@ -57,16 +57,34 @@ const SignupPage: React.FC = () => {
   const [stepValid, setStepValid] = useState(false);
   const [isOAuthUser, setIsOAuthUser] = useState(false);
   
-  // Check for OAuth redirect
+  // Check for OAuth redirect and pre-filled data from join pages
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const oauth = urlParams.get('oauth');
     const step = urlParams.get('step');
+    const role = urlParams.get('role');
+    const name = urlParams.get('name');
+    const email = urlParams.get('email');
     
     if (oauth && step === 'profile') {
       setIsOAuthUser(true);
       setCurrentStep('account-type'); // Still need to select role
       toast.success(`Successfully connected with ${oauth}!`);
+    }
+
+    // Pre-fill form data from join page
+    if (role || name || email) {
+      setFormData(prev => ({
+        ...prev,
+        ...(role && { role: role as 'VENDOR' | 'CUSTOMER' | 'EVENT_COORDINATOR' }),
+        ...(name && { name }),
+        ...(email && { email })
+      }));
+
+      // If role is provided, skip account-type step
+      if (role) {
+        setCurrentStep('credentials');
+      }
     }
   }, []);
 

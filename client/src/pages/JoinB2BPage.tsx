@@ -141,10 +141,10 @@ export const JoinB2BPage = () => {
         <span>Ready to supply local artisans?</span>
         <div className="flex gap-4">
           <Link
-            href="/join"
+            href="/signup?role=B2B"
             className="bg-white text-brand-green responsive-button rounded shadow hover:bg-gray-100 transition"
           >
-            Get Started
+            Get Started as B2B Vendor
           </Link>
           <a
             href="mailto:support@cravedartisan.com?subject=B2B%20Vendor%20Questions"
