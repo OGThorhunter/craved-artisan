@@ -33,8 +33,9 @@ const VendorAnalyticsPage: React.FC = () => {
         setLoading(true);
         setError(null);
 
-        // Use test endpoint for now
-        const response = await axios.get(`/api/vendors/${user?.id}/delivery-metrics/test`);
+        const response = await axios.get(`/api/vendors/${user?.vendorProfileId || user?.id}/delivery-metrics`, {
+          withCredentials: true
+        });
         setMetrics(response.data);
       } catch (err) {
         console.error('Error fetching delivery metrics:', err);

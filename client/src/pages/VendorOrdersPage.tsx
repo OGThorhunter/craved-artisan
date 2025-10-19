@@ -1,6 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation } from 'wouter';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
 import OrderEditModal from '../components/orders/OrderEditModal';
 import {
   Plus, 
@@ -36,6 +38,7 @@ import Card from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Input } from '../components/ui/Input';
 import { toast } from 'react-hot-toast';
+import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import SystemMessagesDrawer from '../components/inventory/SystemMessagesDrawer';
 import AIInsightsDrawer from '../components/inventory/AIInsightsDrawer';
@@ -755,8 +758,10 @@ type ViewMode = 'list' | 'calendar' | 'production-kitchen' | 'packaging-center' 
 type PackagingSubMode = 'overview' | 'labels' | 'packaging-assignment';
 
 const VendorOrdersPage: React.FC = () => {
+  const { user } = useAuth();
   const { addNotification } = useNotifications();
   const [, setLocation] = useLocation();
+  const queryClient = useQueryClient();
   const [viewMode, setViewMode] = useState<ViewMode>('list'); // Start with list view
   const [packagingSubMode, setPackagingSubMode] = useState<PackagingSubMode>('overview');
   const [searchQuery, setSearchQuery] = useState('');
@@ -774,13 +779,30 @@ const VendorOrdersPage: React.FC = () => {
   const [showLabelModal, setShowLabelModal] = useState(false);
   const [selectedOrderForLabel, setSelectedOrderForLabel] = useState<Order | null>(null);
   const [showAddOrderWizard, setShowAddOrderWizard] = useState(false);
-  const [orders, setOrders] = useState<Order[]>([]);
   const [showReworkModal, setShowReworkModal] = useState(false);
   const [selectedOrderForRework, setSelectedOrderForRework] = useState<Order | null>(null);
   const [reworkNotes, setReworkNotes] = useState('');
   const [packageSelections, setPackageSelections] = useState<Record<string, string>>({});
   const [showAddPackageModal, setShowAddPackageModal] = useState(false);
   const [currentProductForPackage, setCurrentProductForPackage] = useState<string | null>(null);
+
+  // Fetch orders from API
+  const { data: ordersData = [], isLoading: isLoadingOrders } = useQuery({
+    queryKey: ['vendor-orders', user?.vendorProfileId],
+    queryFn: async () => {
+      if (!user?.vendorProfileId) return [];
+      const response = await axios.get(`/api/vendor/orders`, {
+        withCredentials: true
+      });
+      return response.data.orders || mockOrders; // Fallback to mock if API returns empty
+    },
+    enabled: !!user?.vendorProfileId,
+    retry: 1,
+    staleTime: 30 * 1000, // 30 seconds
+  });
+  
+  // Use ordersData from API or mockOrders as fallback
+  const [orders, setOrders] = useState<Order[]>(ordersData);
   const [customPackageData, setCustomPackageData] = useState({
     name: '',
     width: '',
@@ -807,24 +829,20 @@ const VendorOrdersPage: React.FC = () => {
   const [editingStepProductId, setEditingStepProductId] = useState<string | null>(null);
   const [customProductionSteps, setCustomProductionSteps] = useState<Record<string, ProductionStep[]>>({});
 
-  // Load orders and custom QA fields from localStorage on component mount
+  // Sync orders from API data
   React.useEffect(() => {
-    const loadOrders = () => {
-      const savedOrders = JSON.parse(localStorage.getItem('vendorOrders') || '[]');
-      if (savedOrders.length > 0) {
-        setOrders(savedOrders);
-      } else {
-        // Use mock data if no saved orders
-        setOrders(mockOrders);
-      }
-    };
+    if (ordersData && ordersData.length > 0) {
+      setOrders(ordersData);
+    }
+  }, [ordersData]);
 
+  // Load custom QA fields from localStorage on component mount
+  React.useEffect(() => {
     const loadCustomQaFields = () => {
       const savedFields = JSON.parse(localStorage.getItem('customQaFields') || '[]');
       setCustomQaFields(savedFields);
     };
 
-    loadOrders();
     loadCustomQaFields();
 
     // Listen for new orders created from sales windows
@@ -918,7 +936,7 @@ const VendorOrdersPage: React.FC = () => {
     });
   }, [orders, addNotification]);
 
-  const isLoadingOrders = false;
+  // AI insights can be added later if needed
   const aiInsights = null;
   const isLoadingInsights = false;
 
