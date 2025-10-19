@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Mail, Sparkles, Star, Zap, Lock, Unlock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
@@ -127,8 +127,17 @@ This user is interested in being a beta tester for the Craved Artisan platform.
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
             transition={{ type: 'spring', duration: 0.5 }}
-            className="relative bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            className="relative bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto"
           >
+            {/* Logo */}
+            <div className="absolute top-8 left-1/2 transform -translate-x-1/2 z-20">
+              <img 
+                src="/images/logonobg.png" 
+                alt="Craved Artisan Logo" 
+                className="h-16 w-auto drop-shadow-lg"
+              />
+            </div>
+
             {/* Construction Tape Border */}
             <div className="absolute inset-0 pointer-events-none">
               {/* Top tape */}
@@ -136,13 +145,6 @@ This user is interested in being a beta tester for the Craved Artisan platform.
                 style={{
                   backgroundImage: 'repeating-linear-gradient(45deg, #000 0px, #000 20px, #fbbf24 20px, #fbbf24 40px)',
                   boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
-                }}
-              />
-              {/* Bottom tape */}
-              <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-400 transform rotate-1 opacity-90"
-                style={{
-                  backgroundImage: 'repeating-linear-gradient(-45deg, #000 0px, #000 20px, #fbbf24 20px, #fbbf24 40px)',
-                  boxShadow: '0 -2px 8px rgba(0,0,0,0.3)'
                 }}
               />
             </div>
@@ -158,7 +160,7 @@ This user is interested in being a beta tester for the Craved Artisan platform.
             </button>
 
             {/* Content */}
-            <div className="relative pt-20 pb-16 px-8">
+            <div className="relative pt-28 pb-16 px-8">
               {showPasswordField ? (
                 /* Admin Password Gate */
                 <div className="text-center py-8">
@@ -211,12 +213,18 @@ This user is interested in being a beta tester for the Craved Artisan platform.
                       </h1>
                     </motion.div>
                     
-                    <p className="text-xl text-gray-700 font-semibold mb-2">
-                      Interested in being a <span className="text-blue-600">Beta Tester</span>?
+                    <p className="text-lg text-gray-700 mb-4">
+                      <strong>Craved Artisan</strong> is a multi-vendor SaaS marketplace platform that connects local artisans, food makers, and small businesses with customers in their area.
                     </p>
-                    <p className="text-gray-600">
-                      For this new small business platform?
-                    </p>
+                  </div>
+
+                  {/* Platform Teaser Copy */}
+                  <div className="bg-amber-50 border-l-4 border-amber-500 rounded-lg p-4 mb-6">
+                    <div className="space-y-3 text-sm text-gray-700">
+                      <p><strong className="text-amber-800">Built for Makers, by Makers:</strong> A marketplace that empowers small artisans, farms, and creators to sell locally and online without big-box barriers.</p>
+                      <p><strong className="text-amber-800">Smart, Seamless Tools:</strong> AI-assisted dashboards handle orders, inventory, and analytics so you can focus on your craft — not the code.</p>
+                      <p><strong className="text-amber-800">Community-Driven Commerce:</strong> Connect with nearby customers, events, and fellow artisans through zip-based discovery and real-world collaborations.</p>
+                    </div>
                   </div>
 
                   {/* Beta Tester Perks */}
