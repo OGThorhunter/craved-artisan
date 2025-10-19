@@ -29,23 +29,28 @@ const LoginPage: React.FC = () => {
       // Redirect based on user role from auth response
       const userRole = userData?.role;
 
-      switch (userRole) {
-        case 'VENDOR':
-          setLocation('/dashboard/vendor/pulse');
-          break;
-        case 'EVENT_COORDINATOR':
-        case 'COORDINATOR':
-          setLocation('/dashboard/event-coordinator');
-          break;
-        case 'ADMIN':
-          setLocation('/dashboard/admin');
-          break;
-        case 'CUSTOMER':
-          setLocation('/dashboard/customer');
-          break;
-        default:
-          setLocation('/dashboard');
-          break;
+      // Special handling for support admin account
+      if (email === 'support@cravedartisan.com') {
+        setLocation('/dashboard/admin');
+      } else {
+        switch (userRole) {
+          case 'VENDOR':
+            setLocation('/dashboard/vendor/pulse');
+            break;
+          case 'EVENT_COORDINATOR':
+          case 'COORDINATOR':
+            setLocation('/dashboard/event-coordinator');
+            break;
+          case 'ADMIN':
+            setLocation('/dashboard/admin');
+            break;
+          case 'CUSTOMER':
+            setLocation('/dashboard/customer');
+            break;
+          default:
+            setLocation('/dashboard');
+            break;
+        }
       }
     } catch (error: any) {
       toast.error(error.message || 'Login failed');
