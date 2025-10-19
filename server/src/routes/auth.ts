@@ -47,279 +47,134 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // TODO: Replace with actual database query
-    // For now, use mock data
-    if (email === 'test@example.com' && password === 'password123') {
-      console.log('🔍 [DEBUG] Login successful, setting session data...');
-      console.log('🔍 [DEBUG] Session ID before:', req.sessionID);
-      console.log('🔍 [DEBUG] Session data before:', JSON.stringify(req.session, null, 2));
-      
-      req.session.userId = 'mock-user-id';
-      req.session.email = email;
-      req.session.role = 'VENDOR';
-      req.session.vendorProfileId = 'mock-user-id';
-      
-      console.log('🔍 [DEBUG] Session data after setting:', JSON.stringify(req.session, null, 2));
-      
-      // Force session save
-      req.session.save((err) => {
-        if (err) {
-          console.error('🔍 [DEBUG] Session save error:', err);
-        } else {
-          console.log('🔍 [DEBUG] Session saved successfully');
+    // Find user in database
+    const user = await prisma.user.findUnique({
+      where: { email },
+      include: {
+        vendorProfile: true,
+        coordinatorProfile: true,
+        roles: {
+          where: { deletedAt: null },
+          orderBy: { createdAt: 'desc' },
+          take: 1
         }
-      });
-      
-      logger.info({ email, userId: req.session.userId }, 'User logged in');
-      
-      // Audit log: successful login
+      }
+    });
+
+    if (!user) {
+      // Audit log: failed login
       logEvent({
         scope: AuditScope.AUTH,
-        action: AUTH_LOGIN_SUCCESS,
-        actorId: req.session.userId,
+        action: AUTH_LOGIN_FAIL,
         actorType: ActorType.USER,
         actorIp: req.context?.actor.ip,
         actorUa: req.context?.actor.ua,
         requestId: req.context?.requestId,
         traceId: req.context?.traceId,
-        targetType: 'User',
-        targetId: req.session.userId,
-        severity: Severity.INFO,
-        metadata: { email, role: req.session.role }
+        severity: Severity.WARNING,
+        metadata: { email, reason: 'User not found' }
       });
-      
-      return res.json({
-        success: true,
-        message: 'Login successful',
-        user: {
-          id: req.session.userId,
-          userId: req.session.userId,
-          email: req.session.email,
-          role: req.session.role,
-          vendorProfileId: req.session.vendorProfileId,
-          isAuthenticated: true,
-          lastActivity: new Date(),
-          betaTester: false
-        }
-      });
-    }
-    
-    // Vendor login
-    if (email === 'vendor@cravedartisan.com' && password === 'vendor123') {
-      console.log('🔍 [DEBUG] Vendor login successful, setting session data...');
-      console.log('🔍 [DEBUG] Session ID before:', req.sessionID);
-      console.log('🔍 [DEBUG] Session data before:', JSON.stringify(req.session, null, 2));
-      
-      req.session.userId = 'vendor-user-id';
-      req.session.email = email;
-      req.session.role = 'VENDOR';
-      req.session.vendorProfileId = 'vendor-user-id';
-      
-      console.log('🔍 [DEBUG] Session data after setting:', JSON.stringify(req.session, null, 2));
-      
-      // Force session save
-      req.session.save((err) => {
-        if (err) {
-          console.error('🔍 [DEBUG] Session save error:', err);
-        } else {
-          console.log('🔍 [DEBUG] Session saved successfully');
-        }
-      });
-      
-      logger.info({ email, userId: req.session.userId }, 'User logged in');
-      
-      return res.json({
-        success: true,
-        message: 'Login successful',
-        user: {
-          id: req.session.userId,
-          userId: req.session.userId,
-          email: req.session.email,
-          role: req.session.role,
-          vendorProfileId: req.session.vendorProfileId,
-          isAuthenticated: true,
-          lastActivity: new Date(),
-          betaTester: false
-        }
-      });
-    }
-    
-    // Coordinator login
-    if (email === 'coordinator@cravedartisan.com' && password === 'coordinator123') {
-      console.log('🔍 [DEBUG] Coordinator login successful, setting session data...');
-      console.log('🔍 [DEBUG] Session ID before:', req.sessionID);
-      console.log('🔍 [DEBUG] Session data before:', JSON.stringify(req.session, null, 2));
-      
-      req.session.userId = 'coordinator-user-id';
-      req.session.email = email;
-      req.session.role = 'EVENT_COORDINATOR';
-      req.session.vendorProfileId = 'coordinator-user-id';
-      
-      console.log('🔍 [DEBUG] Session data after setting:', JSON.stringify(req.session, null, 2));
-      
-      // Force session save
-      req.session.save((err) => {
-        if (err) {
-          console.error('🔍 [DEBUG] Session save error:', err);
-        } else {
-          console.log('🔍 [DEBUG] Session saved successfully');
-        }
-      });
-      
-      logger.info({ email, userId: req.session.userId }, 'User logged in');
-      
-      return res.json({
-        success: true,
-        message: 'Login successful',
-        user: {
-          id: req.session.userId,
-          userId: req.session.userId,
-          email: req.session.email,
-          role: req.session.role,
-          vendorProfileId: req.session.vendorProfileId,
-          isAuthenticated: true,
-          lastActivity: new Date(),
-          betaTester: false
-        }
+
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password'
       });
     }
 
-    // Super Admin login
-    if (email === 'support@cravedartisan.com' && password === 'Bigbertha#1') {
-      console.log('🔍 [DEBUG] Super Admin login successful, setting session data...');
-      console.log('🔍 [DEBUG] Session ID before:', req.sessionID);
-      console.log('🔍 [DEBUG] Session data before:', JSON.stringify(req.session, null, 2));
-      
-      req.session.userId = 'cmgwuw1y20000qus0z6ij5xjl';
-      req.session.email = email;
-      req.session.role = 'SUPER_ADMIN';
-      req.session.vendorProfileId = 'cmgwuw1y20000qus0z6ij5xjl';
-      
-      console.log('🔍 [DEBUG] Session data after setting:', JSON.stringify(req.session, null, 2));
-      
-      // Force session save
-      req.session.save((err) => {
-        if (err) {
-          console.error('🔍 [DEBUG] Session save error:', err);
-        } else {
-          console.log('🔍 [DEBUG] Session saved successfully');
-        }
-      });
-      
-      logger.info({ email, userId: req.session.userId }, 'User logged in');
-      
-      return res.json({
-        success: true,
-        message: 'Login successful',
-        user: {
-          id: req.session.userId,
-          userId: req.session.userId,
-          email: req.session.email,
-          role: req.session.role,
-          vendorProfileId: req.session.vendorProfileId,
-          isAuthenticated: true,
-          lastActivity: new Date(),
-          betaTester: false
-        }
-      });
-    }
+    // Verify password
+    const passwordMatch = await bcrypt.compare(password, user.password);
     
-    // Customer login
-    if (email === 'customer@cravedartisan.com' && password === 'customer123') {
-      console.log('🔍 [DEBUG] Customer login successful, setting session data...');
-      console.log('🔍 [DEBUG] Session ID before:', req.sessionID);
-      console.log('🔍 [DEBUG] Session data before:', JSON.stringify(req.session, null, 2));
-      
-      req.session.userId = 'mock-customer-id';
-      req.session.email = email;
-      req.session.role = 'CUSTOMER';
-      req.session.vendorProfileId = 'mock-customer-id';
-      
-      console.log('🔍 [DEBUG] Session data after setting:', JSON.stringify(req.session, null, 2));
-      
-      // Force session save
-      req.session.save((err) => {
-        if (err) {
-          console.error('🔍 [DEBUG] Session save error:', err);
-        } else {
-          console.log('🔍 [DEBUG] Session saved successfully');
-        }
+    if (!passwordMatch) {
+      // Audit log: failed login
+      logEvent({
+        scope: AuditScope.AUTH,
+        action: AUTH_LOGIN_FAIL,
+        actorId: user.id,
+        actorType: ActorType.USER,
+        actorIp: req.context?.actor.ip,
+        actorUa: req.context?.actor.ua,
+        requestId: req.context?.requestId,
+        traceId: req.context?.traceId,
+        severity: Severity.WARNING,
+        metadata: { email, userId: user.id, reason: 'Invalid password' }
       });
-      
-      logger.info({ email, userId: req.session.userId }, 'User logged in');
-      
-      return res.json({
-        success: true,
-        message: 'Login successful',
-        user: {
-          id: req.session.userId,
-          userId: req.session.userId,
-          email: req.session.email,
-          role: req.session.role,
-          vendorProfileId: req.session.vendorProfileId,
-          isAuthenticated: true,
-          lastActivity: new Date(),
-          betaTester: false
-        }
+
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid email or password'
       });
     }
 
-    // Event Coordinator login
-    if (email === 'coordinator@cravedartisan.com' && password === 'password123') {
-      console.log('🔍 [DEBUG] Coordinator login successful, setting session data...');
-      console.log('🔍 [DEBUG] Session ID before:', req.sessionID);
-      console.log('🔍 [DEBUG] Session data before:', JSON.stringify(req.session, null, 2));
-      
-      req.session.userId = 'coordinator-user-id';
-      req.session.email = email;
-      req.session.role = 'EVENT_COORDINATOR';
-      req.session.vendorProfileId = 'coordinator-user-id';
-      
-      console.log('🔍 [DEBUG] Session data after setting:', JSON.stringify(req.session, null, 2));
-      
-      // Force session save
-      req.session.save((err) => {
-        if (err) {
-          console.error('🔍 [DEBUG] Session save error:', err);
-        } else {
-          console.log('🔍 [DEBUG] Session saved successfully');
-        }
-      });
-      
-      logger.info({ email, userId: req.session.userId }, 'Coordinator logged in');
-      
-      return res.json({
-        success: true,
-        message: 'Login successful',
-        user: {
-          id: req.session.userId,
-          userId: req.session.userId,
-          email: req.session.email,
-          role: req.session.role,
-          vendorProfileId: req.session.vendorProfileId,
-          isAuthenticated: true,
-          lastActivity: new Date(),
-          betaTester: false
-        }
-      });
+    // Determine user role (from UserRole table or profile)
+    let userRole = 'CUSTOMER'; // Default role
+    let vendorProfileId = null;
+
+    if (user.roles && user.roles.length > 0) {
+      userRole = user.roles[0].role; // Use the most recent role from UserRole table
+    } else if (user.vendorProfile) {
+      userRole = 'VENDOR';
+      vendorProfileId = user.vendorProfile.id;
+    } else if (user.coordinatorProfile) {
+      userRole = 'EVENT_COORDINATOR';
     }
 
-    // Audit log: failed login
+    // Set session data
+    req.session.userId = user.id;
+    req.session.email = user.email;
+    req.session.role = userRole;
+    if (vendorProfileId) {
+      req.session.vendorProfileId = vendorProfileId;
+    }
+
+    // Update last activity
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { lastActiveAt: new Date() }
+    }).catch(err => logger.warn({ error: err }, 'Failed to update lastActiveAt'));
+
+    // Force session save
+    await new Promise((resolve, reject) => {
+      req.session.save((err) => {
+        if (err) {
+          logger.error({ error: err }, 'Session save error');
+          reject(err);
+        } else {
+          logger.info({ userId: user.id, email, role: userRole }, 'User logged in successfully');
+          resolve(true);
+        }
+      });
+    });
+
+    // Audit log: successful login
     logEvent({
       scope: AuditScope.AUTH,
-      action: AUTH_LOGIN_FAIL,
+      action: AUTH_LOGIN_SUCCESS,
+      actorId: user.id,
       actorType: ActorType.USER,
       actorIp: req.context?.actor.ip,
       actorUa: req.context?.actor.ua,
       requestId: req.context?.requestId,
       traceId: req.context?.traceId,
-      severity: Severity.WARNING,
-      metadata: { email, reason: 'Invalid credentials' }
+      targetType: 'User',
+      targetId: user.id,
+      severity: Severity.INFO,
+      metadata: { email, role: userRole }
     });
-    
-    return res.status(401).json({
-      success: false,
-      message: 'Invalid email or password'
+
+    return res.json({
+      success: true,
+      message: 'Login successful',
+      user: {
+        id: user.id,
+        userId: user.id,
+        email: user.email,
+        role: userRole,
+        vendorProfileId,
+        isAuthenticated: true,
+        lastActivity: new Date(),
+        betaTester: user.betaTester || false,
+        emailVerified: user.emailVerified
+      }
     });
 
   } catch (error) {
