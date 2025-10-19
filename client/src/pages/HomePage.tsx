@@ -159,21 +159,21 @@ export default function Home() {
   // Get events based on current ZIP code
   const events = getMockEvents(zip);
 
-  // Show beta overlay on first visit
+  // Show beta overlay - acts as password gate for site access
   useEffect(() => {
-    const hasSeenBetaOverlay = localStorage.getItem('hasSeenBetaOverlay');
-    if (!hasSeenBetaOverlay) {
-      // Show overlay after 1 second delay for better UX
-      const timer = setTimeout(() => {
-        setShowBetaOverlay(true);
-      }, 1000);
-      return () => clearTimeout(timer);
+    const hasAccess = localStorage.getItem('siteAccessGranted');
+    if (!hasAccess) {
+      // Show overlay immediately to block access
+      setShowBetaOverlay(true);
     }
   }, []);
 
   const handleCloseBetaOverlay = () => {
-    setShowBetaOverlay(false);
-    localStorage.setItem('hasSeenBetaOverlay', 'true');
+    // Only allow closing if access was granted (via password)
+    const hasAccess = localStorage.getItem('siteAccessGranted');
+    if (hasAccess) {
+      setShowBetaOverlay(false);
+    }
   };
 
   useEffect(() => {
