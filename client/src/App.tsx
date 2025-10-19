@@ -71,6 +71,7 @@ import CheckoutPage from './pages/CheckoutPage';
 import CheckoutSuccessPage from './pages/CheckoutSuccessPage';
 import NotFoundPage from './pages/NotFoundPage';
 import MaintenancePage from './pages/MaintenancePage';
+import ComingSoonPage from './pages/ComingSoonPage';
 import VendorAnalyticsPage from './pages/VendorAnalyticsPage';
 import VendorAnalyticsCRMPage from './pages/VendorAnalyticsCRMPage';
 import { VendorFinancialPage } from './pages/VendorFinancialPage';
@@ -99,6 +100,8 @@ function App() {
                 <Layout>
             <Switch>
             <Route path="/" component={HomePage} />
+            <Route path="/coming-soon" component={ComingSoonPage} />
+            
             <Route path="/test">
               <div className="min-h-screen bg-blue-50 flex items-center justify-center">
                 <div className="text-center">

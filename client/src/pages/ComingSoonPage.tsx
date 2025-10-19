@@ -37,23 +37,23 @@ const ComingSoonPage: React.FC = () => {
   const features = [
     {
       icon: <ChefHat className="w-8 h-8 text-amber-600" />,
-      title: "Artisan Marketplace",
-      description: "Discover unique, handcrafted goods from local creators and artisans in your area."
+      title: "Built for Makers, by Makers",
+      description: "A marketplace that empowers small artisans, farms, and creators to sell locally and online without big-box barriers."
     },
     {
-      icon: <Users className="w-8 h-8 text-blue-600" />,
-      title: "Community-Driven",
-      description: "Connect directly with makers, learn their stories, and support small businesses."
+      icon: <Star className="w-8 h-8 text-blue-600" />,
+      title: "Smart, Seamless Tools",
+      description: "AI-assisted dashboards handle orders, inventory, and analytics so you can focus on your craft — not the code."
     },
     {
       icon: <MapPin className="w-8 h-8 text-green-600" />,
-      title: "Local Focus",
-      description: "Find amazing products and experiences right in your neighborhood."
+      title: "Community-Driven Commerce",
+      description: "Connect with nearby customers, events, and fellow artisans through zip-based discovery and real-world collaborations."
     },
     {
       icon: <Shield className="w-8 h-8 text-purple-600" />,
-      title: "Quality Assured",
-      description: "Every artisan is carefully vetted to ensure you get exceptional quality."
+      title: "Founders First Promise",
+      description: "Transparent pricing, fair fees, and lifetime discounts for early adopters who help shape the movement."
     }
   ];
 
@@ -74,38 +74,53 @@ const ComingSoonPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-white to-blue-50">
+      {/* Construction Tape - Top */}
+      <div className="relative h-16 overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-400 transform -rotate-1 opacity-95"
+          style={{
+            backgroundImage: 'repeating-linear-gradient(45deg, #000 0px, #000 20px, #fbbf24 20px, #fbbf24 40px)',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+          }}
+        />
+      </div>
+
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-amber-100/20 to-blue-100/20"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12">
           <div className="text-center">
             {/* Logo */}
             <div className="flex items-center justify-center mb-8">
-              <div className="bg-gradient-to-r from-amber-600 to-amber-700 p-4 rounded-2xl shadow-lg">
-                <ChefHat className="w-12 h-12 text-white" />
-              </div>
-              <h1 className="ml-4 text-5xl font-bold bg-gradient-to-r from-amber-700 to-amber-800 bg-clip-text text-transparent">
-                Craved
-              </h1>
+              <img 
+                src="/images/logonobg.png" 
+                alt="Craved Artisan Logo" 
+                className="h-24 w-auto drop-shadow-lg"
+              />
             </div>
 
             {/* Main Heading */}
-            <h2 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-              Where Artisans
-              <span className="block bg-gradient-to-r from-amber-600 to-blue-600 bg-clip-text text-transparent">
-                Meet Community
-              </span>
-            </h2>
+            <div className="mb-8">
+              <h1 className="text-5xl md:text-7xl font-black text-yellow-500 transform -rotate-1 drop-shadow-lg mb-4"
+                style={{ 
+                  textShadow: '3px 3px 0px #000, -1px -1px 0px #000, 1px -1px 0px #000, -1px 1px 0px #000',
+                  WebkitTextStroke: '2px black'
+                }}
+              >
+                COMING SOON!
+              </h1>
+              <h2 className="text-3xl md:text-5xl font-bold text-gray-900">
+                Built for Makers, by Makers
+              </h2>
+            </div>
 
-            <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
-              The marketplace for authentic, handcrafted goods and local experiences. 
-              Supporting creators, connecting communities.
+            <p className="text-xl md:text-2xl text-gray-700 mb-6 max-w-3xl mx-auto leading-relaxed font-medium">
+              A marketplace that empowers small artisans, farms, and creators to sell locally and online without big-box barriers.
             </p>
 
             {/* Coming Soon Badge */}
-            <div className="inline-flex items-center bg-gradient-to-r from-amber-100 to-blue-100 text-amber-800 px-6 py-3 rounded-full text-lg font-semibold mb-12 shadow-md">
+            <div className="inline-flex items-center bg-gradient-to-r from-amber-100 to-blue-100 text-amber-800 px-6 py-3 rounded-full text-lg font-semibold mb-12 shadow-md border-2 border-amber-300">
               <Star className="w-5 h-5 mr-2" />
-              Coming Soon - Get Early Access
+              Get Early Access - Limited Spots Available
             </div>
           </div>
         </div>
@@ -172,10 +187,10 @@ const ComingSoonPage: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20">
         <div className="text-center mb-16">
           <h3 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            What Makes Craved Special
+            Why Craved Artisan?
           </h3>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            We're building more than a marketplace - we're creating a community that celebrates craftsmanship and creativity.
+            We're building more than a marketplace — we're creating a movement that celebrates craftsmanship, community, and fair commerce.
           </p>
         </div>
 
@@ -218,27 +233,39 @@ const ComingSoonPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Construction Tape - Bottom */}
+      <div className="relative h-16 overflow-hidden mb-0">
+        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-r from-yellow-400 via-yellow-300 to-yellow-400 transform rotate-1 opacity-95"
+          style={{
+            backgroundImage: 'repeating-linear-gradient(-45deg, #000 0px, #000 20px, #fbbf24 20px, #fbbf24 40px)',
+            boxShadow: '0 -4px 12px rgba(0,0,0,0.3)'
+          }}
+        />
+      </div>
+
       {/* Footer */}
       <footer className="bg-gray-900 text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center mb-4 md:mb-0">
-              <div className="bg-gradient-to-r from-amber-600 to-amber-700 p-3 rounded-xl mr-3">
-                <ChefHat className="w-8 h-8 text-white" />
-              </div>
-              <span className="text-2xl font-bold">Craved</span>
+              <img 
+                src="/images/logonobg.png" 
+                alt="Craved Artisan Logo" 
+                className="h-12 w-auto mr-3"
+              />
+              <span className="text-2xl font-bold">Craved Artisan</span>
             </div>
             
             <div className="flex items-center space-x-6">
-              <a href="mailto:hello@craved.com" className="flex items-center text-gray-300 hover:text-white transition-colors">
+              <a href="mailto:hello@cravedartisan.com" className="flex items-center text-gray-300 hover:text-white transition-colors">
                 <Mail className="w-5 h-5 mr-2" />
-                hello@craved.com
+                hello@cravedartisan.com
               </a>
             </div>
           </div>
           
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 Craved. Building something amazing for creators and communities.</p>
+            <p>&copy; 2025 Craved Artisan. Building something amazing for makers and communities.</p>
           </div>
         </div>
       </footer>
