@@ -24,7 +24,6 @@ import DashboardPage from './pages/DashboardPage';
 import CustomerDashboardPage from './pages/CustomerDashboardPage';
 import CartPage from './pages/CartPage';
 import { VendorSettingsPage } from './pages/VendorSettingsPage';
-import VendorProductsPage from './pages/VendorProductsPage';
 import EnhancedVendorProductsPage from './pages/EnhancedVendorProductsPage';
 import RecipeManagementPage from './pages/RecipeManagementPage';
 import VendorInventoryPage from './pages/VendorInventoryPage';
@@ -207,17 +206,12 @@ function App() {
             </Route>
             <Route path="/dashboard/vendor/products">
               <ProtectedRoute role="VENDOR">
-                <VendorProductsPage />
+                <EnhancedVendorProductsPage />
               </ProtectedRoute>
             </Route>
             <Route path="/dashboard/vendor/recipes">
               <ProtectedRoute role="VENDOR">
                 <RecipeManagementPage />
-              </ProtectedRoute>
-            </Route>
-            <Route path="/dashboard/vendor/enhanced-products">
-              <ProtectedRoute role="VENDOR">
-                <EnhancedVendorProductsPage />
               </ProtectedRoute>
             </Route>
             <Route path="/dashboard/vendor/inventory">
