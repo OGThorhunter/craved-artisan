@@ -30,7 +30,6 @@ import RecipeManagementPage from './pages/RecipeManagementPage';
 import VendorInventoryPage from './pages/VendorInventoryPage';
 import VendorOrdersPage from './pages/VendorOrdersPage';
 import VendorPromotionsPage from './pages/VendorPromotionsPage';
-import LabelProfilesPage from './pages/LabelProfilesPage';
 import TemplateEditorPage from './pages/labels/TemplateEditorPage';
 import VendorLabelManagementPage from './pages/VendorLabelManagementPage';
 import VendorLabelsPackagingPage from './pages/VendorLabelsPackagingPage';
@@ -241,11 +240,6 @@ function App() {
                 <VendorPromotionsPage />
               </ProtectedRoute>
             </Route>
-            <Route path="/dashboard/vendor/labels">
-              <ProtectedRoute role="VENDOR">
-                <LabelProfilesPage />
-              </ProtectedRoute>
-            </Route>
             <Route path="/dashboard/vendor/labels/editor">
               <ProtectedRoute role="VENDOR">
                 <TemplateEditorPage />
@@ -353,53 +347,6 @@ function App() {
                 <VendorOnboardingPage />
               </ProtectedRoute>
             </Route>
-            <Route path="/dashboard/admin">
-              <ProtectedRoute role="ADMIN">
-                <AdminDashboard />
-              </ProtectedRoute>
-            </Route>
-            <Route path="/dashboard/event-coordinator">
-              <ProtectedRoute role="EVENT_COORDINATOR">
-                <EventCoordinatorDashboardPage />
-              </ProtectedRoute>
-            </Route>
-            <Route path="/dashboard/dropoff">
-              <ProtectedRoute role="DROPOFF">
-                <DropoffDashboardPage />
-              </ProtectedRoute>
-            </Route>
-            
-            <Route path="/events" component={EventDetailPage} />
-            <Route path="/events/:id" component={EventDetailPage} />
-            <Route path="/community" component={CommunityPage} />
-          
-          {/* Placeholder routes for future pages */}
-          <Route path="/products">
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-              <div className="text-center">
-                <h1 className="text-3xl font-bold text-gray-900 mb-4">Products</h1>
-                <p className="text-gray-600">Product catalog coming soon...</p>
-              </div>
-            </div>
-          </Route>
-          
-          <Route path="/artisans">
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-              <div className="text-center">
-                <h1 className="text-3xl font-bold text-gray-900 mb-4">Artisans</h1>
-                <p className="text-gray-600">Artisan profiles coming soon...</p>
-              </div>
-            </div>
-          </Route>
-          
-          <Route path="/about">
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-              <div className="text-center">
-                <h1 className="text-3xl font-bold text-gray-900 mb-4">About</h1>
-                <p className="text-gray-600">About page coming soon...</p>
-              </div>
-            </div>
-          </Route>
           
           {/* Catch-all route for unhandled routes */}
           <Route component={NotFound} />

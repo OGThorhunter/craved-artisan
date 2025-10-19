@@ -30,7 +30,7 @@ const CSVImportButton: React.FC<CSVImportButtonProps> = ({ vendorId, onImportSuc
       formData.append('file', file);
 
       const response = await axios.post(
-        `/api/vendors/${vendorId}/financials/import/test`,
+        `/api/vendors/${vendorId}/financials/import`,
         formData,
         {
           withCredentials: true,

@@ -46,7 +46,7 @@ export const EditableFinancialTable: React.FC<EditableFinancialTableProps> = ({
   const updateFinancialMutation = useMutation({
     mutationFn: async ({ snapshotId, updateData }: { snapshotId: string; updateData: Partial<FinancialSnapshot> }) => {
       const response = await axios.patch(
-        `/api/vendors/${vendorId}/financials/${snapshotId}/test`,
+        `/api/vendors/${vendorId}/financials/${snapshotId}`,
         updateData,
         { withCredentials: true }
       );

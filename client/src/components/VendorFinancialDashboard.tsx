@@ -82,7 +82,7 @@ export const VendorFinancialDashboard: React.FC<VendorFinancialDashboardProps> =
         params.append('range', 'monthly');
       }
       
-      const response = await axios.get(`/api/vendors/${vendorId}/financials/test?${params.toString()}`, {
+      const response = await axios.get(`/api/vendors/${vendorId}/financials?${params.toString()}`, {
         withCredentials: true
       });
       return response.data;
@@ -94,7 +94,7 @@ export const VendorFinancialDashboard: React.FC<VendorFinancialDashboardProps> =
   // Generate financial snapshot
   const generateSnapshotMutation = useMutation({
     mutationFn: async ({ period, notes }: { period: string; notes?: string }) => {
-      const response = await axios.post(`/api/vendors/${vendorId}/financials/generate/test`, {
+      const response = await axios.post(`/api/vendors/${vendorId}/financials/generate`, {
         period,
         notes
       }, {
@@ -132,7 +132,7 @@ export const VendorFinancialDashboard: React.FC<VendorFinancialDashboardProps> =
   const handleExportCSV = async () => {
     try {
       // Use server-side CSV export endpoint
-      const response = await axios.get(`/api/vendors/${vendorId}/financials/export.csv/test`, {
+      const response = await axios.get(`/api/vendors/${vendorId}/financials/export.csv`, {
         withCredentials: true,
         responseType: 'blob'
       });
@@ -169,7 +169,7 @@ export const VendorFinancialDashboard: React.FC<VendorFinancialDashboardProps> =
   const handleExportPDF = async () => {
     try {
       // Use server-side PDF export endpoint
-      const response = await axios.get(`/api/vendors/${vendorId}/financials/export.pdf/test`, {
+      const response = await axios.get(`/api/vendors/${vendorId}/financials/export.pdf`, {
         withCredentials: true,
         responseType: 'blob'
       });

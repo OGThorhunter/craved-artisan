@@ -69,7 +69,7 @@ export const FinancialInsights: React.FC<FinancialInsightsProps> = ({
       if (selectedQuarter) params.append('quarter', selectedQuarter);
       
       const response = await axios.get(
-        `/api/vendors/${vendorId}/financials/insights/test?${params.toString()}`,
+        `/api/vendors/${vendorId}/financials/insights?${params.toString()}`,
         { withCredentials: true }
       );
       return response.data as FinancialInsightsData;

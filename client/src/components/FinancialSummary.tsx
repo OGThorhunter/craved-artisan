@@ -45,7 +45,7 @@ export const FinancialSummary: React.FC<FinancialSummaryProps> = ({
     queryKey: ['financial-summary', vendorId],
     queryFn: async () => {
       const response = await axios.get(
-        `/api/vendors/${vendorId}/financials/summary/test`,
+        `/api/vendors/${vendorId}/financials/summary`,
         { withCredentials: true }
       );
       return response.data as FinancialSummaryData;

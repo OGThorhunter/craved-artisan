@@ -30,7 +30,7 @@ export const VendorAnalyticsTab: React.FC<VendorAnalyticsTabProps> = ({
   const { data: analyticsData, isLoading, error } = useQuery({
     queryKey: ['vendor-analytics', vendorId, selectedRange],
     queryFn: async () => {
-      const response = await axios.get(`/api/vendors/${vendorId}/financials/test?range=${selectedRange}`, {
+      const response = await axios.get(`/api/vendors/${vendorId}/financials?range=${selectedRange}`, {
         withCredentials: true
       });
       return response.data;
