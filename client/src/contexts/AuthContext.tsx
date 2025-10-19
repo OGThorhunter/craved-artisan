@@ -116,7 +116,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const response = await api.post('/auth/login', { email, password });
       
       if (response.data.success && response.data.user) {
-        setUser({
+        const userData = {
           id: response.data.user.id || response.data.user.userId,
           userId: response.data.user.userId,
           email: response.data.user.email,
@@ -124,7 +124,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           isAuthenticated: true,
           lastActivity: new Date(response.data.user.lastActivity),
           betaTester: response.data.user.betaTester || false
-        });
+        };
+        
+        setUser(userData);
+        return userData; // Return user data for redirect logic
       } else {
         throw new Error(response.data.message || 'Login failed');
       }
