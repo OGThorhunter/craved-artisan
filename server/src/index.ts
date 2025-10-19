@@ -167,15 +167,15 @@ app.use('/api/newsletter', newsletterRouter);
 app.use('/api/maintenance', maintenanceRouter);
 
 // Pulse routes
-// app.use('/api', pulseRouter); // Temporarily disabled to debug
+app.use('/api', pulseRouter);
 
 // Vendor routes
-// app.use('/api', vendorRouter); // Temporarily disabled to debug
+app.use('/api', vendorRouter);
 
 // Ingredients routes
-// app.use('/api', ingredientsRouter); // Temporarily disabled to debug
+app.use('/api', ingredientsRouter);
 
-// Inventory routes
+// Inventory routes (temporarily disabled - import commented out at top)
 // app.use('/api', inventoryRouter); // Temporarily disabled to debug
 
 // AI Insights routes

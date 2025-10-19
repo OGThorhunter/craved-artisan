@@ -1,9 +1,13 @@
 ﻿import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import axios from 'axios';
 import VendorDashboardLayout from '@/layouts/VendorDashboardLayout';
 import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import MotivationalQuote from '@/components/dashboard/MotivationalQuote';
 import { getQuoteByCategory } from '@/data/motivationalQuotes';
 import AIInsights from '@/components/crm/AIInsights';
+import { useAuth } from '@/contexts/AuthContext';
+import LoadingSpinner from '@/components/LoadingSpinner';
 import { 
   TrendingUp, 
   DollarSign, 
@@ -22,89 +26,48 @@ import {
 } from 'lucide-react';
 
 
-// Mock Pulse data
-const pulseData = {
-  pendingOrders: {
-    count: 8,
-    value: 1247.50,
-    change: '+15%',
-    changeType: 'positive'
-  },
-  salesWindows: {
-    upcoming: 3,
-    totalTraffic: 156,
-    nextEvent: 'Farmers Market - Tomorrow 9AM'
-  },
-  revenue: {
-    today: 342.50,
-    thisWeek: 2847.30,
-    thisMonth: 12450.80,
-    todayChange: '+8.5%',
-    weekChange: '+12.3%',
-    monthChange: '+5.7%'
-  },
-  orderFunnel: {
-    new: 12,
-    inProgress: 8,
-    ready: 5,
-    completed: 342
-  },
-  topProducts: [
-    { name: 'Handmade Soap Set', units: 45, revenue: 1247.50, trend: 'up', recipeId: 'soap-recipe-001' },
-    { name: 'Artisan Bread', units: 38, revenue: 1083.00, trend: 'up', recipeId: 'bread-recipe-002' },
-    { name: 'Organic Honey', units: 32, revenue: 896.00, trend: 'stable', recipeId: 'honey-recipe-003' }
-  ],
-  underperformers: [
-    { name: 'Handcrafted Mug', units: 3, revenue: 56.25, inventory: 12, recipeId: 'mug-recipe-001' },
-    { name: 'Lavender Sachet', units: 2, revenue: 18.00, inventory: 8, recipeId: 'sachet-recipe-002' },
-    { name: 'Artisan Candle', units: 1, revenue: 12.50, inventory: 15, recipeId: 'candle-recipe-003' }
-  ],
-  customerHealth: {
-    returning: 78,
-    new: 22,
-    engagement: 85,
-    atRisk: 12
-  },
-  inventory: {
-    lowStock: 3,
-    wasteTrend: 'decreasing',
-    spoilageRate: 2.1
-  },
-  profitability: {
-    grossMargin: 68.5,
-    cogs: 5120.30,
-    revenue: 15420.00
-  }
-};
-
-// Mock AI insights for dashboard
-const dashboardInsights = [
-  {
-    id: 'dashboard-1',
-    type: 'recommendation' as const,
-    title: 'Optimize Bundle Offerings',
-    description: 'Sales are up 12% vs last week, but average basket size is down. Bundle high-margin items to increase order value.',
-    confidence: 85,
-    action: 'Create product bundles',
-    priority: 'high' as const,
-    category: 'sales-opportunity' as const
-  },
-  {
-    id: 'dashboard-2',
-    type: 'warning' as const,
-    title: 'Low Stock Alert',
-    description: 'Three popular items are running low. Restock before your next sales window to avoid lost revenue.',
-    confidence: 92,
-    action: 'Review inventory and reorder',
-    priority: 'high' as const,
-    category: 'customer-health' as const
-  }
-];
-
 const VendorDashboardPage: React.FC = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('pulse');
   const [timeRange, setTimeRange] = useState('weekly');
   const [seasonalFilter, setSeasonalFilter] = useState('current');
+
+  // Fetch vendor pulse data from API
+  const { data: pulseData, isLoading: pulseLoading, error: pulseError } = useQuery({
+    queryKey: ['vendor-pulse', user?.vendorProfileId, timeRange],
+    queryFn: async () => {
+      if (!user?.vendorProfileId) {
+        throw new Error('Vendor profile not found');
+      }
+      const response = await axios.get(`/api/vendor/${user.vendorProfileId}/pulse?range=${timeRange}`, {
+        withCredentials: true
+      });
+      return response.data;
+    },
+    enabled: !!user?.vendorProfileId,
+    retry: 1,
+    staleTime: 2 * 60 * 1000, // 2 minutes
+  });
+
+  // Fetch AI insights for dashboard
+  const { data: dashboardInsights, isLoading: insightsLoading } = useQuery({
+    queryKey: ['dashboard-insights', user?.vendorProfileId],
+    queryFn: async () => {
+      if (!user?.vendorProfileId) return [];
+      try {
+        const response = await axios.get(`/api/ai-insights/vendor/${user.vendorProfileId}`, {
+          withCredentials: true
+        });
+        return response.data.insights || [];
+      } catch (error) {
+        console.warn('AI insights not available:', error);
+        return [];
+      }
+    },
+    enabled: !!user?.vendorProfileId,
+    retry: 0,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
 
   const tabs = [
     { id: 'pulse', label: '🔥 UPDATED Pulse', icon: Activity },
@@ -141,14 +104,47 @@ const VendorDashboardPage: React.FC = () => {
     return <Minus className="w-4 h-4 text-gray-600" />;
   };
 
+  // Show loading state while fetching pulse data
+  if (pulseLoading) {
+    return (
+      <VendorDashboardLayout>
+        <div className="py-8 bg-white min-h-screen flex items-center justify-center">
+          <LoadingSpinner />
+        </div>
+      </VendorDashboardLayout>
+    );
+  }
+
+  // Show error state if pulse data fails to load
+  if (pulseError || !pulseData) {
+    return (
+      <VendorDashboardLayout>
+        <div className="py-8 bg-white min-h-screen">
+          <div className="container-responsive">
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+              <h2 className="text-xl font-semibold text-red-900 mb-2">Unable to Load Dashboard</h2>
+              <p className="text-red-700 mb-4">{pulseError?.message || 'Failed to fetch dashboard data'}</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+              >
+                Retry
+              </button>
+            </div>
+          </div>
+        </div>
+      </VendorDashboardLayout>
+    );
+  }
+
   return (
     <VendorDashboardLayout>
       <div className="py-8 bg-white min-h-screen">
         <div className="container-responsive">
           {/* Header */}
           <DashboardHeader
-            title="🚀 UPDATED Business Dashboard 🚀"
-            description="Your business at a glance - updated in real-time - CHANGES APPLIED!"
+            title="Business Dashboard"
+            description="Your business at a glance - updated in real-time"
             currentView="Dashboard"
             icon={Activity}
             iconColor="text-blue-600"
@@ -277,8 +273,8 @@ const VendorDashboardPage: React.FC = () => {
                   <h3 className="text-lg font-semibold text-gray-900">AI Insights</h3>
                 </div>
                 <AIInsights 
-                  insights={dashboardInsights}
-                  isLoading={false}
+                  insights={dashboardInsights || []}
+                  isLoading={insightsLoading}
                   maxInsights={2}
                   showCategories={true}
                 />
