@@ -5,6 +5,7 @@ import { Link } from 'wouter';
 import { motion } from 'framer-motion';
 import { ArrowDown, Star, ShoppingBag, Sparkles, Users, TrendingUp, Calendar, MapPin, Clock, Cloud, Sun, Award, Heart } from 'lucide-react';
 import { useZip } from '../contexts/ZipContext';
+import BetaTesterOverlay from '../components/BetaTesterOverlay';
 
 const storeCTA = (cta: string) => {
   localStorage.setItem('lastCTA', cta);
@@ -153,9 +154,27 @@ export default function Home() {
   const [currentNewsIndex, setCurrentNewsIndex] = useState(0);
   const [currentEventIndex, setCurrentEventIndex] = useState(0);
   const [currentSpotlightIndex, setCurrentSpotlightIndex] = useState(0);
+  const [showBetaOverlay, setShowBetaOverlay] = useState(false);
   
   // Get events based on current ZIP code
   const events = getMockEvents(zip);
+
+  // Show beta overlay on first visit
+  useEffect(() => {
+    const hasSeenBetaOverlay = localStorage.getItem('hasSeenBetaOverlay');
+    if (!hasSeenBetaOverlay) {
+      // Show overlay after 1 second delay for better UX
+      const timer = setTimeout(() => {
+        setShowBetaOverlay(true);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const handleCloseBetaOverlay = () => {
+    setShowBetaOverlay(false);
+    localStorage.setItem('hasSeenBetaOverlay', 'true');
+  };
 
   useEffect(() => {
     // Rotate through reviews every 4 seconds
@@ -187,7 +206,14 @@ export default function Home() {
   }, [events.length]);
 
   return (
-    <div className="min-h-screen overflow-y-auto scroll-smooth snap-y snap-mandatory">
+    <>
+      {/* Beta Tester Overlay */}
+      <BetaTesterOverlay 
+        isOpen={showBetaOverlay} 
+        onClose={handleCloseBetaOverlay} 
+      />
+
+      <div className="min-h-screen overflow-y-auto scroll-smooth snap-y snap-mandatory">
              {/* Section 1: Hero */}
                <section className="snap-start min-h-screen w-full relative overflow-hidden flex flex-col">
           <img
@@ -699,6 +725,7 @@ export default function Home() {
           </motion.div>
           </div>
         </section>
-    </div>
+      </div>
+    </>
   );
 } 
