@@ -85,6 +85,9 @@ import coordinatorRouter from './routes/coordinator';
 // Maintenance Routes
 import maintenanceRouter from './routes/maintenance.router';
 
+// Status/Health Check Routes
+import statusRouter from './routes/status.router';
+
 // Check-in & Refunds/Payouts Routes
 import checkinRouter from './routes/checkin.router';
 import refundsPayoutsRouter from './routes/refunds-payouts.router';
@@ -112,8 +115,25 @@ const PORT = Number(process.env.PORT || 3001);
 // Security middleware
 app.use(helmet({ crossOriginResourcePolicy: false }));
 
-// CORS middleware - must come before session middleware
-app.use(cors({
+// CORS origin logging middleware (for debugging production issues)
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const method = req.method;
+  
+  if (origin && (method === 'OPTIONS' || process.env.NODE_ENV === 'production')) {
+    logger.info({
+      method,
+      origin,
+      path: req.path,
+      userAgent: req.headers['user-agent']
+    }, 'CORS request received');
+  }
+  
+  next();
+});
+
+// Define CORS configuration
+const corsOptions = {
   origin: [
     'http://localhost:5173', 
     'http://[::1]:5173',
@@ -128,7 +148,13 @@ app.use(cors({
   credentials: true, // Allow cookies
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization']
-}));
+};
+
+// CORS middleware - must come before session middleware
+app.use(cors(corsOptions));
+
+// Explicit OPTIONS preflight handler for all routes
+app.options('*', cors(corsOptions));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -170,6 +196,9 @@ app.use('/api/newsletter', newsletterRouter);
 
 // Maintenance routes
 app.use('/api/maintenance', maintenanceRouter);
+
+// Status/Health Check routes (comprehensive infrastructure checks)
+app.use('/api/status', statusRouter);
 
 // Pulse routes
 app.use('/api', pulseRouter);
@@ -309,7 +338,7 @@ app.listen(PORT, () => {
   
   // Start cron jobs
   cronJobs.startAllJobs().catch((error) => {
-    logger.error('Failed to start cron jobs:', error);
+    logger.error({ error }, 'Failed to start cron jobs');
   });
   
   // Initialize support system workers
