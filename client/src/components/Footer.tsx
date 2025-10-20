@@ -169,6 +169,10 @@ export default function Footer() {
                 Terms
               </Link>
               <span>•</span>
+              <Link href="/contact?subject=data-deletion" className="hover:text-white transition">
+                Delete Data
+              </Link>
+              <span>•</span>
               <Link href="/contact" className="hover:text-white transition">
                 Contact
               </Link>

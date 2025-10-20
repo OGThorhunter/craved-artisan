@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+﻿import { useState, useEffect } from "react";
 import {
   Mail, Phone, MessageCircle, MapPin, Clock, Send, CheckCircle2,
   Building2, ShieldCheck, Info, Sparkles, ArrowRight, AlertCircle
@@ -62,6 +62,16 @@ function ContactCard({
 
 export default function ContactPage() {
   const [status, setStatus] = useState<"idle" | "sending" | "ok" | "err">("idle");
+  const [prefilledSubject, setPrefilledSubject] = useState("");
+
+  // Handle URL parameters for pre-filling subject
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const subject = urlParams.get('subject');
+    if (subject) {
+      setPrefilledSubject(subject);
+    }
+  }, []);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -183,9 +193,12 @@ export default function ContactPage() {
                 <select
                   name="subject"
                   required
+                  value={prefilledSubject}
+                  onChange={(e) => setPrefilledSubject(e.target.value)}
                   className="rounded-xl border px-3 py-2 bg-white/80 border-[#7F232E]/20 focus:outline-none focus:ring-2 focus:ring-[#7F232E]/30"
                 >
                   <option value="">Select a subject…</option>
+                  <option value="Data Deletion Request">Data Deletion Request</option>
                   <option>Orders & Delivery</option>
                   <option>Vendor & Sales Windows</option>
                   <option>Inventory & Labels</option>
