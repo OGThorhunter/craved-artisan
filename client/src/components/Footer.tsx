@@ -169,7 +169,7 @@ export default function Footer() {
                 Terms
               </Link>
               <span>•</span>
-              <Link href="/contact?subject=data-deletion" className="hover:text-white transition">
+              <Link href="/contact?subject=Data%20Deletion%20Request" className="hover:text-white transition">
                 Delete Data
               </Link>
               <span>•</span>
