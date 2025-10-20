@@ -20,8 +20,6 @@ const router = Router();
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { Strategy as FacebookStrategy } from 'passport-facebook';
-import { Strategy as LinkedInStrategy } from 'passport-linkedin-oauth2';
-import { Strategy as TwitterStrategy } from 'passport-twitter';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import { prisma } from '../lib/prisma';

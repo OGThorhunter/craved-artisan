@@ -7,7 +7,7 @@ import { sessionMiddleware, attachUser } from './middleware/session-redis';
 import { requestContext } from './middleware/request-context';
 import { cronJobs } from './services/cron-jobs';
 import authRoutes from './routes/auth';
-import oauthRoutes from './routes/oauth';
+import oauthRoutes from './routes/oauth-simple';
 import { pulseRouter } from './routes/pulse.router';
 import { vendorRouter } from './routes/vendor.router';
 import { ingredientsRouter } from './routes/ingredients.router';
