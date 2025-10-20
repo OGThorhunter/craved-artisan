@@ -1413,7 +1413,7 @@ const VendorOrdersPage: React.FC = () => {
                 setSearchQuery('');
                 toast.success(`Filtering ${dueTodayOrders.length} orders due today`);
               } else {
-                toast.info('No orders due today');
+                toast('No orders due today', { icon: 'ℹ️' });
               }
             }}
           >

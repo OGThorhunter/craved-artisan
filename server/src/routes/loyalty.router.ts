@@ -1,11 +1,9 @@
 import express from 'express';
 import { z } from 'zod';
-import { PrismaClient } from '@prisma/client';
 import { logger } from '../logger';
+import { prisma } from '../lib/prisma';
 
 const router = express.Router();
-const prisma = new PrismaClient();
-
 // Helper function to authenticate and get vendor profile
 async function authenticateVendor(req: any) {
   console.log('🔍 [DEBUG] Loyalty authenticateVendor - req.user:', req.user);

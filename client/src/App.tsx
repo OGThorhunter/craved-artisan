@@ -10,12 +10,6 @@ import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
-import { JoinPage } from './pages/JoinPage';
-import { JoinVendorPage } from './pages/JoinVendorPage';
-import { JoinCustomerPage } from './pages/JoinCustomerPage';
-import { JoinB2BPage } from './pages/JoinB2BPage';
-import { JoinCoordinatorPage } from './pages/JoinCoordinatorPage';
-import { JoinDropoffPage } from './pages/JoinDropoffPage';
 import VendorPage from './pages/VendorPage';
 import ProductPage from './pages/ProductPage';
 import VendorStorefrontPage from './pages/VendorStorefrontPage';
@@ -80,6 +74,7 @@ import VIPProgramPage from './pages/VIPProgramPage';
 import TestDataPage from './pages/TestDataPage';
 import { NotFound } from './components/NotFound';
 import ProtectedRoute from './components/ProtectedRoute';
+import { JoinRedirect } from './components/JoinRedirect';
 
 // SEO-optimized pages
 import ArtisanSourdoughGeorgiaPage from './pages/seo/ArtisanSourdoughGeorgiaPage';
@@ -114,12 +109,15 @@ function App() {
             <Route path="/login" component={LoginPage} />
             <Route path="/signup" component={SignupPage} />
             <Route path="/verify-email" component={VerifyEmailPage} />
-            <Route path="/join" component={JoinPage} />
-            <Route path="/join/vendor" component={JoinVendorPage} />
-            <Route path="/join/customer" component={JoinCustomerPage} />
-            <Route path="/join/b2b" component={JoinB2BPage} />
-            <Route path="/join/coordinator" component={JoinCoordinatorPage} />
-            <Route path="/join/dropoff" component={JoinDropoffPage} />
+            {/* Redirect join routes to signup with role parameters */}
+            <Route path="/join" component={() => <JoinRedirect />} />
+            <Route path="/join/vendor" component={() => <JoinRedirect role="VENDOR" />} />
+            <Route path="/join/customer" component={() => <JoinRedirect role="CUSTOMER" />} />
+            <Route path="/join/b2b" component={() => <JoinRedirect role="B2B" />} />
+            <Route path="/join/coordinator" component={() => <JoinRedirect role="EVENT_COORDINATOR" />} />
+            <Route path="/join/dropoff" component={() => <JoinRedirect role="DROPOFF_MANAGER" />} />
+            {/* Catch-all for any other join routes */}
+            <Route path="/join/*" component={() => <JoinRedirect />} />
             <Route path="/vendor/:id" component={VendorPage} />
             <Route path="/product/:id" component={ProductPage} />
             <Route path="/vendors/:vendorId" component={VendorStorefrontPage} />

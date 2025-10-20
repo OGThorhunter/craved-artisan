@@ -1,10 +1,8 @@
 import { Router } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
+import { prisma } from '../lib/prisma';
 
 const router = Router();
-const prisma = new PrismaClient();
-
 // Middleware to check if user is coordinator
 const isCoordinator = async (req: any, res: any, next: any) => {
   try {

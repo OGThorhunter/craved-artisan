@@ -1,12 +1,10 @@
 import express from 'express';
 import { z } from 'zod';
-import { PrismaClient } from '@prisma/client';
 import { logger } from '../logger';
 import { FacebookAPIService, getDefaultFacebookConfig } from '../services/facebookAPI';
+import { prisma } from '../lib/prisma';
 
 const router = express.Router();
-const prisma = new PrismaClient();
-
 // Initialize Facebook API service
 const facebookAPI = new FacebookAPIService(getDefaultFacebookConfig());
 

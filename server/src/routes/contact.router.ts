@@ -1,9 +1,6 @@
 import { Router } from "express";
-import { PrismaClient } from '@prisma/client';
-
+import { prisma } from '../lib/prisma';
 const router = Router();
-const prisma = new PrismaClient();
-
 /**
  * Creates a lightweight contact ticket and a System Message (no email).
  * Note: wire your auth to capture userId/vendorId if logged in.

@@ -173,7 +173,7 @@ export const Header = () => {
               </div>
             ) : (
               <>
-                <Link href="/join">
+                <Link href="/signup">
                   <button className={`text-sm font-medium transition-colors ${
                     isScrolled 
                       ? 'text-brand-charcoal hover:text-brand-green' 
@@ -318,7 +318,7 @@ export const Header = () => {
                   </>
                 ) : (
                   <>
-                    <Link href="/join">
+                    <Link href="/signup">
                       <button className={`w-full text-left text-sm font-medium transition-colors ${
                         isScrolled 
                           ? 'text-brand-charcoal hover:text-brand-green' 

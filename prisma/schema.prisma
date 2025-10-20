@@ -126,6 +126,16 @@ model VendorProfile {
   stripeAccountId           String?
   stripeAccountStatus       String?
   stripeOnboardingUrl       String?
+  
+  // Subscription billing fields
+  stripeCustomerId          String?   // For billing subscription
+  stripeSubscriptionId      String?   // Active subscription ID
+  subscriptionStatus        VendorSubscriptionStatus? @default(TRIALING)
+  subscriptionPriceId       String?   // Stripe Price ID
+  subscriptionCurrentPeriodEnd DateTime?
+  subscriptionCanceledAt    DateTime?
+  trialEndsAt              DateTime?  // 14-day trial
+  
   minMarginPercent          Float?
   marginOverrideEnabled     Boolean                    @default(false)
   tags                      String?
@@ -2451,6 +2461,14 @@ enum SubStatus {
   PAST_DUE
   CANCELED
   TRIALING
+  INCOMPLETE
+}
+
+enum VendorSubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
   INCOMPLETE
 }
 

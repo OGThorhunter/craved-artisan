@@ -19,7 +19,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <a href="/events" className="px-3 py-1.5 rounded-xl hover:bg-offwhite">
               Events
             </a>
-            <a href="/join" className="px-3 py-1.5 rounded-xl bg-accent text-white">
+            <a href="/signup" className="px-3 py-1.5 rounded-xl bg-accent text-white">
               Join
             </a>
           </nav>

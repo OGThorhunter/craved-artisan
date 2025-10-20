@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import bcrypt from 'bcrypt';
 import { z } from 'zod';
-import { PrismaClient, AuditScope, ActorType, Severity } from '@prisma/client';
+import { AuditScope, ActorType, Severity } from '@prisma/client';
 import { logger } from '../logger';
 import { requireAuth } from '../middleware/session-simple';
 import { passwordSchema, emailSchema, nameSchema, generateSlug } from '../utils/validation';
@@ -9,8 +9,7 @@ import { generateVerificationToken, verifyEmailToken, sendVerificationEmail, sen
 import type { LoginRequest, RegisterRequest, AuthResponse, AuthenticatedRequest } from '../types/session';
 import { logEvent } from '../utils/audit';
 import { AUTH_LOGIN_SUCCESS, AUTH_LOGIN_FAIL, AUTH_LOGOUT, USER_CREATED } from '../constants/audit-events';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 const router = Router();
 

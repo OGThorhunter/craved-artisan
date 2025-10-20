@@ -27,12 +27,11 @@ const MaintenanceGate: React.FC<MaintenanceGateProps> = ({ children }) => {
           const status = await response.json();
           setMaintenanceStatus(status);
         } else {
-          // If API fails, assume no maintenance mode
+          // If API fails, assume no maintenance mode (silently handle 404)
           setMaintenanceStatus({ maintenanceMode: false, source: 'environment' });
         }
       } catch (error) {
-        console.error('Failed to check maintenance mode:', error);
-        // If API fails, assume no maintenance mode
+        // Silently handle network errors - assume no maintenance mode
         setMaintenanceStatus({ maintenanceMode: false, source: 'environment' });
       } finally {
         setIsLoading(false);

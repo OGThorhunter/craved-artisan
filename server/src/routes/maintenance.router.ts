@@ -1,12 +1,10 @@
 import { Router } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { logger } from '../logger';
 import { requireAuth, requireAdmin } from '../middleware/auth';
 import { maintenanceModeService } from '../services/maintenance-mode.service';
+import { prisma } from '../lib/prisma';
 
 const router = Router();
-const prisma = new PrismaClient();
-
 // Check maintenance mode status (public endpoint)
 router.get('/status', async (req, res) => {
   try {

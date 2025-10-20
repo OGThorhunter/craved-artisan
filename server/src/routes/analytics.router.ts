@@ -1,13 +1,11 @@
 import express from 'express';
 import { z } from 'zod';
-import { PrismaClient } from '@prisma/client';
 import { logger } from '../logger';
 import { getNextPayout, getLast30DaysFees, reconcileStripePayments } from '../services/stripeReconciliation';
 import { cacheService } from '../services/cache';
+import { prisma } from '../lib/prisma';
 
 const router = express.Router();
-const prisma = new PrismaClient();
-
 // Helper function to authenticate and get vendor profile
 async function authenticateVendor(req: any) {
   console.log('🔍 [DEBUG] Analytics authenticateVendor - req.user:', req.user);

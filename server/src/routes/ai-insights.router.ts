@@ -1,5 +1,4 @@
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
 import { isVendorOwnerOrAdmin } from '../middleware/isVendorOwnerOrAdmin-mock';
 import { 
   forecastSeries, 
@@ -13,8 +12,6 @@ import {
 import { z } from 'zod';
 
 const router = express.Router();
-const prisma = new PrismaClient();
-
 // Validation schemas
 const InsightsQuerySchema = z.object({
   range: z.string().default('30d'),
@@ -340,6 +337,7 @@ router.get('/pricing', isVendorOwnerOrAdmin, async (req, res) => {
 router.get('/health', isVendorOwnerOrAdmin, async (req, res) => {
   try {
     const { checkAllAIHealth } = await import('../lib/ai');
+import { prisma } from '../lib/prisma';
     const health = await checkAllAIHealth();
     
     res.json(health);

@@ -1,11 +1,9 @@
 import express from 'express';
 import { z } from 'zod';
-import { PrismaClient } from '@prisma/client';
 import { isVendorOwnerOrAdmin } from '../middleware/isVendorOwnerOrAdmin-mock';
 import { getLabelSuggestions } from '../services/label-suggestor';
 import { resolveTokens, replaceTokens } from '../services/token-resolver';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 const router = express.Router();
 

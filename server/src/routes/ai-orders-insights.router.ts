@@ -1,12 +1,10 @@
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
 import { isVendorOwnerOrAdmin } from '../middleware/isVendorOwnerOrAdmin-mock';
 import { z } from 'zod';
 import { callOllamaChat } from '../lib/ai';
+import { prisma } from '../lib/prisma';
 
 const router = express.Router();
-const prisma = new PrismaClient();
-
 // Validation schemas
 const OrdersInsightsQuerySchema = z.object({
   range: z.string().default('7d'),

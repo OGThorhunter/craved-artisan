@@ -1,15 +1,13 @@
 import { Router } from 'express';
 import { body, param, query, validationResult } from 'express-validator';
-import { PrismaClient } from '@prisma/client';
 import { requireAuth, requireRole } from '../middleware/session-simple';
 import { rateLimit } from 'express-rate-limit';
 import { labelQueue } from '../services/labels/queue';
 import { resolveLabelData } from '../services/labels/dataResolver';
 import { getRenderer, RenderConfig } from '../services/labels/renderers';
+import { prisma } from '../lib/prisma';
 
 const router = Router();
-const prisma = new PrismaClient();
-
 // Rate limiting for label jobs (30 requests/min per vendor)
 const labelJobRateLimit = rateLimit({
   windowMs: 60 * 1000, // 1 minute

@@ -2,11 +2,12 @@ import { Router, Request, Response } from 'express';
 import { prisma } from '../../db';
 import { logger } from '../../logger';
 import Stripe from 'stripe';
+import { VendorSubscriptionStatus } from '@prisma/client';
 
 const router = Router();
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2024-12-18.acacia'
+  apiVersion: '2023-10-16'
 });
 
 // Webhook endpoint for Stripe events
@@ -95,8 +96,28 @@ async function handleSubscriptionEvent(subscription: Stripe.Subscription) {
   try {
     const customerId = subscription.customer as string;
     
-    // Find account by Stripe customer ID
-    const billingProfile = await prisma.billingProfile.findUnique({
+    // Check if this is a vendor subscription
+    const customer = await stripe.customers.retrieve(customerId);
+    const vendorProfileId = (customer as Stripe.Customer).metadata?.vendorProfileId;
+    
+    if (vendorProfileId) {
+      // Handle vendor subscription
+      await prisma.vendorProfile.update({
+        where: { id: vendorProfileId },
+        data: {
+          subscriptionStatus: mapVendorSubscriptionStatus(subscription.status),
+          subscriptionCurrentPeriodEnd: new Date(subscription.current_period_end * 1000),
+          subscriptionCanceledAt: subscription.canceled_at 
+            ? new Date(subscription.canceled_at * 1000) 
+            : null,
+        },
+      });
+      logger.info({ vendorProfileId, status: subscription.status }, 'Vendor subscription updated');
+      return;
+    }
+    
+    // Handle Account subscription (existing logic)
+    const billingProfile = await prisma.billingProfile.findFirst({
       where: { stripeCustomerId: customerId }
     });
 
@@ -133,7 +154,7 @@ async function handleInvoiceEvent(invoice: Stripe.Invoice) {
     const customerId = invoice.customer as string;
     
     // Find account by Stripe customer ID
-    const billingProfile = await prisma.billingProfile.findUnique({
+    const billingProfile = await prisma.billingProfile.findFirst({
       where: { stripeCustomerId: customerId }
     });
 
@@ -201,9 +222,28 @@ function mapInvoiceStatus(status: string | null): 'DRAFT' | 'OPEN' | 'PAID' | 'V
   }
 }
 
+// Map Stripe subscription status to vendor subscription enum
+function mapVendorSubscriptionStatus(status: string): VendorSubscriptionStatus {
+  switch (status) {
+    case 'active':
+      return VendorSubscriptionStatus.ACTIVE;
+    case 'past_due':
+      return VendorSubscriptionStatus.PAST_DUE;
+    case 'canceled':
+      return VendorSubscriptionStatus.CANCELED;
+    case 'trialing':
+      return VendorSubscriptionStatus.TRIALING;
+    case 'incomplete':
+      return VendorSubscriptionStatus.INCOMPLETE;
+    default:
+      return VendorSubscriptionStatus.INCOMPLETE;
+  }
+}
+
 router.post('/', handleStripeWebhook);
 
 export default router;
+
 
 
 

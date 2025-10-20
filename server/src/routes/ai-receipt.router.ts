@@ -1,13 +1,12 @@
 import express from 'express';
 import multer from 'multer';
-import { PrismaClient, ReceiptSource } from '@prisma/client';
+import { ReceiptSource } from '@prisma/client';
 import { isVendorOwnerOrAdmin } from '../middleware/isVendorOwnerOrAdmin-mock';
 import { ocrParse, callOllamaChat, RECEIPT_POST_PROCESSOR_PROMPT } from '../lib/ai';
 import { z } from 'zod';
+import { prisma } from '../lib/prisma';
 
 const router = express.Router();
-const prisma = new PrismaClient();
-
 // Configure multer for file uploads
 const upload = multer({
   storage: multer.memoryStorage(),

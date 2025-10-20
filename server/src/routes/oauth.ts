@@ -20,11 +20,11 @@ const router = Router();
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { Strategy as FacebookStrategy } from 'passport-facebook';
-import { PrismaClient } from '@prisma/client';
+import { Strategy as LinkedInStrategy } from 'passport-linkedin-oauth2';
+import { Strategy as TwitterStrategy } from '@superfaceai/passport-twitter-oauth2';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
-
-const prisma = new PrismaClient();
+import { prisma } from '../lib/prisma';
 
 // Google OAuth Strategy - Only initialize if credentials are provided
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && 
@@ -139,6 +139,126 @@ async (accessToken, refreshToken, profile, done) => {
 }));
 }
 
+// LinkedIn OAuth Strategy - Only initialize if credentials are provided
+if (process.env.LINKEDIN_CLIENT_ID && process.env.LINKEDIN_CLIENT_SECRET &&
+    process.env.LINKEDIN_CLIENT_ID !== 'your-linkedin-client-id-here') {
+  passport.use(new LinkedInStrategy({
+    clientID: process.env.LINKEDIN_CLIENT_ID!,
+    clientSecret: process.env.LINKEDIN_CLIENT_SECRET!,
+    callbackURL: `${process.env.BACKEND_URL}/api/oauth/linkedin/callback`,
+    scope: ['r_emailaddress', 'r_liteprofile']
+  },
+async (accessToken: string, refreshToken: string, profile: any, done: any) => {
+  try {
+    let user = await prisma.user.findFirst({
+      where: {
+        oauthProvider: 'linkedin',
+        oauthProviderId: profile.id
+      }
+    });
+
+    if (!user) {
+      const email = profile.emails && profile.emails[0] ? profile.emails[0].value : null;
+      if (!email) {
+        return done(new Error('No email returned from LinkedIn'));
+      }
+
+      const existingUser = await prisma.user.findUnique({
+        where: { email }
+      });
+
+      if (existingUser) {
+        user = await prisma.user.update({
+          where: { id: existingUser.id },
+          data: {
+            oauthProvider: 'linkedin',
+            oauthProviderId: profile.id,
+            emailVerified: true,
+            emailVerifiedAt: new Date()
+          }
+        });
+      } else {
+        user = await prisma.user.create({
+          data: {
+            email,
+            name: profile.displayName,
+            oauthProvider: 'linkedin',
+            oauthProviderId: profile.id,
+            password: await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10),
+            emailVerified: true,
+            emailVerifiedAt: new Date()
+          }
+        });
+      }
+    }
+
+    done(null, user);
+  } catch (error) {
+    done(error as Error);
+  }
+}));
+}
+
+// Twitter OAuth Strategy - Only initialize if credentials are provided
+if (process.env.TWITTER_CLIENT_ID && process.env.TWITTER_CLIENT_SECRET &&
+    process.env.TWITTER_CLIENT_ID !== 'your-twitter-client-id-here') {
+  passport.use(new TwitterStrategy({
+    clientID: process.env.TWITTER_CLIENT_ID!,
+    clientSecret: process.env.TWITTER_CLIENT_SECRET!,
+    clientType: 'confidential',
+    callbackURL: `${process.env.BACKEND_URL}/api/oauth/twitter/callback`
+  },
+async (accessToken: string, refreshToken: string, profile: any, done: any) => {
+  try {
+    let user = await prisma.user.findFirst({
+      where: {
+        oauthProvider: 'twitter',
+        oauthProviderId: profile.id
+      }
+    });
+
+    if (!user) {
+      const email = profile.emails && profile.emails[0] ? profile.emails[0].value : null;
+      if (!email) {
+        return done(new Error('No email returned from Twitter'));
+      }
+
+      const existingUser = await prisma.user.findUnique({
+        where: { email }
+      });
+
+      if (existingUser) {
+        user = await prisma.user.update({
+          where: { id: existingUser.id },
+          data: {
+            oauthProvider: 'twitter',
+            oauthProviderId: profile.id,
+            emailVerified: true,
+            emailVerifiedAt: new Date()
+          }
+        });
+      } else {
+        user = await prisma.user.create({
+          data: {
+            email,
+            name: profile.displayName || profile.username,
+            oauthProvider: 'twitter',
+            oauthProviderId: profile.id,
+            password: await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10),
+            emailVerified: true,
+            emailVerifiedAt: new Date()
+          }
+        });
+      }
+    }
+
+    done(null, user);
+  } catch (error) {
+    done(error as Error);
+  }
+}));
+}
+
 // Serialize/Deserialize user
 passport.serializeUser((user: any, done) => {
   done(null, user.id);
@@ -234,6 +354,84 @@ router.get('/facebook/callback', (req: Request, res: Response, next) => {
 });
 
 /**
+ * LinkedIn OAuth Routes
+ */
+router.get('/linkedin', (req: Request, res: Response, next) => {
+  if (!process.env.LINKEDIN_CLIENT_ID || !process.env.LINKEDIN_CLIENT_SECRET) {
+    return res.status(501).json({
+      success: false,
+      message: 'LinkedIn OAuth not configured. Please set LINKEDIN_CLIENT_ID and LINKEDIN_CLIENT_SECRET environment variables.'
+    });
+  }
+  
+  passport.authenticate('linkedin', { scope: ['r_emailaddress', 'r_liteprofile'] })(req, res, next);
+});
+
+router.get('/linkedin/callback', (req: Request, res: Response, next) => {
+  passport.authenticate('linkedin', {
+    failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=oauth_failed`
+  }, async (err: any, user: any) => {
+    if (err) {
+      logger.error({ error: err }, 'LinkedIn OAuth error');
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=oauth_error`);
+    }
+    
+    if (!user) {
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=oauth_denied`);
+    }
+    
+    // Create session for OAuth user
+    (req.session as any).userId = user.id;
+    (req.session as any).email = user.email;
+    (req.session as any).oauthProvider = user.oauthProvider;
+    (req.session as any).role = 'CUSTOMER';
+    
+    logger.info({ userId: user.id, email: user.email, provider: 'linkedin' }, 'OAuth login successful');
+    
+    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/signup?oauth=linkedin&step=profile`);
+  })(req, res, next);
+});
+
+/**
+ * Twitter OAuth Routes
+ */
+router.get('/twitter', (req: Request, res: Response, next) => {
+  if (!process.env.TWITTER_CLIENT_ID || !process.env.TWITTER_CLIENT_SECRET) {
+    return res.status(501).json({
+      success: false,
+      message: 'Twitter OAuth not configured. Please set TWITTER_CLIENT_ID and TWITTER_CLIENT_SECRET environment variables.'
+    });
+  }
+  
+  passport.authenticate('twitter')(req, res, next);
+});
+
+router.get('/twitter/callback', (req: Request, res: Response, next) => {
+  passport.authenticate('twitter', {
+    failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=oauth_failed`
+  }, async (err: any, user: any) => {
+    if (err) {
+      logger.error({ error: err }, 'Twitter OAuth error');
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=oauth_error`);
+    }
+    
+    if (!user) {
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/login?error=oauth_denied`);
+    }
+    
+    // Create session for OAuth user
+    (req.session as any).userId = user.id;
+    (req.session as any).email = user.email;
+    (req.session as any).oauthProvider = user.oauthProvider;
+    (req.session as any).role = 'CUSTOMER';
+    
+    logger.info({ userId: user.id, email: user.email, provider: 'twitter' }, 'OAuth login successful');
+    
+    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:5173'}/signup?oauth=twitter&step=profile`);
+  })(req, res, next);
+});
+
+/**
  * Apple OAuth Routes
  */
 router.get('/apple', (req: Request, res: Response) => {
@@ -265,6 +463,14 @@ router.get('/status', (req: Request, res: Response) => {
     facebook: {
       configured: !!(process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET),
       available: !!process.env.FACEBOOK_APP_ID
+    },
+    linkedin: {
+      configured: !!(process.env.LINKEDIN_CLIENT_ID && process.env.LINKEDIN_CLIENT_SECRET),
+      available: !!process.env.LINKEDIN_CLIENT_ID
+    },
+    twitter: {
+      configured: !!(process.env.TWITTER_CLIENT_ID && process.env.TWITTER_CLIENT_SECRET),
+      available: !!process.env.TWITTER_CLIENT_ID
     },
     apple: {
       configured: !!(process.env.APPLE_CLIENT_ID && process.env.APPLE_TEAM_ID),

@@ -43,7 +43,6 @@ const StripeOnboardingStep: React.FC<StripeOnboardingStepProps> = ({
   const [creating, setCreating] = useState(false);
   const [checking, setChecking] = useState(false);
 
-  const roleDisplayName = role === 'VENDOR' ? 'vendor' : 'event coordinator';
 
   // Check Stripe onboarding status
   const checkOnboardingStatus = async () => {
@@ -91,6 +90,16 @@ const StripeOnboardingStep: React.FC<StripeOnboardingStepProps> = ({
       setStatus(newStatus);
       onStatusChange(false); // Still not complete
       
+      // Create subscription for vendors ONLY (not for event coordinators)
+      if (role === 'VENDOR') {
+        await createVendorSubscription();
+      } else {
+        // For Event Coordinators, just acknowledge the setup
+        toast.success('Payment setup initiated! You can complete this later from your dashboard.', {
+          duration: 3000,
+        });
+      }
+      
     } catch (error) {
       console.error('Error starting Stripe onboarding:', error);
       toast.error('Failed to start Stripe Connect onboarding');
@@ -99,8 +108,34 @@ const StripeOnboardingStep: React.FC<StripeOnboardingStepProps> = ({
     }
   };
 
+  // Create vendor subscription with trial
+  const createVendorSubscription = async () => {
+    try {
+      const response = await fetch('/api/vendor-subscription/create', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.subscription?.trialEnd) {
+          toast.success('14-day free trial activated! 🎉', {
+            duration: 4000,
+          });
+        }
+      } else {
+        // Don't show error to user as subscription can be created later
+        console.warn('Subscription creation deferred - can be created later');
+      }
+    } catch (error) {
+      console.error('Error creating subscription:', error);
+      // Silent fail - subscription can be created later
+    }
+  };
+
   useEffect(() => {
     checkOnboardingStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (loading) {
@@ -120,9 +155,42 @@ const StripeOnboardingStep: React.FC<StripeOnboardingStepProps> = ({
       <div>
         <h3 className="text-lg font-medium text-gray-900 mb-4">Payment Setup</h3>
         <p className="text-sm text-gray-600">
-          As a {roleDisplayName}, you'll need to connect with Stripe to receive payments securely.
+          {role === 'VENDOR' 
+            ? 'Set up your account to start selling products and receiving payments.'
+            : 'Set up payments to sell booth spaces at your events. No monthly fee - only 2% commission on sales.'}
         </p>
       </div>
+
+      {/* Vendor Trial Information */}
+      {role === 'VENDOR' && (
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg p-6">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <CheckCircle className="h-8 w-8 text-green-600" />
+            </div>
+            <div className="ml-4">
+              <h4 className="text-lg font-medium text-green-900 mb-2">14-Day Free Trial</h4>
+              <p className="text-sm text-green-800 mb-3">
+                Start selling immediately with your free trial! No payment method required to begin.
+              </p>
+              <div className="space-y-2">
+                <div className="flex items-center text-sm text-green-800">
+                  <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
+                  Full access to all vendor features
+                </div>
+                <div className="flex items-center text-sm text-green-800">
+                  <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
+                  After trial: $25/month + 2% commission
+                </div>
+                <div className="flex items-center text-sm text-green-800">
+                  <CheckCircle className="h-4 w-4 text-green-600 mr-2" />
+                  Cancel anytime during your trial
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stripe Connect Information */}
       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6">
@@ -154,18 +222,39 @@ const StripeOnboardingStep: React.FC<StripeOnboardingStepProps> = ({
         </div>
       </div>
 
-      {/* Commission Information */}
+      {/* Pricing Information */}
       <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-        <h5 className="font-medium text-gray-900 mb-2">Platform Commission</h5>
-        <p className="text-sm text-gray-600 mb-2">
-          Craved Artisan charges a 2% platform fee on all transactions. This covers:
-        </p>
-        <ul className="text-sm text-gray-600 space-y-1">
-          <li>• Secure payment processing</li>
-          <li>• Platform maintenance and development</li>
-          <li>• Customer support and dispute resolution</li>
-          <li>• Marketing and promotion of your {role === 'VENDOR' ? 'products' : 'events'}</li>
-        </ul>
+        <h5 className="font-medium text-gray-900 mb-2">
+          {role === 'VENDOR' ? 'Pricing' : 'Commission Structure'}
+        </h5>
+        {role === 'VENDOR' ? (
+          <>
+            <div className="text-sm text-gray-600 mb-2">
+              <strong>$25/month</strong> subscription + <strong>2%</strong> commission on all sales
+            </div>
+            <p className="text-sm text-gray-600 mb-2">Your subscription includes:</p>
+            <ul className="text-sm text-gray-600 space-y-1">
+              <li>• Unlimited product listings</li>
+              <li>• Secure payment processing via Stripe</li>
+              <li>• Sales analytics and customer insights</li>
+              <li>• Marketing and promotion of your products</li>
+              <li>• Customer support and order management</li>
+            </ul>
+          </>
+        ) : (
+          <>
+            <div className="text-sm text-gray-600 mb-2">
+              <strong>Free to join</strong> - Only <strong>2%</strong> commission on booth sales
+            </div>
+            <p className="text-sm text-gray-600 mb-2">No monthly fees! Platform commission covers:</p>
+            <ul className="text-sm text-gray-600 space-y-1">
+              <li>• Secure payment processing via Stripe</li>
+              <li>• Event listing and promotion</li>
+              <li>• Vendor management tools</li>
+              <li>• Customer support and payments</li>
+            </ul>
+          </>
+        )}
       </div>
 
       {/* Status Display */}

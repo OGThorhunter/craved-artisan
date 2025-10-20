@@ -118,7 +118,7 @@ export default function AboutPage() {
                   Explore the marketplace
                 </a>
                 <a
-                  href="/join"
+                  href="/signup"
                   className="rounded-xl px-4 py-2 border border-[#7F232E]/30 text-[#7F232E] bg-white/80 hover:bg-white"
                 >
                   Become a vendor
@@ -326,7 +326,7 @@ export default function AboutPage() {
               </p>
             </div>
             <div className="flex gap-3 justify-start md:justify-end">
-              <a href="/join" className={`rounded-xl px-4 py-2 ${colors.primaryBtn}`}>
+              <a href="/signup" className={`rounded-xl px-4 py-2 ${colors.primaryBtn}`}>
                 Become a vendor
               </a>
               <a href="/marketplace" className="rounded-xl px-4 py-2 border border-[#7F232E]/30 text-[#7F232E] bg-white/80 hover:bg-white">

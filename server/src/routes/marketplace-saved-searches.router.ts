@@ -1,11 +1,9 @@
 import express from 'express';
 import { z } from 'zod';
-import { PrismaClient } from '@prisma/client';
 import { requireAuth } from '../middleware/session-simple';
+import { prisma } from '../lib/prisma';
 
 const router = express.Router();
-const prisma = new PrismaClient();
-
 // Validation schemas
 const createSavedSearchSchema = z.object({
   name: z.string().min(1).max(100),

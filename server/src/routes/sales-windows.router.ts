@@ -1,9 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
 import { requireVendorAuth } from '../middleware/auth';
+import { prisma } from '../lib/prisma';
 
 const router = Router();
 

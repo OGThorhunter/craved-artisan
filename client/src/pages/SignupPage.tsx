@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'wouter';
 import { toast } from 'react-hot-toast';
-import { ChevronLeft, ChevronRight, Check, AlertCircle, Mail } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, Mail } from 'lucide-react';
 
 // Import our new components
 import OAuthButtons from '../components/auth/OAuthButtons';
@@ -12,7 +12,7 @@ import CustomerProfileForm from '../components/auth/CustomerProfileForm';
 import StripeOnboardingStep from '../components/auth/StripeOnboardingStep';
 
 // Import services
-import { legalService, LegalDocument } from '../services/legal';
+import { legalService, type LegalDocument } from '../services/legal';
 
 interface SignupFormData {
   // Step 1: Account Type
@@ -25,7 +25,7 @@ interface SignupFormData {
   name: string;
   
   // Step 3: Profile Data (varies by role)
-  profileData: any;
+  profileData: Record<string, unknown>;
   
   // Step 4: Legal Agreements
   acceptedAgreements: LegalDocument[];
@@ -123,8 +123,11 @@ const SignupPage: React.FC = () => {
     const currentIndex = getCurrentStepIndex();
     
     if (currentIndex < stepOrder.length - 1) {
-      setCurrentStep(stepOrder[currentIndex + 1]);
-      setStepValid(false);
+      const nextStep = stepOrder[currentIndex + 1];
+      if (nextStep) {
+        setCurrentStep(nextStep);
+        setStepValid(false);
+      }
     }
   };
 
@@ -133,8 +136,11 @@ const SignupPage: React.FC = () => {
     const currentIndex = getCurrentStepIndex();
     
     if (currentIndex > 0) {
-      setCurrentStep(stepOrder[currentIndex - 1]);
-      setStepValid(false);
+      const prevStep = stepOrder[currentIndex - 1];
+      if (prevStep) {
+        setCurrentStep(prevStep);
+        setStepValid(false);
+      }
     }
   };
 
@@ -181,7 +187,19 @@ const SignupPage: React.FC = () => {
         })
       });
       
-      const data = await response.json();
+      // Check if response has content before parsing
+      const text = await response.text();
+      if (!text) {
+        throw new Error('Server returned an empty response');
+      }
+      
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        console.error('Failed to parse response:', text);
+        throw new Error('Server returned invalid response');
+      }
       
       if (response.ok && data.success) {
         toast.success('Account created successfully!');
@@ -263,7 +281,7 @@ const SignupPage: React.FC = () => {
   };
 
   // Step validation
-  const validateCurrentStep = () => {
+  const validateCurrentStep = useCallback(() => {
     switch (currentStep) {
       case 'account-type':
         return !!formData.role;
@@ -285,7 +303,7 @@ const SignupPage: React.FC = () => {
       default:
         return false;
     }
-  };
+  }, [currentStep, formData, stepValid]);
 
   // Progress indicator component
   const ProgressIndicator = () => {
@@ -393,9 +411,13 @@ const SignupPage: React.FC = () => {
                 </div>
                 <div className="flex-1">
                   <h3 className="text-lg font-medium text-gray-900">Vendor</h3>
-                  <p className="text-sm text-gray-600">
-                    Sell your handmade products, food, or crafts to customers
+                  <p className="text-sm text-gray-600 mt-1">
+                    Sell your handmade products, food, or crafts directly to customers
                   </p>
+                  <div className="mt-2 text-xs text-gray-500">
+                    <div className="font-medium text-[#5B6E02]">$25/month with 14-day free trial</div>
+                    <div>+ 2% commission on all sales</div>
+                  </div>
                 </div>
               </label>
 
@@ -420,9 +442,12 @@ const SignupPage: React.FC = () => {
                 </div>
                 <div className="flex-1">
                   <h3 className="text-lg font-medium text-gray-900">Customer</h3>
-                  <p className="text-sm text-gray-600">
-                    Discover and purchase unique products from local vendors
+                  <p className="text-sm text-gray-600 mt-1">
+                    Discover and purchase unique products from local artisans
                   </p>
+                  <div className="mt-2 text-xs text-gray-500">
+                    <div className="font-medium text-green-600">Free to join</div>
+                  </div>
                 </div>
               </label>
 
@@ -447,9 +472,13 @@ const SignupPage: React.FC = () => {
                 </div>
                 <div className="flex-1">
                   <h3 className="text-lg font-medium text-gray-900">Event Coordinator</h3>
-                  <p className="text-sm text-gray-600">
-                    Organize farmers markets, craft fairs, and vendor events
+                  <p className="text-sm text-gray-600 mt-1">
+                    Organize farmers markets, craft fairs, and vendor events. Sell booth spaces to vendors.
                   </p>
+                  <div className="mt-2 text-xs text-gray-500">
+                    <div className="font-medium text-green-600">Free to join</div>
+                    <div>2% commission on booth sales only</div>
+                  </div>
                 </div>
               </label>
             </div>
@@ -469,7 +498,7 @@ const SignupPage: React.FC = () => {
 
       case 'credentials':
         return (
-          <div className="space-y-6">
+          <form onSubmit={(e) => { e.preventDefault(); handleCredentialsSubmit(); }} className="space-y-6">
             <div className="text-center">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
                 Create Your Account
@@ -552,7 +581,7 @@ const SignupPage: React.FC = () => {
                 )}
               </div>
             </div>
-          </div>
+          </form>
         );
 
       case 'profile':
@@ -561,7 +590,7 @@ const SignupPage: React.FC = () => {
             {formData.role === 'VENDOR' && (
               <VendorProfileForm
                 onDataChange={(data, isValid) => {
-                  setFormData(prev => ({ ...prev, profileData: data }));
+                  setFormData(prev => ({ ...prev, profileData: data as unknown as Record<string, unknown> }));
                   setStepValid(isValid);
                 }}
                 disabled={loading}
@@ -570,7 +599,7 @@ const SignupPage: React.FC = () => {
             {formData.role === 'EVENT_COORDINATOR' && (
               <CoordinatorProfileForm
                 onDataChange={(data, isValid) => {
-                  setFormData(prev => ({ ...prev, profileData: data }));
+                  setFormData(prev => ({ ...prev, profileData: data as unknown as Record<string, unknown> }));
                   setStepValid(isValid);
                 }}
                 disabled={loading}
@@ -579,7 +608,7 @@ const SignupPage: React.FC = () => {
             {formData.role === 'CUSTOMER' && (
               <CustomerProfileForm
                 onDataChange={(data, isValid) => {
-                  setFormData(prev => ({ ...prev, profileData: data }));
+                  setFormData(prev => ({ ...prev, profileData: data as unknown as Record<string, unknown> }));
                   setStepValid(isValid);
                 }}
                 disabled={loading}
@@ -669,7 +698,7 @@ const SignupPage: React.FC = () => {
   // Update step validity when form data changes
   useEffect(() => {
     setStepValid(validateCurrentStep());
-  }, [currentStep, formData]);
+  }, [currentStep, formData, validateCurrentStep]);
 
   return (
     <div className="min-h-screen bg-white flex flex-col justify-center py-12 sm:px-6 lg:px-8">

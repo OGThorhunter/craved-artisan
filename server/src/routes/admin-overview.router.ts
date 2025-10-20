@@ -1,12 +1,10 @@
 import { Router } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { requireAdmin, auditAdminAction } from '../middleware/admin-auth';
 import { systemHealth } from '../services/system-health';
 import { z } from 'zod';
+import { prisma } from '../lib/prisma';
 
 const router = Router();
-const prisma = new PrismaClient();
-
 // GET /api/admin/overview - Get all top KPIs and health checks
 router.get('/overview', requireAdmin, async (req, res) => {
   try {

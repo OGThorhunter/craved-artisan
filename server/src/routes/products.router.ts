@@ -1,13 +1,11 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { PrismaClient } from '@prisma/client';
 import { requireVendorAuth } from '../middleware/auth';
 import { validateRequest } from '../middleware/validation';
 import { invalidateProductCache, invalidateAnalyticsCache } from '../middleware/cache-invalidation';
+import { prisma } from '../lib/prisma';
 
 const router = Router();
-const prisma = new PrismaClient();
-
 // Validation schemas
 const ProductTypeSchema = z.enum(['FOOD', 'NON_FOOD', 'SERVICE']);
 

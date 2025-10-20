@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 import { requireAdmin, auditAdminAction } from '../middleware/admin-auth';
 import { logger } from '../logger';
@@ -7,10 +6,9 @@ import { riskScoringService } from '../services/risk-scoring';
 import { stripeAdminSyncService } from '../services/stripe-admin-sync';
 import { taxAdminService } from '../services/tax-admin';
 import { duplicateDetectionService } from '../services/duplicate-detection';
+import { prisma } from '../lib/prisma';
 
 const router = Router();
-const prisma = new PrismaClient();
-
 // ================================
 // LIST & SEARCH
 // ================================

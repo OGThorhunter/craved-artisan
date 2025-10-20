@@ -1,10 +1,7 @@
 import { Router, Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 
 const router = Router();
-const prisma = new PrismaClient();
-
 // Validation schemas
 const ApplyPriceSchema = z.object({
   productId: z.string(),
@@ -413,6 +410,7 @@ router.post('/competitors/import', async (req: Request, res: Response) => {
 
   } catch (error) {
     console.error('Error importing competitor data:', error);
+import { prisma } from '../lib/prisma';
     res.status(500).json({ error: 'Internal server error' });
   }
 });

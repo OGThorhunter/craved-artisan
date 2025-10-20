@@ -5,14 +5,13 @@ import { integrationsStatusService } from '../services/integrations-status.servi
 import { s3UploadService } from '../services/s3-upload.service';
 import { maintenanceModeService } from '../services/maintenance-mode.service';
 import { redisCacheService } from '../services/redis-cache.service';
-import { PrismaClient, ConfigCategory, ComplianceDocType } from '@prisma/client';
+import { ConfigCategory, ComplianceDocType } from '@prisma/client';
 import { logger } from '../logger';
 import { z } from 'zod';
 import multer from 'multer';
+import { prisma } from '../lib/prisma';
 
 const router = Router();
-const prisma = new PrismaClient();
-
 // Multer configuration for file uploads
 const upload = multer({
   storage: multer.memoryStorage(),

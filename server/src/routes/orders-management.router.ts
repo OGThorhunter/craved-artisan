@@ -1,11 +1,10 @@
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
 import { isVendorOwnerOrAdmin } from '../middleware/isVendorOwnerOrAdmin-mock';
+import { requireActiveSubscription } from '../middleware/require-active-subscription';
 import { z } from 'zod';
+import { prisma } from '../lib/prisma';
 
 const router = express.Router();
-const prisma = new PrismaClient();
-
 // Validation schemas
 const GetOrdersQuerySchema = z.object({
   status: z.string().optional(),
@@ -186,7 +185,7 @@ router.get('/', isVendorOwnerOrAdmin, async (req, res) => {
 });
 
 // POST /api/vendor/orders
-router.post('/', isVendorOwnerOrAdmin, async (req, res) => {
+router.post('/', isVendorOwnerOrAdmin, requireActiveSubscription, async (req, res) => {
   try {
     const vendorProfileId = req.user!.vendorProfileId!;
     const orderData = CreateOrderSchema.parse(req.body);
@@ -378,7 +377,7 @@ router.put('/:id', isVendorOwnerOrAdmin, async (req, res) => {
 });
 
 // POST /api/vendor/orders/:id/status
-router.post('/:id/status', isVendorOwnerOrAdmin, async (req, res) => {
+router.post('/:id/status', isVendorOwnerOrAdmin, requireActiveSubscription, async (req, res) => {
   try {
     const vendorProfileId = req.user!.vendorProfileId!;
     const { id } = req.params;

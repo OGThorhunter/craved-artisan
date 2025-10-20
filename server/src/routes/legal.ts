@@ -1,12 +1,10 @@
 import { Router } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 import { logger } from '../logger';
 import type { Request, Response } from 'express';
+import { prisma } from '../lib/prisma';
 
 const router = Router();
-const prisma = new PrismaClient();
-
 // Validation schema for accepting agreements
 const acceptAgreementsSchema = z.object({
   agreements: z.array(z.object({

@@ -244,7 +244,7 @@ export default function Home() {
                <p className="text-white/90 mb-10 sm:mb-12 text-sm sm:text-base md:text-lg drop-shadow">We're connecting farmers, bakers, makers, and neighbors through a local-first platform built for transparency, trust, and real human connection.</p>
                             <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center w-full sm:w-auto mt-6 sm:mt-8">
                 <Link
-                  href="/join"
+                  href="/signup"
                   onClick={() => storeCTA('join')}
                   className="bg-brand-maroon text-white px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base rounded-lg hover:bg-[#681b24] transition shadow w-full sm:w-auto text-center font-medium"
                 >
@@ -650,36 +650,36 @@ export default function Home() {
                img: 'vendor_1750622113753', 
                label: 'Vendor', 
                description: 'Share your handmade goods with a community that values craftsmanship and quality.',
-               learnMore: '/join/vendor',
-               joinHref: '/join?vendor=true'
+               learnMore: '/signup?role=VENDOR',
+               joinHref: '/signup?role=VENDOR'
              },
              { 
                img: 'supplier_1750627234352', 
                label: 'B2B Vendors', 
                description: 'Supply ingredients and materials to help other vendors create their best products.',
-               learnMore: '/join/b2b',
-               joinHref: '/join?b2b=true'
+               learnMore: '/signup?role=B2B',
+               joinHref: '/signup?role=B2B'
              },
              { 
                img: 'winecheese_1750622113753', 
                label: 'Customer', 
                description: 'Discover and support local artisans while enjoying fresh, high-quality products.',
-               learnMore: '/join/customer',
-               joinHref: '/join?customer=true'
+               learnMore: '/signup?role=CUSTOMER',
+               joinHref: '/signup?role=CUSTOMER'
              },
              { 
                img: 'Event coordinator_1750627631683', 
                label: 'Coordinator', 
                description: 'Organize events and markets that bring the community together around local goods.',
-               learnMore: '/join/coordinator',
-               joinHref: '/join?coordinator=true'
+               learnMore: '/signup?role=EVENT_COORDINATOR',
+               joinHref: '/signup?role=EVENT_COORDINATOR'
              },
              { 
                img: 'DoL1_1750621743272', 
                label: 'Drop-Off', 
                description: 'Host pickup locations that serve as community hubs for local commerce.',
-               learnMore: '/join/dropoff',
-               joinHref: '/join?dropoff=true'
+               learnMore: '/signup?role=DROPOFF_MANAGER',
+               joinHref: '/signup?role=DROPOFF_MANAGER'
              },
            ].map(({ img, label, description, learnMore, joinHref }) => (
              <div

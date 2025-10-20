@@ -1,12 +1,10 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { PrismaClient } from '@prisma/client';
 import { requireVendorAuth } from '../middleware/auth';
 import { validateRequest } from '../middleware/validation';
+import { prisma } from '../lib/prisma';
 
 const router = Router();
-const prisma = new PrismaClient();
-
 // Validation schemas
 const RecipeParseSchema = z.object({
   sourceType: z.enum(['IMAGE', 'PDF', 'TEXT', 'URL']),
@@ -321,6 +319,7 @@ router.get('/unit-convert', requireVendorAuth, async (req, res) => {
 });
 
 export default router;
+
 
 
 

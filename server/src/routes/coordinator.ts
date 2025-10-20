@@ -1,14 +1,12 @@
 import { Router } from 'express';
-import { PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 import { logger } from '../logger';
 import { requireAuth } from '../middleware/session-simple';
 import { slugSchema, urlSchema, phoneSchema, generateSlug } from '../utils/validation';
 import type { Request, Response } from 'express';
+import { prisma } from '../lib/prisma';
 
 const router = Router();
-const prisma = new PrismaClient();
-
 // Validation schemas
 const createCoordinatorProfileSchema = z.object({
   organizationName: z.string().min(2, 'Organization name must be at least 2 characters'),

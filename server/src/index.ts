@@ -45,6 +45,7 @@ import { promotionsAnalyticsRouter } from './routes/promotions-analytics.router'
 // Settings & Account Hub Routes
 import settingsRouter from './routes/settings';
 import stripeWebhooksRouter from './routes/webhooks/stripe';
+import vendorSubscriptionRouter from './routes/vendor-subscription.router';
 
 // Orders Management Routes
 import ordersManagementRouter from './routes/orders-management.router';
@@ -118,7 +119,11 @@ app.use(cors({
     'http://[::1]:5173',
     // Render production URLs (will be set via env vars)
     ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : []),
-    ...(process.env.NODE_ENV === 'production' ? ['https://cravedartisan-web.onrender.com'] : [])
+    ...(process.env.NODE_ENV === 'production' ? [
+      'https://cravedartisan-web.onrender.com',
+      'https://www.cravedartisan.com',
+      'https://cravedartisan.com'
+    ] : [])
   ],
   credentials: true, // Allow cookies
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
@@ -232,6 +237,9 @@ app.use('/api/vendor/promotions', promotionsRouter);
 app.use('/api/vendor/social-media', socialMediaRouter);
 app.use('/api/vendor/loyalty', loyaltyRouter);
 app.use('/api/vendor/promotions-analytics', promotionsAnalyticsRouter);
+
+// Vendor Subscription Routes
+app.use('/api/vendor-subscription', vendorSubscriptionRouter);
 
 // Orders Management Routes
 app.use('/api/vendor/orders', ordersManagementRouter);

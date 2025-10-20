@@ -274,7 +274,7 @@ export default function NavHeader() {
               <Link key={link.href} href={link.href} className="hover:text-accent transition-colors">{link.label}</Link>
             ))}
                          <Link
-               href="/join"
+               href="/signup"
                className="bg-accent text-white px-3 py-1 rounded-lg shadow hover:opacity-90 transition-colors"
              >
                Join
@@ -807,7 +807,7 @@ export default function NavHeader() {
          {navLinks.map(link => (
            <Link key={link.href} href={link.href}>{link.label}</Link>
          ))}
-                   <Link href="/join" className="block bg-[#5B6E02] text-white px-3 py-1 rounded shadow">Join</Link>
+                   <Link href="/signup" className="block bg-[#5B6E02] text-white px-3 py-1 rounded shadow">Join</Link>
          {role !== 'guest' && (
            <span className="text-[#2C2C2C] hover:text-[#5B6E02] transition-colors">
              {roleLinks[role]}

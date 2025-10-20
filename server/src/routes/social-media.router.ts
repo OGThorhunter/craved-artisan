@@ -1,13 +1,11 @@
 import express from 'express';
 import { z } from 'zod';
-import { PrismaClient } from '@prisma/client';
 import { logger } from '../logger';
 import { createFacebookAPIService, getFacebookConfig } from '../services/facebook-api.service';
 import { createInstagramAPIService, getInstagramConfig } from '../services/instagram-api.service';
+import { prisma } from '../lib/prisma';
 
 const router = express.Router();
-const prisma = new PrismaClient();
-
 // Helper function to authenticate and get vendor profile
 async function authenticateVendor(req: any) {
   console.log('🔍 [DEBUG] SocialMedia authenticateVendor - req.user:', req.user);
