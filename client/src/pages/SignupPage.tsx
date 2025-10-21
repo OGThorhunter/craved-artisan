@@ -166,8 +166,18 @@ const SignupPage: React.FC = () => {
         return;
       }
       
-      if (formData.password.length < 6) {
-        toast.error('Password must be at least 6 characters long');
+      if (formData.password.length < 8) {
+        toast.error('Password must be at least 8 characters long');
+        return;
+      }
+      
+      if (!/[A-Z]/.test(formData.password)) {
+        toast.error('Password must contain at least one uppercase letter');
+        return;
+      }
+      
+      if (!/[0-9]/.test(formData.password)) {
+        toast.error('Password must contain at least one number');
         return;
       }
       
@@ -318,7 +328,9 @@ const SignupPage: React.FC = () => {
           formData.confirmPassword &&
           formData.name &&
           formData.password === formData.confirmPassword &&
-          formData.password.length >= 6
+          formData.password.length >= 8 &&
+          /[A-Z]/.test(formData.password) &&
+          /[0-9]/.test(formData.password)
         );
       case 'profile':
         return stepValid;
@@ -571,7 +583,7 @@ const SignupPage: React.FC = () => {
                   required
                 />
                 <p className="mt-1 text-xs text-gray-500">
-                  Must be at least 6 characters long
+                  Must be at least 8 characters with one uppercase letter and one number
                 </p>
               </div>
 
