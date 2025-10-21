@@ -1,13 +1,11 @@
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
-import passport from 'passport';
 import { logger } from './logger';
 import { sessionMiddleware, attachUser } from './middleware/session-redis';
 import { requestContext } from './middleware/request-context';
 import { cronJobs } from './services/cron-jobs';
 import authRoutes from './routes/auth';
-import oauthRoutes from './routes/oauth-simple';
 import { pulseRouter } from './routes/pulse.router';
 import { vendorRouter } from './routes/vendor.router';
 import { ingredientsRouter } from './routes/ingredients.router';
@@ -166,10 +164,6 @@ app.use(attachUser);
 // Request context middleware (for audit logging)
 app.use(requestContext);
 
-// Passport middleware (after session)
-app.use(passport.initialize());
-app.use(passport.session());
-
 // Health check endpoints
 app.get('/health', (_req, res) => {
   res.json({ ok: true, ts: Date.now(), message: 'Session-based auth server running' });
@@ -185,7 +179,6 @@ app.get('/api/health', (_req, res) => {
 
 // Auth routes
 app.use('/api/auth', authRoutes);
-app.use('/api/oauth', oauthRoutes);
 
 // Legal & Coordinator routes
 app.use('/api/legal', legalRouter);

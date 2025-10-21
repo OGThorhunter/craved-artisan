@@ -4,7 +4,6 @@ import { toast } from 'react-hot-toast';
 import { ChevronLeft, ChevronRight, Check, Mail } from 'lucide-react';
 
 // Import our new components
-import OAuthButtons from '../components/auth/OAuthButtons';
 import LegalAgreements from '../components/auth/LegalAgreements';
 import VendorProfileForm from '../components/auth/VendorProfileForm';
 import CoordinatorProfileForm from '../components/auth/CoordinatorProfileForm';
@@ -482,17 +481,6 @@ const SignupPage: React.FC = () => {
                 </div>
               </label>
             </div>
-
-            {!isOAuthUser && (
-              <>
-                <div className="text-center">
-                  <p className="text-sm text-gray-600 mb-4">
-                    Or sign up quickly with:
-                  </p>
-                </div>
-                <OAuthButtons />
-              </>
-            )}
           </div>
         );
 
