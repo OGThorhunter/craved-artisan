@@ -8,15 +8,17 @@ const redisClient = getRedisClient();
 
 // Configure session store based on Redis availability
 const createSessionStore = () => {
-  if (process.env.REDIS_URL && isRedisConnected()) {
-    logger.info('✅ Using Redis session store');
+  // If REDIS_URL is configured, always try to use Redis
+  // The Redis client will handle connection errors gracefully
+  if (process.env.REDIS_URL) {
+    logger.info('✅ Configuring Redis session store');
     return new RedisStore({
       client: redisClient as any,
       prefix: 'sess:',
       ttl: 86400, // 24 hours in seconds
     });
   } else {
-    logger.warn('⚠️  Redis not available - using memory store (sessions will not persist across restarts)');
+    logger.warn('⚠️  No REDIS_URL configured - using memory store (sessions will not persist across restarts)');
     return undefined; // Express-session will use default memory store
   }
 };
