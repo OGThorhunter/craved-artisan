@@ -12,11 +12,23 @@ const createSessionStore = () => {
   // The Redis client will handle connection errors gracefully
   if (process.env.REDIS_URL) {
     logger.info('✅ Configuring Redis session store');
-    return new RedisStore({
-      client: redisClient as any,
-      prefix: 'sess:',
-      ttl: 86400, // 24 hours in seconds
-    });
+    try {
+      const store = new RedisStore({
+        client: redisClient as any,
+        prefix: 'sess:',
+        ttl: 86400, // 24 hours in seconds
+      });
+      
+      // Add error handling for Redis store
+      (store as any).on('error', (err: Error) => {
+        logger.error({ error: err }, '❌ Redis session store error');
+      });
+      
+      return store;
+    } catch (error) {
+      logger.error({ error }, '❌ Failed to create Redis session store, falling back to memory store');
+      return undefined;
+    }
   } else {
     logger.warn('⚠️  No REDIS_URL configured - using memory store (sessions will not persist across restarts)');
     return undefined; // Express-session will use default memory store

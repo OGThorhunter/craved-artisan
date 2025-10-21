@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { AuditScope, ActorType, Severity } from '@prisma/client';
 import { logger } from '../logger';
@@ -423,8 +423,11 @@ const signupStep1Schema = z.object({
 
 router.post('/signup/step1', async (req, res) => {
   try {
+    logger.info({ body: req.body }, 'Signup step 1 request received');
+    
     const validation = signupStep1Schema.safeParse(req.body);
     if (!validation.success) {
+      logger.warn({ errors: validation.error.errors }, 'Signup validation failed');
       return res.status(400).json({
         success: false,
         message: 'Invalid input data',
@@ -435,11 +438,21 @@ router.post('/signup/step1', async (req, res) => {
     const { email, password, name, role } = validation.data;
 
     // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email }
-    });
+    let existingUser;
+    try {
+      existingUser = await prisma.user.findUnique({
+        where: { email }
+      });
+    } catch (dbError) {
+      logger.error({ error: dbError, email }, 'Database error checking existing user');
+      return res.status(500).json({
+        success: false,
+        message: 'Database error occurred. Please try again.'
+      });
+    }
 
     if (existingUser) {
+      logger.info({ email }, 'Signup attempted with existing email');
       return res.status(400).json({
         success: false,
         message: 'An account with this email already exists'
@@ -447,33 +460,76 @@ router.post('/signup/step1', async (req, res) => {
     }
 
     // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    let hashedPassword;
+    try {
+      hashedPassword = await bcrypt.hash(password, 10);
+    } catch (hashError) {
+      logger.error({ error: hashError }, 'Password hashing failed');
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to process password. Please try again.'
+      });
+    }
 
     // Create user
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        name,
-        profileCompleted: false,
-        emailVerified: false
-      }
-    });
+    let user;
+    try {
+      user = await prisma.user.create({
+        data: {
+          email,
+          password: hashedPassword,
+          name,
+          profileCompleted: false,
+          emailVerified: false
+        }
+      });
+      logger.info({ userId: user.id, email }, 'User created successfully');
+    } catch (createError) {
+      logger.error({ error: createError, email }, 'Failed to create user in database');
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to create account. Please try again.'
+      });
+    }
 
-    // Generate email verification token
-    const verificationToken = generateVerificationToken(user.id, email);
-    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-    await sendVerificationEmail(email, verificationToken, baseUrl);
+    // Generate email verification token (don't fail signup if this fails)
+    try {
+      const verificationToken = generateVerificationToken(user.id, email);
+      const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+      await sendVerificationEmail(email, verificationToken, baseUrl);
+      logger.info({ userId: user.id }, 'Verification email sent');
+    } catch (emailError) {
+      logger.error({ error: emailError, userId: user.id }, 'Failed to send verification email (non-critical)');
+      // Continue anyway - user is created, they can resend verification later
+    }
 
     // Create session
-    (req.session as any).userId = user.id;
-    (req.session as any).email = user.email;
-    (req.session as any).role = role;
-    (req.session as any).signupRole = role; // Store intended role
+    try {
+      (req.session as any).userId = user.id;
+      (req.session as any).email = user.email;
+      (req.session as any).role = role;
+      (req.session as any).signupRole = role; // Store intended role
+      
+      // Save session explicitly to ensure it's persisted
+      await new Promise<void>((resolve, reject) => {
+        req.session.save((err) => {
+          if (err) {
+            logger.error({ error: err, userId: user.id }, 'Session save failed');
+            reject(err);
+          } else {
+            logger.info({ userId: user.id, sessionId: req.sessionID }, 'Session saved successfully');
+            resolve();
+          }
+        });
+      });
+    } catch (sessionError) {
+      logger.error({ error: sessionError, userId: user.id }, 'Failed to create session (non-critical)');
+      // Continue anyway - user can log in manually if needed
+    }
 
-    logger.info({ userId: user.id, email, role }, 'User signup step 1 completed');
+    logger.info({ userId: user.id, email, role }, 'User signup step 1 completed successfully');
 
-    res.json({
+    return res.status(200).json({
       success: true,
       message: 'Account created successfully',
       user: {
@@ -489,11 +545,15 @@ router.post('/signup/step1', async (req, res) => {
       nextStep: 'profile'
     });
   } catch (error) {
-    logger.error({ error }, 'Signup step 1 error');
-    res.status(500).json({
-      success: false,
-      message: 'Failed to create account'
-    });
+    logger.error({ error, body: req.body }, 'Unexpected error in signup step 1');
+    
+    // Make sure we always return a JSON response
+    if (!res.headersSent) {
+      return res.status(500).json({
+        success: false,
+        message: 'An unexpected error occurred. Please try again.'
+      });
+    }
   }
 });
 

@@ -171,45 +171,72 @@ const SignupPage: React.FC = () => {
         return;
       }
       
-      // Call signup step 1 API
-      const response = await fetch('/api/auth/signup/step1', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          name: formData.name,
-          role: formData.role
-        })
+      console.log('Submitting signup step 1 with:', {
+        email: formData.email,
+        name: formData.name,
+        role: formData.role
       });
+      
+      // Call signup step 1 API
+      let response;
+      try {
+        response = await fetch('/api/auth/signup/step1', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+            name: formData.name,
+            role: formData.role
+          })
+        });
+      } catch (networkError) {
+        console.error('Network error during signup:', networkError);
+        toast.error('Network error. Please check your connection and try again.');
+        return;
+      }
+      
+      console.log('Signup response status:', response.status, response.statusText);
+      console.log('Signup response headers:', Object.fromEntries(response.headers.entries()));
       
       // Check if response has content before parsing
       const text = await response.text();
-      if (!text) {
-        throw new Error('Server returned an empty response');
+      console.log('Signup response text length:', text.length);
+      
+      if (!text || text.trim() === '') {
+        console.error('Empty response received from server');
+        console.error('Response status:', response.status);
+        console.error('Response headers:', Object.fromEntries(response.headers.entries()));
+        toast.error('Server error. Please try again or contact support if the issue persists.');
+        return;
       }
       
       let data;
       try {
         data = JSON.parse(text);
-      } catch {
-        console.error('Failed to parse response:', text);
-        throw new Error('Server returned invalid response');
+        console.log('Parsed signup response:', data);
+      } catch (parseError) {
+        console.error('Failed to parse response as JSON:', text);
+        console.error('Parse error:', parseError);
+        toast.error('Invalid server response. Please try again.');
+        return;
       }
       
       if (response.ok && data.success) {
+        console.log('Signup successful, proceeding to next step');
         toast.success('Account created successfully!');
         goToNextStep();
       } else {
+        console.error('Signup failed:', data);
         toast.error(data.message || 'Failed to create account');
       }
       
     } catch (error) {
-      console.error('Signup step 1 error:', error);
-      toast.error('Failed to create account');
+      console.error('Unexpected error in signup step 1:', error);
+      toast.error('An unexpected error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
