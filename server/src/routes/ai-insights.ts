@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
+import { prisma } from '../lib/prisma';
 
 const router = Router();
 // Validation schemas
@@ -410,7 +411,6 @@ router.post('/competitors/import', async (req: Request, res: Response) => {
 
   } catch (error) {
     console.error('Error importing competitor data:', error);
-import { prisma } from '../lib/prisma';
     res.status(500).json({ error: 'Internal server error' });
   }
 });

@@ -4,6 +4,7 @@ import { requireVendorAuth } from '../middleware/auth';
 import multer from 'multer';
 import csv from 'csv-parser';
 import { Readable } from 'stream';
+import { prisma } from '../lib/prisma';
 
 const router = Router();
 // Configure multer for file uploads
@@ -335,7 +336,6 @@ router.get('/csv-template', requireVendorAuth, async (req, res) => {
 
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename="products-import-template.csv"');
-import { prisma } from '../lib/prisma';
     res.send(csvContent);
   } catch (error) {
     console.error('Error generating CSV template:', error);

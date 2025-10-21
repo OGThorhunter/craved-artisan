@@ -10,6 +10,7 @@ import {
   PRICING_ADVICE_PROMPT
 } from '../lib/ai';
 import { z } from 'zod';
+import { prisma } from '../lib/prisma';
 
 const router = express.Router();
 // Validation schemas
@@ -337,7 +338,6 @@ router.get('/pricing', isVendorOwnerOrAdmin, async (req, res) => {
 router.get('/health', isVendorOwnerOrAdmin, async (req, res) => {
   try {
     const { checkAllAIHealth } = await import('../lib/ai');
-import { prisma } from '../lib/prisma';
     const health = await checkAllAIHealth();
     
     res.json(health);
