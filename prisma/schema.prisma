@@ -23,10 +23,6 @@ model User {
   updated_at     DateTime  @updatedAt
   deletedAt      DateTime?
 
-  // OAuth fields
-  oauthProvider   String?
-  oauthProviderId String?
-
   // Profile completion
   profileCompleted Boolean   @default(false)
   emailVerified    Boolean   @default(false)
@@ -109,7 +105,6 @@ model User {
   complianceDocsUploaded ComplianceDocument[]
 
   @@index([zip_code])
-  @@index([oauthProvider, oauthProviderId])
   @@index([status])
   @@index([onboardingStage])
   @@index([lastActiveAt])
