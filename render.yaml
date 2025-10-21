@@ -13,6 +13,7 @@ services:
     startCommand: node server/dist/index.js
     healthCheckPath: /readyz
     autoDeploy: true
+    branch: main
     scaling:
       minInstances: 1
       maxInstances: 3
@@ -51,6 +52,8 @@ services:
       npm ci
       npm run -w client build
     staticPublishPath: client/dist
+    autoDeploy: true
+    branch: main
     envVars:
       - key: VITE_API_BASE_URL
         value: https://cravedartisan-api.onrender.com
