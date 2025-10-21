@@ -53,7 +53,7 @@ services:
     staticPublishPath: client/dist
     envVars:
       - key: VITE_API_BASE_URL
-        sync: false
+        value: https://cravedartisan-api.onrender.com
       - key: VITE_FEATURE_LIVE_PRODUCTS
         value: "true"
       - key: VITE_FEATURE_LIVE_ANALYTICS
