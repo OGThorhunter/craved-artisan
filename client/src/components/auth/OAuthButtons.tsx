@@ -112,8 +112,6 @@ const OAuthButtons: React.FC<OAuthButtonsProps> = ({ disabled = false, className
         )}
       </button>
 
-
-
       {/* Divider */}
       <div className="relative">
         <div className="absolute inset-0 flex items-center">

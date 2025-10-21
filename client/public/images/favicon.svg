@@ -1,4 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
-  <rect width="32" height="32" fill="#4F6F52" rx="4"/>
-  <text x="16" y="22" font-family="Arial, sans-serif" font-size="18" font-weight="bold" text-anchor="middle" fill="white">CA</text>
-</svg> 
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Light grey background -->
+  <rect width="32" height="32" fill="#f5f5f5"/>
+  
+  <!-- Stylized plant icon (dark green) -->
+  <!-- Central stem -->
+  <rect x="15" y="6" width="2" height="20" fill="#2d5a27"/>
+  
+  <!-- Left leaves -->
+  <ellipse cx="11" cy="10" rx="3" ry="1.5" fill="#2d5a27" transform="rotate(-30 11 10)"/>
+  <ellipse cx="11" cy="14" rx="3" ry="1.5" fill="#2d5a27" transform="rotate(-30 11 14)"/>
+  <ellipse cx="11" cy="18" rx="3" ry="1.5" fill="#2d5a27" transform="rotate(-30 11 18)"/>
+  
+  <!-- Right leaves -->
+  <ellipse cx="21" cy="10" rx="3" ry="1.5" fill="#2d5a27" transform="rotate(30 21 10)"/>
+  <ellipse cx="21" cy="14" rx="3" ry="1.5" fill="#2d5a27" transform="rotate(30 21 14)"/>
+  <ellipse cx="21" cy="18" rx="3" ry="1.5" fill="#2d5a27" transform="rotate(30 21 18)"/>
+</svg>
