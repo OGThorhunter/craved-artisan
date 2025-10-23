@@ -7,7 +7,24 @@ const queryClient = new QueryClient({
       // TODO: hook up your toast system here
       // If your fetch wrapper adds requestId, surface it:
       const rid = err?.requestId ? ` (Request ID: ${err.requestId})` : "";
-      console.error(`Query error${rid}:`, err);
+      
+      // Better error logging to prevent truncation
+      if (err?.response?.data) {
+        console.error(`Query error${rid}:`, {
+          status: err.response.status,
+          statusText: err.response.statusText,
+          data: err.response.data,
+          message: err.message,
+          url: err.config?.url
+        });
+      } else {
+        console.error(`Query error${rid}:`, {
+          message: err.message,
+          name: err.name,
+          stack: err.stack,
+          url: err.config?.url
+        });
+      }
     },
   }),
   defaultOptions: {

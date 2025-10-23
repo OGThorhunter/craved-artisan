@@ -96,7 +96,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Handle query error
   useEffect(() => {
     if (error) {
-      console.log('AuthContext: Session check failed:', error);
+      console.log('AuthContext: Session check failed:', {
+        message: error.message,
+        name: error.name,
+        status: error.response?.status,
+        data: error.response?.data
+      });
       setUser(null);
       setLoading(false);
     }

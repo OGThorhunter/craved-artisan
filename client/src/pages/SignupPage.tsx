@@ -56,6 +56,12 @@ const SignupPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [stepValid, setStepValid] = useState(false);
   const [isOAuthUser, setIsOAuthUser] = useState(false);
+  const [duplicateEmailError, setDuplicateEmailError] = useState(false);
+
+  // Debug stepValid changes
+  useEffect(() => {
+    console.log('stepValid changed:', stepValid, 'currentStep:', currentStep);
+  }, [stepValid, currentStep]);
   
   // Check for OAuth redirect and pre-filled data from join pages
   useEffect(() => {
@@ -150,6 +156,14 @@ const SignupPage: React.FC = () => {
     setStepValid(true);
   };
 
+  const handleEmailChange = (email: string) => {
+    setFormData(prev => ({ ...prev, email }));
+    // Clear duplicate email error when user changes email
+    if (duplicateEmailError) {
+      setDuplicateEmailError(false);
+    }
+  };
+
   const handleCredentialsSubmit = async () => {
     if (!stepValid) return;
     
@@ -197,8 +211,20 @@ const SignupPage: React.FC = () => {
           name: formData.name,
           role: formData.role
         });
-      } catch (networkError) {
+      } catch (networkError: any) {
         console.error('Network error during signup:', networkError);
+        
+        // Handle specific error cases
+        if (networkError.response?.status === 400) {
+          const errorData = networkError.response.data;
+          if (errorData.message?.includes('already exists')) {
+            setDuplicateEmailError(true);
+            toast.error('An account with this email already exists. Please try logging in instead.');
+            return;
+          }
+        }
+        
+        // Generic network error
         toast.error('Network error. Please check your connection and try again.');
         return;
       }
@@ -309,6 +335,8 @@ const SignupPage: React.FC = () => {
           /[0-9]/.test(formData.password)
         );
       case 'profile':
+        // For profile step, validate that we have profile data
+        // The profile forms will set stepValid via onDataChange callback
         return stepValid;
       case 'legal':
         return stepValid && formData.acceptedAgreements.length > 0;
@@ -537,11 +565,30 @@ const SignupPage: React.FC = () => {
                   type="email"
                   id="email"
                   value={formData.email}
-                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                  className="mt-1 appearance-none block w-full px-3 py-2 border border-[#E8CBAE] rounded-md placeholder-[#777] focus:outline-none focus:ring-[#5B6E02] focus:border-[#5B6E02] sm:text-sm bg-white text-black"
+                  onChange={(e) => handleEmailChange(e.target.value)}
+                  className={`mt-1 appearance-none block w-full px-3 py-2 border rounded-md placeholder-[#777] focus:outline-none focus:ring-[#5B6E02] focus:border-[#5B6E02] sm:text-sm bg-white text-black ${
+                    duplicateEmailError ? 'border-red-500' : 'border-[#E8CBAE]'
+                  }`}
                   placeholder="Enter your email address"
                   required
                 />
+                {duplicateEmailError && (
+                  <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-md">
+                    <p className="text-sm text-red-600 font-medium">
+                      This email is already registered
+                    </p>
+                    <p className="text-xs text-red-500 mt-1">
+                      An account with this email already exists. 
+                      <button
+                        type="button"
+                        onClick={() => setLocation('/auth/login')}
+                        className="underline hover:text-red-700 ml-1"
+                      >
+                        Click here to login instead
+                      </button>
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Password */}
@@ -592,28 +639,29 @@ const SignupPage: React.FC = () => {
           <div>
             {formData.role === 'VENDOR' && (
               <VendorProfileForm
-                onDataChange={(data, isValid) => {
+                onDataChange={useCallback((data, isValid) => {
+                  console.log('VendorProfileForm validation:', { data, isValid });
                   setFormData(prev => ({ ...prev, profileData: data as unknown as Record<string, unknown> }));
                   setStepValid(isValid);
-                }}
+                }, [])}
                 disabled={loading}
               />
             )}
             {formData.role === 'EVENT_COORDINATOR' && (
               <CoordinatorProfileForm
-                onDataChange={(data, isValid) => {
+                onDataChange={useCallback((data, isValid) => {
                   setFormData(prev => ({ ...prev, profileData: data as unknown as Record<string, unknown> }));
                   setStepValid(isValid);
-                }}
+                }, [])}
                 disabled={loading}
               />
             )}
             {formData.role === 'CUSTOMER' && (
               <CustomerProfileForm
-                onDataChange={(data, isValid) => {
+                onDataChange={useCallback((data, isValid) => {
                   setFormData(prev => ({ ...prev, profileData: data as unknown as Record<string, unknown> }));
                   setStepValid(isValid);
-                }}
+                }, [])}
                 disabled={loading}
               />
             )}
@@ -700,7 +748,10 @@ const SignupPage: React.FC = () => {
 
   // Update step validity when form data changes
   useEffect(() => {
-    setStepValid(validateCurrentStep());
+    // Don't override stepValid for profile step - let the profile forms handle it
+    if (currentStep !== 'profile') {
+      setStepValid(validateCurrentStep());
+    }
   }, [currentStep, formData, validateCurrentStep]);
 
   return (
