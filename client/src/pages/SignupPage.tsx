@@ -12,6 +12,7 @@ import StripeOnboardingStep from '../components/auth/StripeOnboardingStep';
 
 // Import services
 import { legalService, type LegalDocument } from '../services/legal';
+import { api } from '../lib/api';
 
 interface SignupFormData {
   // Step 1: Account Type
@@ -190,18 +191,11 @@ const SignupPage: React.FC = () => {
       // Call signup step 1 API
       let response;
       try {
-        response = await fetch('/api/auth/signup/step1', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({
-            email: formData.email,
-            password: formData.password,
-            name: formData.name,
-            role: formData.role
-          })
+        response = await api.post('/auth/signup/step1', {
+          email: formData.email,
+          password: formData.password,
+          name: formData.name,
+          role: formData.role
         });
       } catch (networkError) {
         console.error('Network error during signup:', networkError);
@@ -210,32 +204,21 @@ const SignupPage: React.FC = () => {
       }
       
       console.log('Signup response status:', response.status, response.statusText);
-      console.log('Signup response headers:', Object.fromEntries(response.headers.entries()));
+      console.log('Signup response headers:', response.headers);
       
-      // Check if response has content before parsing
-      const text = await response.text();
-      console.log('Signup response text length:', text.length);
+      // Get response data directly from axios
+      const data = response.data;
+      console.log('Signup response data:', data);
       
-      if (!text || text.trim() === '') {
+      if (!data) {
         console.error('Empty response received from server');
         console.error('Response status:', response.status);
-        console.error('Response headers:', Object.fromEntries(response.headers.entries()));
+        console.error('Response headers:', response.headers);
         toast.error('Server error. Please try again or contact support if the issue persists.');
         return;
       }
       
-      let data;
-      try {
-        data = JSON.parse(text);
-        console.log('Parsed signup response:', data);
-      } catch (parseError) {
-        console.error('Failed to parse response as JSON:', text);
-        console.error('Parse error:', parseError);
-        toast.error('Invalid server response. Please try again.');
-        return;
-      }
-      
-      if (response.ok && data.success) {
+      if (response.status === 200 && data.success) {
         console.log('Signup successful, proceeding to next step');
         toast.success('Account created successfully!');
         goToNextStep();
@@ -259,18 +242,11 @@ const SignupPage: React.FC = () => {
       setLoading(true);
       
       // Call signup profile API
-      const response = await fetch('/api/auth/signup/profile', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(formData.profileData)
-      });
+      const response = await api.post('/auth/signup/profile', formData.profileData);
       
-      const data = await response.json();
+      const data = response.data;
       
-      if (response.ok && data.success) {
+      if (response.status === 200 && data.success) {
         toast.success('Profile completed successfully!');
         goToNextStep();
       } else {
