@@ -167,17 +167,6 @@ app.use(attachUser);
 // Request context middleware (for audit logging)
 app.use(requestContext);
 
-// Response flush middleware to ensure JSON responses are sent
-app.use((req, res, next) => {
-  const originalJson = res.json.bind(res);
-  res.json = function(body) {
-    const result = originalJson(body);
-    res.end();  // Force response to flush
-    return result;
-  };
-  next();
-});
-
 // Health check endpoints
 app.get('/health', (_req, res) => {
   res.json({ ok: true, ts: Date.now(), message: 'Session-based auth server running' });

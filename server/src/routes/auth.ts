@@ -509,9 +509,14 @@ router.post('/signup/step1', async (req, res) => {
     (req.session as any).role = role;
     (req.session as any).signupRole = role; // Store intended role
     
-    // Save session in background (don't await)
+    // Save session in background (don't await) with timeout
     setImmediate(() => {
+      const timeout = setTimeout(() => {
+        logger.warn({ userId: user.id }, 'Session save timeout - continuing without session');
+      }, 3000);
+      
       req.session.save((err) => {
+        clearTimeout(timeout);
         if (err) {
           logger.error({ error: err, userId: user.id }, 'Session save failed (background)');
         } else {
@@ -529,7 +534,11 @@ router.post('/signup/step1', async (req, res) => {
       responseHeaders: res.getHeaders()
     }, 'About to send signup response');
 
-    return res.status(200).json({
+    // Set explicit headers to ensure response is sent
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Cache-Control', 'no-cache');
+    
+    const responseData = {
       success: true,
       message: 'Account created successfully',
       user: {
@@ -543,7 +552,11 @@ router.post('/signup/step1', async (req, res) => {
         betaTester: false
       },
       nextStep: 'profile'
-    });
+    };
+    
+    logger.info({ responseData }, 'Sending signup response');
+    
+    return res.status(200).send(JSON.stringify(responseData));
   } catch (error) {
     logger.error({ error, body: req.body }, 'Unexpected error in signup step 1');
     
