@@ -422,6 +422,7 @@ const signupStep1Schema = z.object({
 });
 
 router.post('/signup/step1', async (req, res) => {
+  logger.info('🚨 SIGNUP ROUTE HIT - START OF HANDLER');
   try {
     logger.info({ body: req.body }, 'Signup step 1 request received');
     
@@ -885,5 +886,7 @@ router.get('/signup-status', requireAuth, async (req, res) => {
     });
   }
 });
+
+logger.info('🚨 AUTH ROUTER: /signup/step1 route registered');
 
 export default router;
