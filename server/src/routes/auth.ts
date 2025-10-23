@@ -422,123 +422,61 @@ const signupStep1Schema = z.object({
 });
 
 router.post('/signup/step1', async (req, res) => {
-  logger.info('🚨 SIGNUP ROUTE HIT - START OF HANDLER');
+  const startTime = Date.now();
+  logger.info({ body: req.body, timestamp: startTime }, '🔵 SIGNUP START');
+  
   try {
-    logger.info({ body: req.body }, 'Signup step 1 request received');
+    // 1. Validate input
+    logger.info('🔵 Step 1: Validating input');
+    const { email, password, name, role } = req.body;
     
-    const validation = signupStep1Schema.safeParse(req.body);
-    if (!validation.success) {
-      logger.warn({ errors: validation.error.errors }, 'Signup validation failed');
-      return res.status(400).json({
+    if (!email || !password || !name || !role) {
+      logger.warn({ email, name, role }, '🔴 Validation failed: Missing fields');
+      res.setHeader('Content-Type', 'application/json');
+      res.status(400);
+      res.write(JSON.stringify({
         success: false,
-        message: 'Invalid input data',
-        errors: validation.error.errors
-      });
+        message: 'Missing required fields'
+      }));
+      res.end();
+      return;
     }
-
-    const { email, password, name, role } = validation.data;
-
-    // Check if user already exists
-    let existingUser;
-    try {
-      existingUser = await prisma.user.findUnique({
-        where: { email }
-      });
-    } catch (dbError) {
-      logger.error({ error: dbError, email }, 'Database error checking existing user');
-      return res.status(500).json({
-        success: false,
-        message: 'Database error occurred. Please try again.'
-      });
-    }
-
+    
+    // 2. Check existing user
+    logger.info({ email }, '🔵 Step 2: Checking for existing user');
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    
     if (existingUser) {
-      logger.info({ email }, 'Signup attempted with existing email');
-      return res.status(400).json({
+      logger.info({ email }, '🔴 User already exists');
+      res.setHeader('Content-Type', 'application/json');
+      res.status(400);
+      res.write(JSON.stringify({
         success: false,
         message: 'An account with this email already exists'
-      });
+      }));
+      res.end();
+      return;
     }
-
-    // Hash password
-    let hashedPassword;
-    try {
-      hashedPassword = await bcrypt.hash(password, 10);
-    } catch (hashError) {
-      logger.error({ error: hashError }, 'Password hashing failed');
-      return res.status(500).json({
-        success: false,
-        message: 'Failed to process password. Please try again.'
-      });
-    }
-
-    // Create user
-    let user;
-    try {
-      user = await prisma.user.create({
-        data: {
-          email,
-          password: hashedPassword,
-          name,
-          profileCompleted: false,
-          emailVerified: false
-        }
-      });
-      logger.info({ userId: user.id, email }, 'User created successfully');
-    } catch (createError) {
-      logger.error({ error: createError, email }, 'Failed to create user in database');
-      return res.status(500).json({
-        success: false,
-        message: 'Failed to create account. Please try again.'
-      });
-    }
-
-    // Generate email verification token (don't fail signup if this fails)
-    try {
-      const verificationToken = generateVerificationToken(user.id, email);
-      const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-      await sendVerificationEmail(email, verificationToken, baseUrl);
-      logger.info({ userId: user.id }, 'Verification email sent');
-    } catch (emailError) {
-      logger.error({ error: emailError, userId: user.id }, 'Failed to send verification email (non-critical)');
-      // Continue anyway - user is created, they can resend verification later
-    }
-
-    // Create session (move to background to avoid blocking response)
-    (req.session as any).userId = user.id;
-    (req.session as any).email = user.email;
-    (req.session as any).role = role;
-    (req.session as any).signupRole = role; // Store intended role
     
-    // Save session in background (don't await) with timeout
-    setImmediate(() => {
-      const timeout = setTimeout(() => {
-        logger.warn({ userId: user.id }, 'Session save timeout - continuing without session');
-      }, 3000);
-      
-      req.session.save((err) => {
-        clearTimeout(timeout);
-        if (err) {
-          logger.error({ error: err, userId: user.id }, 'Session save failed (background)');
-        } else {
-          logger.info({ userId: user.id, sessionId: req.sessionID }, 'Session saved successfully (background)');
-        }
-      });
+    // 3. Hash password
+    logger.info('🔵 Step 3: Hashing password');
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    // 4. Create user
+    logger.info({ email, role }, '🔵 Step 4: Creating user');
+    const user = await prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        name,
+        profileCompleted: false,
+        emailVerified: false
+      }
     });
-
-    logger.info({ userId: user.id, email, role }, 'User signup step 1 completed successfully');
-
-    // Add response debugging
-    logger.info({ 
-      userId: user.id, 
-      hasResponse: !res.headersSent,
-      responseHeaders: res.getHeaders()
-    }, 'About to send signup response');
-
-    // Set explicit headers to ensure response is sent
-    res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Cache-Control', 'no-cache');
     
+    logger.info({ userId: user.id, email }, '✅ User created successfully');
+    
+    // 5. Prepare response
     const responseData = {
       success: true,
       message: 'Account created successfully',
@@ -555,18 +493,43 @@ router.post('/signup/step1', async (req, res) => {
       nextStep: 'profile'
     };
     
-    logger.info({ responseData }, 'Sending signup response to client');
+    logger.info({ responseData, duration: Date.now() - startTime }, '🔵 Step 5: Sending response');
     
-    return res.status(200).send(JSON.stringify(responseData));
-  } catch (error) {
-    logger.error({ error, body: req.body }, 'Unexpected error in signup step 1');
+    // 6. Send response using direct write
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.status(200);
+    const jsonString = JSON.stringify(responseData);
+    res.write(jsonString);
+    res.end();
     
-    // Make sure we always return a JSON response
-    if (!res.headersSent) {
-      return res.status(500).json({
-        success: false,
-        message: 'An unexpected error occurred. Please try again.'
+    logger.info({ userId: user.id, duration: Date.now() - startTime }, '✅ SIGNUP COMPLETE');
+    
+    // 7. Handle session in background (after response sent)
+    setImmediate(() => {
+      (req.session as any).userId = user.id;
+      (req.session as any).email = user.email;
+      (req.session as any).role = role;
+      req.session.save((err) => {
+        if (err) {
+          logger.error({ error: err, userId: user.id }, 'Session save failed (non-critical)');
+        } else {
+          logger.info({ userId: user.id }, 'Session saved in background');
+        }
       });
+    });
+    
+  } catch (error) {
+    logger.error({ error, duration: Date.now() - startTime }, '🔴 SIGNUP ERROR');
+    
+    if (!res.headersSent) {
+      res.setHeader('Content-Type', 'application/json');
+      res.status(500);
+      res.write(JSON.stringify({
+        success: false,
+        message: 'An error occurred during signup'
+      }));
+      res.end();
     }
   }
 });
@@ -886,15 +849,5 @@ router.get('/signup-status', requireAuth, async (req, res) => {
     });
   }
 });
-
-// TEMPORARY: Ultra-simple signup endpoint for debugging
-router.post('/signup/step1-test', async (req, res) => {
-  res.setHeader('Content-Type', 'application/json');
-  res.status(200);
-  res.write(JSON.stringify({ success: true, message: 'Test endpoint working' }));
-  res.end();
-});
-
-logger.info('🚨 AUTH ROUTER: /signup/step1 route registered');
 
 export default router;
