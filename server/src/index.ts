@@ -111,7 +111,10 @@ const app = express();
 const PORT = Number(process.env.PORT || 3001);
 
 // Security middleware
-app.use(helmet({ crossOriginResourcePolicy: false }));
+app.use(helmet({ 
+  crossOriginResourcePolicy: false,
+  contentSecurityPolicy: false  // Disable CSP to allow JSON responses
+}));
 
 // CORS origin logging middleware (for debugging production issues)
 app.use((req, res, next) => {
@@ -163,6 +166,17 @@ app.use(attachUser);
 
 // Request context middleware (for audit logging)
 app.use(requestContext);
+
+// Response flush middleware to ensure JSON responses are sent
+app.use((req, res, next) => {
+  const originalJson = res.json.bind(res);
+  res.json = function(body) {
+    const result = originalJson(body);
+    res.end();  // Force response to flush
+    return result;
+  };
+  next();
+});
 
 // Health check endpoints
 app.get('/health', (_req, res) => {

@@ -503,31 +503,31 @@ router.post('/signup/step1', async (req, res) => {
       // Continue anyway - user is created, they can resend verification later
     }
 
-    // Create session
-    try {
-      (req.session as any).userId = user.id;
-      (req.session as any).email = user.email;
-      (req.session as any).role = role;
-      (req.session as any).signupRole = role; // Store intended role
-      
-      // Save session explicitly to ensure it's persisted
-      await new Promise<void>((resolve, reject) => {
-        req.session.save((err) => {
-          if (err) {
-            logger.error({ error: err, userId: user.id }, 'Session save failed');
-            reject(err);
-          } else {
-            logger.info({ userId: user.id, sessionId: req.sessionID }, 'Session saved successfully');
-            resolve();
-          }
-        });
+    // Create session (move to background to avoid blocking response)
+    (req.session as any).userId = user.id;
+    (req.session as any).email = user.email;
+    (req.session as any).role = role;
+    (req.session as any).signupRole = role; // Store intended role
+    
+    // Save session in background (don't await)
+    setImmediate(() => {
+      req.session.save((err) => {
+        if (err) {
+          logger.error({ error: err, userId: user.id }, 'Session save failed (background)');
+        } else {
+          logger.info({ userId: user.id, sessionId: req.sessionID }, 'Session saved successfully (background)');
+        }
       });
-    } catch (sessionError) {
-      logger.error({ error: sessionError, userId: user.id }, 'Failed to create session (non-critical)');
-      // Continue anyway - user can log in manually if needed
-    }
+    });
 
     logger.info({ userId: user.id, email, role }, 'User signup step 1 completed successfully');
+
+    // Add response debugging
+    logger.info({ 
+      userId: user.id, 
+      hasResponse: !res.headersSent,
+      responseHeaders: res.getHeaders()
+    }, 'About to send signup response');
 
     return res.status(200).json({
       success: true,
