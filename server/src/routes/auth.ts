@@ -421,6 +421,14 @@ const signupStep1Schema = z.object({
   role: z.enum(['VENDOR', 'CUSTOMER', 'EVENT_COORDINATOR'])
 });
 
+// Add catch-all for debugging
+router.all('*', (req, res, next) => {
+  if (req.path.includes('signup')) {
+    logger.info({ method: req.method, path: req.path, body: req.body }, '🚨 ANY SIGNUP ROUTE HIT');
+  }
+  next();
+});
+
 router.post('/signup/step1', async (req, res) => {
   const startTime = Date.now();
   logger.info({ body: req.body, timestamp: startTime }, '🔵 SIGNUP START');
