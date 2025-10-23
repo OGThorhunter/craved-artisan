@@ -74,6 +74,11 @@ const VendorProfileForm: React.FC<VendorProfileFormProps> = ({
     return newErrors;
   };
 
+  // Wrap onDataChange with useCallback to prevent infinite loops
+  const handleDataChange = useCallback((data: VendorProfileData, isValid: boolean) => {
+    onDataChange(data, isValid);
+  }, [onDataChange]);
+
   // Update form data and validation
   useEffect(() => {
     const newErrors = validateForm(formData);
@@ -87,8 +92,8 @@ const VendorProfileForm: React.FC<VendorProfileFormProps> = ({
       slug: generateSlug(formData.storeName)
     };
     
-    onDataChange(updatedData, isValid);
-  }, [formData, onDataChange]);
+    handleDataChange(updatedData, isValid);
+  }, [formData, handleDataChange]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;

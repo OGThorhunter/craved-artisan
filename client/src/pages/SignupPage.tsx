@@ -211,16 +211,19 @@ const SignupPage: React.FC = () => {
           name: formData.name,
           role: formData.role
         });
-      } catch (networkError: any) {
+      } catch (networkError: unknown) {
         console.error('Network error during signup:', networkError);
         
         // Handle specific error cases
-        if (networkError.response?.status === 400) {
-          const errorData = networkError.response.data;
-          if (errorData.message?.includes('already exists')) {
-            setDuplicateEmailError(true);
-            toast.error('An account with this email already exists. Please try logging in instead.');
-            return;
+        if (networkError && typeof networkError === 'object' && 'response' in networkError) {
+          const axiosError = networkError as { response?: { status?: number; data?: { message?: string } } };
+          if (axiosError.response?.status === 400) {
+            const errorData = axiosError.response.data;
+            if (errorData?.message?.includes('already exists')) {
+              setDuplicateEmailError(true);
+              toast.error('An account with this email already exists. Please try logging in instead.');
+              return;
+            }
           }
         }
         
@@ -639,29 +642,29 @@ const SignupPage: React.FC = () => {
           <div>
             {formData.role === 'VENDOR' && (
               <VendorProfileForm
-                onDataChange={useCallback((data, isValid) => {
+                onDataChange={(data, isValid) => {
                   console.log('VendorProfileForm validation:', { data, isValid });
                   setFormData(prev => ({ ...prev, profileData: data as unknown as Record<string, unknown> }));
                   setStepValid(isValid);
-                }, [])}
+                }}
                 disabled={loading}
               />
             )}
             {formData.role === 'EVENT_COORDINATOR' && (
               <CoordinatorProfileForm
-                onDataChange={useCallback((data, isValid) => {
+                onDataChange={(data, isValid) => {
                   setFormData(prev => ({ ...prev, profileData: data as unknown as Record<string, unknown> }));
                   setStepValid(isValid);
-                }, [])}
+                }}
                 disabled={loading}
               />
             )}
             {formData.role === 'CUSTOMER' && (
               <CustomerProfileForm
-                onDataChange={useCallback((data, isValid) => {
+                onDataChange={(data, isValid) => {
                   setFormData(prev => ({ ...prev, profileData: data as unknown as Record<string, unknown> }));
                   setStepValid(isValid);
-                }, [])}
+                }}
                 disabled={loading}
               />
             )}

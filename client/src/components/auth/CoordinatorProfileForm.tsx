@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 
 interface CoordinatorProfileData {
@@ -83,6 +83,11 @@ const CoordinatorProfileForm: React.FC<CoordinatorProfileFormProps> = ({
     return newErrors;
   };
 
+  // Wrap onDataChange with useCallback to prevent infinite loops
+  const handleDataChange = useCallback((data: CoordinatorProfileData, isValid: boolean) => {
+    onDataChange(data, isValid);
+  }, [onDataChange]);
+
   // Update form data and validation
   useEffect(() => {
     const newErrors = validateForm(formData);
@@ -90,8 +95,8 @@ const CoordinatorProfileForm: React.FC<CoordinatorProfileFormProps> = ({
     
     const isValid = Object.keys(newErrors).length === 0 && formData.organizationName.trim() !== '';
     
-    onDataChange(formData, isValid);
-  }, [formData, onDataChange]);
+    handleDataChange(formData, isValid);
+  }, [formData, handleDataChange]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;

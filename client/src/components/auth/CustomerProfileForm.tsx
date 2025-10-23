@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 interface CustomerProfileData {
   firstName: string;
@@ -62,6 +62,11 @@ const CustomerProfileForm: React.FC<CustomerProfileFormProps> = ({
   };
 
   // Update form data and validation
+  // Wrap onDataChange with useCallback to prevent infinite loops
+  const handleDataChange = useCallback((data: CustomerProfileData, isValid: boolean) => {
+    onDataChange(data, isValid);
+  }, [onDataChange]);
+
   useEffect(() => {
     const newErrors = validateForm(formData);
     setErrors(newErrors);
@@ -69,8 +74,8 @@ const CustomerProfileForm: React.FC<CustomerProfileFormProps> = ({
     // Customer profile is always valid since all fields are optional
     const isValid = Object.keys(newErrors).length === 0;
     
-    onDataChange(formData, isValid);
-  }, [formData, onDataChange]);
+    handleDataChange(formData, isValid);
+  }, [formData, handleDataChange]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
