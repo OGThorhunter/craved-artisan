@@ -554,7 +554,7 @@ router.post('/signup/step1', async (req, res) => {
       nextStep: 'profile'
     };
     
-    logger.info({ responseData }, 'Sending signup response');
+    logger.info({ responseData }, 'Sending signup response to client');
     
     return res.status(200).send(JSON.stringify(responseData));
   } catch (error) {
