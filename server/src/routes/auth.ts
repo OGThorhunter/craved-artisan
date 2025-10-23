@@ -424,6 +424,7 @@ const signupStep1Schema = z.object({
 router.post('/signup/step1', async (req, res) => {
   const startTime = Date.now();
   logger.info({ body: req.body, timestamp: startTime }, '🔵 SIGNUP START');
+  logger.info('🚨 SIGNUP ENDPOINT HIT - THIS SHOULD APPEAR IN LOGS');
   
   try {
     // 1. Validate input
@@ -496,12 +497,15 @@ router.post('/signup/step1', async (req, res) => {
     logger.info({ responseData, duration: Date.now() - startTime }, '🔵 Step 5: Sending response');
     
     // 6. Send response using direct write
+    logger.info('🚨 ABOUT TO SEND RESPONSE');
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Cache-Control', 'no-cache');
     res.status(200);
     const jsonString = JSON.stringify(responseData);
+    logger.info({ jsonString }, '🚨 JSON STRING TO SEND');
     res.write(jsonString);
     res.end();
+    logger.info('🚨 RESPONSE SENT');
     
     logger.info({ userId: user.id, duration: Date.now() - startTime }, '✅ SIGNUP COMPLETE');
     
