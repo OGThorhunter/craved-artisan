@@ -887,6 +887,14 @@ router.get('/signup-status', requireAuth, async (req, res) => {
   }
 });
 
+// TEMPORARY: Ultra-simple signup endpoint for debugging
+router.post('/signup/step1-test', async (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.status(200);
+  res.write(JSON.stringify({ success: true, message: 'Test endpoint working' }));
+  res.end();
+});
+
 logger.info('🚨 AUTH ROUTER: /signup/step1 route registered');
 
 export default router;
