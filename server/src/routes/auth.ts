@@ -473,11 +473,13 @@ router.post('/signup/step1', async (req, res) => {
     const existingUser = await prisma.user.findUnique({ where: { email } });
     
     if (existingUser) {
-      logger.info({ email }, '🔴 User already exists');
-      return res.status(400).json({
+      logger.warn({ email }, '🔴 User already exists');
+      const response = {
         success: false,
         message: 'An account with this email already exists'
-      });
+      };
+      logger.warn({ response, duration: Date.now() - startTime }, '🔴 Sending existing user response');
+      return res.status(400).json(response);
     }
     
     logger.info({ email, role }, '✅ Validation passed - no database writes');
@@ -494,12 +496,19 @@ router.post('/signup/step1', async (req, res) => {
     return res.status(200).json(responseData);
     
   } catch (error) {
-    logger.error({ error, duration: Date.now() - startTime }, '🔴 VALIDATION ERROR');
+    logger.error({ 
+      error, 
+      stack: error instanceof Error ? error.stack : undefined,
+      duration: Date.now() - startTime 
+    }, '🔴 VALIDATION ERROR');
     
-    return res.status(500).json({
+    const errorResponse = {
       success: false,
       message: 'An error occurred during validation'
-    });
+    };
+    logger.error({ errorResponse, duration: Date.now() - startTime }, '🔴 Sending error response');
+    
+    return res.status(500).json(errorResponse);
   }
 });
 
