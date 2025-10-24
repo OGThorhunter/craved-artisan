@@ -6,6 +6,9 @@ import { LegalDocument } from '../../services/legal';
 interface LegalAgreementDisplayProps {
   document: LegalDocument;
   onAcceptChange: (accepted: boolean) => void;
+  onScrollProgress?: (progress: number) => void;
+  onScrollToBottom?: (hasReachedBottom: boolean) => void;
+  hasScrolledToBottom?: boolean;
   accepted: boolean;
   error?: string;
 }
@@ -13,6 +16,9 @@ interface LegalAgreementDisplayProps {
 const LegalAgreementDisplay: React.FC<LegalAgreementDisplayProps> = ({
   document,
   onAcceptChange,
+  onScrollProgress,
+  onScrollToBottom,
+  hasScrolledToBottom = false,
   accepted,
   error
 }) => {
@@ -43,7 +49,26 @@ const LegalAgreementDisplay: React.FC<LegalAgreementDisplayProps> = ({
       {/* Collapsible Content */}
       {isExpanded && (
         <div className="border-t border-gray-200">
-          <div className="p-4 max-h-96 overflow-y-auto bg-gray-50">
+          <div 
+            className="p-4 max-h-96 overflow-y-auto bg-gray-50"
+            onScroll={(e) => {
+              const target = e.target as HTMLDivElement;
+              const scrollTop = target.scrollTop;
+              const scrollHeight = target.scrollHeight;
+              const clientHeight = target.clientHeight;
+              const progress = scrollTop / (scrollHeight - clientHeight);
+              
+              if (onScrollProgress) {
+                onScrollProgress(Math.min(progress, 1));
+              }
+              
+              // Check if scrolled to bottom (within 10px)
+              const isAtBottom = scrollTop + clientHeight >= scrollHeight - 10;
+              if (onScrollToBottom && isAtBottom) {
+                onScrollToBottom(true);
+              }
+            }}
+          >
             <div className="prose prose-sm max-w-none text-gray-700">
               <ReactMarkdown
                 components={{
@@ -53,7 +78,7 @@ const LegalAgreementDisplay: React.FC<LegalAgreementDisplayProps> = ({
                   p: ({ node, ...props }) => <p className="mb-3 text-gray-700" {...props} />,
                   ul: ({ node, ...props }) => <ul className="list-disc pl-5 mb-3 space-y-1" {...props} />,
                   ol: ({ node, ...props }) => <ol className="list-decimal pl-5 mb-3 space-y-1" {...props} />,
-                  // eslint-disable-next-line react/no-children-prop
+                  // eslint-disable-next-line jsx-a11y/no-redundant-roles
                   li: ({ node, ...props }) => <li className="text-gray-700" {...props} />,
                   strong: ({ node, ...props }) => <strong className="font-semibold text-gray-900" {...props} />,
                   blockquote: ({ node, ...props }) => (
@@ -76,7 +101,10 @@ const LegalAgreementDisplay: React.FC<LegalAgreementDisplayProps> = ({
             type="checkbox"
             checked={accepted}
             onChange={(e) => onAcceptChange(e.target.checked)}
-            className="mt-1 h-4 w-4 rounded border-gray-300 text-[#5B6E02] focus:ring-[#5B6E02] cursor-pointer"
+            disabled={!hasScrolledToBottom}
+            className={`mt-1 h-4 w-4 rounded border-gray-300 text-[#5B6E02] focus:ring-[#5B6E02] ${
+              !hasScrolledToBottom ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
+            }`}
           />
           <span className={`text-sm ${error ? 'text-red-700' : 'text-gray-700'} group-hover:text-gray-900`}>
             I have read and agree to the <strong>{document.title}</strong>
@@ -94,6 +122,11 @@ const LegalAgreementDisplay: React.FC<LegalAgreementDisplayProps> = ({
             )}
           </span>
         </label>
+        {!hasScrolledToBottom && isExpanded && (
+          <p className="mt-2 text-xs text-amber-600">
+            Please scroll through the entire document before accepting
+          </p>
+        )}
         {error && (
           <p className="mt-2 text-xs text-red-600">{error}</p>
         )}

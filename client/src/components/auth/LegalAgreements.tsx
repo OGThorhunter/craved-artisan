@@ -20,6 +20,8 @@ const LegalAgreements: React.FC<LegalAgreementsProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [acceptanceState, setAcceptanceState] = useState<Record<string, boolean>>({});
+  const [scrollProgress, setScrollProgress] = useState<Record<string, number>>({});
+  const [hasScrolledToBottom, setHasScrolledToBottom] = useState<Record<string, boolean>>({});
 
   // Fetch required documents for the role
   useEffect(() => {
@@ -31,12 +33,18 @@ const LegalAgreements: React.FC<LegalAgreementsProps> = ({
         const requiredDocuments = await legalService.getRequiredDocuments(role);
         setDocuments(requiredDocuments);
         
-        // Initialize acceptance state
+        // Initialize acceptance state and scroll tracking
         const initialState: Record<string, boolean> = {};
+        const scrollState: Record<string, number> = {};
+        const bottomState: Record<string, boolean> = {};
         requiredDocuments.forEach(doc => {
           initialState[doc.id] = false;
+          scrollState[doc.id] = 0;
+          bottomState[doc.id] = false;
         });
         setAcceptanceState(initialState);
+        setScrollProgress(scrollState);
+        setHasScrolledToBottom(bottomState);
         
       } catch (err) {
         console.error('Error fetching legal documents:', err);
@@ -52,16 +60,32 @@ const LegalAgreements: React.FC<LegalAgreementsProps> = ({
     }
   }, [role]);
 
-  // Check if all required agreements are accepted
+  // Check if all required agreements are accepted and scrolled through
   useEffect(() => {
-    const allAccepted = documents.length > 0 && documents.every(doc => acceptanceState[doc.id]);
+    const allAccepted = documents.length > 0 && documents.every(doc => 
+      acceptanceState[doc.id] && hasScrolledToBottom[doc.id]
+    );
     onAcceptanceChange(allAccepted, allAccepted ? documents : undefined);
-  }, [acceptanceState, documents, onAcceptanceChange]);
+  }, [acceptanceState, hasScrolledToBottom, documents, onAcceptanceChange]);
 
   const handleDocumentAcceptance = (documentId: string, accepted: boolean) => {
     setAcceptanceState(prev => ({
       ...prev,
       [documentId]: accepted
+    }));
+  };
+
+  const handleScrollProgress = (documentId: string, progress: number) => {
+    setScrollProgress(prev => ({
+      ...prev,
+      [documentId]: progress
+    }));
+  };
+
+  const handleScrollToBottom = (documentId: string, hasReachedBottom: boolean) => {
+    setHasScrolledToBottom(prev => ({
+      ...prev,
+      [documentId]: hasReachedBottom
     }));
   };
 
@@ -115,20 +139,26 @@ const LegalAgreements: React.FC<LegalAgreementsProps> = ({
     );
   }
 
-  const allAccepted = documents.every(doc => acceptanceState[doc.id]);
-  const acceptedCount = documents.filter(doc => acceptanceState[doc.id]).length;
+  const allAccepted = documents.every(doc => acceptanceState[doc.id] && hasScrolledToBottom[doc.id]);
+  const acceptedCount = documents.filter(doc => acceptanceState[doc.id] && hasScrolledToBottom[doc.id]).length;
+  const scrolledCount = documents.filter(doc => hasScrolledToBottom[doc.id]).length;
 
   return (
     <div className={`space-y-4 ${className}`}>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-medium text-gray-900">Legal Agreements</h3>
         <div className="text-sm text-gray-600">
-          {acceptedCount} of {documents.length} accepted
+          {acceptedCount} of {documents.length} fully completed
+          {scrolledCount > acceptedCount && (
+            <span className="text-blue-600 ml-2">
+              ({scrolledCount} scrolled through)
+            </span>
+          )}
         </div>
       </div>
       
       <div className="text-sm text-gray-600 mb-4">
-        Please review and accept all legal agreements to continue with your {role.toLowerCase().replace('_', ' ')} account registration.
+        Please scroll through and read each policy document completely, then accept all legal agreements to continue with your {role.toLowerCase().replace('_', ' ')} account registration.
       </div>
 
       <div className="space-y-4">
@@ -138,6 +168,9 @@ const LegalAgreements: React.FC<LegalAgreementsProps> = ({
             document={document}
             accepted={acceptanceState[document.id] || false}
             onAcceptChange={(accepted) => handleDocumentAcceptance(document.id, accepted)}
+            onScrollProgress={(progress) => handleScrollProgress(document.id, progress)}
+            onScrollToBottom={(hasReachedBottom) => handleScrollToBottom(document.id, hasReachedBottom)}
+            hasScrolledToBottom={hasScrolledToBottom[document.id] || false}
             error={!acceptanceState[document.id] && Object.keys(acceptanceState).length > 0 ? 
               'Please accept this agreement to continue' : undefined}
           />
@@ -172,7 +205,7 @@ const LegalAgreements: React.FC<LegalAgreementsProps> = ({
             <p className={`text-sm mt-1 ${allAccepted ? 'text-green-700' : 'text-yellow-700'}`}>
               {allAccepted 
                 ? 'You can now proceed to the next step.'
-                : 'Please accept all required agreements to continue.'
+                : 'Please scroll through and accept all required agreements to continue.'
               }
             </p>
           </div>
