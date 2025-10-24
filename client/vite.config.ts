@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 import path from 'node:path';
 import checker from 'vite-plugin-checker';
 import inspect from 'vite-plugin-inspect';
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -39,6 +40,19 @@ export default defineConfig({
     react(),
     checker({ typescript: true }),
     inspect(),
+    // Upload source maps to Sentry on production builds
+    sentryVitePlugin({
+      org: 'craved-artisan',
+      project: 'javascript-react',
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+      // Only upload source maps in production builds
+      disable: process.env.NODE_ENV !== 'production',
+      sourcemaps: {
+        assets: './dist/**',
+        filesToDeleteAfterUpload: './dist/**/*.map',
+      },
+      telemetry: false,
+    }),
   ],
   resolve: {
     alias: {

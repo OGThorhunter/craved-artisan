@@ -10,6 +10,7 @@ import type { LoginRequest, RegisterRequest, AuthResponse, AuthenticatedRequest 
 import { logEvent } from '../utils/audit';
 import { AUTH_LOGIN_SUCCESS, AUTH_LOGIN_FAIL, AUTH_LOGOUT, USER_CREATED } from '../constants/audit-events';
 import { prisma } from '../lib/prisma';
+import * as Sentry from '@sentry/node';
 
 const router = Router();
 
@@ -338,6 +339,20 @@ router.post('/register', async (req, res) => {
     });
 
   } catch (error) {
+    // Track registration errors with Sentry
+    Sentry.captureException(error, {
+      tags: {
+        endpoint: 'register',
+        step: 'user_creation'
+      },
+      extra: {
+        email: req.body.email,
+        role: req.body.role,
+        hasAgreements: !!req.body.agreements,
+        agreementCount: req.body.agreements?.length || 0
+      }
+    });
+    
     logger.error({ error }, 'Registration error');
     return res.status(500).json({
       success: false,
@@ -496,6 +511,22 @@ router.post('/signup/step1', async (req, res) => {
     return res.status(200).json(responseData);
     
   } catch (error) {
+    // Track signup step1 errors with Sentry
+    Sentry.captureException(error, {
+      tags: {
+        endpoint: 'signup/step1',
+        step: 'validation'
+      },
+      extra: {
+        email: req.body.email,
+        role: req.body.role,
+        hasName: !!req.body.name,
+        hasPassword: !!req.body.password,
+        passwordLength: req.body.password?.length || 0,
+        duration: Date.now() - startTime
+      }
+    });
+    
     logger.error({ 
       error, 
       stack: error instanceof Error ? error.stack : undefined,
