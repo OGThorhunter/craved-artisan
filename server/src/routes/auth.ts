@@ -431,8 +431,7 @@ router.all('*', (req, res, next) => {
 
 router.post('/signup/step1', async (req, res) => {
   const startTime = Date.now();
-  logger.info({ body: req.body, timestamp: startTime }, '🔵 SIGNUP START');
-  logger.info('🚨 SIGNUP ENDPOINT HIT - THIS SHOULD APPEAR IN LOGS');
+  logger.info({ body: req.body, timestamp: startTime }, '🔵 SIGNUP VALIDATION START');
   
   try {
     // 1. Validate input
@@ -441,51 +440,256 @@ router.post('/signup/step1', async (req, res) => {
     
     if (!email || !password || !name || !role) {
       logger.warn({ email, name, role }, '🔴 Validation failed: Missing fields');
-      res.setHeader('Content-Type', 'application/json');
-      res.status(400);
-      res.write(JSON.stringify({
+      return res.status(400).json({
         success: false,
         message: 'Missing required fields'
-      }));
-      res.end();
-      return;
+      });
     }
     
-    // 2. Check existing user
+    // 2. Validate password requirements
+    if (password.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 8 characters long'
+      });
+    }
+    
+    if (!/[A-Z]/.test(password)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must contain at least one uppercase letter'
+      });
+    }
+    
+    if (!/[0-9]/.test(password)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must contain at least one number'
+      });
+    }
+    
+    // 3. Check existing user
     logger.info({ email }, '🔵 Step 2: Checking for existing user');
     const existingUser = await prisma.user.findUnique({ where: { email } });
     
     if (existingUser) {
       logger.info({ email }, '🔴 User already exists');
-      res.setHeader('Content-Type', 'application/json');
-      res.status(400);
-      res.write(JSON.stringify({
+      return res.status(400).json({
         success: false,
         message: 'An account with this email already exists'
-      }));
-      res.end();
-      return;
+      });
+    }
+    
+    logger.info({ email, role }, '✅ Validation passed - no database writes');
+    
+    // 4. Return validation success (no database writes)
+    const responseData = {
+      success: true,
+      message: 'Validation passed',
+      nextStep: 'profile'
+    };
+    
+    logger.info({ responseData, duration: Date.now() - startTime }, '🔵 Validation complete');
+    
+    return res.status(200).json(responseData);
+    
+  } catch (error) {
+    logger.error({ error, duration: Date.now() - startTime }, '🔴 VALIDATION ERROR');
+    
+    return res.status(500).json({
+      success: false,
+      message: 'An error occurred during validation'
+    });
+  }
+});
+
+/**
+ * POST /api/auth/signup/complete
+ * Complete signup with all data in single transaction
+ */
+const signupCompleteSchema = z.object({
+  email: emailSchema,
+  password: passwordSchema,
+  name: nameSchema,
+  role: z.enum(['VENDOR', 'CUSTOMER', 'EVENT_COORDINATOR']),
+  profileData: z.record(z.unknown()),
+  agreements: z.array(z.object({
+    documentId: z.string(),
+    documentType: z.string(),
+    documentVersion: z.string()
+  })).optional()
+});
+
+router.post('/signup/complete', async (req, res) => {
+  const startTime = Date.now();
+  logger.info({ body: { ...req.body, password: '[HIDDEN]' }, timestamp: startTime }, '🔵 SIGNUP COMPLETE START');
+  
+  try {
+    // 1. Validate input
+    logger.info('🔵 Step 1: Validating complete signup data');
+    const validation = signupCompleteSchema.safeParse(req.body);
+    
+    if (!validation.success) {
+      logger.warn({ errors: validation.error.errors }, '🔴 Validation failed');
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid signup data',
+        errors: validation.error.errors
+      });
+    }
+    
+    const { email, password, name, role, profileData, agreements } = validation.data;
+    
+    // 2. Check existing user (double-check)
+    logger.info({ email }, '🔵 Step 2: Final email check');
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    
+    if (existingUser) {
+      logger.info({ email }, '🔴 User already exists');
+      return res.status(400).json({
+        success: false,
+        message: 'An account with this email already exists'
+      });
     }
     
     // 3. Hash password
     logger.info('🔵 Step 3: Hashing password');
     const hashedPassword = await bcrypt.hash(password, 10);
     
-    // 4. Create user
-    logger.info({ email, role }, '🔵 Step 4: Creating user');
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        name,
-        profileCompleted: false,
-        emailVerified: false
+    // 4. Create user and all related data in single transaction
+    logger.info({ email, role }, '🔵 Step 4: Creating user and profile in transaction');
+    const user = await prisma.$transaction(async (tx) => {
+      // Create user
+      const newUser = await tx.user.create({
+        data: {
+          email,
+          password: hashedPassword,
+          name,
+          profileCompleted: true,
+          emailVerified: false
+        }
+      });
+
+      // Create role-specific profile
+      if (role === 'VENDOR') {
+        const slug = generateSlug(profileData.storeName as string || name);
+        let finalSlug = slug;
+        let slugExists = await tx.vendorProfile.findUnique({ where: { slug: finalSlug } });
+        let counter = 1;
+        while (slugExists) {
+          finalSlug = `${slug}-${counter}`;
+          slugExists = await tx.vendorProfile.findUnique({ where: { slug: finalSlug } });
+          counter++;
+        }
+
+        await tx.vendorProfile.create({
+          data: {
+            userId: newUser.id,
+            storeName: profileData.storeName as string || name,
+            slug: finalSlug,
+            bio: (profileData.bio as string) || '',
+            phone: profileData.phone as string,
+            stripeAccountStatus: 'NOT_STARTED'
+          }
+        });
+      } else if (role === 'EVENT_COORDINATOR') {
+        const slug = generateSlug(profileData.organizationName as string || name);
+        let finalSlug = slug;
+        let slugExists = await tx.eventCoordinatorProfile.findUnique({ where: { slug: finalSlug } });
+        let counter = 1;
+        while (slugExists) {
+          finalSlug = `${slug}-${counter}`;
+          slugExists = await tx.eventCoordinatorProfile.findUnique({ where: { slug: finalSlug } });
+          counter++;
+        }
+
+        await tx.eventCoordinatorProfile.create({
+          data: {
+            userId: newUser.id,
+            organizationName: profileData.organizationName as string || name,
+            slug: finalSlug,
+            bio: (profileData.bio as string) || '',
+            phone: profileData.phone as string,
+            website: profileData.website as string,
+            stripeAccountStatus: 'NOT_STARTED'
+          }
+        });
       }
+
+      // Update user with profile data
+      await tx.user.update({
+        where: { id: newUser.id },
+        data: {
+          firstName: profileData.firstName as string,
+          lastName: profileData.lastName as string,
+          phone: profileData.phone as string,
+          zip_code: profileData.zip_code as string
+        }
+      });
+
+      // Store legal agreement acceptances
+      if (agreements && agreements.length > 0) {
+        const ipAddress = req.headers['x-forwarded-for'] as string || req.socket.remoteAddress || 'unknown';
+        const userAgent = req.headers['user-agent'] || 'unknown';
+
+        await tx.userAgreement.createMany({
+          data: agreements.map((agreement) => ({
+            userId: newUser.id,
+            documentId: agreement.documentId,
+            documentType: agreement.documentType,
+            documentVersion: agreement.documentVersion,
+            ipAddress,
+            userAgent
+          }))
+        });
+
+        logger.info(
+          { 
+            userId: newUser.id, 
+            email: newUser.email,
+            role,
+            agreementCount: agreements.length 
+          }, 
+          'User registered and accepted legal agreements'
+        );
+      } else {
+        logger.info({ userId: newUser.id, email: newUser.email, role }, 'User registered');
+      }
+
+      return newUser;
     });
     
-    logger.info({ userId: user.id, email }, '✅ User created successfully');
+    logger.info({ userId: user.id, email }, '✅ User and profile created successfully');
     
-    // 5. Prepare response
+    // 5. Set up session
+    (req.session as any).userId = user.id;
+    (req.session as any).email = user.email;
+    (req.session as any).role = role;
+    
+    // Save session
+    await new Promise<void>((resolve, reject) => {
+      req.session.save((err) => {
+        if (err) {
+          logger.error({ error: err, userId: user.id }, 'Session save failed');
+          reject(err);
+        } else {
+          logger.info({ userId: user.id }, 'Session saved');
+          resolve();
+        }
+      });
+    });
+    
+    // 6. Send verification email if email service is configured
+    try {
+      const verificationToken = generateVerificationToken();
+      await sendVerificationEmail(email, verificationToken);
+      logger.info({ userId: user.id, email }, 'Verification email sent');
+    } catch (emailError) {
+      logger.warn({ userId: user.id, error: emailError }, 'Failed to send verification email');
+      // Don't fail registration if email fails
+    }
+    
+    // 7. Prepare response
     const responseData = {
       success: true,
       message: 'Account created successfully',
@@ -495,60 +699,32 @@ router.post('/signup/step1', async (req, res) => {
         email: user.email,
         name: user.name,
         role,
-        profileCompleted: false,
+        profileCompleted: true,
         emailVerified: false,
-        betaTester: false
-      },
-      nextStep: 'profile'
+        betaTester: false,
+        isAuthenticated: true,
+        lastActivity: new Date()
+      }
     };
     
     logger.info({ responseData, duration: Date.now() - startTime }, '🔵 Step 5: Sending response');
     
-    // 6. Send response using direct write
-    logger.info('🚨 ABOUT TO SEND RESPONSE');
-    res.setHeader('Content-Type', 'application/json');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.status(200);
-    const jsonString = JSON.stringify(responseData);
-    logger.info({ jsonString }, '🚨 JSON STRING TO SEND');
-    res.write(jsonString);
-    res.end();
-    logger.info('🚨 RESPONSE SENT');
-    
-    logger.info({ userId: user.id, duration: Date.now() - startTime }, '✅ SIGNUP COMPLETE');
-    
-    // 7. Handle session in background (after response sent)
-    setImmediate(() => {
-      (req.session as any).userId = user.id;
-      (req.session as any).email = user.email;
-      (req.session as any).role = role;
-      req.session.save((err) => {
-        if (err) {
-          logger.error({ error: err, userId: user.id }, 'Session save failed (non-critical)');
-        } else {
-          logger.info({ userId: user.id }, 'Session saved in background');
-        }
-      });
-    });
+    return res.status(200).json(responseData);
     
   } catch (error) {
-    logger.error({ error, duration: Date.now() - startTime }, '🔴 SIGNUP ERROR');
+    logger.error({ error, duration: Date.now() - startTime }, '🔴 SIGNUP COMPLETE ERROR');
     
-    if (!res.headersSent) {
-      res.setHeader('Content-Type', 'application/json');
-      res.status(500);
-      res.write(JSON.stringify({
-        success: false,
-        message: 'An error occurred during signup'
-      }));
-      res.end();
-    }
+    return res.status(500).json({
+      success: false,
+      message: 'An error occurred during signup'
+    });
   }
 });
 
 /**
  * POST /api/auth/signup/profile
  * Complete profile setup based on role
+ * @deprecated - Use /signup/complete instead
  */
 const vendorProfileSchema = z.object({
   storeName: z.string().min(2),
