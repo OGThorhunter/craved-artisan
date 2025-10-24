@@ -72,21 +72,36 @@ export default defineConfig({
     target: 'esnext',
     // Memory optimization for large builds
     chunkSizeWarningLimit: 1600,
+    // Reduce memory pressure during build
+    reportCompressedSize: false,
     rollupOptions: {
       external: ['zod/v4/core'],
       output: {
+        // More aggressive code splitting to reduce memory usage
         manualChunks(id) {
           if (id.includes('node_modules')) {
             if (id.includes('react') || id.includes('react-dom')) {
               return 'vendor-react';
             }
-            if (id.includes('jspdf') || id.includes('qrcode')) {
+            if (id.includes('jspdf') || id.includes('qrcode') || id.includes('jsbarcode')) {
               return 'vendor-print';
             }
             if (id.includes('@radix-ui')) {
               return 'vendor-ui';
             }
-            if (id.includes('axios') || id.includes('dayjs') || id.includes('zod')) {
+            if (id.includes('konva') || id.includes('react-konva')) {
+              return 'vendor-canvas';
+            }
+            if (id.includes('leaflet') || id.includes('react-leaflet')) {
+              return 'vendor-maps';
+            }
+            if (id.includes('@tanstack')) {
+              return 'vendor-query';
+            }
+            if (id.includes('recharts')) {
+              return 'vendor-charts';
+            }
+            if (id.includes('axios') || id.includes('date-fns') || id.includes('zod')) {
               return 'vendor-utils';
             }
             return 'vendor';

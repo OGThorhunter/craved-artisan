@@ -5,8 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "prebuild": "tsc -b || echo TypeScript warnings",
-    "build": "node --max-old-space-size=4096 ../node_modules/.bin/vite build",
+    "build": "export NODE_OPTIONS='--max-old-space-size=4096' && tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
   },
