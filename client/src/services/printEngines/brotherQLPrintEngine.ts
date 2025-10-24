@@ -245,7 +245,7 @@ export class BrotherQLPrintEngine extends BasePrintEngine {
       const b = imageData.data[pixelIndex + 2];
       
       // Convert to grayscale using luminance formula
-      const gray = Math.round(0.299 * r + 0.587 * g + 0.114 * b);
+      const gray = Math.round(0.299 * r + 0.587 * (g ?? 0) + 0.114 * (b ?? 0));
       
       // Apply threshold (128 = 50% threshold)
       bitmap[i] = gray < 128 ? 0 : 255;

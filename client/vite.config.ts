@@ -70,9 +70,17 @@ export default defineConfig({
     sourcemap: true,
     minify: 'esbuild',
     target: 'esnext',
-    // Fail build on import/export errors
+    // Memory optimization for large builds
+    chunkSizeWarningLimit: 2000,
     rollupOptions: {
       external: ['zod/v4/core'],
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
+          utils: ['axios', 'dayjs', 'zod']
+        }
+      },
       onwarn(warning, warn) {
         // Catch missing export errors early
         if (warning.code === 'MISSING_EXPORT') {
