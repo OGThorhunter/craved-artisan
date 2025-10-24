@@ -277,7 +277,7 @@ export class PDFPrintEngine extends BasePrintEngine {
           dark: element.color || '#000000',
           light: element.backgroundColor || '#ffffff'
         }
-      });
+      } as any);
 
       pdf.addImage(
         qrDataUrl,
