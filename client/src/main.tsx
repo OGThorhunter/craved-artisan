@@ -7,6 +7,11 @@ import './index.css';
 import App from './App.tsx';
 import { setupGlobalErrorHandlers, ErrorFallback } from './utils/errorHandlers.tsx';
 import { muteExtensionNoise } from './utils/devConsole';
+import { initSentry } from './lib/sentry';
+import './utils/testSentry'; // Load test utility
+
+// Initialize Sentry first (before any errors can occur)
+initSentry();
 
 // Setup global error handlers
 setupGlobalErrorHandlers();

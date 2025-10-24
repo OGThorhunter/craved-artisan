@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'wouter';
 import { toast } from 'react-hot-toast';
 import { ChevronLeft, ChevronRight, Check, Mail } from 'lucide-react';
+import * as Sentry from '@sentry/react';
+import { logger } from '../lib/sentry';
 
 // Import our new components
 import LegalAgreements from '../components/auth/LegalAgreements';
@@ -273,64 +275,128 @@ const SignupPage: React.FC = () => {
 
 
   const handleFinalSubmit = async () => {
-    try {
-      setLoading(true);
-      
-      // Prepare agreements data
-      const agreements = formData.acceptedAgreements.map(doc => ({
-        documentId: doc.id,
-        documentType: doc.type,
-        documentVersion: doc.version
-      }));
-      
-      console.log('Submitting complete signup with:', {
-        email: formData.email,
-        role: formData.role,
-        profileData: formData.profileData,
-        agreements
-      });
-      
-      // Call signup complete API with all data
-      const response = await api.post('/auth/signup/complete', {
-        email: formData.email,
-        password: formData.password,
-        name: formData.name,
-        role: formData.role,
-        profileData: formData.profileData,
-        agreements
-      });
-      
-      const data = response.data;
-      
-      if (response.status === 200 && data.success) {
-        console.log('Signup completed successfully');
-        toast.success('Welcome to Craved Artisan! 🎉');
-        setLocation('/dashboard');
-      } else {
-        toast.error(data.message || 'Failed to complete signup');
-      }
-      
-    } catch (error: unknown) {
-      console.error('Final signup submission error:', error);
-      
-      // Handle specific error cases
-      if (error && typeof error === 'object' && 'response' in error) {
-        const axiosError = error as { response?: { status?: number; data?: { message?: string } } };
-        if (axiosError.response?.status === 400) {
-          const errorData = axiosError.response.data;
-          if (errorData?.message?.includes('already exists')) {
-            toast.error('An account with this email already exists. Please try logging in instead.');
-            return;
+    // Create a span to track the entire signup submission process
+    return Sentry.startSpan(
+      {
+        op: 'signup.submit',
+        name: 'Complete Signup Submission',
+      },
+      async (span) => {
+        try {
+          setLoading(true);
+          
+          // Add attributes to the span for tracking
+          span.setAttribute('role', formData.role);
+          span.setAttribute('hasProfileData', Object.keys(formData.profileData).length > 0);
+          span.setAttribute('agreementsCount', formData.acceptedAgreements.length);
+          
+          // Log the start of signup submission
+          logger.info('Starting signup submission', {
+            role: formData.role,
+            email: formData.email,
+            step: currentStep,
+          });
+          
+          // Prepare agreements data
+          const agreements = formData.acceptedAgreements.map(doc => ({
+            documentId: doc.id,
+            documentType: doc.type,
+            documentVersion: doc.version
+          }));
+          
+          console.log('Submitting complete signup with:', {
+            email: formData.email,
+            role: formData.role,
+            profileData: formData.profileData,
+            agreements
+          });
+          
+          // Call signup complete API with all data - wrapped in a child span
+          const response = await Sentry.startSpan(
+            {
+              op: 'http.client',
+              name: 'POST /api/auth/signup/complete',
+            },
+            async () => {
+              return await api.post('/auth/signup/complete', {
+                email: formData.email,
+                password: formData.password,
+                name: formData.name,
+                role: formData.role,
+                profileData: formData.profileData,
+                agreements
+              });
+            }
+          );
+          
+          const data = response.data;
+          
+          if (response.status === 200 && data.success) {
+            logger.info('Signup completed successfully', {
+              role: formData.role,
+              email: formData.email,
+            });
+            span.setStatus({ code: 1, message: 'ok' }); // Success
+            toast.success('Welcome to Craved Artisan! 🎉');
+            setLocation('/dashboard');
+          } else {
+            logger.warn('Signup failed with non-success response', {
+              status: response.status,
+              message: data.message,
+            });
+            span.setStatus({ code: 2, message: 'failed' }); // Failed
+            toast.error(data.message || 'Failed to complete signup');
           }
+          
+        } catch (error: unknown) {
+          // Log the error
+          logger.error('Signup submission failed', {
+            role: formData.role,
+            email: formData.email,
+            step: currentStep,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          });
+          
+          // Mark span as failed
+          span.setStatus({ code: 2, message: 'error' });
+          
+          // Send detailed error to Sentry
+          Sentry.captureException(error, {
+            tags: {
+              component: 'signup',
+              step: 'final_submission',
+              role: formData.role,
+            },
+            extra: {
+              currentStep,
+              email: formData.email,
+              hasProfileData: Object.keys(formData.profileData).length > 0,
+              agreementsCount: formData.acceptedAgreements.length,
+              stripeCompleted: formData.stripeCompleted,
+            },
+            level: 'error',
+          });
+          
+          // Handle specific error cases
+          if (error && typeof error === 'object' && 'response' in error) {
+            const axiosError = error as { response?: { status?: number; data?: { message?: string } } };
+            if (axiosError.response?.status === 400) {
+              const errorData = axiosError.response.data;
+              if (errorData?.message?.includes('already exists')) {
+                toast.error('An account with this email already exists. Please try logging in instead.');
+                return;
+              }
+            }
+            
+            toast.error(axiosError.response?.data?.message || 'Failed to complete signup');
+          } else {
+            toast.error('Failed to complete signup');
+          }
+        } finally {
+          setLoading(false);
         }
-        
-        toast.error(axiosError.response?.data?.message || 'Failed to complete signup');
-      } else {
-        toast.error('Failed to complete signup');
       }
-    } finally {
-      setLoading(false);
-    }
+    );
   };
 
   const handleSignupComplete = () => {
