@@ -30,6 +30,18 @@ interface AuthContextType {
   checkAuth: () => Promise<void>;
   // New multi-step signup methods
   signupStep1: (email: string, password: string, name: string, role: 'VENDOR' | 'CUSTOMER' | 'EVENT_COORDINATOR') => Promise<any>;
+  signupComplete: (signupData: {
+    email: string;
+    password: string;
+    name: string;
+    role: 'VENDOR' | 'CUSTOMER' | 'EVENT_COORDINATOR';
+    profileData: Record<string, unknown>;
+    agreements: Array<{
+      documentId: string;
+      documentType: string;
+      documentVersion: string;
+    }>;
+  }) => Promise<any>;
   signupProfile: (profileData: any) => Promise<any>;
   acceptAgreements: (agreements: AgreementAcceptance[]) => Promise<any>;
   checkSignupStatus: () => Promise<any>;
@@ -197,7 +209,38 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       });
       
       if (response.data.success) {
-        // Update user state with the partial user data
+        // Only validate, don't create user yet
+        return response.data;
+      } else {
+        throw new Error(response.data.message || 'Validation failed');
+      }
+    } catch (error: any) {
+      console.error('Signup step 1 error:', error);
+      throw new Error(error.response?.data?.message || error.message || 'Validation failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Complete signup with all data
+  const signupComplete = async (signupData: {
+    email: string;
+    password: string;
+    name: string;
+    role: 'VENDOR' | 'CUSTOMER' | 'EVENT_COORDINATOR';
+    profileData: Record<string, unknown>;
+    agreements: Array<{
+      documentId: string;
+      documentType: string;
+      documentVersion: string;
+    }>;
+  }) => {
+    try {
+      setLoading(true);
+      const response = await api.post('/auth/signup/complete', signupData);
+      
+      if (response.data.success) {
+        // Update user state with the complete user data
         setUser({
           id: response.data.user.id || response.data.user.userId,
           userId: response.data.user.userId,
@@ -209,11 +252,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         });
         return response.data;
       } else {
-        throw new Error(response.data.message || 'Account creation failed');
+        throw new Error(response.data.message || 'Signup completion failed');
       }
     } catch (error: any) {
-      console.error('Signup step 1 error:', error);
-      throw new Error(error.response?.data?.message || error.message || 'Account creation failed');
+      console.error('Signup complete error:', error);
+      throw new Error(error.response?.data?.message || error.message || 'Signup completion failed');
     } finally {
       setLoading(false);
     }
@@ -307,6 +350,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     checkAuth,
     // New multi-step signup methods
     signupStep1,
+    signupComplete,
     signupProfile,
     acceptAgreements,
     checkSignupStatus,

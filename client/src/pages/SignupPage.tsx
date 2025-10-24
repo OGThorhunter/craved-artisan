@@ -11,7 +11,7 @@ import CustomerProfileForm from '../components/auth/CustomerProfileForm';
 import StripeOnboardingStep from '../components/auth/StripeOnboardingStep';
 
 // Import services
-import { legalService, type LegalDocument } from '../services/legal';
+import type { LegalDocument } from '../services/legal';
 import { api } from '../lib/api';
 
 interface SignupFormData {
@@ -104,14 +104,15 @@ const SignupPage: React.FC = () => {
     
     baseSteps.push('profile', 'legal');
     
-    if (formData.role === 'VENDOR' || formData.role === 'EVENT_COORDINATOR') {
-      baseSteps.push('stripe');
-    }
+    // Skip Stripe by default - users can set up payments later from dashboard
+    // if (formData.role === 'VENDOR' || formData.role === 'EVENT_COORDINATOR') {
+    //   baseSteps.push('stripe');
+    // }
     
     baseSteps.push('complete');
     
     return baseSteps;
-  }, [formData.role, isOAuthUser]);
+  }, [isOAuthUser]);
 
   // Get current step index
   const getCurrentStepIndex = (): number => {
@@ -196,13 +197,13 @@ const SignupPage: React.FC = () => {
         return;
       }
       
-      console.log('Submitting signup step 1 with:', {
+      console.log('Validating credentials with:', {
         email: formData.email,
         name: formData.name,
         role: formData.role
       });
       
-      // Call signup step 1 API
+      // Call signup step 1 API for validation only
       let response;
       try {
         response = await api.post('/auth/signup/step1', {
@@ -212,7 +213,7 @@ const SignupPage: React.FC = () => {
           role: formData.role
         });
       } catch (networkError: unknown) {
-        console.error('Network error during signup:', networkError);
+        console.error('Network error during validation:', networkError);
         
         // Handle specific error cases
         if (networkError && typeof networkError === 'object' && 'response' in networkError) {
@@ -232,32 +233,19 @@ const SignupPage: React.FC = () => {
         return;
       }
       
-      console.log('Signup response status:', response.status, response.statusText);
-      console.log('Signup response headers:', response.headers);
-      
-      // Get response data directly from axios
       const data = response.data;
-      console.log('Signup response data:', data);
-      
-      if (!data) {
-        console.error('Empty response received from server');
-        console.error('Response status:', response.status);
-        console.error('Response headers:', response.headers);
-        toast.error('Server error. Please try again or contact support if the issue persists.');
-        return;
-      }
       
       if (response.status === 200 && data.success) {
-        console.log('Signup successful, proceeding to next step');
-        toast.success('Account created successfully!');
+        console.log('Validation successful, proceeding to next step');
+        toast.success('Credentials validated successfully!');
         goToNextStep();
       } else {
-        console.error('Signup failed:', data);
-        toast.error(data.message || 'Failed to create account');
+        console.error('Validation failed:', data);
+        toast.error(data.message || 'Validation failed');
       }
       
     } catch (error) {
-      console.error('Unexpected error in signup step 1:', error);
+      console.error('Unexpected error in credentials validation:', error);
       toast.error('An unexpected error occurred. Please try again.');
     } finally {
       setLoading(false);
@@ -270,47 +258,76 @@ const SignupPage: React.FC = () => {
     try {
       setLoading(true);
       
-      // Call signup profile API
-      const response = await api.post('/auth/signup/profile', formData.profileData);
-      
-      const data = response.data;
-      
-      if (response.status === 200 && data.success) {
-        toast.success('Profile completed successfully!');
-        goToNextStep();
-      } else {
-        toast.error(data.message || 'Failed to save profile');
-      }
+      // Just validate and move to next step - no API call
+      console.log('Profile data validated:', formData.profileData);
+      toast.success('Profile completed successfully!');
+      goToNextStep();
       
     } catch (error) {
       console.error('Profile submission error:', error);
-      toast.error('Failed to save profile');
+      toast.error('Failed to validate profile');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleLegalSubmit = async () => {
-    if (!stepValid || formData.acceptedAgreements.length === 0) return;
-    
+
+  const handleFinalSubmit = async () => {
     try {
       setLoading(true);
       
-      // Accept agreements
+      // Prepare agreements data
       const agreements = formData.acceptedAgreements.map(doc => ({
         documentId: doc.id,
         documentType: doc.type,
         documentVersion: doc.version
       }));
       
-      await legalService.acceptAgreements({ agreements });
+      console.log('Submitting complete signup with:', {
+        email: formData.email,
+        role: formData.role,
+        profileData: formData.profileData,
+        agreements
+      });
       
-      toast.success('Legal agreements accepted!');
-      goToNextStep();
+      // Call signup complete API with all data
+      const response = await api.post('/auth/signup/complete', {
+        email: formData.email,
+        password: formData.password,
+        name: formData.name,
+        role: formData.role,
+        profileData: formData.profileData,
+        agreements
+      });
       
-    } catch (error) {
-      console.error('Legal agreements error:', error);
-      toast.error('Failed to accept legal agreements');
+      const data = response.data;
+      
+      if (response.status === 200 && data.success) {
+        console.log('Signup completed successfully');
+        toast.success('Welcome to Craved Artisan! 🎉');
+        setLocation('/dashboard');
+      } else {
+        toast.error(data.message || 'Failed to complete signup');
+      }
+      
+    } catch (error: unknown) {
+      console.error('Final signup submission error:', error);
+      
+      // Handle specific error cases
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { status?: number; data?: { message?: string } } };
+        if (axiosError.response?.status === 400) {
+          const errorData = axiosError.response.data;
+          if (errorData?.message?.includes('already exists')) {
+            toast.error('An account with this email already exists. Please try logging in instead.');
+            return;
+          }
+        }
+        
+        toast.error(axiosError.response?.data?.message || 'Failed to complete signup');
+      } else {
+        toast.error('Failed to complete signup');
+      }
     } finally {
       setLoading(false);
     }
@@ -799,7 +816,7 @@ const SignupPage: React.FC = () => {
                   } else if (currentStep === 'profile') {
                     handleProfileSubmit();
                   } else if (currentStep === 'legal') {
-                    handleLegalSubmit();
+                    handleFinalSubmit(); // Use final submit for legal step
                   } else {
                     goToNextStep();
                   }
@@ -814,7 +831,7 @@ const SignupPage: React.FC = () => {
                   </div>
                 ) : (
                   <>
-                    {getCurrentStepIndex() === getTotalSteps() - 1 ? 'Complete' : 'Next'}
+                    {currentStep === 'legal' ? 'Create Account' : (getCurrentStepIndex() === getTotalSteps() - 1 ? 'Complete' : 'Next')}
                     <ChevronRight className="h-4 w-4 ml-1" />
                   </>
                 )}

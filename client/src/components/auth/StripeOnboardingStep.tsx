@@ -153,11 +153,11 @@ const StripeOnboardingStep: React.FC<StripeOnboardingStepProps> = ({
     <div className={`space-y-6 ${className}`}>
       {/* Header */}
       <div>
-        <h3 className="text-lg font-medium text-gray-900 mb-4">Payment Setup</h3>
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Payment Setup (Optional)</h3>
         <p className="text-sm text-gray-600">
           {role === 'VENDOR' 
-            ? 'Set up your account to start selling products and receiving payments.'
-            : 'Set up payments to sell booth spaces at your events. No monthly fee - only 2% commission on sales.'}
+            ? 'You can set up payments now or complete your account and set up payments later from your dashboard. This is required before you can start selling products.'
+            : 'You can set up payments now or complete your account and set up payments later from your dashboard. This is required before you can sell booth spaces at events.'}
         </p>
       </div>
 
@@ -368,21 +368,21 @@ const StripeOnboardingStep: React.FC<StripeOnboardingStepProps> = ({
         )}
       </div>
 
-      {/* Skip Warning */}
+      {/* Skip Info */}
       {onSkip && status.status !== 'active' && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div className="flex">
             <div className="flex-shrink-0">
-              <AlertCircle className="h-5 w-5 text-amber-400" />
+              <Shield className="h-5 w-5 text-blue-400" />
             </div>
             <div className="ml-3">
-              <h4 className="text-sm font-medium text-amber-800">
-                Payment Setup Required
+              <h4 className="text-sm font-medium text-blue-800">
+                Payment Setup Available
               </h4>
-              <p className="text-sm text-amber-700 mt-1">
-                You can skip this step for now, but you'll need to complete Stripe Connect setup 
-                before you can {role === 'VENDOR' ? 'sell products' : 'receive payments for events'} 
-                on the platform. You can set this up anytime from your dashboard.
+              <p className="text-sm text-blue-700 mt-1">
+                You can set up payments now or complete your account and set up payments later from your dashboard. 
+                You'll need Stripe Connect setup before you can {role === 'VENDOR' ? 'sell products' : 'receive payments for events'} 
+                on the platform.
               </p>
             </div>
           </div>
