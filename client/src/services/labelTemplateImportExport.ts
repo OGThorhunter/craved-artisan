@@ -76,11 +76,14 @@ class LabelTemplateImportExportService {
    */
   exportPresets(filename?: string): void {
     const presets = getTemplatePresets();
-    const templates = presets.map(preset => ({
+    const templates: LabelTemplate[] = presets.map(preset => ({
       ...preset.template,
       id: preset.id,
       name: preset.name,
-      description: preset.description
+      description: preset.description,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      createdBy: 'system'
     }));
 
     this.exportTemplates(templates, filename || `label-template-presets-${Date.now()}.json`, {
@@ -184,6 +187,9 @@ class LabelTemplateImportExportService {
   async importFromSharingLink(url: string): Promise<LabelTemplate[]> {
     try {
       const data = url.split('/shared/')[1];
+      if (!data) {
+        throw new Error('Invalid sharing link format');
+      }
       const decoded = JSON.parse(atob(data));
       return decoded.templates || [];
     } catch (error) {

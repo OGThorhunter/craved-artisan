@@ -431,6 +431,11 @@ export class PreflightValidator {
         const el1 = elements[i];
         const el2 = elements[j];
 
+        // Guard against undefined elements
+        if (!el1 || !el2) {
+          continue;
+        }
+
         // Check for rectangle intersection
         const overlap = !(
           el1.x + el1.width <= el2.x ||

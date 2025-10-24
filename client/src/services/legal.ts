@@ -45,7 +45,7 @@ export interface AcceptanceCheckResult {
 }
 
 class LegalService {
-  private cache = new Map<string, LegalDocument[]>();
+  private cache = new Map<string, LegalDocument[] | UserAgreement[]>();
   private cacheTimeout = 5 * 60 * 1000; // 5 minutes
   private cacheTimestamps = new Map<string, number>();
 
@@ -55,7 +55,7 @@ class LegalService {
   async getAllDocuments(): Promise<LegalDocument[]> {
     const cacheKey = 'all-documents';
     const cached = this.getFromCache(cacheKey);
-    if (cached) return cached;
+    if (cached) return cached as LegalDocument[];
 
     const response = await httpClient.get('/api/legal/documents');
     if (!response.ok) {
@@ -77,7 +77,7 @@ class LegalService {
   async getDocumentByType(type: string): Promise<LegalDocument> {
     const cacheKey = `document-${type}`;
     const cached = this.getFromCache(cacheKey);
-    if (cached && cached.length > 0) return cached[0];
+    if (cached && (cached as LegalDocument[]).length > 0) return (cached as LegalDocument[])[0];
 
     const response = await httpClient.get(`/api/legal/documents/${encodeURIComponent(type)}`);
     if (!response.ok) {
@@ -102,7 +102,7 @@ class LegalService {
   async getRequiredDocuments(role: string): Promise<LegalDocument[]> {
     const cacheKey = `required-${role}`;
     const cached = this.getFromCache(cacheKey);
-    if (cached) return cached;
+    if (cached) return cached as LegalDocument[];
 
     const response = await httpClient.get(`/api/legal/documents/required/${encodeURIComponent(role)}`);
     if (!response.ok) {
@@ -144,7 +144,7 @@ class LegalService {
   async getUserAgreements(): Promise<UserAgreement[]> {
     const cacheKey = 'user-agreements';
     const cached = this.getFromCache(cacheKey);
-    if (cached) return cached;
+    if (cached) return cached as UserAgreement[];
 
     const response = await httpClient.get('/api/legal/user-agreements');
     if (!response.ok) {
@@ -230,7 +230,7 @@ class LegalService {
   /**
    * Get item from cache if still valid
    */
-  private getFromCache<T>(key: string): T | null {
+  private getFromCache(key: string): LegalDocument[] | UserAgreement[] | null {
     const timestamp = this.cacheTimestamps.get(key);
     if (!timestamp || Date.now() - timestamp > this.cacheTimeout) {
       this.cache.delete(key);
@@ -238,13 +238,13 @@ class LegalService {
       return null;
     }
 
-    return this.cache.get(key) as T || null;
+    return this.cache.get(key) || null;
   }
 
   /**
    * Set item in cache with timestamp
    */
-  private setCache<T>(key: string, value: T): void {
+  private setCache(key: string, value: LegalDocument[] | UserAgreement[]): void {
     this.cache.set(key, value);
     this.cacheTimestamps.set(key, Date.now());
   }
