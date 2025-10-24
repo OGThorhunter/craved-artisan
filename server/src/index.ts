@@ -9,6 +9,9 @@ import * as Sentry from '@sentry/node';
 // Initialize Sentry before any other code
 initSentry();
 
+// Import database validation
+import { validateDatabaseConfig } from './utils/databaseConfig';
+
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
@@ -195,6 +198,10 @@ app.get('/api/health', (_req, res) => {
 
 // Auth routes
 app.use('/api/auth', authRoutes);
+
+// Database diagnostics routes (for debugging)
+import databaseDiagnosticsRouter from './routes/database-diagnostics';
+app.use('/api/database', databaseDiagnosticsRouter);
 
 // Legal & Coordinator routes
 app.use('/api/legal', legalRouter);
@@ -394,8 +401,31 @@ function startServer(port: number, retries = 3): void {
   (global as any).httpServer = server;
 }
 
+// Start the server with database validation
+async function startServerWithValidation() {
+  try {
+    // Validate database configuration before starting server
+    logger.info('🔍 Validating database configuration...');
+    const dbValid = await validateDatabaseConfig();
+    
+    if (!dbValid) {
+      logger.error('❌ Database validation failed. Server will not start.');
+      process.exit(1);
+    }
+    
+    logger.info('✅ Database validation successful');
+    
+    // Start the server
+    startServer(PORT);
+    
+  } catch (error) {
+    logger.error('❌ Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
 // Start the server
-startServer(PORT);
+startServerWithValidation();
 
 // Graceful shutdown
 process.on('SIGTERM', () => {

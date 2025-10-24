@@ -1,76 +1,38 @@
 services:
-  # --- API (Node runtime; runs Prisma migrate on deploy)
   - type: web
-    name: cravedartisan-api
-    runtime: node
-    region: oregon
-    plan: starter
-    rootDir: .
-    buildCommand: |
-      npm ci
-      npx prisma generate
-      npm run -w server build
-    startCommand: node server/dist/index.js
-    healthCheckPath: /readyz
-    autoDeploy: true
-    branch: main
-    clearCache: true
-    scaling:
-      minInstances: 1
-      maxInstances: 3
-      targetCPUPercent: 60
+    name: craved-artisan-backend
+    env: node
+    buildCommand: cd server && npm install && npm run build
+    startCommand: cd server && npm start
     envVars:
       - key: NODE_ENV
         value: production
-      - key: FRONTEND_URL
-        sync: false
-      - key: BACKEND_URL
-        sync: false
       - key: DATABASE_URL
         sync: false
+      - key: DIRECT_URL
+        sync: false
       - key: SESSION_SECRET
-        generateValue: true
-      - key: ENABLE_STRIPE_TAX
-        value: "true"
-      - key: PLATFORM_FEE_BPS
-        value: "100"
+        sync: false
+      - key: SENTRY_DSN
+        sync: false
       - key: STRIPE_SECRET_KEY
         sync: false
       - key: STRIPE_PUBLISHABLE_KEY
         sync: false
       - key: STRIPE_WEBHOOK_SECRET
         sync: false
-      - key: REDIS_URL
-        sync: false
-      - key: OPENAI_API_KEY
-        sync: false
 
-  # --- Client (Static)
   - type: web
-    name: cravedartisan-web
-    runtime: static
-    buildCommand: |
-      npm ci
-      npm run -w client build
-    staticPublishPath: client/dist
-    autoDeploy: true
-    branch: main
+    name: craved-artisan-frontend
+    env: static
+    buildCommand: cd client && npm install && npm run build
+    staticPublishPath: ./client/dist
     envVars:
-      - key: VITE_API_BASE_URL
-        value: https://cravedartisan-api.onrender.com
-      - key: VITE_FEATURE_LIVE_PRODUCTS
-        value: "true"
-      - key: VITE_FEATURE_LIVE_ANALYTICS
-        value: "true"
-      - key: VITE_FEATURE_FINANCIALS
-        value: "true"
-      - key: VITE_FEATURE_MESSAGING
-        value: "true"
-      - key: VITE_FEATURE_CHECKOUT
-        value: "true"
-      - key: VITE_FEATURE_INVENTORY
-        value: "true"
-      - key: VITE_FEATURE_SMART_RESTOCK
-        value: "true"
-      - key: VITE_FEATURE_PORTFOLIO
-        value: "true"
+      - key: NODE_ENV
+        value: production
+      - key: VITE_API_URL
+        value: /api
+      - key: VITE_SENTRY_DSN
+        sync: false
+      - key: VITE_STRIPE_PUBLISHABLE_KEY
+        sync: false

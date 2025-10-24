@@ -4,6 +4,7 @@ import { toast } from 'react-hot-toast';
 import { ChevronLeft, ChevronRight, Check, Mail } from 'lucide-react';
 import * as Sentry from '@sentry/react';
 import { logger } from '../lib/sentry';
+import { logSignupError, logApiError } from '../utils/debugSentry';
 
 // Import our new components
 import LegalAgreements from '../components/auth/LegalAgreements';
@@ -217,6 +218,21 @@ const SignupPage: React.FC = () => {
       } catch (networkError: unknown) {
         console.error('Network error during validation:', networkError);
         
+        // Enhanced error logging
+        if (networkError instanceof Error) {
+          logApiError(
+            networkError,
+            '/auth/signup/step1',
+            'POST',
+            {
+              email: formData.email,
+              name: formData.name,
+              role: formData.role,
+              hasPassword: !!formData.password
+            }
+          );
+        }
+        
         // Handle specific error cases
         if (networkError && typeof networkError === 'object' && 'response' in networkError) {
           const axiosError = networkError as { response?: { status?: number; data?: { message?: string } } };
@@ -359,6 +375,11 @@ const SignupPage: React.FC = () => {
           
           // Mark span as failed
           span.setStatus({ code: 2, message: 'error' });
+          
+          // Enhanced error logging
+          if (error instanceof Error) {
+            logSignupError(error, 'final_submission', formData as Record<string, unknown>);
+          }
           
           // Send detailed error to Sentry
           Sentry.captureException(error, {

@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { logger } from '../logger';
+import { createPrismaClient, validateDatabaseConfig } from '../utils/databaseConfig';
 
 /**
  * Singleton Prisma Client
@@ -14,15 +15,36 @@ declare global {
   var prisma: PrismaClient | undefined;
 }
 
-export const prisma =
-  global.prisma ||
-  new PrismaClient({
-    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+// Create Prisma client with validated configuration
+let prisma: PrismaClient;
+
+try {
+  prisma = global.prisma || createPrismaClient();
+  
+  // Set up event listeners for better error tracking
+  prisma.$on('warn', (e) => {
+    logger.warn('Prisma Warning:', e);
   });
 
-if (process.env.NODE_ENV !== 'production') {
-  global.prisma = prisma;
+  prisma.$on('error', (e) => {
+    logger.error('Prisma Error:', e);
+  });
+
+  if (process.env.NODE_ENV === 'development') {
+    prisma.$on('query', (e) => {
+      logger.debug(`Query: ${e.query}, Params: ${e.params}, Duration: ${e.duration}ms`);
+    });
+  }
+
+  if (process.env.NODE_ENV !== 'production') {
+    global.prisma = prisma;
+  }
+} catch (error) {
+  logger.error('❌ Failed to initialize Prisma Client:', error);
+  throw error;
 }
+
+export { prisma };
 
 // Graceful shutdown
 process.on('beforeExit', async () => {

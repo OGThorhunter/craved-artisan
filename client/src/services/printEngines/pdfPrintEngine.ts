@@ -271,7 +271,7 @@ export class PDFPrintEngine extends BasePrintEngine {
 
     try {
       const qrDataUrl = await QRCode.toDataURL(element.content, {
-        width: element.width * 72, // Convert to pixels for generation
+        width: Math.round(element.width * 72), // Convert to pixels for generation
         margin: 1,
         color: {
           dark: element.color || '#000000',
