@@ -1,3 +1,14 @@
+// Load environment variables FIRST
+import dotenv from 'dotenv';
+dotenv.config();
+
+// Import Sentry FIRST - before any other imports
+import { initSentry } from './lib/sentry';
+import * as Sentry from '@sentry/node';
+
+// Initialize Sentry before any other code
+initSentry();
+
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
@@ -109,6 +120,8 @@ import adminSettingsRouter from './routes/admin-settings.router';
 
 const app = express();
 const PORT = Number(process.env.PORT || 3001);
+
+// Sentry middleware will be added after proper setup
 
 // Security middleware
 app.use(helmet({ 
@@ -323,57 +336,98 @@ app.use('/api/admin', adminSettingsRouter);
 app.use('/api/settings', settingsRouter);
 app.use('/webhooks/stripe', stripeWebhooksRouter);
 
-// Start server
-app.listen(PORT, () => {
-  logger.info({ port: PORT, pid: process.pid }, '🚀 Session-based auth server listening');
-  logger.info(`📍 Health check: http://localhost:${PORT}/api/health`);
-  logger.info(`🔐 Auth endpoints: http://localhost:${PORT}/api/auth`);
-  logger.info(`📊 Pulse endpoints: http://localhost:${PORT}/api/vendor/:vendorId/pulse`);
-  logger.info(`👑 Admin dashboard: http://localhost:${PORT}/admin`);
-  logger.info(`🎫 Support system: http://localhost:${PORT}/api/admin/support`);
-  
-  // Start cron jobs
-  cronJobs.startAllJobs().catch((error) => {
-    logger.error({ error }, 'Failed to start cron jobs');
+// Sentry error handler - must be LAST middleware (only if Sentry is initialized)
+if (process.env.SENTRY_DSN) {
+  app.use(Sentry.expressErrorHandler());
+}
+
+// Server startup function with port conflict handling
+function startServer(port: number, retries = 3): void {
+  const server = app.listen(port, () => {
+    logger.info({ port, pid: process.pid }, '🚀 Session-based auth server listening');
+    logger.info(`📍 Health check: http://localhost:${port}/api/health`);
+    logger.info(`🔐 Auth endpoints: http://localhost:${port}/api/auth`);
+    logger.info(`📊 Pulse endpoints: http://localhost:${port}/api/vendor/:vendorId/pulse`);
+    logger.info(`👑 Admin dashboard: http://localhost:${port}/admin`);
+    logger.info(`🎫 Support system: http://localhost:${port}/api/admin/support`);
+    
+    // Start cron jobs
+    cronJobs.startAllJobs().catch((error) => {
+      logger.error({ error }, 'Failed to start cron jobs');
+    });
+    
+    // Initialize support system workers
+    if (process.env.USE_BULLMQ === 'true') {
+      import('./jobs/support-sla-check').then(({ initSlaCheckWorker, scheduleSlaChecks }) => {
+        initSlaCheckWorker();
+        scheduleSlaChecks();
+      });
+      
+      import('./jobs/support-auto-close').then(({ initAutoCloseWorker, scheduleAutoClose }) => {
+        initAutoCloseWorker();
+        scheduleAutoClose();
+      });
+      
+      import('./jobs/support-email-queue').then(({ initEmailWorker }) => {
+        initEmailWorker();
+      });
+      
+      import('./jobs/support-ai-triage').then(({ initAITriageWorker }) => {
+        initAITriageWorker();
+      });
+      
+      logger.info('✅ Support system BullMQ workers initialized');
+    } else {
+      logger.info('⚙️  Support system using node-cron fallback (BullMQ disabled)');
+    }
+  }).on('error', (err: NodeJS.ErrnoException) => {
+    if (err.code === 'EADDRINUSE' && retries > 0) {
+      logger.warn({ port, retriesLeft: retries - 1 }, `Port ${port} in use, trying ${port + 1}...`);
+      setTimeout(() => startServer(port + 1, retries - 1), 1000);
+    } else {
+      logger.error({ error: err, port }, 'Failed to start server');
+      process.exit(1);
+    }
   });
   
-  // Initialize support system workers
-  if (process.env.USE_BULLMQ === 'true') {
-    import('./jobs/support-sla-check').then(({ initSlaCheckWorker, scheduleSlaChecks }) => {
-      initSlaCheckWorker();
-      scheduleSlaChecks();
-    });
-    
-    import('./jobs/support-auto-close').then(({ initAutoCloseWorker, scheduleAutoClose }) => {
-      initAutoCloseWorker();
-      scheduleAutoClose();
-    });
-    
-    import('./jobs/support-email-queue').then(({ initEmailWorker }) => {
-      initEmailWorker();
-    });
-    
-    import('./jobs/support-ai-triage').then(({ initAITriageWorker }) => {
-      initAITriageWorker();
-    });
-    
-    logger.info('✅ Support system BullMQ workers initialized');
-  } else {
-    logger.info('⚙️  Support system using node-cron fallback (BullMQ disabled)');
-  }
-});
+  // Store server reference for graceful shutdown
+  (global as any).httpServer = server;
+}
+
+// Start the server
+startServer(PORT);
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
   logger.info('SIGTERM received, shutting down gracefully...');
-  cronJobs.stopAllJobs();
-  process.exit(0);
+  const server = (global as any).httpServer;
+  if (server) {
+    server.close(() => {
+      cronJobs.stopAllJobs();
+      process.exit(0);
+    });
+    // Force exit after 10s if graceful shutdown hangs
+    setTimeout(() => process.exit(1), 10000);
+  } else {
+    cronJobs.stopAllJobs();
+    process.exit(0);
+  }
 });
 
 process.on('SIGINT', () => {
   logger.info('SIGINT received, shutting down gracefully...');
-  cronJobs.stopAllJobs();
-  process.exit(0);
+  const server = (global as any).httpServer;
+  if (server) {
+    server.close(() => {
+      cronJobs.stopAllJobs();
+      process.exit(0);
+    });
+    // Force exit after 10s if graceful shutdown hangs
+    setTimeout(() => process.exit(1), 10000);
+  } else {
+    cronJobs.stopAllJobs();
+    process.exit(0);
+  }
 });
 
 export default app; 
