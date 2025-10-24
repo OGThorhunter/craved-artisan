@@ -71,14 +71,26 @@ export default defineConfig({
     minify: 'esbuild',
     target: 'esnext',
     // Memory optimization for large builds
-    chunkSizeWarningLimit: 2000,
+    chunkSizeWarningLimit: 1600,
     rollupOptions: {
       external: ['zod/v4/core'],
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          ui: ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
-          utils: ['axios', 'dayjs', 'zod']
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom')) {
+              return 'vendor-react';
+            }
+            if (id.includes('jspdf') || id.includes('qrcode')) {
+              return 'vendor-print';
+            }
+            if (id.includes('@radix-ui')) {
+              return 'vendor-ui';
+            }
+            if (id.includes('axios') || id.includes('dayjs') || id.includes('zod')) {
+              return 'vendor-utils';
+            }
+            return 'vendor';
+          }
         }
       },
       onwarn(warning, warn) {
