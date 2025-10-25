@@ -358,7 +358,7 @@ const LabelProfilesPage: React.FC = () => {
     setElementPositions(prev => ({
       ...prev,
       [element]: {
-        ...prev[element],
+        ...(prev[element] || {}),
         [field]: value
       }
     }));
@@ -842,7 +842,7 @@ const LabelProfilesPage: React.FC = () => {
                         </button>
                       </div>
                       <span className="text-xs text-[#777]">
-                        {profile.printerProfile?.name || 'No printer'}
+                        {profile.printerProfileId || 'No printer'}
                       </span>
                     </div>
                   </div>
@@ -1751,7 +1751,7 @@ const LabelProfilesPage: React.FC = () => {
                   </label>
                   <textarea
                     rows={3}
-                    defaultValue={editingItem.description || ''}
+                    defaultValue={(editingItem as any).description || ''}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                     title="Edit profile description"
                   />

@@ -26,7 +26,7 @@ const LoginPage: React.FC = () => {
       toast.success('Login successful!');
       
       // Redirect based on user role from auth response
-      const userRole = userData?.role;
+      const userRole = (userData as any)?.role;
 
       // Special handling for support admin account
       if (email === 'support@cravedartisan.com') {

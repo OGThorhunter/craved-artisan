@@ -217,7 +217,7 @@ export default function NotFoundPage() {
           >
             <div className="w-64 h-64 bg-gradient-to-br from-amber-200 to-orange-300 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow">
               <div className="text-6xl">
-                {getCurrentIllustration().icon || '🥖'}
+                {getCurrentIllustration()?.icon || '🥖'}
               </div>
             </div>
             
@@ -234,12 +234,12 @@ export default function NotFoundPage() {
           </div>
           
           <p className="mt-4 text-sm text-gray-500">
-            {getCurrentIllustration().description}
+            {getCurrentIllustration()?.description || 'Page not found'}
           </p>
           
-          {getCurrentIllustration().easterEgg && (
+          {getCurrentIllustration()?.easterEgg && (
             <p className="mt-2 text-xs text-gray-400">
-              💡 {getCurrentIllustration().easterEgg}
+              💡 {getCurrentIllustration()?.easterEgg}
             </p>
           )}
         </motion.div>

@@ -213,7 +213,7 @@ const PackageTemplateMappingPage: React.FC = () => {
       return pkg;
     }));
 
-    toast.info('Template unassigned from package');
+    toast.success('Template unassigned from package');
   };
 
   const handleCreateTemplateForPackage = (pkg: PackageType) => {
@@ -261,7 +261,7 @@ const PackageTemplateMappingPage: React.FC = () => {
               </Button>
               
               <Button
-                variant="outline"
+                variant="secondary"
                 onClick={() => setLocation('/dashboard/vendor/labels/editor')}
               >
                 <Edit className="h-4 w-4 mr-2" />
@@ -398,8 +398,7 @@ const PackageTemplateMappingPage: React.FC = () => {
                   {pkg.labelTemplate ? (
                     <>
                       <Button
-                        variant="outline"
-                        size="sm"
+                        variant="secondary"
                         className="flex-1"
                         onClick={() => {
                           setSelectedPackage(pkg);
@@ -411,11 +410,10 @@ const PackageTemplateMappingPage: React.FC = () => {
                       </Button>
                       
                       <Button
-                        variant="outline"
-                        size="sm"
+                        variant="secondary"
                         className="flex-1"
                         onClick={() => {
-                          toast.info(`Editing template: ${pkg.labelTemplate?.name}`);
+                          toast.success(`Editing template: ${pkg.labelTemplate?.name}`);
                           setLocation('/dashboard/vendor/labels/editor');
                         }}
                       >
@@ -424,8 +422,7 @@ const PackageTemplateMappingPage: React.FC = () => {
                       </Button>
                       
                       <Button
-                        variant="outline"
-                        size="sm"
+                        variant="secondary"
                         onClick={() => handleUnassignTemplate(pkg.id)}
                       >
                         <X className="h-3 w-3" />
@@ -434,7 +431,6 @@ const PackageTemplateMappingPage: React.FC = () => {
                   ) : (
                     <Button
                       className="flex-1 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600"
-                      size="sm"
                       onClick={() => handleCreateTemplateForPackage(pkg)}
                     >
                       <Plus className="h-3 w-3 mr-1" />
@@ -489,7 +485,7 @@ const PackageTemplateMappingPage: React.FC = () => {
                           </div>
                         </div>
                       ) : (
-                        <Badge variant="warning">No Template</Badge>
+                        <Badge variant="destructive">No Template</Badge>
                       )}
                     </td>
                     <td className="px-6 py-4 text-right">
@@ -497,8 +493,7 @@ const PackageTemplateMappingPage: React.FC = () => {
                         {pkg.labelTemplate ? (
                           <>
                             <Button
-                              variant="outline"
-                              size="sm"
+                              variant="secondary"
                               onClick={() => {
                                 setSelectedPackage(pkg);
                                 setShowAssignModal(true);
@@ -507,8 +502,7 @@ const PackageTemplateMappingPage: React.FC = () => {
                               <Edit className="h-3 w-3" />
                             </Button>
                             <Button
-                              variant="outline"
-                              size="sm"
+                              variant="secondary"
                               onClick={() => handleUnassignTemplate(pkg.id)}
                             >
                               <X className="h-3 w-3" />
@@ -516,7 +510,6 @@ const PackageTemplateMappingPage: React.FC = () => {
                           </>
                         ) : (
                           <Button
-                            size="sm"
                             className="bg-purple-500 hover:bg-purple-600"
                             onClick={() => handleCreateTemplateForPackage(pkg)}
                           >
@@ -565,7 +558,7 @@ const PackageTemplateMappingPage: React.FC = () => {
                     >
                       <div className="flex items-start justify-between mb-2">
                         <h4 className="font-medium text-gray-900">{template.name}</h4>
-                        <Badge variant="outline">
+                        <Badge variant="secondary">
                           {template.dimensions.width}" × {template.dimensions.height}"
                         </Badge>
                       </div>
@@ -579,7 +572,7 @@ const PackageTemplateMappingPage: React.FC = () => {
                 </div>
 
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   className="w-full mt-4"
                   onClick={() => {
                     setShowAssignModal(false);

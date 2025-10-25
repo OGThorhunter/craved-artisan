@@ -292,7 +292,7 @@ const InventoryManagement: React.FC = () => {
           </div>
           <div className="flex gap-1">
             {statuses.map((status) => (
-              <Badge key={status.type} variant={status.color as any} size="sm">
+              <Badge key={status.type} variant={status.color as any} >
                 {status.label}
               </Badge>
             ))}
@@ -334,31 +334,27 @@ const InventoryManagement: React.FC = () => {
         
         <div className="flex gap-2">
           <Button
-            size="sm"
-            variant="outline"
+            variant="secondary"
             onClick={() => handleReceiveItem(item)}
             className="flex-1"
           >
             Receive
           </Button>
           <Button
-            size="sm"
-            variant="outline"
+            variant="secondary"
             onClick={() => handleAdjustItem(item)}
             className="flex-1"
           >
             Adjust
           </Button>
           <Button
-            size="sm"
-            variant="outline"
+            variant="secondary"
             onClick={() => handleViewMovements(item)}
           >
             History
           </Button>
           <Button
-            size="sm"
-            variant="outline"
+            variant="secondary"
             onClick={() => handlePriceWatch(item)}
           >
             {item.priceWatches.length > 0 ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -390,7 +386,7 @@ const InventoryManagement: React.FC = () => {
         <td className="px-6 py-4">
           <div className="flex gap-1">
             {statuses.map((status) => (
-              <Badge key={status.type} variant={status.color as any} size="sm">
+              <Badge key={status.type} variant={status.color as any} >
                 {status.label}
               </Badge>
             ))}
@@ -411,29 +407,25 @@ const InventoryManagement: React.FC = () => {
         <td className="px-6 py-4">
           <div className="flex gap-2">
             <Button
-              size="sm"
-              variant="outline"
+              variant="secondary"
               onClick={() => handleReceiveItem(item)}
             >
               Receive
             </Button>
             <Button
-              size="sm"
-              variant="outline"
+              variant="secondary"
               onClick={() => handleAdjustItem(item)}
             >
               Adjust
             </Button>
             <Button
-              size="sm"
-              variant="outline"
+              variant="secondary"
               onClick={() => handleViewMovements(item)}
             >
               History
             </Button>
             <Button
-              size="sm"
-              variant="outline"
+              variant="secondary"
               onClick={() => handlePriceWatch(item)}
             >
               {item.priceWatches.length > 0 ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -495,7 +487,7 @@ const InventoryManagement: React.FC = () => {
             </div>
             <div className="flex gap-3">
               <Button
-                variant="outline"
+                variant="secondary"
                 onClick={() => setShowMessagesDrawer(true)}
                 className="relative"
               >
@@ -507,13 +499,13 @@ const InventoryManagement: React.FC = () => {
                 )}
               </Button>
               <Button
-                variant="outline"
+                variant="secondary"
                 onClick={() => setShowInsightsDrawer(true)}
               >
                 AI Insights
               </Button>
               <Button
-                variant="outline"
+                variant="secondary"
                 onClick={() => setShowReceiptParser(true)}
               >
                 <Upload size={20} />
@@ -616,15 +608,13 @@ const InventoryManagement: React.FC = () => {
             
             <div className="flex gap-2">
               <Button
-                variant={viewMode === 'grid' ? 'default' : 'outline'}
-                size="sm"
+                variant={viewMode === 'grid' ? 'secondary' : 'secondary'}
                 onClick={() => setViewMode('grid')}
               >
                 <Grid size={16} />
               </Button>
               <Button
-                variant={viewMode === 'list' ? 'default' : 'outline'}
-                size="sm"
+                variant={viewMode === 'list' ? 'secondary' : 'secondary'}
                 onClick={() => setViewMode('list')}
               >
                 <List size={16} />
@@ -690,16 +680,14 @@ const InventoryManagement: React.FC = () => {
             
             <div className="flex gap-2">
               <Button
-                variant="outline"
-                size="sm"
+                variant="secondary"
                 disabled={inventoryData.pagination.page === 1}
                 onClick={() => setCurrentPage(currentPage - 1)}
               >
                 Previous
               </Button>
               <Button
-                variant="outline"
-                size="sm"
+                variant="secondary"
                 disabled={inventoryData.pagination.page === inventoryData.pagination.totalPages}
                 onClick={() => setCurrentPage(currentPage + 1)}
               >
