@@ -126,7 +126,7 @@ export const getRandomQuote = (): QuoteData => {
 // Helper function to get a quote by category
 export const getQuoteByCategory = (category: QuoteData['category']): QuoteData => {
   const categoryQuotes = motivationalQuotes.filter(quote => quote.category === category);
-  return categoryQuotes[Math.floor(Math.random() * categoryQuotes.length)];
+  return categoryQuotes[Math.floor(Math.random() * categoryQuotes.length)] || motivationalQuotes[0];
 };
 
 // Helper function to get a specific quote by author

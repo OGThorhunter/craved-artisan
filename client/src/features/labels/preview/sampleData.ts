@@ -32,6 +32,8 @@ export function resolveBinding(bindingKey: string, sample: SampleData): string {
 
   const key = bindingKey.slice(2, -2).trim();
   const [path, formatter] = key.split('|').map(s => s.trim());
+  
+  if (!path) return bindingKey;
 
   let value: any = sample;
   const parts = path.split('.');

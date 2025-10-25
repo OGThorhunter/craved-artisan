@@ -128,7 +128,7 @@ export function LabelPreview({
 
   // Handle panning
   const handleMouseDown = useCallback((e: Konva.KonvaEventObject<MouseEvent>) => {
-    if (e.evt.button === 1 || (e.evt.button === 0 && e.evt.spaceKey)) {
+    if (e.evt.button === 1) { // Middle mouse button only
       setIsPanning(true);
       setPanStart({ x: e.evt.clientX - stagePos.x, y: e.evt.clientY - stagePos.y });
       e.evt.preventDefault();
