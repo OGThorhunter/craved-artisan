@@ -3321,7 +3321,7 @@ export default function CustomerDashboardPage() {
                                   <label className="flex items-center gap-1 text-sm">
                                     <input
                                       type="checkbox"
-                                      checked={connection.shareProducts}
+                                      checked={(connection as any).shareProducts || false}
                                       onChange={(e) => {
                                         setSettingsData(prev => ({
                                           ...prev,
@@ -3342,7 +3342,7 @@ export default function CustomerDashboardPage() {
                                   <label className="flex items-center gap-1 text-sm">
                                     <input
                                       type="checkbox"
-                                      checked={connection.shareDeals}
+                                      checked={(connection as any).shareDeals || false}
                                       onChange={(e) => {
                                         setSettingsData(prev => ({
                                           ...prev,

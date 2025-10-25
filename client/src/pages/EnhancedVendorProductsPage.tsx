@@ -713,7 +713,7 @@ const EnhancedVendorProductsPage: React.FC = () => {
                 <div class="section-title">Recipe Details</div>
                 <div>Prep Time: ${viewingCard.recipe.prepTime} minutes</div>
                 <div>Cook Time: ${viewingCard.recipe.cookTime} minutes</div>
-                <div>Servings: ${viewingCard.servings}</div>
+                <div>Servings: ${(viewingCard as any).servings || 'N/A'}</div>
                 <div>Yield: ${viewingCard.recipe.yield} ${viewingCard.recipe.yieldUnit}</div>
               </div>
             ` : ''}
@@ -814,7 +814,7 @@ const EnhancedVendorProductsPage: React.FC = () => {
                 <div className="flex items-center gap-4">
                   <button
                     onClick={() => {
-                      setSelectedCategoryForCard('');
+                      setSelectedCategoryForCard('food' as 'food' | 'service' | 'non-food');
                       setShowProductCard(true);
                     }}
                     className="bg-brand-green text-white px-6 py-3 rounded-lg hover:bg-brand-green/90 transition-colors flex items-center gap-2 text-lg font-medium"
@@ -1072,7 +1072,7 @@ const EnhancedVendorProductsPage: React.FC = () => {
                   <div className="flex justify-center">
                     <button
                       onClick={() => {
-                        setSelectedCategoryForCard('');
+                        setSelectedCategoryForCard('food' as 'food' | 'service' | 'non-food');
                         setShowProductCard(true);
                       }}
                       className="bg-brand-green text-white px-6 py-3 rounded-lg hover:bg-brand-green/90 transition-colors flex items-center gap-2 text-lg font-medium"
@@ -1148,7 +1148,7 @@ const EnhancedVendorProductsPage: React.FC = () => {
                       <select
                         {...register('category')}
                         onChange={(e) => {
-                          setValue('category', e.target.value);
+                          setValue('category', e.target.value as 'food' | 'service' | 'non-food');
                           setValue('subcategory', ''); // Reset subcategory when category changes
                         }}
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-brand-green focus:border-transparent"

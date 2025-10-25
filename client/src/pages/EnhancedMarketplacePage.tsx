@@ -407,9 +407,9 @@ export default function EnhancedMarketplacePage() {
         <AIProductDiscovery
           userZip={userZip}
           userPreferences={userPreferences}
-          onProductClick={handleProductClick}
-          onAddToCart={addToCart}
-          onToggleFavorite={toggleFavorite}
+          onProductClick={handleProductClick as any}
+          onAddToCart={addToCart as any}
+          onToggleFavorite={toggleFavorite as any}
         />
       )}
 

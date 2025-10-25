@@ -781,7 +781,11 @@ export default function DropoffDashboardPage() {
                 <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
                 <div className="space-y-3">
                   {[...deliveries, ...pickups]
-                    .sort((a, b) => new Date(b.expectedTime || b.scheduledTime).getTime() - new Date(a.expectedTime || a.scheduledTime).getTime())
+                    .sort((a, b) => {
+                      const aTime = ('expectedTime' in a ? a.expectedTime : 'scheduledTime' in a ? a.scheduledTime : new Date()).getTime();
+                      const bTime = ('expectedTime' in b ? b.expectedTime : 'scheduledTime' in b ? b.scheduledTime : new Date()).getTime();
+                      return bTime - aTime;
+                    })
                     .slice(0, 5)
                     .map((item) => (
                       <div key={item.id} className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg">
@@ -792,10 +796,10 @@ export default function DropoffDashboardPage() {
                         </div>
                         <div className="flex-1">
                           <h4 className="font-medium text-sm">
-                            {('vendorId' in item ? item.vendorName : item.customerName)}
+                            {('vendorId' in item ? item.vendorName : (item as any).customerName || 'Customer')}
                           </h4>
                           <p className="text-xs text-gray-600">
-                            {('vendorId' in item ? 'Delivery' : 'Pickup')} • {new Date('vendorId' in item ? item.expectedTime : item.scheduledTime).toLocaleTimeString()}
+                            {('vendorId' in item ? 'Delivery' : 'Pickup')} • {new Date('vendorId' in item ? item.expectedTime : (item as any).scheduledTime || new Date()).toLocaleTimeString()}
                           </p>
                         </div>
                         <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusColor(item.status)}`}>
