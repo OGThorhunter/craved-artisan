@@ -720,7 +720,7 @@ const AdvancedLabelGenerator: React.FC<AdvancedLabelGeneratorProps> = ({
             <Button
               variant="outline"
               onClick={() => {
-                toast.info('Quick template created! Opening in editor...');
+                toast.success('Quick template created! Opening in editor...');
               }}
             >
               <Zap className="h-4 w-4 mr-2" />
