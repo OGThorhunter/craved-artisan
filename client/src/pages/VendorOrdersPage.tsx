@@ -1138,8 +1138,8 @@ const VendorOrdersPage: React.FC = () => {
           };
         }
 
-        batches[item.productId].totalQuantity += item.quantity;
-        batches[item.productId].orders.push({
+        batches[item.productId]!.totalQuantity += item.quantity;
+        batches[item.productId]!.orders.push({
           orderNumber: order.orderNumber,
           customerName: order.customerName,
           quantity: item.quantity
@@ -1150,13 +1150,13 @@ const VendorOrdersPage: React.FC = () => {
           const batchMultiplier = item.quantity / item.product.recipe.yieldAmount;
           item.product.recipe.ingredients?.forEach(ing => {
             const key = `${ing.name}-${ing.unit}`;
-            if (!batches[item.productId].ingredients[key]) {
-              batches[item.productId].ingredients[key] = {
+            if (!batches[item.productId]!.ingredients[key]) {
+              batches[item.productId]!.ingredients[key] = {
                 quantity: 0,
                 unit: ing.unit
               };
             }
-            batches[item.productId].ingredients[key].quantity += ing.quantity * batchMultiplier;
+            batches[item.productId]!.ingredients[key].quantity += ing.quantity * batchMultiplier;
           });
         }
       });
@@ -1588,7 +1588,7 @@ const VendorOrdersPage: React.FC = () => {
                 const headers = Object.keys(exportData[0] || {});
                 const csv = [
                   headers.join(','),
-                  ...exportData.map(row => headers.map(header => row[header]).join(','))
+                  ...exportData.map(row => headers.map(header => (row as any)[header]).join(','))
                 ].join('\n');
                 
                 // Download
@@ -1848,13 +1848,13 @@ const VendorOrdersPage: React.FC = () => {
                             })}
                           </h3>
                           <Badge className="bg-blue-100 text-blue-800">
-                            {ordersByDate[dateKey].length} orders
+                            {ordersByDate[dateKey]?.length || 0} orders
                           </Badge>
                         </div>
                       </div>
 
                       <div className="space-y-3">
-                        {ordersByDate[dateKey].map(order => (
+                        {ordersByDate[dateKey]?.map(order => (
                           <div key={order.id} className="flex items-center justify-between bg-white p-4 rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
                             <div className="flex items-center gap-4 flex-1">
                               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -2082,16 +2082,16 @@ const VendorOrdersPage: React.FC = () => {
                               </button>
                               
                               <div className="flex items-center gap-2">
-                                {batch.orders[0]?.dueAt && (
+                                {batch.orders[0] && (
                                   <div className="text-xs bg-white rounded-lg px-3 py-1 border border-purple-200">
-                                    <span className="text-gray-600">Kitchen Start: </span>
+                                    <span className="text-gray-600">Batch: </span>
                                     <span className="font-semibold text-purple-900">
-                                      {calculateKitchenStartDate(batch.orders[0].dueAt, 3).toLocaleDateString()}
+                                      {batch.totalQuantity} units
                                     </span>
                                     <span className="text-gray-600 mx-2">→</span>
-                                    <span className="text-gray-600">Delivery: </span>
+                                    <span className="text-gray-600">Orders: </span>
                                     <span className="font-semibold text-purple-900">
-                                      {new Date(batch.orders[0].dueAt).toLocaleDateString()}
+                                      {batch.orders.length}
                                     </span>
                                   </div>
                                 )}
