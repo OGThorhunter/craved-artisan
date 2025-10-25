@@ -30,6 +30,9 @@ interface Opportunity {
   createdAt: string;
   updatedAt: string;
   lastActivityAt: string;
+  source?: string;
+  tags?: string[];
+  customFields?: Record<string, any>;
 }
 
 interface Task {
@@ -42,6 +45,13 @@ interface Task {
   customerId?: string;
   assignedTo?: string;
   createdAt: string;
+  description?: string;
+  customer?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+  };
 }
 
 interface Workflow {
@@ -142,7 +152,7 @@ const fetchCustomers = async (filters: any) => {
         firstName: 'John',
         lastName: 'Doe',
         company: 'Acme Corp',
-        status: 'customer',
+        status: 'customer' as const,
         source: 'Website',
         tags: ['VIP', 'Enterprise'],
         totalOrders: 15,
@@ -165,7 +175,7 @@ const fetchOpportunities = async (filters: any, localOpportunities: any[]) => {
         customerId: '1',
         title: 'Enterprise Contract',
         description: 'Large enterprise contract for custom software development',
-        stage: 'negotiation',
+        stage: 'negotiation' as const,
         value: 50000,
         probability: 75,
         expectedCloseDate: '2024-02-15',
@@ -174,7 +184,7 @@ const fetchOpportunities = async (filters: any, localOpportunities: any[]) => {
         assignedTo: 'sales@company.com',
         tags: ['Enterprise', 'Software', 'High Value'],
         customFields: {},
-        status: 'active',
+        status: 'active' as const,
         createdAt: '2024-01-01',
         updatedAt: '2024-01-15',
         lastActivityAt: '2024-01-15',
@@ -196,9 +206,9 @@ const fetchTasks = async (filters: any) => {
       {
         id: '1',
         title: 'Follow up with John Doe',
-        type: 'call',
-        priority: 'high',
-        status: 'pending',
+        type: 'call' as const,
+        priority: 'high' as const,
+        status: 'pending' as const,
         dueDate: '2024-01-20',
         customerId: '1',
         assignedTo: 'sales@company.com',
@@ -396,16 +406,16 @@ const VendorCRMPage = () => {
     const newTask: Task = {
       id: Date.now().toString(),
       title: task.title || 'New Task',
-      type: task.type || 'follow_up',
-      priority: task.priority || 'medium',
-      status: task.status || 'pending',
+      type: (task.type || 'follow_up') as Task['type'],
+      priority: (task.priority || 'medium') as Task['priority'],
+      status: (task.status || 'pending') as Task['status'],
       dueDate: task.dueDate,
       customerId: task.customerId,
       assignedTo: task.assignedTo,
       createdAt: new Date().toISOString(),
       description: task.description,
       customer: task.customer
-    } as Task;
+    };
     setLocalTasks(prev => [...prev, newTask]);
     toast.success(`Task "${newTask.title}" created successfully!`);
   };
