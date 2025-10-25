@@ -37,6 +37,7 @@
     "lodash-es": "^4.17.21",
     "lucide-react": "^0.534.0",
     "openapi-typescript": "^7.9.1",
+    "posthog-js": "^1.280.1",
     "qrcode": "^1.5.4",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
