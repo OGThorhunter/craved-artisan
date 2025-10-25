@@ -324,7 +324,7 @@ const TestDataPage: React.FC = () => {
                 </button>
                 
                 <button
-                  onClick={() => testApiCall(mockApiResponses.getAnalyticsSummary, 'Get Analytics Summary')}
+                  onClick={() => testApiCall(() => mockApiResponses.getAnalyticsSummary('vendor-123'), 'Get Analytics Summary')}
                   disabled={loading}
                   className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50"
                 >

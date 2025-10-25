@@ -134,7 +134,7 @@ const RecipeManagementPage: React.FC = () => {
       // Update existing ingredient
       const updatedIngredients = ingredients.map(ingredient => 
         ingredient.id === editingIngredient.id 
-          ? { ...ingredient, ...formData, lastUpdated: new Date().toISOString().split('T')[0] }
+          ? { ...ingredient, ...formData, lastUpdated: new Date().toISOString().split('T')[0] as string }
           : ingredient
       );
       setIngredients(updatedIngredients);
@@ -144,7 +144,7 @@ const RecipeManagementPage: React.FC = () => {
       const newIngredient = {
         id: Date.now().toString(),
         ...formData,
-        lastUpdated: new Date().toISOString().split('T')[0]
+        lastUpdated: new Date().toISOString().split('T')[0] as string
       };
       setIngredients([...ingredients, newIngredient]);
     }
@@ -230,9 +230,11 @@ const RecipeManagementPage: React.FC = () => {
       ingredientRequirements: calculateProductionRequirements(selectedRecipeForProduction, batchSize, ingredients),
       estimatedCost: calculateProductionCost(selectedRecipeForProduction, batchSize, ingredients),
       estimatedYield: selectedRecipeForProduction.yield * batchSize,
+      actualYield: undefined,
+      actualCost: undefined,
       notes: productionNotes,
-      createdAt: new Date().toISOString().split('T')[0],
-      updatedAt: new Date().toISOString().split('T')[0]
+      createdAt: new Date().toISOString().split('T')[0] as string,
+      updatedAt: new Date().toISOString().split('T')[0] as string
     };
     
     setProductionPlans([...productionPlans, newPlan]);
@@ -249,7 +251,7 @@ const RecipeManagementPage: React.FC = () => {
     setProductionPlans(plans => 
       plans.map(plan => 
         plan.id === planId 
-          ? { ...plan, status: newStatus, updatedAt: new Date().toISOString().split('T')[0] }
+          ? { ...plan, status: newStatus, updatedAt: new Date().toISOString().split('T')[0] as string }
           : plan
       )
     );

@@ -469,9 +469,9 @@ const RecipeVersionHistoryPage: React.FC = () => {
                                     <div className="responsive-text font-medium text-gray-900">
                                       {ingredient.ingredient.name}
                                     </div>
-                                    {ingredient.notes && (
+                                    {(ingredient as any).notes && (
                                       <div className="responsive-text text-gray-500">
-                                        {ingredient.notes}
+                                        {(ingredient as any).notes}
                                       </div>
                                     )}
                                   </div>
@@ -480,10 +480,10 @@ const RecipeVersionHistoryPage: React.FC = () => {
                                   {ingredient.quantity} {ingredient.unit}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                  ${ingredient.pricePerUnit.toFixed(2)}/{ingredient.ingredient.unit}
+                                  ${ingredient.pricePerUnit.toFixed(2)}/{(ingredient.ingredient as any).unit || 'unit'}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap responsive-text font-medium text-gray-900">
-                                  ${ingredient.totalCost.toFixed(2)}
+                                  ${((ingredient as any).totalCost || (ingredient.quantity * ingredient.pricePerUnit)).toFixed(2)}
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                   {comparison && comparison.previousPrice !== undefined ? (
