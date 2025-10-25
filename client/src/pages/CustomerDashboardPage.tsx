@@ -939,54 +939,50 @@ export default function CustomerDashboardPage() {
     setLoading(isLoading);
 
     // Update customer data when available
-    if (customerData?.success && customerData.customer) {
-      setCustomer(customerData.customer);
+    if ((customerData as any)?.success && (customerData as any).customer) {
+      setCustomer((customerData as any).customer);
       
       // Initialize settings data from customer profile
       setSettingsData({
-        address: customerData.customer.address || { street: '', city: '', state: '', zipCode: '', country: 'US' },
-        phoneLandline: customerData.customer.phoneLandline || '',
-        phoneMobile: customerData.customer.phoneMobile || '',
-        smsOptIn: customerData.customer.smsOptIn || false,
-        smsOptInDate: customerData.customer.smsOptInDate,
-        smsConsentText: customerData.customer.smsConsentText,
-        avatarType: customerData.customer.avatarType || 'default',
-        uploadedAvatar: customerData.customer.uploadedAvatar,
-        socialAvatarUrl: customerData.customer.socialAvatarUrl,
-        socialConnections: customerData.customer.socialConnections,
-        notifications: customerData.customer.preferences?.notifications || {
+        address: (customerData as any).customer.address || { street: '', city: '', state: '', zipCode: '', country: 'US' },
+        phoneLandline: (customerData as any).customer.phoneLandline || '',
+        phoneMobile: (customerData as any).customer.phoneMobile || '',
+        smsOptIn: (customerData as any).customer.smsOptIn || false,
+        avatarType: (customerData as any).customer.avatarType || 'default',
+        uploadedAvatar: (customerData as any).customer.uploadedAvatar,
+        socialAvatarUrl: (customerData as any).customer.socialAvatarUrl,
+        socialConnections: (customerData as any).customer.socialConnections,
+        notifications: (customerData as any).customer.preferences?.notifications || {
           email: true,
           push: true,
           sms: false
         },
-        marketing: customerData.customer.preferences?.marketing ?? true,
-        defaultPickupMethod: customerData.customer.preferences?.defaultPickupMethod || 'pickup'
-      });
+        marketing: (customerData as any).customer.preferences?.marketing ?? true,
+        defaultPickupMethod: (customerData as any).customer.preferences?.defaultPickupMethod || 'pickup'
+      } as any);
       
       setOriginalSettingsData({
-        address: customerData.customer.address || { street: '', city: '', state: '', zipCode: '', country: 'US' },
-        phoneLandline: customerData.customer.phoneLandline || '',
-        phoneMobile: customerData.customer.phoneMobile || '',
-        smsOptIn: customerData.customer.smsOptIn || false,
-        smsOptInDate: customerData.customer.smsOptInDate,
-        smsConsentText: customerData.customer.smsConsentText,
-        avatarType: customerData.customer.avatarType || 'default',
-        uploadedAvatar: customerData.customer.uploadedAvatar,
-        socialAvatarUrl: customerData.customer.socialAvatarUrl,
-        socialConnections: customerData.customer.socialConnections,
-        notifications: customerData.customer.preferences?.notifications || {
+        address: (customerData as any).customer.address || { street: '', city: '', state: '', zipCode: '', country: 'US' },
+        phoneLandline: (customerData as any).customer.phoneLandline || '',
+        phoneMobile: (customerData as any).customer.phoneMobile || '',
+        smsOptIn: (customerData as any).customer.smsOptIn || false,
+        avatarType: (customerData as any).customer.avatarType || 'default',
+        uploadedAvatar: (customerData as any).customer.uploadedAvatar,
+        socialAvatarUrl: (customerData as any).customer.socialAvatarUrl,
+        socialConnections: (customerData as any).customer.socialConnections,
+        notifications: (customerData as any).customer.preferences?.notifications || {
           email: true,
           push: true,
           sms: false
         },
-        marketing: customerData.customer.preferences?.marketing ?? true,
-        defaultPickupMethod: customerData.customer.preferences?.defaultPickupMethod || 'pickup'
-      });
+        marketing: (customerData as any).customer.preferences?.marketing ?? true,
+        defaultPickupMethod: (customerData as any).customer.preferences?.defaultPickupMethod || 'pickup'
+      } as any);
     }
 
     // Update favorites when available
-    if (favoritesData?.success && favoritesData.favorites) {
-      setFavoriteVendors(favoritesData.favorites);
+    if ((favoritesData as any)?.success && (favoritesData as any).favorites) {
+      setFavoriteVendors((favoritesData as any).favorites);
     }
 
     // Update messages when available
@@ -1356,8 +1352,8 @@ export default function CustomerDashboardPage() {
       socialConnections: mockCustomer.socialConnections
     };
     
-      setSettingsData(initialSettingsData);
-      setOriginalSettingsData(initialSettingsData);
+      setSettingsData(initialSettingsData as any);
+      setOriginalSettingsData(initialSettingsData as any);
     }
   }, [loading, customer, orders, favoriteVendors, messages, upcomingEvents]);
 

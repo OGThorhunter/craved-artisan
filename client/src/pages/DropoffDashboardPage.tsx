@@ -799,7 +799,7 @@ export default function DropoffDashboardPage() {
                             {('vendorId' in item ? item.vendorName : (item as any).customerName || 'Customer')}
                           </h4>
                           <p className="text-xs text-gray-600">
-                            {('vendorId' in item ? 'Delivery' : 'Pickup')} • {new Date('vendorId' in item ? item.expectedTime : (item as any).scheduledTime || new Date()).toLocaleTimeString()}
+                            {('vendorId' in item ? 'Delivery' : 'Pickup')} • {new Date('vendorId' in item ? (item as any).expectedTime : (item as any).scheduledTime || new Date()).toLocaleTimeString()}
                           </p>
                         </div>
                         <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusColor(item.status)}`}>

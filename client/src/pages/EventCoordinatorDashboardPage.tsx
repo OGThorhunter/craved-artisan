@@ -252,7 +252,7 @@ export default function EventCoordinatorDashboardPage() {
         title: 'Spring Craft Fair',
         description: 'Handmade crafts, jewelry, and home decor from talented local artisans.',
         startDate: '2024-04-20T10:00:00Z' as any,
-        endDate: '2024-04-20T18:00:00Z',
+        endDate: '2024-04-20T18:00:00Z' as any,
         venue: 'Macon Convention Center',
         address: 'Macon, GA',
         slug: 'spring-craft-fair',
