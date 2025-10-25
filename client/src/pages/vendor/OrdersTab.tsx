@@ -3,6 +3,11 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { httpJson } from '@/lib/http';
 import { CheckCircle, Clock, Package, Truck, X, Bell } from 'lucide-react';
 
+// Type definitions for callback parameters
+type OrderItem = { id: string; productName: string; quantity: number; price: number };
+type Fulfillment = { method: string; date: string; location?: { name: string } };
+type OrderEvent = { type: string; message?: string; createdAt: string };
+
 interface Order {
   id: string;
   customerId: string;
@@ -243,7 +248,7 @@ export function OrdersTab() {
                         </tr>
                       </thead>
                       <tbody>
-                        {selectedOrderData.items.map((item: any) => (
+                        {selectedOrderData.items.map((item: OrderItem) => (
                           <tr key={item.id} className="border-t border-gray-100">
                             <td className="py-3 px-4 text-[#2C2C2C]">{item.productName}</td>
                             <td className="py-3 px-4 text-[#2C2C2C]">{item.quantity}</td>
@@ -264,7 +269,7 @@ export function OrdersTab() {
                 <div>
                   <h4 className="font-semibold text-[#2C2C2C] mb-3">Fulfillment Details</h4>
                   <div className="space-y-2">
-                    {selectedOrderData.fulfillments.map((f: any, idx: number) => (
+                    {selectedOrderData.fulfillments.map((f: Fulfillment, idx: number) => (
                       <div key={idx} className="bg-white rounded-lg p-4">
                         <p className="font-medium text-[#2C2C2C]">{f.method}</p>
                         <p className="text-sm text-gray-600">
@@ -284,7 +289,7 @@ export function OrdersTab() {
                 <div>
                   <h4 className="font-semibold text-[#2C2C2C] mb-3">Order History</h4>
                   <div className="space-y-2">
-                    {selectedOrderData.events.map((event: any, idx: number) => (
+                    {selectedOrderData.events.map((event: OrderEvent, idx: number) => (
                       <div key={idx} className="bg-white rounded-lg p-3 flex items-start space-x-3">
                         <Clock className="w-4 h-4 text-gray-500 mt-0.5" />
                         <div className="flex-1">

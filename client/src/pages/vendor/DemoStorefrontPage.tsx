@@ -1282,26 +1282,30 @@ const DemoStorefrontPage: React.FC = () => {
                        <h4 className="font-semibold" style={{ color: siteSettings.fontColor }}>
                          {window.name}
                        </h4>
-                       <span 
-                         className="inline-block px-2 py-1 rounded-full text-xs font-medium"
-                         style={{ 
-                           backgroundColor: window.status === 'Open' ? '#22c55e20' : '#ef444420',
-                           color: window.status === 'Open' ? '#16a34a' : '#dc2626'
-                         }}
-                       >
-                         {window.status}
-                       </span>
+                       {'status' in window && window.status && (
+                         <span 
+                           className="inline-block px-2 py-1 rounded-full text-xs font-medium"
+                           style={{ 
+                             backgroundColor: window.status === 'Open' ? '#22c55e20' : '#ef444420',
+                             color: window.status === 'Open' ? '#16a34a' : '#dc2626'
+                           }}
+                         >
+                           {window.status}
+                         </span>
+                       )}
                      </div>
                      <div className="space-y-1 text-sm">
                        <div className="flex items-center gap-2" style={{ color: siteSettings.fontColor, opacity: 0.8 }}>
                          <Clock className="w-3 h-3" />
                          <span>{window.time}</span>
                        </div>
-                       <div className="flex items-center gap-2" style={{ color: siteSettings.fontColor, opacity: 0.8 }}>
-                         <MapPin className="w-3 h-3" />
-                         <span className="text-xs">{window.location}</span>
-                       </div>
-                       {window.orderBy && (
+                       {'location' in window && window.location && (
+                         <div className="flex items-center gap-2" style={{ color: siteSettings.fontColor, opacity: 0.8 }}>
+                           <MapPin className="w-3 h-3" />
+                           <span className="text-xs">{window.location}</span>
+                         </div>
+                       )}
+                       {'orderBy' in window && window.orderBy && (
                          <div className="flex items-center gap-2 text-orange-600 font-medium text-xs">
                            <Package className="w-3 h-3" />
                            <span>Order by: {window.orderBy}</span>
@@ -1364,7 +1368,7 @@ const DemoStorefrontPage: React.FC = () => {
                        </div>
                        <div className="flex items-center gap-2" style={{ color: siteSettings.fontColor, opacity: 0.8 }}>
                          <MapPin className="w-3 h-3" />
-                         <span>{event.location}</span>
+                         <span>{'location' in event ? event.location : event.address}</span>
                        </div>
                      </div>
                      {selectedLocation?.type === 'event' && selectedLocation?.id === `event-${index}` && (

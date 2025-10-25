@@ -77,7 +77,10 @@ class LegalService {
   async getDocumentByType(type: string): Promise<LegalDocument> {
     const cacheKey = `document-${type}`;
     const cached = this.getFromCache(cacheKey);
-    if (cached && (cached as LegalDocument[]).length > 0) return (cached as LegalDocument[])[0]!;
+    if (cached && Array.isArray(cached) && cached.length > 0) {
+      const doc = cached[0];
+      if (doc) return doc as LegalDocument;
+    }
 
     const response = await httpClient.get(`/api/legal/documents/${encodeURIComponent(type)}`);
     if (!response.ok) {

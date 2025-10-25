@@ -438,8 +438,7 @@ export class LabelResolver {
         borderWidth: field.borderWidth,
         alignment: field.alignment,
         rotation: field.rotation,
-        showText: true, // Default for barcodes
-        barcodeFormat: 'CODE128' // Default barcode format
+        // barcodeFormat: 'CODE128' // Default barcode format
       };
 
       // Compile content with data
