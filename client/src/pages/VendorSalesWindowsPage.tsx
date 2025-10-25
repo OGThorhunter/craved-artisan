@@ -1025,7 +1025,7 @@ const VendorSalesWindowsPage = () => {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                           <div className="flex items-center gap-1">
                             <Package className="h-3 w-3" />
-                            {window.products.length}
+                            {window.products?.length || 0}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -1075,7 +1075,7 @@ const VendorSalesWindowsPage = () => {
                               <Trash2 className="h-4 w-4" />
                             </button>
                             
-                            {window.status !== 'ARCHIVED' && (
+                            {/* {window.status !== 'ARCHIVED' && (
                               <button
                                 onClick={() => handleArchiveWindow(window)}
                                 className="p-1.5 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded transition-colors"
@@ -1083,9 +1083,9 @@ const VendorSalesWindowsPage = () => {
                               >
                                 <Archive className="h-4 w-4" />
                               </button>
-                            )}
+                            )} */}
                             
-                            {window.status === 'CLOSED' && window.products.length > 0 && (
+                            {window.status === 'CLOSED' && (window.products?.length || 0) > 0 && (
                               <button
                                 onClick={() => handleReconcile(window)}
                                 className="p-1.5 text-green-600 hover:text-green-900 hover:bg-green-50 rounded transition-colors"
@@ -1148,13 +1148,13 @@ const VendorSalesWindowsPage = () => {
                                 {currentStatus}
                                 {currentStatus === 'OPEN' && <span className="ml-1 text-xs">LIVE</span>}
                           </span>
-                          {window.isEvergreen && (
+                          {'isEvergreen' in window && window.isEvergreen && (
                                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                               <Clock className="h-3 w-3" />
                               Evergreen
                             </span>
                           )}
-                          {window.marketId && (
+                          {'marketId' in window && window.marketId && (
                                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                               <Store className="h-3 w-3" />
                               Market
@@ -1167,7 +1167,7 @@ const VendorSalesWindowsPage = () => {
                         )}
                         
                             <div className="flex items-center gap-4 text-sm text-gray-600">
-                          {!window.isEvergreen && window.startDate && window.endDate && (
+                          {!('isEvergreen' in window && window.isEvergreen) && 'startDate' in window && 'endDate' in window && window.startDate && window.endDate && (
                                 <div className="flex items-center gap-1">
                                   <Calendar className="h-3 w-3" />
                               <span>
@@ -1178,22 +1178,22 @@ const VendorSalesWindowsPage = () => {
                           
                               <div className="flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
-                            <span>{window.timezone}</span>
+                            <span>{'timezone' in window ? window.timezone : 'Unknown'}</span>
                           </div>
                               
                               <div className="flex items-center gap-1">
                                 <Package className="h-3 w-3" />
-                                <span>{window.products.length} products</span>
+                                <span>{window.products?.length || 0} products</span>
                         </div>
                         
                               <div className="flex items-center gap-1">
                                 <ShoppingCart className="h-3 w-3" />
-                                <span>Cap: {window.settings.capacity}</span>
+                                <span>Cap: {window.settings?.capacity || 0}</span>
                               </div>
                             </div>
                             
                             <div className="flex items-center gap-2 mt-2">
-                          {window.channels.map((channel, index) => (
+                          {window.channels?.map((channel, index) => (
                             <span
                               key={index}
                               className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700"
@@ -1202,10 +1202,10 @@ const VendorSalesWindowsPage = () => {
                               {getChannelLabel(channel.type)}
                             </span>
                           ))}
-                          {window.settings.tags.length > 0 && (
+                          {window.settings?.tags && window.settings.tags.length > 0 && (
                             <div className="flex items-center gap-1">
                               <Tag className="h-3 w-3" />
-                                  <span className="text-xs text-gray-500">{window.settings.tags.join(', ')}</span>
+                                  <span className="text-xs text-gray-500">{window.settings?.tags?.join(', ') || ''}</span>
                             </div>
                           )}
                             </div>
@@ -1260,7 +1260,7 @@ const VendorSalesWindowsPage = () => {
                           <Trash2 className="h-4 w-4" />
                         </button>
                         
-                        {window.status !== 'ARCHIVED' && (
+                        {/* {window.status !== 'ARCHIVED' && (
                           <button
                             onClick={() => handleArchiveWindow(window)}
                             className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-md transition-colors"
@@ -1268,9 +1268,9 @@ const VendorSalesWindowsPage = () => {
                           >
                             <Archive className="h-4 w-4" />
                           </button>
-                        )}
+                        )} */}
                           
-                          {currentStatus === 'CLOSED' && window.products.length > 0 && (
+                          {currentStatus === 'CLOSED' && (window.products?.length || 0) > 0 && (
                             <button
                               onClick={() => handleReconcile(window)}
                               className="p-2 text-green-600 hover:text-green-900 hover:bg-green-50 rounded-md transition-colors"

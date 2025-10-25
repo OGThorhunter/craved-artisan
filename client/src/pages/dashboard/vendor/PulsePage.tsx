@@ -230,7 +230,7 @@ export default function PulsePage() {
   // Function to get filtered data based on time range
   // Generate chart data based on timeframe
   const getChartData = (metric: string, timeframe: string) => {
-    const baseData = pulseData.chartData[metric];
+    const baseData = pulseData.chartData[metric as keyof typeof pulseData.chartData];
     const today = new Date();
     
     switch (timeframe) {
@@ -971,7 +971,7 @@ export default function PulsePage() {
             </div>
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={filteredData.chartData[selectedMetric]}>
+                <LineChart data={filteredData.chartData[selectedMetric as keyof typeof filteredData.chartData]}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis 
                     dataKey="date" 

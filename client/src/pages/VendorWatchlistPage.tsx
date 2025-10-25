@@ -18,6 +18,12 @@ import {
   ArrowLeft
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+
+type Product = { 
+  lastAiSuggestion?: number; 
+  price: number; 
+  [key: string]: any 
+};
 import axios from 'axios';
 
 interface Product {
@@ -190,7 +196,7 @@ const VendorWatchlistPage = () => {
               <div>
                 <p className="responsive-text font-medium text-gray-600">High Risk Items</p>
                 <p className="responsive-heading text-gray-900">
-                  {products?.filter(p => p.lastAiSuggestion && 
+                  {products?.filter((p: Product) => p.lastAiSuggestion && 
                     Math.abs(p.lastAiSuggestion - p.price) / p.price > 0.15).length || 0}
                 </p>
               </div>
@@ -204,7 +210,7 @@ const VendorWatchlistPage = () => {
               </div>
               <div>
                 <p className="text-lg font-semibold text-gray-900">
-                  {products?.filter(p => p.lastAiSuggestion).length || 0}
+                  {products?.filter((p: Product) => p.lastAiSuggestion).length || 0}
                 </p>
               </div>
             </div>
@@ -214,7 +220,7 @@ const VendorWatchlistPage = () => {
         {/* Products Grid */}
         {products && products.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.map((product) => {
+            {products.map((product: Product) => {
               const priceDifference = product.lastAiSuggestion 
                 ? product.lastAiSuggestion - product.price 
                 : 0;

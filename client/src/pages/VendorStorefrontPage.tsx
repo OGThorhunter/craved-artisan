@@ -817,7 +817,7 @@ Every loaf is hand-shaped, every ingredient carefully sourced, and every custome
                         <label className="block text-sm font-medium text-gray-700 mb-2">Max Lead Time</label>
                         <select
                           value={filters.maxLeadTime}
-                          onChange={(e) => setFilters(prev => ({ ...prev, maxLeadTime: e.target.value }))}
+                          onChange={(e) => setFilters(prev => ({ ...prev, maxLeadTime: e.target.value as "any" | "same-day" | "next-day" | "2-days" | "1-week" }))}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-green"
                           aria-label="Filter by maximum lead time"
                         >
@@ -1356,13 +1356,13 @@ function ProductCard({ product }: { product: Product }) {
         )}
 
         {/* ZIP-Aware Availability */}
-        {zipCode && product.deliveryZips && !product.deliveryZips.includes(zipCode) && (
+        {/* {zipCode && product.deliveryZips && !product.deliveryZips.includes(zipCode) && (
           <div className="mb-3 p-2 bg-orange-50 border border-orange-200 rounded text-xs text-orange-800">
             <MapPin className="w-3 h-3 inline mr-1" />
             Not available for delivery to {zipCode}. 
             {product.pickupAvailable && ' Local pickup available.'}
           </div>
-        )}
+        )} */}
 
         <div className="flex flex-wrap gap-1 mb-3">
           {product.tags.slice(0, 3).map(tag => (

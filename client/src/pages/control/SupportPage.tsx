@@ -82,7 +82,7 @@ export default function SupportPage() {
   useEffect(() => {
     if (events.length > 0) {
       const latestEvent = events[events.length - 1];
-      if (latestEvent.type === 'ticket_update') {
+      if (latestEvent?.type === 'ticket_update') {
         refetch();
       }
     }
@@ -137,7 +137,7 @@ export default function SupportPage() {
             
             <div className="flex items-center gap-3">
               <button
-                onClick={() => toast.info('Create ticket modal - Coming soon')}
+                onClick={() => toast.success('Create ticket modal - Coming soon')}
                 className="flex items-center gap-2 px-4 py-2 bg-[#7F232E] text-white rounded-lg hover:bg-[#6b1e27]"
               >
                 <Plus className="w-4 h-4" />

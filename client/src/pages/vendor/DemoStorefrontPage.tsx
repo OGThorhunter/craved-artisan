@@ -1368,7 +1368,7 @@ const DemoStorefrontPage: React.FC = () => {
                        </div>
                        <div className="flex items-center gap-2" style={{ color: siteSettings.fontColor, opacity: 0.8 }}>
                          <MapPin className="w-3 h-3" />
-                         <span>{'location' in event ? event.location : event.address}</span>
+                         <span>{'location' in event && event.location ? event.location : (event as any).address}</span>
                        </div>
                      </div>
                      {selectedLocation?.type === 'event' && selectedLocation?.id === `event-${index}` && (

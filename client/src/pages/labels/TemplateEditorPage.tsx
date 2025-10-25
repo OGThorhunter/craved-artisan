@@ -150,8 +150,8 @@ export default function TemplateEditorPage() {
     // Reset to first available size for new printer
     const sizes = LABEL_SIZES[printer as keyof typeof LABEL_SIZES];
     if (sizes && sizes.length > 0) {
-      setSelectedLabelSize(sizes[0].name);
-      setLabelDimensions({ width: sizes[0].width, height: sizes[0].height });
+      setSelectedLabelSize(sizes[0]!.name);
+      setLabelDimensions({ width: sizes[0]!.width, height: sizes[0]!.height });
     }
   };
 
