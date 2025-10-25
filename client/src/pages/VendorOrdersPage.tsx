@@ -66,6 +66,9 @@ interface Order {
   station?: string;
   tags?: string[];
   total: number;
+  subtotal?: number;
+  tax?: number;
+  shipping?: number;
   orderItems: OrderItem[];
   reworkNotes?: string;
   salesWindow?: {
@@ -754,7 +757,7 @@ const mockOrders: Order[] = [
 ];
 
 
-type ViewMode = 'list' | 'calendar' | 'production-kitchen' | 'packaging-center' | 'final-qa';
+type ViewMode = 'list' | 'calendar' | 'production-kitchen' | 'packaging-center' | 'final-qa' | 'labeling' | 'qa';
 type PackagingSubMode = 'overview' | 'labels' | 'packaging-assignment';
 
 const VendorOrdersPage: React.FC = () => {
@@ -2111,7 +2114,7 @@ const VendorOrdersPage: React.FC = () => {
                             <div className="space-y-2">
                               {getProductionStepsForProduct(batch.productId, 'white', 100).map((step) => {
                                 const stepKey = `${batch.productId}-step-${step.stepNumber}`;
-                                const stepData = productionSteps[stepKey] || step;
+                                const stepData: ProductionStep = productionSteps[stepKey] || step;
                                 
                                 return (
                                   <div 
@@ -2391,8 +2394,7 @@ const VendorOrdersPage: React.FC = () => {
                     
                     <Button
                       onClick={() => setLocation('/dashboard/vendor/package-templates')}
-                      variant="outline"
-                      size="sm"
+                      variant="secondary"
                       className="border-purple-300 text-purple-700 hover:bg-purple-100"
                     >
                       <Settings className="h-4 w-4 mr-2" />
@@ -2447,8 +2449,7 @@ const VendorOrdersPage: React.FC = () => {
                     </h3>
                     <div className="space-y-2">
                       <Button 
-                        size="sm" 
-                        variant="outline" 
+                        variant="secondary" 
                         className="w-full justify-start"
                         onClick={() => setShowLabelModal(true)}
                       >
@@ -2456,8 +2457,7 @@ const VendorOrdersPage: React.FC = () => {
                         Generate All Labels
                       </Button>
                       <Button 
-                        size="sm" 
-                        variant="outline" 
+                        variant="secondary" 
                         className="w-full justify-start"
                         onClick={() => {
                           setShowLabelModal(true);
@@ -2470,8 +2470,7 @@ const VendorOrdersPage: React.FC = () => {
                         New Template
                       </Button>
                       <Button 
-                        size="sm" 
-                        variant="outline" 
+                        variant="secondary" 
                         className="w-full justify-start"
                         onClick={() => {
                           setShowLabelModal(true);
@@ -2580,7 +2579,6 @@ const VendorOrdersPage: React.FC = () => {
                               <div className="flex items-center gap-3">
                                 <div className="font-bold text-blue-600">{order.quantity} units</div>
                                 <Button
-                                  size="sm"
                                   variant="secondary"
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -2611,7 +2609,7 @@ const VendorOrdersPage: React.FC = () => {
                           <Button 
                             className="flex-1 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white"
                             onClick={() => {
-                              toast.info(`Package "${packageInfo.name}" needs a label template`);
+                              toast.success(`Package "${packageInfo.name}" needs a label template`);
                               setLocation('/dashboard/vendor/package-templates');
                             }}
                           >
@@ -2625,7 +2623,7 @@ const VendorOrdersPage: React.FC = () => {
                             disabled={needsPackageSelection}
                             onClick={() => {
                               // Use advanced label generator for this batch
-                              const batchOrders = filteredOrdersByProduct.flatMap(batch => 
+                              const batchOrders = aggregateProductionBatch().flatMap(batch => 
                                 batch.productName === batch.productName ? batch.orders : []
                               );
                               setSelectedOrderForLabel(batchOrders[0]); // Pass representative order
@@ -2951,7 +2949,6 @@ const VendorOrdersPage: React.FC = () => {
                     </div>
                     <Button
                       variant="secondary"
-                      size="sm"
                       onClick={() => setShowAddQaFieldModal(true)}
                       className="flex-shrink-0 bg-purple-100 text-purple-700 border-purple-300 hover:bg-purple-200"
                     >
@@ -3874,7 +3871,7 @@ const VendorOrdersPage: React.FC = () => {
               setShowLabelModal(false);
               setSelectedOrderForLabel(null);
             }}
-            orders={selectedOrderForLabel ? [selectedOrderForLabel] : filteredOrdersByProduct.flatMap(batch => batch.orders)}
+            orders={selectedOrderForLabel ? [selectedOrderForLabel] : aggregateProductionBatch().flatMap(batch => batch.orders)}
             onPrintComplete={(jobIds) => {
               toast.success(`Label generation complete! ${jobIds.length} print jobs created.`);
               setShowLabelModal(false);

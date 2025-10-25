@@ -1678,7 +1678,7 @@ const VendorProductsPage: React.FC = () => {
         <EnhancedProductModal
           isOpen={showEnhancedModal}
           onClose={() => setShowEnhancedModal(false)}
-          onSave={(product) => handleSaveEnhancedProduct(product as EnhancedProductData)}
+          onSave={(product) => handleSaveEnhancedProduct(product as unknown as EnhancedProductData)}
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           product={selectedProduct as any}
           categories={categories}
