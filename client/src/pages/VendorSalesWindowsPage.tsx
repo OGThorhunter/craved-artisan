@@ -60,6 +60,8 @@ const VendorSalesWindowsPage = () => {
   const [mockSalesWindows, setMockSalesWindows] = useState<SalesWindow[]>([
     {
       id: '1',
+      vendorId: 'vendor-1',
+      type: 'PARK_PICKUP',
       name: 'Weekend Market Pickup',
       description: 'Fresh bread and pastries for weekend pickup',
       status: 'OPEN',
@@ -115,6 +117,8 @@ const VendorSalesWindowsPage = () => {
     },
     {
       id: '2',
+      vendorId: 'vendor-1',
+      type: 'DELIVERY',
       name: 'Holiday Delivery Special',
       description: 'Special holiday delivery service',
       status: 'SCHEDULED',
@@ -486,6 +490,8 @@ const VendorSalesWindowsPage = () => {
     // Create new sales window from wizard data
     const newWindow: SalesWindow = {
       id: Date.now().toString(),
+      vendorId: 'vendor-1', // TODO: Get from auth context
+      type: windowData.channels[0]?.type as SalesWindow['type'] || 'PARK_PICKUP',
       name: windowData.name,
       description: windowData.description,
       status: initialStatus,

@@ -505,10 +505,12 @@ const VendorRecipeEditPage: React.FC = () => {
                     control={control}
                     render={({ field }) => (
                       <input
-                        {...field}
                         type="checkbox"
                         checked={field.value}
                         onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                        ref={field.ref}
                         className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                       />
                     )}

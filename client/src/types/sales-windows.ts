@@ -2,10 +2,10 @@
 export interface SalesWindow {
   id: string;
   vendorId: string;
-  type: 'PARK_PICKUP' | 'DELIVERY' | 'CONSIGNMENT' | 'WHOLESALE' | 'MARKET' | 'PORCH_PICKUP' | 'KIOSK_PICKUP' | 'SERVICE_GREENFIELD';
+  type: 'PARK_PICKUP' | 'DELIVERY' | 'CONSIGNMENT' | 'WHOLESALE' | 'MARKET' | 'PORCH_PICKUP' | 'KIOSK_PICKUP' | 'SERVICE_GREENFIELD' | 'MEETUP_PICKUP' | 'DROP_OFF_LOCATION' | 'CUSTOM';
   name: string;
   description?: string;
-  status: 'DRAFT' | 'SCHEDULED' | 'OPEN' | 'CLOSED' | 'FULFILLED' | 'CANCELLED';
+  status: 'DRAFT' | 'SCHEDULED' | 'OPEN' | 'CLOSED' | 'FULFILLED' | 'CANCELLED' | 'ARCHIVED';
   
   // Location
   location_name?: string;
@@ -32,12 +32,19 @@ export interface SalesWindow {
   metrics?: SalesWindowMetric;
   slots?: SalesWindowSlot[];
   
+  // Scheduling properties
+  isEvergreen?: boolean;
+  marketId?: string;
+  startDate?: string;   // ISO date string
+  endDate?: string;     // ISO date string
+  timezone?: string;    // e.g. 'America/New_York'
+  
   createdAt: string;
   updatedAt: string;
 }
 
 export interface SalesChannel {
-  type: 'PARK_PICKUP' | 'DELIVERY' | 'CONSIGNMENT' | 'WHOLESALE' | 'MARKET' | 'PORCH_PICKUP' | 'KIOSK_PICKUP' | 'SERVICE_GREENFIELD';
+  type: 'PARK_PICKUP' | 'DELIVERY' | 'CONSIGNMENT' | 'WHOLESALE' | 'MARKET' | 'PORCH_PICKUP' | 'KIOSK_PICKUP' | 'SERVICE_GREENFIELD' | 'MEETUP_PICKUP' | 'DROP_OFF_LOCATION' | 'CUSTOM';
   config: ChannelConfig;
 }
 
