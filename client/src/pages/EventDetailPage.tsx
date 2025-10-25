@@ -232,7 +232,7 @@ export default function EventDetailPage() {
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-[#2b2b2b] mb-2">Event not found</h2>
           <p className="text-[#4b4b4b] mb-4">The event you're looking for doesn't exist or has been removed.</p>
-          <Button variant="primary" onClick={() => setLocation('/events')}>
+          <Button variant="default" onClick={() => setLocation('/events')}>
             Browse Events
           </Button>
         </Card>
@@ -318,7 +318,7 @@ export default function EventDetailPage() {
                           )}
                         </div>
                         {perk.code && (
-                          <Badge variant="primary" className="text-xs">
+                          <Badge variant="default" className="text-xs">
                             {perk.code}
                           </Badge>
                         )}
@@ -390,7 +390,7 @@ export default function EventDetailPage() {
                       <div className="ml-6">
                         {available > 0 ? (
                           <Button
-                            variant="primary"
+                            variant="default"
                             className="flex items-center gap-2"
                             onClick={() => {
                               // Handle stall purchase
@@ -457,7 +457,7 @@ export default function EventDetailPage() {
                     
                     <div className="flex items-center gap-2">
                       <Badge 
-                        variant={vendor.status === 'APPROVED' ? 'success' : 'secondary'}
+                        variant={vendor.status === 'APPROVED' ? 'default' : 'secondary'}
                         className="text-xs"
                       >
                         {vendor.status}
@@ -538,7 +538,7 @@ export default function EventDetailPage() {
               </div>
               
               <Button
-                variant="primary"
+                variant="default"
                 onClick={() => setShowReviewModal(true)}
               >
                 Write a Review
@@ -678,7 +678,7 @@ export default function EventDetailPage() {
                   <Share2 className="h-4 w-4" />
                 </Button>
                 <Button
-                  variant="primary"
+                  variant="default"
                   onClick={() => setShowInterestModal(true)}
                 >
                   I'm Interested
@@ -760,7 +760,7 @@ export default function EventDetailPage() {
               
               <div className="mt-6 pt-4 border-t border-[#7F232E]/10">
                 <Button
-                  variant="primary"
+                  variant="default"
                   className="w-full flex items-center justify-center gap-2"
                   onClick={() => {
                     // Generate and download iCal
@@ -874,7 +874,7 @@ export default function EventDetailPage() {
                 Cancel
               </Button>
               <Button
-                variant="primary"
+                variant="default"
                 className="flex-1"
                 onClick={() => interestMutation.mutate(interestStatus)}
                 disabled={interestMutation.isPending}
@@ -934,7 +934,7 @@ export default function EventDetailPage() {
                 Cancel
               </Button>
               <Button
-                variant="primary"
+                variant="default"
                 className="flex-1"
                 onClick={() => reviewMutation.mutate()}
                 disabled={reviewMutation.isPending}
@@ -974,7 +974,7 @@ export default function EventDetailPage() {
                 Cancel
               </Button>
               <Button
-                variant="primary"
+                variant="default"
                 className="flex-1"
                 onClick={() => questionMutation.mutate()}
                 disabled={questionMutation.isPending || !questionMessage.trim()}

@@ -267,7 +267,7 @@ Made with organic whole wheat flour, this bread is packed with fiber, protein, a
         }
       };
       
-      return products[id] ?? products['sourdough-bread'];
+      return (products[id] ?? products['sourdough-bread']) as Product;
     };
 
     const mockProduct = getProductData(productId || 'sourdough-bread');

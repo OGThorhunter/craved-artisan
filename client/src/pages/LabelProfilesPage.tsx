@@ -358,7 +358,7 @@ const LabelProfilesPage: React.FC = () => {
     setElementPositions(prev => ({
       ...prev,
       [element]: {
-        ...(prev[element] || {}),
+        ...(prev[element] as any || {}),
         [field]: value
       }
     }));

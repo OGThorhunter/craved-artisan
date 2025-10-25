@@ -289,21 +289,21 @@ export default function Home() {
                   
                                      {/* Review content */}
                    <div className="mb-4">
-                                         <p className="text-sm md:text-base italic leading-relaxed mb-3">"{mockReviews[currentReview].text}"</p>
+                                         <p className="text-sm md:text-base italic leading-relaxed mb-3">"{mockReviews[currentReview]?.text || ''}"</p>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                                                <div className="w-6 h-6 md:w-8 md:h-8 bg-white/20 rounded-full flex items-center justify-center">
                          <span className="text-xs md:text-sm font-semibold">
-                           {mockReviews[currentReview].name.charAt(0)}
+                           {mockReviews[currentReview]?.name?.charAt(0) || ''}
                          </span>
                        </div>
                                                  <div>
-                           <div className="font-medium text-xs md:text-sm">{mockReviews[currentReview].name}</div>
+                           <div className="font-medium text-xs md:text-sm">{mockReviews[currentReview]?.name || ''}</div>
                            <div className="text-xs opacity-75">Verified Customer</div>
                          </div>
                       </div>
                                              <div className="text-right">
-                         <div className="text-xs opacity-75">{mockReviews[currentReview].time}</div>
+                         <div className="text-xs opacity-75">{mockReviews[currentReview]?.time || ''}</div>
                          <div className="text-xs opacity-60">Local Community</div>
                        </div>
                     </div>
@@ -372,15 +372,15 @@ export default function Home() {
                 transition={{ duration: 0.3 }}
                 className="flex items-start gap-3"
               >
-                <div className={`p-2 rounded-lg bg-brand-cream ${mockSiteNews[currentNewsIndex].color}`}>
+                <div className={`p-2 rounded-lg bg-brand-cream ${mockSiteNews[currentNewsIndex]?.color || ''}`}>
                   {(() => {
-                    const IconComponent = mockSiteNews[currentNewsIndex].icon;
+                    const IconComponent = mockSiteNews[currentNewsIndex]?.icon;
                     return <IconComponent className="h-5 w-5" />;
                   })()}
                 </div>
                 <div className="flex-1">
-                  <p className="text-brand-charcoal font-medium">{mockSiteNews[currentNewsIndex].text}</p>
-                  <p className="text-brand-grey text-sm mt-1">{mockSiteNews[currentNewsIndex].time}</p>
+                  <p className="text-brand-charcoal font-medium">{mockSiteNews[currentNewsIndex]?.text || ''}</p>
+                  <p className="text-brand-grey text-sm mt-1">{mockSiteNews[currentNewsIndex]?.time || ''}</p>
                 </div>
               </motion.div>
             </motion.div>
@@ -411,20 +411,20 @@ export default function Home() {
                     <Calendar className="h-4 w-4 text-brand-maroon" />
                   </div>
                   <div className="flex-1">
-                    <h4 className="text-brand-charcoal font-semibold text-sm">{events[currentEventIndex].title}</h4>
+                    <h4 className="text-brand-charcoal font-semibold text-sm">{events[currentEventIndex]?.title || ''}</h4>
                     <div className="flex items-center gap-4 text-xs text-brand-grey mt-1">
                       <div className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
-                        <span>{events[currentEventIndex].date} • {events[currentEventIndex].time}</span>
+                        <span>{events[currentEventIndex]?.date || ''} • {events[currentEventIndex]?.time || ''}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-4 text-xs text-brand-grey mt-1">
                       <div className="flex items-center gap-1">
                         <MapPin className="h-3 w-3" />
-                        <span>{events[currentEventIndex].location}</span>
+                        <span>{events[currentEventIndex]?.location || ''}</span>
                       </div>
-                      <span>• {events[currentEventIndex].distance}</span>
-                      <span>• {events[currentEventIndex].attendees} attending</span>
+                      <span>• {events[currentEventIndex]?.distance || ''}</span>
+                      <span>• {events[currentEventIndex]?.attendees || ''} attending</span>
                     </div>
                   </div>
                 </div>

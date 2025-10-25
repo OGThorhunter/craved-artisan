@@ -71,7 +71,7 @@ export const PayoutSchema = z.object({
   netAmount: z.number(),
   periodStart: z.string(),
   periodEnd: z.string(),
-  status: z.enum(['PENDING', 'APPROVED', 'PROCESSING', 'COMPLETED', 'FAILED', 'CANCELLED', 'REJECTED']),
+  status: z.enum(['PENDING', 'APPROVED', 'PROCESSING', 'COMPLETED', 'FAILED', 'CANCELLED', 'REJECTED', 'PROCESSED']),
   requestedAt: z.string(),
   approvedAt: z.string().optional(),
   approvedBy: z.string().optional(),
@@ -105,7 +105,7 @@ export type RefundMethod = 'ORIGINAL_PAYMENT' | 'BANK_TRANSFER' | 'CHECK' | 'CRE
 export type CreditType = 'REFUND' | 'BONUS' | 'ADJUSTMENT' | 'PROMOTIONAL' | 'COMPENSATION';
 export type CreditStatus = 'ACTIVE' | 'USED' | 'EXPIRED' | 'CANCELLED' | 'PENDING';
 export type PayoutType = 'REVENUE_SHARE' | 'COMMISSION' | 'FIXED_FEE' | 'BONUS' | 'ADJUSTMENT';
-export type PayoutStatus = 'PENDING' | 'APPROVED' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED' | 'REJECTED';
+export type PayoutStatus = 'PENDING' | 'APPROVED' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED' | 'REJECTED' | 'PROCESSED';
 
 // API Request Types
 export interface CreateRefundRequest {

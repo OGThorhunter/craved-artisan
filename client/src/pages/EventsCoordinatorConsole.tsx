@@ -350,7 +350,7 @@ export default function EventsCoordinatorConsole() {
                             <p className="text-sm text-[#4b4b4b] mt-1 line-clamp-2">{event.summary}</p>
                           )}
                         </div>
-                        <Badge variant={getStatusColor(event.status) as 'success' | 'secondary' | 'destructive'}>
+                        <Badge variant={getStatusColor(event.status) as 'default' | 'secondary' | 'destructive'}>
                           {event.status}
                         </Badge>
                       </div>
@@ -568,7 +568,7 @@ export default function EventsCoordinatorConsole() {
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    <Badge variant={getApplicationStatusColor(application.status) as 'success' | 'secondary' | 'warning' | 'destructive'}>
+                    <Badge variant={getApplicationStatusColor(application.status) as 'default' | 'secondary' | 'destructive'}>
                       {application.status}
                     </Badge>
                     <Button
@@ -700,7 +700,7 @@ export default function EventsCoordinatorConsole() {
                   {showApplicationModal.vendor.city}, {showApplicationModal.vendor.state}
                 </p>
                 
-                <Badge variant={getApplicationStatusColor(showApplicationModal.status) as 'success' | 'secondary' | 'warning' | 'destructive'}>
+                <Badge variant={getApplicationStatusColor(showApplicationModal.status) as 'default' | 'secondary' | 'destructive'}>
                   {showApplicationModal.status}
                 </Badge>
               </div>

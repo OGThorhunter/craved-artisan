@@ -217,7 +217,7 @@ export default function NotFoundPage() {
           >
             <div className="w-64 h-64 bg-gradient-to-br from-amber-200 to-orange-300 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow">
               <div className="text-6xl">
-                {getCurrentIllustration()?.icon || '🥖'}
+                {(getCurrentIllustration() as any)?.icon || '🥖'}
               </div>
             </div>
             
