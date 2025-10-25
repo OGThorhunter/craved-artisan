@@ -129,7 +129,7 @@ const RecipeVersionHistoryPage: React.FC = () => {
       const previousVersion = versions.find((v: RecipeVersion) => v.version === currentVersion.version - 1);
 
       if (previousVersion) {
-        const comparisons: VersionComparison[] = currentVersion.ingredients.map(currentIng => {
+        const comparisons: VersionComparison[] = currentVersion.ingredients.map((currentIng: { ingredient: { id: string; name: string }; quantity: number; unit: string; pricePerUnit: number }) => {
           const previousIng = previousVersion.ingredients.find(
             (ing: RecipeIngredientVersion) => ing.ingredient.id === currentIng.ingredient.id
           );
@@ -457,7 +457,7 @@ const RecipeVersionHistoryPage: React.FC = () => {
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                          {currentVersion.ingredients.map((ingredient) => {
+                          {currentVersion.ingredients.map((ingredient: { id: string; ingredient: { id: string; name: string }; quantity: number; unit: string; pricePerUnit: number }) => {
                             const comparison = comparisonData.find(
                               comp => comp.ingredientId === ingredient.ingredient.id
                             );

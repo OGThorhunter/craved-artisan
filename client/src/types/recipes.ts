@@ -115,13 +115,13 @@ export interface RecipeCostAnalysis {
 export interface ProductionPlan {
   id: string;
   recipeId: string;
-  recipe: Recipe;
+  recipe?: Recipe;
   batchSize: number;
   plannedDate: string;
   status: 'planned' | 'in-progress' | 'completed' | 'cancelled';
   ingredientRequirements: {
     ingredientId: string;
-    ingredient: Ingredient;
+    ingredient?: Ingredient;
     requiredQuantity: number;
     availableQuantity: number;
     needsPurchase: boolean;
@@ -132,8 +132,9 @@ export interface ProductionPlan {
   actualYield?: number;
   actualCost?: number;
   notes?: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
+  lastUpdated?: string;
 }
 
 export interface CreateProductionPlanForm {

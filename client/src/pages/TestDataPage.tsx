@@ -22,7 +22,11 @@ const TestDataPage: React.FC = () => {
       const result = await apiFunction();
       setApiResponse({ name, result, timestamp: new Date().toISOString() });
     } catch (error) {
-      setApiResponse({ name, error: error.message, timestamp: new Date().toISOString() });
+      if (error instanceof Error) {
+        setApiResponse({ name, error: error.message, timestamp: new Date().toISOString() });
+      } else {
+        setApiResponse({ name, error: String(error), timestamp: new Date().toISOString() });
+      }
     } finally {
       setLoading(false);
     }

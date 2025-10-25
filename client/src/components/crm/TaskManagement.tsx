@@ -75,6 +75,8 @@ interface TaskManagementProps {
   onTaskUpdate: (task: Task) => void;
   onTaskComplete: (id: string) => void;
   onTaskDelete: (id: string) => void;
+  onTaskAssign?: (taskId: string, userId: string) => void;
+  onTaskReassign?: (taskId: string, fromUserId: string, toUserId: string) => void;
   onTeamMemberCreate: (member: Partial<TeamMember>) => void;
   onTeamMemberUpdate: (member: TeamMember) => void;
   isLoading: boolean;

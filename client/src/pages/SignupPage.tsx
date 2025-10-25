@@ -378,7 +378,7 @@ const SignupPage: React.FC = () => {
           
           // Enhanced error logging
           if (error instanceof Error) {
-            logSignupError(error, 'final_submission', formData as Record<string, unknown>);
+            logSignupError(error, 'final_submission', formData as unknown as Record<string, unknown>);
           }
           
           // Send detailed error to Sentry

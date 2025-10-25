@@ -21,10 +21,12 @@ interface Opportunity {
   id: string;
   customerId: string;
   title: string;
+  description?: string;
   stage: 'lead' | 'qualification' | 'proposal' | 'negotiation' | 'closed_won' | 'closed_lost';
   value: number;
   probability: number;
   expectedCloseDate: string;
+  actualCloseDate?: string;
   assignedTo?: string;
   status: 'active' | 'on_hold' | 'cancelled';
   createdAt: string;

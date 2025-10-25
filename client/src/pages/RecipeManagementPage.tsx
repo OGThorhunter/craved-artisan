@@ -960,16 +960,16 @@ const RecipeManagementPage: React.FC = () => {
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-xl font-semibold text-gray-900">{plan.recipe.name}</h3>
+                        <h3 className="text-xl font-semibold text-gray-900">{plan.recipe?.name ?? "Unnamed recipe"}</h3>
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getProductionStatusColor(plan.status)}`}>
                           {getProductionStatusIcon(plan.status)} {plan.status}
                         </span>
                       </div>
-                      <p className="text-gray-600 mb-2">{plan.recipe.description}</p>
+                      <p className="text-gray-600 mb-2">{plan.recipe?.description ?? "No description"}</p>
                       <div className="flex items-center gap-4 text-sm text-gray-500">
                         <span>📅 {plan.plannedDate}</span>
                         <span>📦 Batch: {plan.batchSize}</span>
-                        <span>🎯 Yield: {plan.estimatedYield} {plan.recipe.yieldUnit}</span>
+                        <span>🎯 Yield: {plan.estimatedYield} {plan.recipe?.yieldUnit ?? "units"}</span>
                         <span>💰 Cost: ${plan.estimatedCost.toFixed(2)}</span>
                       </div>
                     </div>
@@ -1008,7 +1008,7 @@ const RecipeManagementPage: React.FC = () => {
                       {plan.ingredientRequirements.map((req, index) => (
                         <div key={index} className="bg-gray-50 rounded-lg p-3">
                           <div className="flex items-center justify-between mb-2">
-                            <span className="font-medium text-gray-900">{req.ingredient.name}</span>
+                            <span className="font-medium text-gray-900">{req.ingredient?.name ?? "Unknown ingredient"}</span>
                             {req.needsPurchase && (
                               <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full">
                                 Needs Purchase
@@ -1016,11 +1016,11 @@ const RecipeManagementPage: React.FC = () => {
                             )}
                           </div>
                           <div className="text-sm text-gray-600 space-y-1">
-                            <div>Required: {req.requiredQuantity} {req.ingredient.unit}</div>
-                            <div>Available: {req.availableQuantity} {req.ingredient.unit}</div>
+                            <div>Required: {req.requiredQuantity} {req.ingredient?.unit ?? ""}</div>
+                            <div>Available: {req.availableQuantity} {req.ingredient?.unit ?? ""}</div>
                             {req.needsPurchase && (
                               <div className="text-red-600 font-medium">
-                                Purchase: {req.purchaseQuantity} {req.ingredient.unit}
+                                Purchase: {req.purchaseQuantity} {req.ingredient?.unit ?? ""}
                               </div>
                             )}
                           </div>

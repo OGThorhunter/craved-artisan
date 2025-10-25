@@ -7,7 +7,7 @@ import {
   Calculator, DollarSign, Package, AlertTriangle, CheckCircle,
   Camera, Upload, Download, Share2, Settings, Grid, List,
   Search, Filter, Star, Clock, Users, Calendar, MapPin,
-  ShoppingCart, Heart, Brain, Zap, Target, TrendingUp,
+  ShoppingCart, Heart, Brain, Zap, Target, TrendingUp, X,
   BarChart3, PieChart, LineChart, Activity, ArrowUpRight,
   ArrowDownRight, AlertCircle, Info
 } from 'lucide-react';
