@@ -212,7 +212,7 @@ export class LabelBatchProcessor {
           resolutionErrors.push(...resolution.errors);
           progress.warnings.push(...resolution.warnings.map(w => ({
             jobId: order.id,
-            message: w.message || w.error
+            message: w.message
           })));
         }
 
@@ -299,16 +299,18 @@ export class LabelBatchProcessor {
         // For now, we'll process the first job as representative
         if (group.printJobs.length > 0) {
           const firstJob = group.printJobs[0];
-          const output = await engine.generatePrintOutput(firstJob);
-          
-          outputs.push({
-            groupId: group.id,
-            engine: group.engine,
-            output,
-            jobCount: group.printJobs.length
-          });
+          if (firstJob) {
+            const output = await engine.generatePrintOutput(firstJob);
+            
+            outputs.push({
+              groupId: group.id,
+              engine: group.engine,
+              output,
+              jobCount: group.printJobs.length
+            });
 
-          progress.completedJobs += group.printJobs.length;
+            progress.completedJobs += group.printJobs.length;
+          }
         }
 
       } catch (error) {
@@ -509,15 +511,18 @@ export class LabelCompilationService {
         };
       }
 
-      const output = batchResult.outputs[0].output;
+      const output = batchResult.outputs[0]?.output;
       
       // Generate preview if requested
       let preview: string | undefined;
       if (batchResult.groups.length > 0 && batchResult.groups[0].printJobs.length > 0) {
         const engine = this.batchProcessor['printEngines'].get(options.engine || 'PDF');
         if (engine) {
-          const previewResult = await engine.generatePreview(batchResult.groups[0].printJobs[0]);
-          preview = previewResult.imageData;
+          const firstJob = batchResult.groups[0].printJobs[0];
+          if (firstJob) {
+            const previewResult = await engine.generatePreview(firstJob);
+            preview = previewResult.imageData;
+          }
         }
       }
 

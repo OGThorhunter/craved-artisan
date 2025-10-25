@@ -576,8 +576,7 @@ export class LabelResolver {
           x: 2,
           y: 14,
           width: 46,
-          height: 8,
-          showText: true
+          height: 8
         }
       ],
       createdAt: new Date().toISOString(),

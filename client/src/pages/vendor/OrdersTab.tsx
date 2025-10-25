@@ -243,7 +243,7 @@ export function OrdersTab() {
                         </tr>
                       </thead>
                       <tbody>
-                        {selectedOrderData.items.map((item) => (
+                        {selectedOrderData.items.map((item: any) => (
                           <tr key={item.id} className="border-t border-gray-100">
                             <td className="py-3 px-4 text-[#2C2C2C]">{item.productName}</td>
                             <td className="py-3 px-4 text-[#2C2C2C]">{item.quantity}</td>
@@ -264,7 +264,7 @@ export function OrdersTab() {
                 <div>
                   <h4 className="font-semibold text-[#2C2C2C] mb-3">Fulfillment Details</h4>
                   <div className="space-y-2">
-                    {selectedOrderData.fulfillments.map((f, idx) => (
+                    {selectedOrderData.fulfillments.map((f: any, idx: number) => (
                       <div key={idx} className="bg-white rounded-lg p-4">
                         <p className="font-medium text-[#2C2C2C]">{f.method}</p>
                         <p className="text-sm text-gray-600">
@@ -284,7 +284,7 @@ export function OrdersTab() {
                 <div>
                   <h4 className="font-semibold text-[#2C2C2C] mb-3">Order History</h4>
                   <div className="space-y-2">
-                    {selectedOrderData.events.map((event, idx) => (
+                    {selectedOrderData.events.map((event: any, idx: number) => (
                       <div key={idx} className="bg-white rounded-lg p-3 flex items-start space-x-3">
                         <Clock className="w-4 h-4 text-gray-500 mt-0.5" />
                         <div className="flex-1">

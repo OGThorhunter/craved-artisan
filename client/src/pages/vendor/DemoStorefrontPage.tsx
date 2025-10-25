@@ -462,7 +462,10 @@ const orderWindows = [
     address: 'Atlanta Metro Area',
     days: ['Wednesday', 'Saturday'],
     time: '2:00 PM - 8:00 PM',
-    fee: '$5.99'
+    fee: '$5.99',
+    status: 'Open',
+    location: 'Atlanta Metro Area',
+    orderBy: 'Tuesday 6:00 PM'
   },
   {
     id: 'farmers-market-sat',
@@ -471,7 +474,10 @@ const orderWindows = [
     address: '4500 Peachtree Rd NE, Atlanta, GA 30319',
     days: ['Saturday'],
     time: '10:00 AM - 6:00 PM',
-    eventUrl: 'https://atlantafarmersmarket.com'
+    eventUrl: 'https://atlantafarmersmarket.com',
+    status: 'Open',
+    location: '4500 Peachtree Rd NE, Atlanta, GA 30319',
+    orderBy: 'Friday 5:00 PM'
   },
   {
     id: 'ponce-market-sun',
@@ -480,7 +486,10 @@ const orderWindows = [
     address: '675 Ponce de Leon Ave NE, Atlanta, GA 30308',
     days: ['Sunday'],
     time: '11:00 AM - 7:00 PM',
-    eventUrl: 'https://poncecitymarket.com/events'
+    eventUrl: 'https://poncecitymarket.com/events',
+    status: 'Open',
+    location: '675 Ponce de Leon Ave NE, Atlanta, GA 30308',
+    orderBy: 'Saturday 6:00 PM'
   },
   {
     id: 'krog-market-first-sat',
@@ -489,7 +498,10 @@ const orderWindows = [
     address: '99 Krog St NE, Atlanta, GA 30307',
     days: ['First Saturday'],
     time: '9:00 AM - 5:00 PM',
-    eventUrl: 'https://krogstreetmarket.com/artisan-market'
+    eventUrl: 'https://krogstreetmarket.com/artisan-market',
+    status: 'Open',
+    location: '99 Krog St NE, Atlanta, GA 30307',
+    orderBy: 'Friday 5:00 PM'
   },
   {
     id: 'workshop-jan20',
@@ -498,7 +510,10 @@ const orderWindows = [
     address: '123 Artisan Way, Atlanta, GA 30301',
     days: ['Saturday'],
     time: '2:00 PM - 4:00 PM',
-    eventUrl: null
+    eventUrl: null,
+    status: 'Open',
+    location: '123 Artisan Way, Atlanta, GA 30301',
+    orderBy: 'Friday 5:00 PM'
   },
   {
     id: 'bread-class-feb1',
@@ -507,7 +522,10 @@ const orderWindows = [
     address: '123 Artisan Way, Atlanta, GA 30301',
     days: ['Thursday'],
     time: '1:00 PM - 4:00 PM',
-    eventUrl: null
+    eventUrl: null,
+    status: 'Open',
+    location: '123 Artisan Way, Atlanta, GA 30301',
+    orderBy: 'Wednesday 5:00 PM'
   }
 ];
 
@@ -583,7 +601,8 @@ const upcomingEvents = [
     address: '123 Artisan Way, Atlanta, GA 30301',
     description: 'Learn the art of sourdough bread making from our master baker',
     eventUrl: null,
-    coordinates: [33.7490, -84.3880]
+    coordinates: [33.7490, -84.3880],
+    location: '123 Artisan Way, Atlanta, GA 30301'
   },
   {
     id: '2',
@@ -596,7 +615,8 @@ const upcomingEvents = [
     address: '4500 Peachtree Rd NE, Atlanta, GA 30319',
     description: 'Weekly farmers market featuring local artisans and fresh produce',
     eventUrl: 'https://atlantafarmersmarket.com',
-    coordinates: [33.8590, -84.3580]
+    coordinates: [33.8590, -84.3580],
+    location: '4500 Peachtree Rd NE, Atlanta, GA 30319'
   },
   {
     id: '3',
@@ -609,7 +629,8 @@ const upcomingEvents = [
     address: '675 Ponce de Leon Ave NE, Atlanta, GA 30308',
     description: 'Artisan pop-up market in the heart of Ponce City Market',
     eventUrl: 'https://poncecitymarket.com/events',
-    coordinates: [33.7690, -84.3590]
+    coordinates: [33.7690, -84.3590],
+    location: '675 Ponce de Leon Ave NE, Atlanta, GA 30308'
   },
   {
     id: '4',
@@ -622,7 +643,8 @@ const upcomingEvents = [
     address: '123 Artisan Way, Atlanta, GA 30301',
     description: 'Hands-on bread making workshop for beginners',
     eventUrl: null,
-    coordinates: [33.7490, -84.3880]
+    coordinates: [33.7490, -84.3880],
+    location: '123 Artisan Way, Atlanta, GA 30301'
   },
   {
     id: '5',
@@ -635,7 +657,8 @@ const upcomingEvents = [
     address: '99 Krog St NE, Atlanta, GA 30307',
     description: 'Monthly artisan market at Krog Street Market',
     eventUrl: 'https://krogstreetmarket.com/artisan-market',
-    coordinates: [33.7590, -84.3590]
+    coordinates: [33.7590, -84.3590],
+    location: '99 Krog St NE, Atlanta, GA 30307'
   }
 ];
 
@@ -1168,11 +1191,11 @@ const DemoStorefrontPage: React.FC = () => {
                        ? 'ring-2 ring-offset-2' 
                        : ''
                    }`}
-                   style={{
-                     ringColor: selectedLocation?.type === 'pickup' && selectedLocation?.id === 'main' 
-                       ? siteSettings.linkColor 
-                       : undefined
-                   }}
+                  style={{
+                    borderColor: selectedLocation?.type === 'pickup' && selectedLocation?.id === 'main' 
+                      ? siteSettings.linkColor 
+                      : undefined
+                  }}
                  >
                    <h4 className="font-semibold mb-1" style={{ color: siteSettings.fontColor }}>
                      Main Location
@@ -1200,9 +1223,9 @@ const DemoStorefrontPage: React.FC = () => {
                        : ''
                    }`}
                    style={{
-                     ringColor: selectedLocation?.type === 'pickup' && selectedLocation?.id === 'midtown' 
-                       ? siteSettings.linkColor 
-                       : undefined
+                    borderColor: selectedLocation?.type === 'pickup' && selectedLocation?.id === 'midtown' 
+                      ? siteSettings.linkColor 
+                      : undefined
                    }}
                  >
                    <h4 className="font-semibold mb-1" style={{ color: siteSettings.fontColor }}>
@@ -1250,7 +1273,7 @@ const DemoStorefrontPage: React.FC = () => {
                          : ''
                      }`}
                      style={{
-                       ringColor: selectedLocation?.type === 'storefront' && selectedLocation?.id === `storefront-${index}` 
+                       borderColor: selectedLocation?.type === 'storefront' && selectedLocation?.id === `storefront-${index}` 
                          ? siteSettings.buttonColor 
                          : undefined
                      }}
@@ -1321,7 +1344,7 @@ const DemoStorefrontPage: React.FC = () => {
                          : ''
                      }`}
                      style={{
-                       ringColor: selectedLocation?.type === 'event' && selectedLocation?.id === `event-${index}` 
+                       borderColor: selectedLocation?.type === 'event' && selectedLocation?.id === `event-${index}` 
                          ? siteSettings.linkColor 
                          : undefined
                      }}

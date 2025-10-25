@@ -19,7 +19,7 @@ export default function FinancialsTab({ vendorId }: FinancialsTabProps) {
   const [customFrom, setCustomFrom] = useState<string>('');
   const [customTo, setCustomTo] = useState<string>('');
   const [cashFlowMethod, setCashFlowMethod] = useState<'direct' | 'indirect'>('direct');
-  const [balanceSheetDate, setBalanceSheetDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [balanceSheetDate, setBalanceSheetDate] = useState<string>(new Date().toISOString().split('T')[0] || '');
 
   // Calculate date range
   const getDateRange = () => {
