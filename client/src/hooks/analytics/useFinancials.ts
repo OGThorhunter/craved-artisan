@@ -244,7 +244,7 @@ function generateComprehensiveMockData(range: string, asOf?: string): Comprehens
     const date = new Date();
     date.setDate(date.getDate() - (days - i - 1));
     return {
-      date: date.toISOString().split('T')[0],
+      date: date.toISOString().split('T')[0]!,
       revenue: Math.floor(Math.random() * 1000) + 100,
       profit: Math.floor(Math.random() * 500) + 50,
       orders: Math.floor(Math.random() * 20) + 1,
@@ -346,7 +346,7 @@ function generateComprehensiveMockData(range: string, asOf?: string): Comprehens
       netIncome,
     },
     balanceSheet: {
-      asOf: asOfDate.toISOString().split('T')[0],
+      asOf: asOfDate.toISOString().split('T')[0]!,
       assets: {
         current: {
           cash,

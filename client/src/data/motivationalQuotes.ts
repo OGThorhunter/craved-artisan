@@ -120,7 +120,7 @@ export const motivationalQuotes: QuoteData[] = [
 
 // Helper function to get a random quote
 export const getRandomQuote = (): QuoteData => {
-  return motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
+  return motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)] || motivationalQuotes[0];
 };
 
 // Helper function to get a quote by category
