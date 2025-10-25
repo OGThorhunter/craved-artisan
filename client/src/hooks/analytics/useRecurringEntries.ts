@@ -99,7 +99,7 @@ const calculateNextDueDate = (startDate: string, interval: string): string => {
   const start = new Date(startDate);
   const today = new Date();
   
-  if (start > today) return start.toISOString().split('T')[0];
+  if (start > today) return start.toISOString().split('T')[0] || '';
   
   let next = new Date(start);
   while (next <= today) {
@@ -119,7 +119,7 @@ const calculateNextDueDate = (startDate: string, interval: string): string => {
     }
   }
   
-  return next.toISOString().split('T')[0];
+  return next.toISOString().split('T')[0] || '';
 };
 
 // Hook for fetching recurring entries

@@ -84,7 +84,7 @@ export function useSupportSSE() {
   // Get latest event for a specific ticket
   const getLatestTicketEvent = useCallback((ticketId: string): SSEEvent | null => {
     const ticketEvents = events.filter(e => e.ticketId === ticketId);
-    return ticketEvents.length > 0 ? ticketEvents[ticketEvents.length - 1] : null;
+    return ticketEvents.length > 0 ? ticketEvents[ticketEvents.length - 1] ?? null : null;
   }, [events]);
   
   // Clear all events

@@ -36,7 +36,7 @@ export function useUpdateIssue() {
   
   return useMutation({
     mutationFn: async ({ id, ...params }: UpdateIssueParams) => {
-      const response = await api.patch(`/api/issues/${id}`, params);
+      const response = await api.put(`/api/issues/${id}`, params);
       return response.data;
     },
     onSuccess: (issue) => {

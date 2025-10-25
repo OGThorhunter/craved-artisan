@@ -317,8 +317,8 @@ function generateComprehensiveMockData(range: string, asOf?: string): Comprehens
   return {
     profitLoss: {
       period: {
-        from: series[0].date,
-        to: series[series.length - 1].date,
+        from: series[0]?.date || '',
+        to: series[series.length - 1]?.date || '',
       },
       revenue: {
         grossSales,
@@ -385,8 +385,8 @@ function generateComprehensiveMockData(range: string, asOf?: string): Comprehens
     },
     cashFlow: {
       period: {
-        from: series[0].date,
-        to: series[series.length - 1].date,
+        from: series[0]?.date || '',
+        to: series[series.length - 1]?.date || '',
       },
       operating: {
         netIncome,
@@ -433,11 +433,11 @@ function generateARAgingData(totalAR: number) {
   const over90 = totalAR * 0.03;
   
   const aging = [
-    { customer: 'Acme Corp', invoice: 'INV-001', amount: current * 0.3, dueDate: new Date().toISOString().split('T')[0], daysOverdue: 0, status: 'current' as const },
-    { customer: 'Tech Solutions', invoice: 'INV-002', amount: days30 * 0.4, dueDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], daysOverdue: 15, status: 'overdue' as const },
-    { customer: 'Global Industries', invoice: 'INV-003', amount: days60 * 0.5, dueDate: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], daysOverdue: 45, status: 'overdue' as const },
-    { customer: 'Startup Inc', invoice: 'INV-004', amount: days90 * 0.6, dueDate: new Date(Date.now() - 75 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], daysOverdue: 75, status: 'critical' as const },
-    { customer: 'Legacy Corp', invoice: 'INV-005', amount: over90 * 0.7, dueDate: new Date(Date.now() - 120 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], daysOverdue: 120, status: 'critical' as const },
+    { customer: 'Acme Corp', invoice: 'INV-001', amount: current * 0.3, dueDate: new Date().toISOString().split('T')[0] || '', daysOverdue: 0, status: 'current' as const },
+    { customer: 'Tech Solutions', invoice: 'INV-002', amount: days30 * 0.4, dueDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] || '', daysOverdue: 15, status: 'overdue' as const },
+    { customer: 'Global Industries', invoice: 'INV-003', amount: days60 * 0.5, dueDate: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] || '', daysOverdue: 45, status: 'overdue' as const },
+    { customer: 'Startup Inc', invoice: 'INV-004', amount: days90 * 0.6, dueDate: new Date(Date.now() - 75 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] || '', daysOverdue: 75, status: 'critical' as const },
+    { customer: 'Legacy Corp', invoice: 'INV-005', amount: over90 * 0.7, dueDate: new Date(Date.now() - 120 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] || '', daysOverdue: 120, status: 'critical' as const },
   ];
   
   const trends = Array.from({ length: 30 }, (_, i) => {
@@ -466,11 +466,11 @@ function generateAPAgingData(totalAP: number) {
   const over90 = totalAP * 0.005;
   
   const aging = [
-    { vendor: 'Raw Materials Co', invoice: 'PO-001', amount: current * 0.4, dueDate: new Date().toISOString().split('T')[0], daysOverdue: 0, status: 'current' as const },
-    { vendor: 'Logistics Inc', invoice: 'PO-002', amount: days30 * 0.5, dueDate: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], daysOverdue: 20, status: 'overdue' as const },
-    { vendor: 'Equipment Supply', invoice: 'PO-003', amount: days60 * 0.6, dueDate: new Date(Date.now() - 50 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], daysOverdue: 50, status: 'overdue' as const },
-    { vendor: 'Software Licenses', invoice: 'PO-004', amount: days90 * 0.7, dueDate: new Date(Date.now() - 80 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], daysOverdue: 80, status: 'critical' as const },
-    { vendor: 'Legal Services', invoice: 'PO-005', amount: over90 * 0.8, dueDate: new Date(Date.now() - 110 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], daysOverdue: 110, status: 'critical' as const },
+    { vendor: 'Raw Materials Co', invoice: 'PO-001', amount: current * 0.4, dueDate: new Date().toISOString().split('T')[0] || '', daysOverdue: 0, status: 'current' as const },
+    { vendor: 'Logistics Inc', invoice: 'PO-002', amount: days30 * 0.5, dueDate: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] || '', daysOverdue: 20, status: 'overdue' as const },
+    { vendor: 'Equipment Supply', invoice: 'PO-003', amount: days60 * 0.6, dueDate: new Date(Date.now() - 50 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] || '', daysOverdue: 50, status: 'overdue' as const },
+    { vendor: 'Software Licenses', invoice: 'PO-004', amount: days90 * 0.7, dueDate: new Date(Date.now() - 80 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] || '', daysOverdue: 80, status: 'critical' as const },
+    { vendor: 'Legal Services', invoice: 'PO-005', amount: over90 * 0.8, dueDate: new Date(Date.now() - 110 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] || '', daysOverdue: 110, status: 'critical' as const },
   ];
   
   const trends = Array.from({ length: 30 }, (_, i) => {
