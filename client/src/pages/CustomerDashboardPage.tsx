@@ -990,13 +990,13 @@ export default function CustomerDashboardPage() {
     }
 
     // Update messages when available
-    if (messagesData?.success && messagesData.messages) {
-      setMessages(messagesData.messages);
+    if ((messagesData as any)?.success && (messagesData as any).messages) {
+      setMessages((messagesData as any).messages);
     }
 
     // Update events when available
-    if (eventsData?.success && eventsData.events) {
-      setUpcomingEvents(eventsData.events);
+    if ((eventsData as any)?.success && (eventsData as any).events) {
+      setUpcomingEvents((eventsData as any).events);
     }
   }, [customerData, favoritesData, messagesData, eventsData, customerLoading, ordersLoading, favoritesLoading]);
 
@@ -1869,10 +1869,10 @@ export default function CustomerDashboardPage() {
 
               {/* Orders Content */}
               {!ordersLoading && !ordersError && detailedOrdersData && (() => {
-                const detailedOrders = detailedOrdersData.orders || [];
+                const detailedOrders = (detailedOrdersData as any).orders || [];
                 
                 // Filter orders by status
-                const filteredOrders = detailedOrders.filter(order => {
+                const filteredOrders = detailedOrders.filter((order: any) => {
                   if (statusFilter === 'all') return true;
                   return order.fulfillment?.status === statusFilter || order.status === statusFilter;
                 });
@@ -1901,11 +1901,11 @@ export default function CustomerDashboardPage() {
                             className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-green focus:border-transparent bg-white"
                           >
                             <option value="all">All Orders ({detailedOrders.length})</option>
-                            <option value="COMPLETED">Completed ({detailedOrders.filter(o => o.fulfillment?.status === 'COMPLETED').length})</option>
-                            <option value="IN_PROGRESS">In Progress ({detailedOrders.filter(o => o.fulfillment?.status === 'IN_PROGRESS').length})</option>
-                            <option value="PENDING">Pending ({detailedOrders.filter(o => o.fulfillment?.status === 'PENDING').length})</option>
-                            <option value="CANCELLED">Cancelled ({detailedOrders.filter(o => o.fulfillment?.status === 'CANCELLED').length})</option>
-                            <option value="FAILED">Failed ({detailedOrders.filter(o => o.fulfillment?.status === 'FAILED').length})</option>
+                            <option value="COMPLETED">Completed ({detailedOrders.filter((o: any) => o.fulfillment?.status === 'COMPLETED').length})</option>
+                            <option value="IN_PROGRESS">In Progress ({detailedOrders.filter((o: any) => o.fulfillment?.status === 'IN_PROGRESS').length})</option>
+                            <option value="PENDING">Pending ({detailedOrders.filter((o: any) => o.fulfillment?.status === 'PENDING').length})</option>
+                            <option value="CANCELLED">Cancelled ({detailedOrders.filter((o: any) => o.fulfillment?.status === 'CANCELLED').length})</option>
+                            <option value="FAILED">Failed ({detailedOrders.filter((o: any) => o.fulfillment?.status === 'FAILED').length})</option>
                           </select>
                           </div>
                         <div className="flex items-center gap-4">
@@ -1958,7 +1958,7 @@ export default function CustomerDashboardPage() {
                     ) : (
                       <>
                         <div className="space-y-6">
-                          {currentOrders.map((order) => {
+                          {currentOrders.map((order: any) => {
                             const StatusIcon = getStatusInfo(order.fulfillment?.status || 'PENDING').icon;
                             const statusColor = getStatusInfo(order.fulfillment?.status || 'PENDING').color;
                             const statusBgColor = getStatusInfo(order.fulfillment?.status || 'PENDING').bgColor;
@@ -1992,7 +1992,7 @@ export default function CustomerDashboardPage() {
                                 </div>
 
                                 <div className="space-y-2 mb-4">
-                                  {order.items.slice(0, 3).map((item) => (
+                                  {order.items.slice(0, 3).map((item: any) => (
                                     <div key={item.id} className="flex items-center justify-between gap-4 text-sm">
                                       {item.product.imageUrl ? (
                                         <img 
@@ -3253,13 +3253,13 @@ export default function CustomerDashboardPage() {
                       <p className="text-sm text-gray-600 mb-3">
                         Get order updates, delivery notifications, and exclusive deals via text message.
                       </p>
-                      {settingsData.smsOptIn && settingsData.smsConsentText && (
+                      {settingsData.smsOptIn && (settingsData as any).smsConsentText && (
                         <div className="bg-white p-4 rounded-lg border border-gray-200">
                           <p className="text-xs text-gray-700 leading-relaxed">
-                            {settingsData.smsConsentText}
+                            {(settingsData as any).smsConsentText}
                           </p>
                           <p className="text-xs text-gray-500 mt-2">
-                            Consent date: {settingsData.smsOptInDate ? new Date(settingsData.smsOptInDate).toLocaleDateString() : 'N/A'}
+                            Consent date: {(settingsData as any).smsOptInDate ? new Date((settingsData as any).smsOptInDate).toLocaleDateString() : 'N/A'}
                           </p>
                         </div>
                       )}
@@ -3306,7 +3306,7 @@ export default function CustomerDashboardPage() {
                             <h3 className="font-semibold capitalize">{platform}</h3>
                             {connection.connected ? (
                               <p className="text-sm text-green-600">
-                                Connected as {connection.username || connection.email}
+                                Connected as {(connection as any).username || (connection as any).email}
                               </p>
                             ) : (
                               <p className="text-sm text-gray-500">Not connected</p>

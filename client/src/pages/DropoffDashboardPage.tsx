@@ -782,8 +782,8 @@ export default function DropoffDashboardPage() {
                 <div className="space-y-3">
                   {[...deliveries, ...pickups]
                     .sort((a, b) => {
-                      const aTime = ('expectedTime' in a ? a.expectedTime : 'scheduledTime' in a ? a.scheduledTime : new Date()).getTime();
-                      const bTime = ('expectedTime' in b ? b.expectedTime : 'scheduledTime' in b ? b.scheduledTime : new Date()).getTime();
+                      const aTime = new Date('expectedTime' in a ? a.expectedTime : 'scheduledTime' in a ? a.scheduledTime : new Date()).getTime();
+                      const bTime = new Date('expectedTime' in b ? b.expectedTime : 'scheduledTime' in b ? b.scheduledTime : new Date()).getTime();
                       return bTime - aTime;
                     })
                     .slice(0, 5)

@@ -46,6 +46,16 @@ import type { SalesWindow, Order } from '@/lib/api/sales';
 import type { Event as EventType } from '@/lib/api/events';
 import type { RefundRequest, Payout } from '@/lib/api/refunds-payouts';
 
+interface Stall {
+  id: string;
+  number: string;
+  size: string;
+  price: number;
+  status: string;
+  vendorId?: string;
+  vendorName?: string;
+}
+
 interface Promotion {
   id: string;
   eventId: string;
@@ -229,7 +239,7 @@ export default function EventCoordinatorDashboardPage() {
         status: 'published',
         visibility: 'public',
         capacity: 60,
-        categories: ['artisan', 'farmers-market', 'local'],
+        categories: ['artisan', 'farmers-market', 'local'] as any,
         tags: ['artisan', 'farmers-market', 'local'],
         coverImage: '/images/events/market-1.jpg',
         imageUrl: '/images/events/market-1.jpg',
@@ -249,7 +259,7 @@ export default function EventCoordinatorDashboardPage() {
         status: 'draft',
         visibility: 'private',
         capacity: 50,
-        categories: ['crafts', 'jewelry', 'home-decor'],
+        categories: ['crafts', 'jewelry', 'home-decor'] as any,
         tags: ['crafts', 'jewelry', 'home-decor'],
         coverImage: '/images/events/craft-fair.jpg',
         imageUrl: '/images/events/craft-fair.jpg',
@@ -411,7 +421,7 @@ export default function EventCoordinatorDashboardPage() {
         startDate: '2024-03-15T09:00:00Z',
         endDate: '2024-03-15T17:00:00Z',
         capacity: 60,
-        categories: ['artisan', 'farmers-market', 'local'],
+        categories: ['artisan', 'farmers-market', 'local'] as any,
         tags: ['artisan', 'farmers-market', 'local'],
         status: 'published',
         visibility: 'public',
@@ -434,7 +444,7 @@ export default function EventCoordinatorDashboardPage() {
         startDate: '2024-04-20T10:00:00Z' as any,
         endDate: '2024-04-20T18:00:00Z',
         capacity: 50,
-        categories: ['crafts', 'jewelry', 'home-decor'],
+        categories: ['crafts', 'jewelry', 'home-decor'] as any,
         tags: ['crafts', 'jewelry', 'home-decor'],
         status: 'draft',
         visibility: 'private',
