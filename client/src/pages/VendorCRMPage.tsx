@@ -27,14 +27,21 @@ interface Opportunity {
   probability: number;
   expectedCloseDate: string;
   actualCloseDate?: string;
+  source?: string;
   assignedTo?: string;
+  tags: string[];
+  customFields: Record<string, unknown>;
   status: 'active' | 'on_hold' | 'cancelled';
   createdAt: string;
   updatedAt: string;
   lastActivityAt: string;
-  source?: string;
-  tags?: string[];
-  customFields?: Record<string, any>;
+  customer?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    company?: string;
+  };
 }
 
 interface Task {
@@ -184,7 +191,7 @@ const fetchOpportunities = async (filters: any, localOpportunities: any[]) => {
         actualCloseDate: undefined,
         source: 'Website',
         assignedTo: 'sales@company.com',
-        tags: ['Enterprise', 'Software', 'High Value'] as string[],
+        tags: ['Enterprise', 'Software', 'High Value'],
         customFields: {},
         status: 'active' as const,
         createdAt: '2024-01-01',

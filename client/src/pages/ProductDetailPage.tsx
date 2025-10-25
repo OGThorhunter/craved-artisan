@@ -117,160 +117,14 @@ interface Product {
     cutOffTime: string;
     leadTime: string;
   };
-        metadata: {
-        sku: 'SOUR-001',
-        batchNumber: 'B2024-01-15',
-        ingredientCost: 3.50,
-        recipeId: 'RCP-001'
-      },
-      createdAt: '2024-01-15',
-      updatedAt: '2024-01-20',
-      // Enhanced properties
-      variants: [
-        {
-          id: 'v1',
-          name: 'Small Loaf (1 lb)',
-          price: 9.00,
-          image: '/images/products/sourdough-small.jpg',
-          inStock: true,
-          weight: '1 lb'
-        },
-        {
-          id: 'v2',
-          name: 'Large Loaf (2 lb)',
-          price: 16.00,
-          image: '/images/products/sourdough-large.jpg',
-          inStock: true,
-          weight: '2 lb'
-        }
-      ],
-      selectedVariant: 'v1',
-      unit: 'loaf',
-      estimatedTax: 0.72,
-      fees: [
-        {
-          name: 'Delivery Fee',
-          amount: 5.00,
-          description: 'Standard delivery within 25 miles'
-        }
-      ],
-      scheduleSlots: [
-        {
-          id: 'slot1',
-          date: 'Friday, January 26',
-          time: '3:00 PM - 5:00 PM',
-          available: true,
-          maxOrders: 50,
-          currentOrders: 23
-        },
-        {
-          id: 'slot2',
-          date: 'Saturday, January 27',
-          time: '9:00 AM - 11:00 AM',
-          available: true,
-          maxOrders: 50,
-          currentOrders: 15
-        }
-      ],
-      selectedSchedule: 'slot1',
-      preorder: false,
-      preorderWindow: {
-        start: '2024-01-20',
-        end: '2024-01-25',
-        maxOrders: 100
-      },
-      madeToOrder: true,
-      prepTime: '24 hours',
-      shelfLife: '5-7 days',
-      reheatInstructions: 'Warm in oven at 350°F for 5-10 minutes',
-      serveInstructions: 'Best served at room temperature. Slice and enjoy!',
-      cancellationPolicy: {
-        window: '24 hours before pickup',
-        rules: [
-          'Full refund if cancelled 24+ hours before pickup',
-          '50% refund if cancelled 12-24 hours before pickup',
-          'No refund if cancelled less than 12 hours before pickup'
-        ]
-      },
-      customOrderRules: [
-        'Minimum 24 hours notice for custom orders',
-        'Special dietary requests require 48 hours notice',
-        'Bulk orders (10+ loaves) require 1 week notice'
-      ],
-      bundles: [
-        {
-          id: 'b1',
-          name: 'Bread & Butter Bundle',
-          products: ['sourdough', 'artisanal-butter'],
-          price: 14.00,
-          savings: 2.00,
-          image: '/images/bundles/bread-butter.jpg'
-        }
-      ],
-      subscriptions: [
-        {
-          id: 'sub1',
-          name: 'Weekly Bread Share',
-          frequency: 'Weekly',
-          price: 32.00,
-          savings: 4.00,
-          description: 'Get fresh sourdough delivered weekly'
-        }
-      ],
-      giftOptions: {
-        giftWrap: true,
-        giftNote: true,
-        giftWrapPrice: 2.00
-      },
-      waitlist: false,
-      notifyWhenAvailable: true,
-      digitalGoods: [
-        {
-          id: 'dg1',
-          name: 'Sourdough Masterclass',
-          type: 'class',
-          price: 25.00,
-          description: 'Learn the art of sourdough baking'
-        }
-      ],
-      serviceBookings: [
-        {
-          id: 'sb1',
-          name: 'Baking Consultation',
-          duration: '1 hour',
-          price: 50.00,
-          availableSlots: ['Monday 2PM', 'Wednesday 4PM', 'Friday 10AM']
-        }
-      ],
-      sourcing: {
-        organic: true,
-        local: true,
-        nonGMO: true,
-        fairTrade: false,
-        sustainable: true,
-        farmToTable: true
-      },
-      frequentlyBoughtTogether: ['artisanal-butter', 'local-honey', 'olive-oil'],
-      pairsWith: ['soup', 'cheese', 'wine'],
-      fromThisVendor: ['cinnamon-rolls', 'croissants', 'baguettes'],
-      questions: [
-        {
-          id: 'q1',
-          question: 'How long does the sourdough stay fresh?',
-          answer: 'Our sourdough stays fresh for 5-7 days when stored properly in a cool, dry place.',
-          answeredBy: 'Rose Creek Bakery',
-          date: '2024-01-18',
-          helpful: 8
-        },
-        {
-          id: 'q2',
-          question: 'Can I freeze the bread?',
-          answer: 'Yes! You can freeze our sourdough for up to 3 months. Thaw at room temperature.',
-          answeredBy: 'Rose Creek Bakery',
-          date: '2024-01-19',
-          helpful: 12
-        }
-      ]
+  metadata: {
+    sku: string;
+    batchNumber: string;
+    ingredientCost: number;
+    recipeId: string;
+  };
+  createdAt: string;
+  updatedAt: string;
   // Enhanced properties for advanced PDP features
   variants?: Array<{
     id: string;
@@ -431,6 +285,10 @@ export default function ProductDetailPage() {
   const [countdown, setCountdown] = useState<{ hours: number; minutes: number; seconds: number }>({ hours: 0, minutes: 0, seconds: 0 });
 
   if (!productId) return <div>Missing product id.</div>;
+
+  if (!product) {
+    return <div>Loading...</div>;
+  }
 
   // Countdown timer effect
   useEffect(() => {
@@ -623,6 +481,14 @@ Perfect for sandwiches, toast, or simply enjoyed with butter and honey.`,
     setCurrentImageIndex(index);
     setShowImageModal(true);
   };
+
+  const nextAvailable = product
+    ? (product.availability.pickup
+        ? product.availability.nextPickup
+        : product.availability.delivery
+          ? product.availability.nextDelivery
+          : product.availability.leadTime)
+    : "";
 
   return (
     <div className="page-container bg-gray-50">
@@ -875,10 +741,10 @@ Perfect for sandwiches, toast, or simply enjoyed with butter and honey.`,
                 </div>
                 
                 <div className="space-y-2 text-sm">
-                  {product.availability?.nextAvailable && (
+                  {nextAvailable && (
                     <div className="flex justify-between">
                       <span className="text-blue-800">Next Available:</span>
-                      <span className="font-medium">{product.availability.nextAvailable}</span>
+                      <span className="font-medium">{nextAvailable}</span>
                     </div>
                   )}
                   
@@ -1670,10 +1536,10 @@ Perfect for sandwiches, toast, or simply enjoyed with butter and honey.`,
                             <div className="flex items-center gap-2 mb-1">
                               <h4 className="font-semibold text-gray-900">{review.userName}</h4>
                               {review.isVerified && (
-                                <CheckCircle className="w-4 h-4 text-blue-500" title="Verified Customer" />
+                                <CheckCircle className="w-4 h-4 text-blue-500" />
                               )}
                               {review.isVerifiedPurchase && (
-                                <Shield className="w-4 h-4 text-green-500" title="Verified Purchase" />
+                                <Shield className="w-4 h-4 text-green-500" />
                               )}
                             </div>
                             <div className="flex items-center gap-2 text-sm text-gray-500">
