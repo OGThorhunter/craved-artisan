@@ -30,13 +30,13 @@ interface Order {
   id: string;
   orderNumber: string;
   customerName: string;
-  customerEmail: string;
+  customerEmail?: string;
   phone?: string;
   status: string;
   priority: string;
-  subtotal: number;
-  tax: number;
-  shipping: number;
+  subtotal?: number;
+  tax?: number;
+  shipping?: number;
   total: number;
   paymentStatus?: string;
   orderItems: OrderItem[];

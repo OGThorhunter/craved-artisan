@@ -1156,7 +1156,7 @@ const VendorOrdersPage: React.FC = () => {
                 unit: ing.unit
               };
             }
-            batches[item.productId]!.ingredients[key].quantity += ing.quantity * batchMultiplier;
+            batches[item.productId]!.ingredients[key]!.quantity += ing.quantity * batchMultiplier;
           });
         }
       });
