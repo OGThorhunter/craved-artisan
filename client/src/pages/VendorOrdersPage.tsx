@@ -757,7 +757,7 @@ const mockOrders: Order[] = [
 ];
 
 
-type ViewMode = 'list' | 'calendar' | 'production-kitchen' | 'packaging-center' | 'final-qa' | 'labeling' | 'qa';
+type ViewMode = 'list' | 'calendar' | 'production-kitchen' | 'packaging-center' | 'final-qa' | 'labeling' | 'qa' | 'batching';
 type PackagingSubMode = 'overview' | 'labels' | 'packaging-assignment';
 
 const VendorOrdersPage: React.FC = () => {
@@ -817,7 +817,7 @@ const VendorOrdersPage: React.FC = () => {
     unitPrice: '',
     supplier: ''
   });
-  const [productionSteps, setProductionSteps] = useState<Record<string, ProductionStep[]>>({});
+  const [productionSteps, setProductionSteps] = useState<Record<string, ProductionStep>>({});
   const [starterInventory, setStarterInventory] = useState<StarterInventory[]>([
     { type: 'white', available: 500, unit: 'g' },
     { type: 'whole-wheat', available: 300, unit: 'g' },
@@ -1146,9 +1146,9 @@ const VendorOrdersPage: React.FC = () => {
         });
 
         // Aggregate ingredients
-        if (item.product.recipe) {
+        if (item.product?.recipe) {
           const batchMultiplier = item.quantity / item.product.recipe.yieldAmount;
-          item.product.recipe.ingredients.forEach(ing => {
+          item.product.recipe.ingredients?.forEach(ing => {
             const key = `${ing.name}-${ing.unit}`;
             if (!batches[item.productId].ingredients[key]) {
               batches[item.productId].ingredients[key] = {
@@ -1574,7 +1574,7 @@ const VendorOrdersPage: React.FC = () => {
               className="px-6 py-2.5 bg-accent2 text-white hover:bg-accent2/90 shadow-md"
               onClick={() => {
                 // Export functionality
-                const exportData = filteredOrders.map(order => ({
+                const exportData = orders.map(order => ({
                   'Order Number': order.orderNumber,
                   'Customer': order.customerName,
                   'Status': order.status,
@@ -2096,7 +2096,6 @@ const VendorOrdersPage: React.FC = () => {
                                   </div>
                                 )}
                                 <Button
-                                  size="sm"
                                   variant="secondary"
                                   onClick={() => {
                                     setEditingStepProductId(batch.productId);
@@ -2623,10 +2622,7 @@ const VendorOrdersPage: React.FC = () => {
                             disabled={needsPackageSelection}
                             onClick={() => {
                               // Use advanced label generator for this batch
-                              const batchOrders = aggregateProductionBatch().flatMap(batch => 
-                                batch.productName === batch.productName ? batch.orders : []
-                              );
-                              setSelectedOrderForLabel(batchOrders[0]); // Pass representative order
+                              setSelectedOrderForLabel(null); // Use all batch orders
                               setShowLabelModal(true);
                             }}
                           >
@@ -3871,7 +3867,7 @@ const VendorOrdersPage: React.FC = () => {
               setShowLabelModal(false);
               setSelectedOrderForLabel(null);
             }}
-            orders={selectedOrderForLabel ? [selectedOrderForLabel] : aggregateProductionBatch().flatMap(batch => batch.orders)}
+            orders={selectedOrderForLabel ? [selectedOrderForLabel] : orders}
             onPrintComplete={(jobIds) => {
               toast.success(`Label generation complete! ${jobIds.length} print jobs created.`);
               setShowLabelModal(false);
