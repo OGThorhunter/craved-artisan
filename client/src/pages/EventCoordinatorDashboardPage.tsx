@@ -231,42 +231,42 @@ export default function EventCoordinatorDashboardPage() {
         id: 'e1',
         title: 'Locust Grove Artisan Market',
         description: 'A vibrant marketplace featuring local artisans, farmers, and food vendors.',
-        startDate: '2024-03-15T09:00:00Z' as any,
-        endDate: '2024-03-15T17:00:00Z' as any,
+        startDate: '2024-03-15T09:00:00Z',
+        endDate: '2024-03-15T17:00:00Z',
         venue: 'Locust Grove Farmers Market',
         address: 'Locust Grove, GA',
         slug: 'locust-grove-artisan-market',
         status: 'published',
         visibility: 'public',
         capacity: 60,
-        categories: ['artisan', 'farmers-market', 'local'] as any,
+        categories: ['artisan', 'farmers-market', 'local'],
         tags: ['artisan', 'farmers-market', 'local'],
         coverImage: '/images/events/market-1.jpg',
         imageUrl: '/images/events/market-1.jpg',
         applicationCount: 45,
         createdAt: '2024-01-15T00:00:00Z',
         updatedAt: '2024-02-10T00:00:00Z'
-      },
+      } as any,
       {
         id: 'e2',
         title: 'Spring Craft Fair',
         description: 'Handmade crafts, jewelry, and home decor from talented local artisans.',
-        startDate: '2024-04-20T10:00:00Z' as any,
-        endDate: '2024-04-20T18:00:00Z' as any,
+        startDate: '2024-04-20T10:00:00Z',
+        endDate: '2024-04-20T18:00:00Z',
         venue: 'Macon Convention Center',
         address: 'Macon, GA',
         slug: 'spring-craft-fair',
         status: 'draft',
         visibility: 'private',
         capacity: 50,
-        categories: ['crafts', 'jewelry', 'home-decor'] as any,
+        categories: ['crafts', 'jewelry', 'home-decor'],
         tags: ['crafts', 'jewelry', 'home-decor'],
         coverImage: '/images/events/craft-fair.jpg',
         imageUrl: '/images/events/craft-fair.jpg',
         applicationCount: 32,
         createdAt: '2024-02-01T00:00:00Z',
         updatedAt: '2024-02-15T00:00:00Z'
-      }
+      } as any
     ];
 
     const mockVendors: Vendor[] = [
@@ -418,10 +418,10 @@ export default function EventCoordinatorDashboardPage() {
         description: 'A vibrant marketplace featuring local artisans, farmers, and food vendors.',
         venue: 'Locust Grove Farmers Market',
         address: '123 Main St, Locust Grove, GA',
-        startDate: '2024-03-15T09:00:00Z' as any,
+        startDate: '2024-03-15T09:00:00Z',
         endDate: '2024-03-15T17:00:00Z',
         capacity: 60,
-        categories: ['artisan', 'farmers-market', 'local'] as any,
+        categories: ['artisan', 'farmers-market', 'local'],
         tags: ['artisan', 'farmers-market', 'local'],
         status: 'published',
         visibility: 'public',
@@ -430,21 +430,21 @@ export default function EventCoordinatorDashboardPage() {
         gallery: ['/images/events/market-1.jpg'],
         documents: [],
         isRecurring: false,
-        recurrencePattern: null as any,
-        recurrenceEndDate: null as any,
+        recurrencePattern: null,
+        recurrenceEndDate: null,
         createdAt: '2024-01-15T00:00:00Z',
         updatedAt: '2024-02-10T00:00:00Z',
-      },
+      } as any,
       {
         id: 'evt_2',
         title: 'Spring Craft Fair',
         description: 'Handmade crafts, jewelry, and home decor from talented local artisans.',
         venue: 'Macon Convention Center',
         address: '456 Convention Blvd, Macon, GA',
-        startDate: '2024-04-20T10:00:00Z' as any,
+        startDate: '2024-04-20T10:00:00Z',
         endDate: '2024-04-20T18:00:00Z',
         capacity: 50,
-        categories: ['crafts', 'jewelry', 'home-decor'] as any,
+        categories: ['crafts', 'jewelry', 'home-decor'],
         tags: ['crafts', 'jewelry', 'home-decor'],
         status: 'draft',
         visibility: 'private',
@@ -453,11 +453,11 @@ export default function EventCoordinatorDashboardPage() {
         gallery: ['/images/events/craft-fair.jpg'],
         documents: [],
         isRecurring: false,
-        recurrencePattern: null as any,
-        recurrenceEndDate: null as any,
+        recurrencePattern: null,
+        recurrenceEndDate: null,
         createdAt: '2024-02-01T00:00:00Z',
         updatedAt: '2024-02-15T00:00:00Z',
-      }
+      } as any
     ];
     setEventsList(mockEventsList);
 
@@ -983,10 +983,10 @@ export default function EventCoordinatorDashboardPage() {
       description: eventData.description || '',
       venue: eventData.venue?.name || eventData.venue || '',
       address: eventData.venue?.address || eventData.address || '',
-      startDate: eventData.startDate || new Date().toISOString() as any,
+      startDate: eventData.startDate || new Date().toISOString(),
       endDate: eventData.endDate || new Date().toISOString(),
       capacity: 50, // Default capacity since we removed the field
-      categories: [] as any, // Default empty since we removed the field
+      categories: [], // Default empty since we removed the field
       tags: [],
       status: 'draft',
       visibility: 'private',
@@ -1015,7 +1015,7 @@ export default function EventCoordinatorDashboardPage() {
       fireMarshalSafetyItems: eventData.fireMarshalSafetyItems || '',
       vendorContract: eventData.vendorContract || '',
       safetyRequirements: eventData.safetyRequirements || '',
-    };
+    } as any;
     setEventsList(prev => [newEvent, ...prev]);
     setShowCreateEventModal(false);
   };
@@ -1034,7 +1034,7 @@ export default function EventCoordinatorDashboardPage() {
       description: eventData.description || editingEvent.description,
       venue: eventData.venue?.name || eventData.venue || editingEvent.venue,
       address: eventData.venue?.address || eventData.address || editingEvent.address,
-      startDate: eventData.startDate || editingEvent.startDate as any,
+      startDate: eventData.startDate || editingEvent.startDate,
       endDate: eventData.endDate || editingEvent.endDate,
       capacity: editingEvent.capacity, // Keep existing capacity since we removed the field
       categories: (editingEvent as any).categories || [], // Keep existing categories since we removed the field
@@ -1059,7 +1059,7 @@ export default function EventCoordinatorDashboardPage() {
       fireMarshalSafetyItems: eventData.fireMarshalSafetyItems || editingEvent.fireMarshalSafetyItems,
       vendorContract: eventData.vendorContract || editingEvent.vendorContract,
       safetyRequirements: eventData.safetyRequirements || editingEvent.safetyRequirements,
-    };
+    } as any;
     
     setEventsList(prev => prev.map(e => e.id === editingEvent.id ? updatedEvent : e));
     setEditingEvent(null);

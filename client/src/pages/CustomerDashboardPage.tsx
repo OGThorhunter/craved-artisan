@@ -831,7 +831,7 @@ export default function CustomerDashboardPage() {
         ...prev,
         avatar: avatarData, // Store the avatar data object
         avatarType: 'default'
-      } : null);
+      } as any : null);
       setHasUnsavedChanges(true);
     }
   };
