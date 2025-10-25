@@ -28,14 +28,14 @@ interface Opportunity {
   assignedTo?: string;
   status: 'active' | 'on_hold' | 'cancelled';
   createdAt: string;
-  updatedAt?: string;
-  lastActivityAt?: string;
+  updatedAt: string;
+  lastActivityAt: string;
 }
 
 interface Task {
   id: string;
   title: string;
-  type: 'call' | 'email' | 'meeting' | 'follow_up' | 'proposal' | 'demo' | 'other';
+  type: 'call' | 'email' | 'meeting' | 'follow_up' | 'proposal' | 'demo' | 'research' | 'documentation' | 'other';
   priority: 'low' | 'medium' | 'high' | 'urgent';
   status: 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'on_hold';
   dueDate?: string;
@@ -618,19 +618,19 @@ const VendorCRMPage = () => {
               onTaskUpdate={handleTaskUpdate}
               onTaskComplete={handleTaskComplete}
               onTaskDelete={handleTaskDelete}
-              onTaskAssign={(taskId, userId) => {
+              onTaskAssign={(taskId: string, userId: string) => {
                 const task = allTasks.find(t => t.id === taskId);
                 if (task) {
                   handleTaskUpdate({...task, assignedTo: userId});
                 }
               }}
-              onTaskReassign={(taskId, fromUserId, toUserId) => {
+              onTaskReassign={(taskId: string, fromUserId: string, toUserId: string) => {
                 const task = allTasks.find(t => t.id === taskId);
                 if (task) {
                   handleTaskUpdate({...task, assignedTo: toUserId});
                 }
               }}
-              onSubtaskCreate={(parentTaskId, subtask: any) => {
+              onSubtaskCreate={(parentTaskId: string, subtask: any) => {
                 console.log('Create subtask:', {parentTaskId, subtask});
               }}
               onTeamMemberCreate={handleTeamMemberCreate}
