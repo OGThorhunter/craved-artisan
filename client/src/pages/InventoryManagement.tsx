@@ -583,28 +583,28 @@ const InventoryManagement: React.FC = () => {
               />
             </div>
             
-            <Select
+            <select
               value={selectedCategory}
-              onValueChange={setSelectedCategory}
-              placeholder="All Categories"
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md"
             >
               <option value="">All Categories</option>
               <option value="FOOD_GRADE">Food Grade</option>
               <option value="PACKAGING">Packaging</option>
               <option value="EQUIPMENT">Equipment</option>
               <option value="CLEANING">Cleaning</option>
-            </Select>
+            </select>
             
-            <Select
+            <select
               value={selectedStatus}
-              onValueChange={setSelectedStatus}
-              placeholder="All Status"
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md"
             >
               <option value="">All Status</option>
               <option value="low_stock">Low Stock</option>
               <option value="expired">Expired</option>
               <option value="on_watchlist">On Watchlist</option>
-            </Select>
+            </select>
             
             <div className="flex gap-2">
               <Button

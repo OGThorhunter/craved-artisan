@@ -375,7 +375,7 @@ export default function Home() {
                 <div className={`p-2 rounded-lg bg-brand-cream ${mockSiteNews[currentNewsIndex]?.color || ''}`}>
                   {(() => {
                     const IconComponent = mockSiteNews[currentNewsIndex]?.icon;
-                    return <IconComponent className="h-5 w-5" />;
+                    return IconComponent ? <IconComponent className="h-5 w-5" /> : null;
                   })()}
                 </div>
                 <div className="flex-1">

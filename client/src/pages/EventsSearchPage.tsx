@@ -235,7 +235,7 @@ export default function EventsSearchPage() {
                 
                 <div className="flex items-center gap-2 ml-4">
                   {stallsAvailable > 0 && (
-                    <Badge variant="default" className="text-xs">
+                    <Badge variant="secondary" className="text-xs">
                       {stallsAvailable} stalls left
                     </Badge>
                   )}
@@ -290,7 +290,7 @@ export default function EventsSearchPage() {
           
           {stallsAvailable > 0 && (
             <div className="absolute top-3 left-3">
-              <Badge variant="default" className="text-xs">
+              <Badge variant="secondary" className="text-xs">
                 {stallsAvailable} stalls left
               </Badge>
             </div>
@@ -390,7 +390,7 @@ export default function EventsSearchPage() {
                 <SlidersHorizontal className="h-4 w-4" />
                 Filters
                 {getActiveFilters().length > 0 && (
-                  <Badge variant="default" className="ml-1">
+                  <Badge variant="secondary" className="ml-1">
                     {getActiveFilters().length}
                   </Badge>
                 )}
@@ -603,7 +603,7 @@ export default function EventsSearchPage() {
                   Try adjusting your search criteria or browse all events.
                 </p>
                 <Button
-                  variant="default"
+                  variant="secondary"
                   onClick={() => setSearchParams({
                     q: '',
                     category: '',
