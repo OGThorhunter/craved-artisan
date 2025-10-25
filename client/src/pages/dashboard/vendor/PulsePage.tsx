@@ -241,7 +241,7 @@ export default function PulsePage() {
           date.setDate(date.getDate() - (6 - i));
           return {
             date: date.toISOString().split('T')[0],
-            value: baseData[Math.min(i, baseData.length - 1)].value * (0.8 + Math.random() * 0.4)
+            value: (baseData?.[Math.min(i, baseData.length - 1)]?.value ?? 0) * (0.8 + Math.random() * 0.4)
           };
         });
       case '30days':
@@ -251,7 +251,7 @@ export default function PulsePage() {
           date.setDate(date.getDate() - (29 - i));
           return {
             date: date.toISOString().split('T')[0],
-            value: baseData[Math.min(i % baseData.length, baseData.length - 1)].value * (0.7 + Math.random() * 0.6)
+            value: (baseData?.[Math.min(i % baseData.length, baseData.length - 1)]?.value ?? 0) * (0.7 + Math.random() * 0.6)
           };
         });
       case 'qtd':
@@ -261,7 +261,7 @@ export default function PulsePage() {
           date.setMonth(date.getMonth() - (3 - i));
           return {
             date: date.toISOString().split('T')[0],
-            value: baseData[Math.min(i % baseData.length, baseData.length - 1)].value * (0.5 + Math.random() * 1.0)
+            value: (baseData?.[Math.min(i % baseData.length, baseData.length - 1)]?.value ?? 0) * (0.5 + Math.random() * 1.0)
           };
         });
       case 'ytd':
@@ -271,7 +271,7 @@ export default function PulsePage() {
           date.setMonth(date.getMonth() - (11 - i));
           return {
             date: date.toISOString().split('T')[0],
-            value: baseData[Math.min(i % baseData.length, baseData.length - 1)].value * (0.3 + Math.random() * 1.4)
+            value: (baseData?.[Math.min(i % baseData.length, baseData.length - 1)]?.value ?? 0) * (0.3 + Math.random() * 1.4)
           };
         });
       case 'custom':
@@ -284,7 +284,7 @@ export default function PulsePage() {
             date.setDate(date.getDate() + i);
             return {
               date: date.toISOString().split('T')[0],
-              value: baseData[Math.min(i % baseData.length, baseData.length - 1)].value * (0.6 + Math.random() * 0.8)
+              value: (baseData?.[Math.min(i % baseData.length, baseData.length - 1)]?.value ?? 0) * (0.6 + Math.random() * 0.8)
             };
           });
         }

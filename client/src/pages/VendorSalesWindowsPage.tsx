@@ -213,14 +213,14 @@ const VendorSalesWindowsPage = () => {
     // Filter by channels
     if (filterChannels.length > 0) {
       filtered = filtered.filter(w => 
-        w.channels.some(c => filterChannels.includes(c.type))
+        w.channels?.some(c => filterChannels.includes(c.type)) ?? false
       );
     }
 
     // Filter by tags
     if (filterTags.length > 0) {
       filtered = filtered.filter(w => 
-        w.settings.tags.some(tag => filterTags.includes(tag))
+        w.settings?.tags?.some(tag => filterTags.includes(tag)) ?? false
       );
     }
 
@@ -569,7 +569,7 @@ const VendorSalesWindowsPage = () => {
         const productInfo = mockProductData[product.productId as keyof typeof mockProductData];
         if (productInfo) {
           // Calculate baking date based on event date and lead time
-          const eventDate = new Date(salesWindow.startDate);
+          const eventDate = salesWindow.startDate ? new Date(salesWindow.startDate) : new Date();
           const bakingDate = new Date(eventDate);
           bakingDate.setDate(bakingDate.getDate() - productInfo.leadTimeDays);
           
@@ -635,13 +635,13 @@ const VendorSalesWindowsPage = () => {
     const reconciliationData = {
       id: window.id,
       name: window.name,
-      products: window.products.map(p => ({
+      products: window.products?.map(p => ({
         productId: p.productId,
         name: p.name,
         holdQuantity: p.currentStock || 0, // Use currentStock as holdQuantity
         priceOverride: p.priceOverride,
         price: p.price
-      }))
+      })) ?? []
     };
     setReconciliationWindow(reconciliationData);
     setShowReconciliation(true);
@@ -752,7 +752,7 @@ const VendorSalesWindowsPage = () => {
                   onClick={() => {
                     // TODO: Implement export functionality
                     const csvContent = filteredWindows.map(w => 
-                      `${w.name},${w.status},${w.isEvergreen ? 'Evergreen' : w.startDate},${w.channels.map(c => c.type).join(';')},${w.products.length}`
+                      `${w.name},${w.status},${w.isEvergreen ? 'Evergreen' : w.startDate},${w.channels?.map(c => c.type).join(';') ?? ''},${w.products?.length ?? 0}`
                     ).join('\n');
                     const blob = new Blob([`Name,Status,Start Date,Channels,Products\n${csvContent}`], { type: 'text/csv' });
                     const url = window.URL.createObjectURL(blob);
@@ -1017,7 +1017,7 @@ const VendorSalesWindowsPage = () => {
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex flex-wrap gap-1">
-                            {window.channels.map((channel, index) => (
+                            {window.channels?.map((channel, index) => (
                               <span
                                 key={index}
                                 className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700"
@@ -1025,7 +1025,7 @@ const VendorSalesWindowsPage = () => {
                                 {getChannelIcon(channel.type)}
                                 {getChannelLabel(channel.type)}
                               </span>
-                            ))}
+                            )) ?? []}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">

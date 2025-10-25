@@ -353,7 +353,9 @@ const VendorPromotionsPage: React.FC = () => {
     if (limits.maxSpend > 0) summary += `Max $${limits.maxSpend}, `;
     
     summary += `Stack: ${stacking.policy.charAt(0).toUpperCase() + stacking.policy.slice(1)}, `;
-    summary += `${new Date(startDate).toLocaleDateString()}–${new Date(endDate).toLocaleDateString()} (${timezone})`;
+    const start = startDate ? new Date(startDate) : null;
+    const end = endDate ? new Date(endDate) : null;
+    summary += `${start ? start.toLocaleDateString() : 'TBD'}–${end ? end.toLocaleDateString() : 'TBD'} (${timezone})`;
     
     return summary;
   };
@@ -424,8 +426,8 @@ const VendorPromotionsPage: React.FC = () => {
         type: promotionForm.type,
         value: promotionForm.value,
         status: promotionForm.status,
-        startDate: new Date(promotionForm.startDate).toISOString(),
-        endDate: new Date(promotionForm.endDate).toISOString(),
+        startDate: promotionForm.startDate ? new Date(promotionForm.startDate).toISOString() : new Date().toISOString(),
+        endDate: promotionForm.endDate ? new Date(promotionForm.endDate).toISOString() : new Date().toISOString(),
         performance: {
           totalUses: 0,
           totalDiscount: 0,
@@ -508,8 +510,8 @@ const VendorPromotionsPage: React.FC = () => {
         products: discountCodeForm.products,
         channels: discountCodeForm.channels,
         dateRange: {
-          start: new Date(discountCodeForm.startDate).toISOString(),
-          end: new Date(discountCodeForm.endDate).toISOString(),
+          start: discountCodeForm.startDate ? new Date(discountCodeForm.startDate).toISOString() : new Date().toISOString(),
+          end: discountCodeForm.endDate ? new Date(discountCodeForm.endDate).toISOString() : new Date().toISOString(),
           timezone: discountCodeForm.timezone
         },
         limits: discountCodeForm.limits,

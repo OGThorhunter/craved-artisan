@@ -19,30 +19,12 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-type Product = { 
-  lastAiSuggestion?: number; 
-  price: number; 
-  [key: string]: any 
-};
 import axios from 'axios';
+import type { Product } from '@/types/product';
 
-interface Product {
-  id: string;
-  name: string;
-  description?: string;
-  price: number;
-  imageUrl?: string;
-  tags: string[];
-  stock: number;
-  isAvailable: boolean;
-  targetMargin?: number;
-  recipeId?: string;
-  onWatchlist: boolean;
-  lastAiSuggestion?: number;
-  aiSuggestionNote?: string;
-  createdAt: string;
-  updatedAt: string;
-  vendorProfileId: string;
+interface WatchlistProduct extends Product {
+  // Inherits all Product fields from the global type
+  // Add any watchlist-specific fields if needed
 }
 
 interface AiSuggestionResponse {
@@ -82,7 +64,7 @@ const VendorWatchlistPage = () => {
     queryFn: async () => {
       const response = await axios.get('/api/vendor/products');
       // Filter to only show products on watchlist
-      return response.data.products.filter((product: Product) => product.onWatchlist);
+      return response.data.products.filter((product: WatchlistProduct) => product.onWatchlist);
     },
   });
 
@@ -196,7 +178,7 @@ const VendorWatchlistPage = () => {
               <div>
                 <p className="responsive-text font-medium text-gray-600">High Risk Items</p>
                 <p className="responsive-heading text-gray-900">
-                  {products?.filter((p: Product) => p.lastAiSuggestion && 
+                  {products?.filter((p: WatchlistProduct) => p.lastAiSuggestion && 
                     Math.abs(p.lastAiSuggestion - p.price) / p.price > 0.15).length || 0}
                 </p>
               </div>
@@ -210,7 +192,7 @@ const VendorWatchlistPage = () => {
               </div>
               <div>
                 <p className="text-lg font-semibold text-gray-900">
-                  {products?.filter((p: Product) => p.lastAiSuggestion).length || 0}
+                  {products?.filter((p: WatchlistProduct) => p.lastAiSuggestion).length || 0}
                 </p>
               </div>
             </div>
@@ -220,7 +202,7 @@ const VendorWatchlistPage = () => {
         {/* Products Grid */}
         {products && products.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.map((product: Product) => {
+            {products.map((product: WatchlistProduct) => {
               const priceDifference = product.lastAiSuggestion 
                 ? product.lastAiSuggestion - product.price 
                 : 0;
