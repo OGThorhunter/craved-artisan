@@ -11,6 +11,7 @@ interface User {
   isAuthenticated: boolean;
   lastActivity: Date;
   betaTester?: boolean;
+  vendorProfileId?: string;
 }
 
 interface AgreementAcceptance {
