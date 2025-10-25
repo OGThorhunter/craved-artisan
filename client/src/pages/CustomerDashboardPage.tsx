@@ -341,10 +341,7 @@ export default function CustomerDashboardPage() {
       const response = await axios.get('/api/orders/history');
       return response.data;
     },
-    retry: 1,
-    onError: (error) => {
-      toast.error('Failed to load order history. Please try again.');
-    }
+    retry: 1
   });
 
   // Fetch customer profile data
@@ -354,10 +351,7 @@ export default function CustomerDashboardPage() {
       const response = await axios.get('/api/customer/profile');
       return response.data;
     },
-    retry: 1,
-    onError: (error) => {
-      toast.error('Failed to load profile data.');
-    }
+    retry: 1
   });
 
   // Fetch favorite vendors
@@ -367,10 +361,7 @@ export default function CustomerDashboardPage() {
       const response = await axios.get('/api/customer/favorites');
       return response.data;
     },
-    retry: 1,
-    onError: (error) => {
-      toast.error('Failed to load favorite vendors.');
-    }
+    retry: 1
   });
 
   // Fetch messages
@@ -380,10 +371,7 @@ export default function CustomerDashboardPage() {
       const response = await axios.get('/api/customer/messages');
       return response.data;
     },
-    retry: 1,
-    onError: (error) => {
-      toast.error('Failed to load messages.');
-    }
+    retry: 1
   });
 
   // Fetch upcoming events
@@ -393,10 +381,7 @@ export default function CustomerDashboardPage() {
       const response = await axios.get('/api/customer/events');
       return response.data;
     },
-    retry: 1,
-    onError: (error) => {
-      toast.error('Failed to load upcoming events.');
-    }
+    retry: 1
   });
 
   // Helper functions for detailed orders
@@ -864,7 +849,7 @@ export default function CustomerDashboardPage() {
         avatar: profileImage,
         avatarType: 'social',
         socialAvatarUrl: profileImage
-      } : null);
+      } as any : null);
       setHasUnsavedChanges(true);
     }
   };
@@ -892,8 +877,8 @@ export default function CustomerDashboardPage() {
         phoneLandline: settingsData.phoneLandline,
         phoneMobile: settingsData.phoneMobile,
         smsOptIn: settingsData.smsOptIn,
-        smsOptInDate: settingsData.smsOptInDate,
-        smsConsentText: settingsData.smsConsentText,
+        smsOptInDate: (settingsData as any).smsOptInDate,
+        smsConsentText: (settingsData as any).smsConsentText,
         avatarType: settingsData.avatarType,
         uploadedAvatar: settingsData.uploadedAvatar,
         socialAvatarUrl: settingsData.socialAvatarUrl,

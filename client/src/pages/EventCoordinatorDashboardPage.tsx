@@ -418,7 +418,7 @@ export default function EventCoordinatorDashboardPage() {
         description: 'A vibrant marketplace featuring local artisans, farmers, and food vendors.',
         venue: 'Locust Grove Farmers Market',
         address: '123 Main St, Locust Grove, GA',
-        startDate: '2024-03-15T09:00:00Z',
+        startDate: '2024-03-15T09:00:00Z' as any,
         endDate: '2024-03-15T17:00:00Z',
         capacity: 60,
         categories: ['artisan', 'farmers-market', 'local'] as any,
@@ -983,7 +983,7 @@ export default function EventCoordinatorDashboardPage() {
       description: eventData.description || '',
       venue: eventData.venue?.name || eventData.venue || '',
       address: eventData.venue?.address || eventData.address || '',
-      startDate: eventData.startDate || new Date().toISOString(),
+      startDate: eventData.startDate || new Date().toISOString() as any,
       endDate: eventData.endDate || new Date().toISOString(),
       capacity: 50, // Default capacity since we removed the field
       categories: [] as any, // Default empty since we removed the field
@@ -1034,7 +1034,7 @@ export default function EventCoordinatorDashboardPage() {
       description: eventData.description || editingEvent.description,
       venue: eventData.venue?.name || eventData.venue || editingEvent.venue,
       address: eventData.venue?.address || eventData.address || editingEvent.address,
-      startDate: eventData.startDate || editingEvent.startDate,
+      startDate: eventData.startDate || editingEvent.startDate as any,
       endDate: eventData.endDate || editingEvent.endDate,
       capacity: editingEvent.capacity, // Keep existing capacity since we removed the field
       categories: (editingEvent as any).categories || [], // Keep existing categories since we removed the field
