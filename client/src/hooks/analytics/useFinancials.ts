@@ -229,7 +229,6 @@ export function useFinancials({ vendorId, range, asOf }: FinancialsOptions, enab
     enabled: enabled && !!vendorId,
     staleTime: 60_000, // 1 minute
     gcTime: 5 * 60_000, // 5 minutes
-    keepPreviousData: true,
     refetchOnWindowFocus: false,
     retry: 2,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),

@@ -43,7 +43,7 @@ export {
 // Re-export types if needed
 export type { 
   KpiData,
-  SalesData,
+  SalesDataPoint,
   TopProduct,
   CustomerInsights,
   InventoryMetrics,

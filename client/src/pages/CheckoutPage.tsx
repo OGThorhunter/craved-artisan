@@ -101,7 +101,7 @@ const CheckoutPage = () => {
           vendorId: 'mock-vendor-id', // In a real app, this would come from the cart/items
           items: items.map(item => ({
             quantity: item.quantity,
-            productId: item.product.id
+            productId: (item as any).product.id
           })),
           shippingMethod: selectedShippingMethod,
           customerZip: customerZip || undefined
@@ -165,13 +165,13 @@ const CheckoutPage = () => {
               
               <div className="space-y-4">
                 {items.map((item) => (
-                  <div key={item.product.id} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg">
+                  <div key={(item as any).product.id} className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg">
                     {/* Product Image */}
                     <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center flex-shrink-0">
-                      {item.product.imageUrl ? (
+                      {(item as any).product.imageUrl ? (
                         <img 
-                          src={item.product.imageUrl} 
-                          alt={item.product.name}
+                          src={(item as any).product.imageUrl} 
+                          alt={(item as any).product.name}
                           className="w-full h-full object-cover rounded-lg"
                         />
                       ) : (
@@ -183,14 +183,14 @@ const CheckoutPage = () => {
 
                     {/* Product Details */}
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-gray-900 truncate">{item.product.name}</h3>
-                      <p className="responsive-text text-gray-600">${item.product.price.toFixed(2)} each</p>
+                      <h3 className="font-medium text-gray-900 truncate">{(item as any).product.name}</h3>
+                      <p className="responsive-text text-gray-600">${(item as any).product.price.toFixed(2)} each</p>
                     </div>
 
                                          {/* Quantity Controls */}
                      <div className="flex items-center gap-2">
                        <button
-                         onClick={() => handleQuantityChange(item.product.id, item.quantity - 1)}
+                         onClick={() => handleQuantityChange((item as any).product.id, item.quantity - 1)}
                          className="p-1 rounded-md hover:bg-gray-100 transition-colors"
                          disabled={item.quantity <= 1}
                          title="Decrease quantity"
@@ -199,7 +199,7 @@ const CheckoutPage = () => {
                        </button>
                        <span className="w-8 text-center font-medium">{item.quantity}</span>
                        <button
-                         onClick={() => handleQuantityChange(item.product.id, item.quantity + 1)}
+                         onClick={() => handleQuantityChange((item as any).product.id, item.quantity + 1)}
                          className="p-1 rounded-md hover:bg-gray-100 transition-colors"
                          title="Increase quantity"
                        >
@@ -210,13 +210,13 @@ const CheckoutPage = () => {
                     {/* Item Total */}
                     <div className="text-right">
                       <p className="font-medium text-gray-900">
-                        ${(item.product.price * item.quantity).toFixed(2)}
+                        ${((item as any).product.price * item.quantity).toFixed(2)}
                       </p>
                     </div>
 
                                          {/* Remove Button */}
                      <button
-                       onClick={() => removeItem(item.product.id)}
+                       onClick={() => removeItem((item as any).product.id)}
                        className="p-1 text-red-500 hover:text-red-700 transition-colors"
                        title="Remove item from cart"
                      >

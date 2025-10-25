@@ -86,7 +86,7 @@ export function parseIngredients(text: string): ParsedIngredient[] {
           unit = normalizeUnit(match[3]);
         } else {
           // Pattern 3: "cinnamon"
-          name = match[1].trim();
+          name = match[1]?.trim() || '';
           quantity = 1;
           unit = 'count';
         }

@@ -217,10 +217,10 @@ export function validateCoordinates(lat: number, lon: number): boolean {
 export function getMapBounds(locations: MapLocation[]): [[number, number], [number, number]] | null {
   if (locations.length === 0) return null;
 
-  let minLat = locations[0].coordinates[0];
-  let maxLat = locations[0].coordinates[0];
-  let minLon = locations[0].coordinates[1];
-  let maxLon = locations[0].coordinates[1];
+  let minLat = locations[0]?.coordinates[0] ?? 0;
+  let maxLat = locations[0]?.coordinates[0] ?? 0;
+  let minLon = locations[0]?.coordinates[1] ?? 0;
+  let maxLon = locations[0]?.coordinates[1] ?? 0;
 
   locations.forEach(location => {
     const [lat, lon] = location.coordinates;
@@ -253,10 +253,10 @@ export function parseAddress(address: string): {
   
   if (parts.length >= 4) {
     return {
-      street: parts[0],
-      city: parts[1],
-      state: parts[2],
-      zip: parts[3]
+      street: parts[0] || '',
+      city: parts[1] || '',
+      state: parts[2] || '',
+      zip: parts[3] || ''
     };
   }
   

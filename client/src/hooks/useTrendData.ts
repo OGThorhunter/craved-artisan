@@ -20,7 +20,7 @@ export function useTrendData(vendorId: string, range: 'daily' | 'weekly' | 'mont
     },
     enabled: !!vendorId, // Only run query if vendorId is provided
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
-    cacheTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
     retry: 2, // Retry failed requests 2 times
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
@@ -39,7 +39,7 @@ export function useAnalyticsSummary(vendorId: string) {
     },
     enabled: !!vendorId, // Only run query if vendorId is provided
     staleTime: 10 * 60 * 1000, // Consider data fresh for 10 minutes
-    cacheTime: 15 * 60 * 1000, // Keep in cache for 15 minutes
+    gcTime: 15 * 60 * 1000, // Keep in cache for 15 minutes
     retry: 2, // Retry failed requests 2 times
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
@@ -69,7 +69,7 @@ export function useTrendDataWithFallback(vendorId: string, range: 'daily' | 'wee
     },
     enabled: !!vendorId, // Only run query if vendorId is provided
     staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
-    cacheTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
     retry: false, // Don't retry since we have fallback
   });
 }

@@ -18,6 +18,7 @@ import {
   Globe as GlobeIcon, Tag as TagIcon, Users as UsersIcon,
   Package as PackageIcon, Calendar as CalendarIcon,
   DollarSign as DollarSignIcon, Award as AwardIcon,
+  Grid, List,
   Zap as ZapIcon, Eye as EyeIcon, Share2 as Share2Icon,
   Download as DownloadIcon, Upload as UploadIcon,
   Settings as SettingsIcon, BarChart3 as BarChart3Icon,
