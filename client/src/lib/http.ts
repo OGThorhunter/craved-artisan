@@ -73,6 +73,15 @@ export const api = {
     const response = await http(path, { method: 'DELETE' });
     const data = await response.json();
     return { data };
+  },
+  
+  async patch(path: string, body?: any): Promise<{ data: any }> {
+    const response = await http(path, { 
+      method: 'PATCH', 
+      body: body ? JSON.stringify(body) : undefined 
+    });
+    const data = await response.json();
+    return { data };
   }
 };
 
@@ -98,6 +107,13 @@ export const httpClient = {
   
   async delete(path: string): Promise<Response> {
     return await http(path, { method: 'DELETE' });
+  },
+  
+  async patch(path: string, body?: any): Promise<Response> {
+    return await http(path, { 
+      method: 'PATCH', 
+      body: body ? JSON.stringify(body) : undefined 
+    });
   }
 };
 

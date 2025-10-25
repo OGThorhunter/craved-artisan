@@ -133,7 +133,7 @@ export function useMarkRead() {
   
   return useMutation({
     mutationFn: async (conversationId: string): Promise<{ success: boolean }> => {
-      const response = await api.put(`/api/messages/conversations/${conversationId}/read`);
+      const response = await api.patch(`/api/messages/conversations/${conversationId}/read`);
       return response.data;
     },
     onSuccess: (_, conversationId) => {

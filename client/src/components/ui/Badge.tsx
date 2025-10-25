@@ -1,9 +1,10 @@
 import React from 'react';
+import { BadgeVariant } from '@/types/core';
 
 interface BadgeProps {
   children: React.ReactNode;
   className?: string;
-  variant?: 'default' | 'secondary' | 'destructive' | 'outline';
+  variant?: BadgeVariant;
 }
 
 export const Badge: React.FC<BadgeProps> = ({
@@ -18,6 +19,11 @@ export const Badge: React.FC<BadgeProps> = ({
     secondary: 'bg-gray-100 text-gray-900',
     destructive: 'bg-red-100 text-red-800',
     outline: 'border border-gray-200 text-gray-900',
+    success: 'bg-green-100 text-green-800',
+    warning: 'bg-yellow-100 text-yellow-800',
+    red: 'bg-red-100 text-red-800',
+    yellow: 'bg-yellow-100 text-yellow-800',
+    gray: 'bg-gray-100 text-gray-900',
   };
 
   return (
