@@ -365,7 +365,7 @@ const VendorDashboardPage: React.FC = () => {
               <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">🔴 Bottom Performers (Updated!)</h3>
                 <div className="space-y-3">
-                  {pulseData.underperformers.map((product, index) => (
+                  {pulseData.underperformers.map((product: any, index: number) => (
                     <div key={index} className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm border-l-4 border-red-400">
                       <div className="flex items-center gap-3">
                         <span className="text-sm font-medium text-gray-500">#{index + 1}</span>
@@ -393,7 +393,7 @@ const VendorDashboardPage: React.FC = () => {
               <div className="bg-[#F7F2EC] rounded-lg p-6 border border-gray-200 shadow-sm">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">🟢 Top Performers (Updated!)</h3>
                 <div className="space-y-3">
-                  {pulseData.topProducts.map((product, index) => (
+                  {pulseData.topProducts.map((product: any, index: number) => (
                     <div key={index} className="flex items-center justify-between p-3 bg-white rounded-lg shadow-sm border-l-4 border-green-400">
                       <div className="flex items-center gap-3">
                         <span className="text-sm font-medium text-gray-500">#{index + 1}</span>

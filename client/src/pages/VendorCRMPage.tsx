@@ -28,6 +28,8 @@ interface Opportunity {
   assignedTo?: string;
   status: 'active' | 'on_hold' | 'cancelled';
   createdAt: string;
+  updatedAt?: string;
+  lastActivityAt?: string;
 }
 
 interface Task {
@@ -35,7 +37,7 @@ interface Task {
   title: string;
   type: 'call' | 'email' | 'meeting' | 'follow_up' | 'proposal' | 'demo' | 'other';
   priority: 'low' | 'medium' | 'high' | 'urgent';
-  status: 'pending' | 'in_progress' | 'completed' | 'cancelled';
+  status: 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'on_hold';
   dueDate?: string;
   customerId?: string;
   assignedTo?: string;
@@ -59,7 +61,7 @@ interface TeamMember {
   name: string;
   email: string;
   phone?: string;
-  role: 'admin' | 'manager' | 'sales_rep' | 'support';
+  role: 'admin' | 'manager' | 'sales_rep' | 'support' | 'marketing' | 'other';
   isActive: boolean;
   tasksAssigned: number;
   tasksCompleted: number;
@@ -628,7 +630,7 @@ const VendorCRMPage = () => {
                   handleTaskUpdate({...task, assignedTo: toUserId});
                 }
               }}
-              onSubtaskCreate={(parentTaskId, subtask) => {
+              onSubtaskCreate={(parentTaskId, subtask: any) => {
                 console.log('Create subtask:', {parentTaskId, subtask});
               }}
               onTeamMemberCreate={handleTeamMemberCreate}
