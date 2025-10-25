@@ -206,7 +206,10 @@ const VendorRecipeEditPage: React.FC = () => {
   const updateIngredient = (index: number, field: keyof RecipeIngredient, value: any) => {
     const updatedIngredients = [...ingredients];
     if (index < 0 || index >= updatedIngredients.length) return;
-    updatedIngredients[index] = { ...updatedIngredients[index], [field]: value };
+    updatedIngredients[index] = { 
+      ...updatedIngredients[index], 
+      [field]: value 
+    } as RecipeIngredient;
     
     // Update ingredient details if ingredientId changes
     if (field === 'ingredientId') {

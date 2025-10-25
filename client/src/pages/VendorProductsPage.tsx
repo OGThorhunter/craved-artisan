@@ -955,7 +955,7 @@ const VendorProductsPage: React.FC = () => {
         'Creation Time (minutes)': product.creationTimeMinutes || '',
         'Lead Time (days)': product.leadTimeDays || '',
         'Tags': product.tags.join(', '),
-        'Allergens': product.allergenFlags.join(', '),
+        'Allergens': product.allergenFlags?.join(', ') ?? '',
         'Active': product.active,
         'Created': product.createdAt,
         'Updated': product.updatedAt
@@ -1678,7 +1678,7 @@ const VendorProductsPage: React.FC = () => {
         <EnhancedProductModal
           isOpen={showEnhancedModal}
           onClose={() => setShowEnhancedModal(false)}
-          onSave={handleSaveEnhancedProduct}
+          onSave={(product) => handleSaveEnhancedProduct(product as EnhancedProductData)}
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           product={selectedProduct as any}
           categories={categories}
@@ -2176,7 +2176,6 @@ const VendorProductsPage: React.FC = () => {
           onClose={() => setShowProductWizard(false)}
           onComplete={handleWizardComplete}
           categories={mockCategories}
-          inventoryItems={mockInventoryItems}
         />
 
         {/* Export Modal */}

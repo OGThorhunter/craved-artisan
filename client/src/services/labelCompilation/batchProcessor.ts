@@ -515,9 +515,10 @@ export class LabelCompilationService {
       
       // Generate preview if requested
       let preview: string | undefined;
-      if (batchResult.groups.length > 0 && batchResult.groups[0]?.printJobs.length > 0) {
+      const firstGroup = batchResult.groups[0];
+      if (firstGroup && firstGroup.printJobs.length > 0) {
         const engine = this.batchProcessor['printEngines'].get(options.engine || 'PDF');
-        const firstJob = batchResult.groups[0]?.printJobs[0];
+        const firstJob = firstGroup.printJobs[0];
         
         if (engine && firstJob) {
           const previewResult = await engine.generatePreview(firstJob);

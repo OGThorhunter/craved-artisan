@@ -20,7 +20,7 @@ import {
 import toast from 'react-hot-toast';
 
 import axios from 'axios';
-import type { Product } from '@/types/product';
+import type { Product } from '@/types/products';
 
 interface WatchlistProduct extends Product {
   // Inherits all Product fields from the global type
