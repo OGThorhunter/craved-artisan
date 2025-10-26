@@ -34,7 +34,7 @@ export function StandardButton({
       title={title}
       className={`${baseClasses} ${variantClasses[variant]} ${className}`}
     >
-      {icon && <AppIcon name={icon} className="w-4 h-4" />}
+      {icon && <AppIcon name={icon as any} className="w-4 h-4" />}
       {children}
     </button>
   );

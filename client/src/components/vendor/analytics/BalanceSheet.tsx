@@ -259,7 +259,7 @@ export function BalanceSheet() {
                     <span className="text-gray-600">{a.label}</span>
                     <div className="text-right">
                       <span className="text-green-700 font-medium">${a.amount.toFixed(2)}</span>
-                      {a.depreciation && (
+                      {'depreciation' in a && a.depreciation && (
                         <div className="text-xs text-gray-500">
                           <TrendingDown size={10} className="inline mr-1" />
                           -${a.depreciation.toFixed(2)} dep.

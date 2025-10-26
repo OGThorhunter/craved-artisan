@@ -88,7 +88,7 @@ export function CashFlowChart() {
   const netChange = totalInflows - totalOutflows;
   const endingCash = startingCash + netChange;
 
-  const chartData = mockTimeSeriesData[timeRange] || mockTimeSeriesData["30-day"];
+  const chartData = timeRange === 'custom' ? mockTimeSeriesData["30-day"] : (mockTimeSeriesData[timeRange as keyof typeof mockTimeSeriesData] || mockTimeSeriesData["30-day"]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -102,7 +102,7 @@ export function CashFlowChart() {
   const handleExportCSV = () => {
     const csvContent = [
       "Date,Inflows,Outflows,Cash Balance",
-      ...chartData.map(item => `${item.date},${item.inflows},${item.outflows},${item.cash}`)
+      ...chartData.map((item: { date: string; inflows: number; outflows: number; cash: number }) => `${item.date},${item.inflows},${item.outflows},${item.cash}`)
     ].join('\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv' });

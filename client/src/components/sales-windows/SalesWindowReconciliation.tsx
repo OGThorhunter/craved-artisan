@@ -83,6 +83,8 @@ const SalesWindowReconciliation: React.FC<SalesWindowReconciliationProps> = ({
     if (!product) return;
 
     const currentDisposition = dispositions[productId];
+    if (!currentDisposition) return;
+    
     const otherTotal = Object.entries(currentDisposition)
       .filter(([key]) => key !== type)
       .reduce((sum, [, val]) => sum + val, 0);
@@ -104,6 +106,8 @@ const SalesWindowReconciliation: React.FC<SalesWindowReconciliationProps> = ({
     if (!product) return 0;
     
     const disposition = dispositions[productId];
+    if (!disposition) return product.unsoldQuantity;
+    
     const totalDisposed = disposition.dayOld + disposition.charity + disposition.waste;
     return product.unsoldQuantity - totalDisposed;
   };
@@ -125,15 +129,15 @@ const SalesWindowReconciliation: React.FC<SalesWindowReconciliationProps> = ({
         plannedQuantity: p.plannedQuantity,
         soldQuantity: p.soldQuantity,
         unsoldQuantity: p.unsoldQuantity,
-        disposition: dispositions[p.productId]
+        disposition: dispositions[p.productId] || { dayOld: 0, charity: 0, waste: 0 }
       }))
     };
 
     // Calculate totals for summary
     const totalRevenue = products.reduce((sum, p) => sum + (p.soldQuantity * p.unitPrice), 0);
-    const totalCharity = products.reduce((sum, p) => sum + dispositions[p.productId].charity, 0);
-    const totalDayOld = products.reduce((sum, p) => sum + dispositions[p.productId].dayOld, 0);
-    const totalWaste = products.reduce((sum, p) => sum + dispositions[p.productId].waste, 0);
+    const totalCharity = products.reduce((sum, p) => sum + (dispositions[p.productId]?.charity ?? 0), 0);
+    const totalDayOld = products.reduce((sum, p) => sum + (dispositions[p.productId]?.dayOld ?? 0), 0);
+    const totalWaste = products.reduce((sum, p) => sum + (dispositions[p.productId]?.waste ?? 0), 0);
 
     // Store reconciliation data
     const existingReconciliations = JSON.parse(localStorage.getItem('salesWindowReconciliations') || '[]');
@@ -161,8 +165,8 @@ const SalesWindowReconciliation: React.FC<SalesWindowReconciliationProps> = ({
   const totalSold = products.reduce((sum, p) => sum + p.soldQuantity, 0);
   const totalUnsold = products.reduce((sum, p) => sum + p.unsoldQuantity, 0);
   const totalRevenue = products.reduce((sum, p) => sum + (p.soldQuantity * p.unitPrice), 0);
-  const totalCharity = Object.values(dispositions).reduce((sum, d) => sum + d.charity, 0);
-  const totalDayOld = Object.values(dispositions).reduce((sum, d) => sum + d.dayOld, 0);
+  const totalCharity = Object.values(dispositions).reduce((sum, d) => sum + (d?.charity ?? 0), 0);
+  const totalDayOld = Object.values(dispositions).reduce((sum, d) => sum + (d?.dayOld ?? 0), 0);
 
   if (!isOpen) return null;
 
@@ -324,7 +328,7 @@ const SalesWindowReconciliation: React.FC<SalesWindowReconciliationProps> = ({
                           type="number"
                           min="0"
                           max={product.unsoldQuantity}
-                          value={disposition.dayOld}
+                          value={disposition?.dayOld ?? 0}
                           onChange={(e) => handleDispositionChange(product.productId, 'dayOld', parseInt(e.target.value) || 0)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
@@ -340,7 +344,7 @@ const SalesWindowReconciliation: React.FC<SalesWindowReconciliationProps> = ({
                           type="number"
                           min="0"
                           max={product.unsoldQuantity}
-                          value={disposition.charity}
+                          value={disposition?.charity ?? 0}
                           onChange={(e) => handleDispositionChange(product.productId, 'charity', parseInt(e.target.value) || 0)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                         />
@@ -356,7 +360,7 @@ const SalesWindowReconciliation: React.FC<SalesWindowReconciliationProps> = ({
                           type="number"
                           min="0"
                           max={product.unsoldQuantity}
-                          value={disposition.waste}
+                          value={disposition?.waste ?? 0}
                           onChange={(e) => handleDispositionChange(product.productId, 'waste', parseInt(e.target.value) || 0)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                         />

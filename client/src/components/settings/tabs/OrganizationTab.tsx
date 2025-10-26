@@ -175,7 +175,7 @@ export function OrganizationTab() {
 
   const handleAddressSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateAddressMutation.mutate(addressData);
+    updateAddressMutation.mutate({ ...addressData, id: addressData.id || crypto.randomUUID() });
   };
 
   const handleOrgCancel = () => {

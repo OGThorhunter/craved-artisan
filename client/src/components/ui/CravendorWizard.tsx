@@ -21,7 +21,7 @@ const CravendorWizard: React.FC<CravendorWizardProps> = ({
               src={wizardImage} 
               alt="Cravendor the Wise"
               className="w-36 h-36 object-contain object-center -mt-2"
-              onLoad={() => {
+              onLoad={(e) => {
                 console.log('✅ Wizard image loaded successfully');
                 console.log('Image dimensions:', e.currentTarget.naturalWidth, 'x', e.currentTarget.naturalHeight);
               }}

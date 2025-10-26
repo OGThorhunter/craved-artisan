@@ -33,7 +33,7 @@ const Button = forwardRef<HTMLButtonElement, Props>(
     
     return (
       <Component 
-        ref={ref}
+        {...(!href && { ref })}
         className={cn(base, sizeStyles, styles, className)} 
         {...rest} 
       />

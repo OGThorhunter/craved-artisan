@@ -163,10 +163,10 @@ export function CheckoutForm({
                   </div>
                   <div className="text-right">
                     <div className="font-medium text-gray-900">{formatCurrency(pricing.total)}</div>
-                    {pricing.earlyBirdDiscount > 0 && (
+                    {(pricing as any).earlyBirdDiscount > 0 && (
                       <div className="text-xs text-green-600">Early bird discount applied</div>
                     )}
-                    {pricing.lastMinuteSurcharge > 0 && (
+                    {(pricing as any).lastMinuteSurcharge > 0 && (
                       <div className="text-xs text-red-600">Last minute pricing</div>
                     )}
                   </div>

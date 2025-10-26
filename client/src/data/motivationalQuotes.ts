@@ -121,14 +121,14 @@ export const motivationalQuotes: QuoteData[] = [
 // Helper function to get a random quote
 export const getRandomQuote = (): QuoteData => {
   const quote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
-  return quote ?? motivationalQuotes[0];
+  return quote ?? { quote: "Success is not final, failure is not fatal: it is the courage to continue that counts.", author: "Winston Churchill", category: "motivation" };
 };
 
 // Helper function to get a quote by category
 export const getQuoteByCategory = (category: QuoteData['category']): QuoteData => {
   const categoryQuotes = motivationalQuotes.filter(quote => quote.category === category);
   const quote = categoryQuotes[Math.floor(Math.random() * categoryQuotes.length)];
-  return quote ?? motivationalQuotes[0];
+  return quote ?? { quote: "Success is not final, failure is not fatal: it is the courage to continue that counts.", author: "Winston Churchill", category: "motivation" };
 };
 
 // Helper function to get a specific quote by author

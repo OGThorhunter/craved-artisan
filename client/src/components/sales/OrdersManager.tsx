@@ -252,7 +252,7 @@ export function OrdersManager({
                     </td>
                     
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {getStatusBadge(order.paymentStatus, PAYMENT_STATUS_COLORS)}
+                      {getStatusBadge(order.paymentStatus as any, PAYMENT_STATUS_COLORS)}
                     </td>
                     
                     <td className="px-6 py-4 whitespace-nowrap">

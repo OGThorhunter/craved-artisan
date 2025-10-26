@@ -563,7 +563,7 @@ export default function UnitConverterDashboard({ isOpen, onClose }: UnitConverte
                       {getCategoryIcon(category.id)}
                       <div className="text-left">
                         <div className="font-medium">{category.name}</div>
-                        <div className="text-xs text-gray-500">{category.unitCount} units</div>
+                        <div className="text-xs text-gray-500">{category.units?.length ?? 0} units</div>
                       </div>
                     </button>
                   ))}
@@ -706,8 +706,10 @@ export default function UnitConverterDashboard({ isOpen, onClose }: UnitConverte
                             value={input.value}
                             onChange={(e) => {
                               const newInputs = [...batchInputs];
-                              newInputs[index].value = e.target.value;
-                              setBatchInputs(newInputs);
+                              if (newInputs[index]) {
+                                newInputs[index].value = e.target.value;
+                                setBatchInputs(newInputs);
+                              }
                             }}
                             className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             placeholder="Enter value"
