@@ -24,7 +24,7 @@ import VendorInventoryPage from './pages/VendorInventoryPage';
 import VendorOrdersPage from './pages/VendorOrdersPage';
 import VendorPromotionsPage from './pages/VendorPromotionsPage';
 import TemplateEditorPage from './pages/labels/TemplateEditorPage';
-import VendorLabelManagementPage from './pages/VendorLabelManagementPage';
+// import VendorLabelManagementPage from './pages/VendorLabelManagementPage'; // File doesn't exist
 import VendorLabelsPackagingPage from './pages/VendorLabelsPackagingPage';
 import PackageTemplateMappingPage from './pages/PackageTemplateMappingPage';
 import VendorRecipeCreatePage from './pages/VendorRecipeCreatePage';

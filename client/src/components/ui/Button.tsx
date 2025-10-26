@@ -5,12 +5,20 @@ import { ButtonVariant } from "@/types/core";
 type Variant = ButtonVariant;
 type Props = ButtonHTMLAttributes<HTMLButtonElement> & { 
   variant?: Variant;
+  size?: 'sm' | 'md' | 'lg' | 'icon';
   asChild?: boolean;
 };
 
 const Button = forwardRef<HTMLButtonElement, Props>(
-  ({ variant="secondary", className, asChild, ...rest }, ref) => {
-    const base = "px-4 py-2 rounded-xl text-sm font-medium transition";
+  ({ variant="secondary", size="md", className, asChild, ...rest }, ref) => {
+    const base = "rounded-xl font-medium transition";
+    const sizeStyles = {
+      sm: "px-3 py-1.5 text-xs",
+      md: "px-4 py-2 text-sm",
+      lg: "px-6 py-3 text-base",
+      icon: "p-2 text-sm"
+    }[size];
+    
     const styles = {
       default: "bg-accent2 text-white hover:opacity-90",
       primary: "bg-accent2 text-white hover:opacity-90",
@@ -26,7 +34,7 @@ const Button = forwardRef<HTMLButtonElement, Props>(
     return (
       <Component 
         ref={ref}
-        className={cn(base, styles, className)} 
+        className={cn(base, sizeStyles, styles, className)} 
         {...rest} 
       />
     );

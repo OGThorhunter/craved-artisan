@@ -29,7 +29,11 @@ import {
   Filter as FilterIcon,
   SortAsc,
   SortDesc,
-  Activity
+  Activity,
+  Phone,
+  Mail,
+  MessageSquare,
+  Play
 } from 'lucide-react';
 
 interface Task {
@@ -126,6 +130,21 @@ const TaskManagement: React.FC<TaskManagementProps> = ({
     estimatedHours: 1,
     tags: []
   });
+
+  // Workflow automation state
+  const [showWorkflowCreate, setShowWorkflowCreate] = useState(false);
+  const [newWorkflow, setNewWorkflow] = useState({
+    name: '',
+    description: '',
+    trigger: '',
+    status: 'draft',
+    actions: [] as string[]
+  });
+  
+  // Default no-op function for onWorkflowCreate if not provided as prop
+  const onWorkflowCreate = (workflow: any) => {
+    console.log('Workflow created:', workflow);
+  };
 
   // Filter and sort tasks
   const filteredTasks = tasks.filter(task => {

@@ -2,6 +2,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { DollarSign, Server, Database, Zap, Mail, CreditCard, HardDrive, TrendingUp, Activity } from 'lucide-react';
 import Card from '../ui/Card';
+import { Badge } from '../ui/Badge';
 
 export default function CostUsageView() {
   const { data: costs } = useQuery({

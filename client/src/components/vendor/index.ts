@@ -23,6 +23,5 @@ export { PriceOptimizer } from './analytics/PriceOptimizer';
 export { TaxSummary } from './analytics/TaxSummary';
 
 // Re-export types for convenience
-export type { Vendor } from './VendorHeader';
-// Removed conflicting Product type re-export to fix import issues
-export type { Review } from './ReviewBlock'; 
+// export type { Vendor } from './VendorHeader'; // Vendor type not exported from VendorHeader
+// export type { Review } from './ReviewBlock'; // Review type not exported from ReviewBlock 

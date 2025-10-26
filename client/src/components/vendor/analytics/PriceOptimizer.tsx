@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { DollarSign, TrendingUp, TrendingDown, Target, Calculator, BarChart3, Zap, AlertTriangle, CheckCircle, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { DollarSign, TrendingUp, TrendingDown, Target, Calculator, BarChart3, Zap, AlertTriangle, CheckCircle, ArrowUpRight, ArrowDownRight, X } from "lucide-react";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, LineChart, Line, CartesianGrid, ScatterChart, Scatter, ZAxis } from "recharts";
 
 interface Product {

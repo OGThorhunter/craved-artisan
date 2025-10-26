@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { CheckCircle, XCircle, Clock, AlertTriangle, FileText, Calendar, RefreshCw } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, AlertTriangle, FileText, Calendar, RefreshCw, Plus } from 'lucide-react';
 import Card from '../../../ui/Card';
 import { Badge } from '../../../ui/Badge';
 

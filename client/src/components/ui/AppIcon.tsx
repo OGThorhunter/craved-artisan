@@ -130,7 +130,7 @@ const map: Record<IconName, React.ComponentType<React.SVGProps<SVGSVGElement>>> 
   wifi: Lucide.Wifi ?? (() => null as any),
   'wifi-off': Lucide.WifiOff ?? (() => null as any),
   activity: Lucide.Activity ?? (() => null as any),
-  refresh: Lucide.RefreshCw ?? Lucide.Refresh ?? (() => null as any),
+  refresh: Lucide.RefreshCw ?? (() => null as any),
   zap: Lucide.Zap ?? (() => null as any),
   target: Lucide.Target ?? (() => null as any),
   'dollar-sign': Lucide.DollarSign ?? (() => null as any),

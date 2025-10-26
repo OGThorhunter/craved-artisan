@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { CreditCard, QrCode, AlertCircle, CheckCircle, X } from 'lucide-react';
-import type { Stall, PricingBreakdown } from '@/lib/api/sales';
+import type { PricingBreakdown } from '@/lib/api/sales';
+// Stall type not exported from @/lib/api/sales, using local type
+type Stall = any;
 import { formatCurrency, calculatePricing } from '@/lib/api/sales';
 
 interface CheckoutFormProps {

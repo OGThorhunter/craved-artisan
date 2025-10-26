@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { DollarSign, Package, TrendingUp, AlertCircle, RefreshCw } from 'lucide-react';
+import { DollarSign, Package, TrendingUp, AlertCircle, RefreshCw, FileText } from 'lucide-react';
 import Card from '../../../ui/Card';
 import { Badge } from '../../../ui/Badge';
 

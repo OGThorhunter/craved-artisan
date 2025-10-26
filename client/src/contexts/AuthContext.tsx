@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../lib/api';
+import axios from 'axios';
 
 // Types
 interface User {
@@ -25,7 +26,7 @@ interface AuthContextType {
   loading: boolean;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User>;
   logout: () => Promise<void>;
   register: (email: string, password: string, name: string, role: 'VENDOR' | 'CUSTOMER', agreements?: AgreementAcceptance[]) => Promise<void>;
   checkAuth: () => Promise<void>;
@@ -63,8 +64,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     queryFn: async ({ signal }) => {
       const response = await api.get('/auth/session', { signal });
       
-      // Handle cancellation
-      if (response.canceled) {
+      // Handle cancellation - check if request was aborted
+      if (signal?.aborted) {
         return { success: false, user: null };
       }
       
@@ -109,11 +110,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Handle query error
   useEffect(() => {
     if (error) {
+      const message = axios.isAxiosError(error) && error.response?.data?.message 
+        ? error.response.data.message 
+        : error.message || 'Session check failed';
+      
       console.log('AuthContext: Session check failed:', {
-        message: error.message,
+        message,
         name: error.name,
-        status: error.response?.status,
-        data: error.response?.data
+        status: axios.isAxiosError(error) ? error.response?.status : undefined,
+        data: axios.isAxiosError(error) ? error.response?.data : undefined
       });
       setUser(null);
       setLoading(false);

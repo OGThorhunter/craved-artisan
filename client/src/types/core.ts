@@ -1,6 +1,3 @@
-// Core type aliases for the application
-// This file centralizes all type definitions to avoid string literal mismatches
-
 // Order Status Type
 export type OrderStatus = 'PENDING' | 'PROCESSING' | 'SUCCEEDED' | 'FAILED' | 'CANCELLED' | 'REFUNDED';
 
@@ -13,8 +10,8 @@ export type UserStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'PENDING';
 // Event Status Type
 export type EventStatus = 'draft' | 'published' | 'active' | 'completed' | 'cancelled';
 
-// Badge Variant Type (for UI components) - includes all used variants
-export type BadgeVariant = 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning' | 'red' | 'yellow' | 'gray';
+// Badge Variant Type (for UI components)
+export type BadgeVariant = 'default' | 'secondary' | 'destructive' | 'outline' | 'success' | 'warning';
 
-// Button Variant Type (for UI components) - includes all used variants
+// Button Variant Type (for UI components)
 export type ButtonVariant = 'default' | 'secondary' | 'destructive' | 'outline' | 'ghost' | 'link' | 'primary';
