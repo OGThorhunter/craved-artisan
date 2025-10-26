@@ -142,8 +142,8 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
     },
     onSuccess: (data) => {
       toast.success('Receipt parsed successfully!');
-      queryClient.invalidateQueries(['ai-receipt-parser-receipts']);
-      queryClient.invalidateQueries(['ai-receipt-parser-analytics']);
+      queryClient.invalidateQueries({ queryKey: ['ai-receipt-parser-receipts'] });
+      queryClient.invalidateQueries({ queryKey: ['ai-receipt-parser-analytics'] });
       setSelectedDocument(data.data);
       setShowDocumentDetails(true);
     },
@@ -160,8 +160,8 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
     },
     onSuccess: (data) => {
       toast.success('Shopping list parsed successfully!');
-      queryClient.invalidateQueries(['ai-receipt-parser-shopping-lists']);
-      queryClient.invalidateQueries(['ai-receipt-parser-analytics']);
+      queryClient.invalidateQueries({ queryKey: ['ai-receipt-parser-shopping-lists'] });
+      queryClient.invalidateQueries({ queryKey: ['ai-receipt-parser-analytics'] });
       setSelectedDocument(data.data);
       setShowDocumentDetails(true);
     },
@@ -178,7 +178,7 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
     },
     onSuccess: (data) => {
       toast.success(`${data.importedItems.length} items imported to inventory!`);
-      queryClient.invalidateQueries(['inventory']);
+      queryClient.invalidateQueries({ queryKey: ['inventory'] });
       setSelectedItems([]);
     },
     onError: () => {
@@ -194,8 +194,8 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
     },
     onSuccess: () => {
       toast.success('Receipt deleted successfully');
-      queryClient.invalidateQueries(['ai-receipt-parser-receipts']);
-      queryClient.invalidateQueries(['ai-receipt-parser-analytics']);
+      queryClient.invalidateQueries({ queryKey: ['ai-receipt-parser-receipts'] });
+      queryClient.invalidateQueries({ queryKey: ['ai-receipt-parser-analytics'] });
     },
     onError: () => {
       toast.error('Failed to delete receipt');
@@ -210,8 +210,8 @@ export default function AIReceiptParserDashboard({ isOpen, onClose }: AIReceiptP
     },
     onSuccess: () => {
       toast.success('Shopping list deleted successfully');
-      queryClient.invalidateQueries(['ai-receipt-parser-shopping-lists']);
-      queryClient.invalidateQueries(['ai-receipt-parser-analytics']);
+      queryClient.invalidateQueries({ queryKey: ['ai-receipt-parser-shopping-lists'] });
+      queryClient.invalidateQueries({ queryKey: ['ai-receipt-parser-analytics'] });
     },
     onError: () => {
       toast.error('Failed to delete shopping list');

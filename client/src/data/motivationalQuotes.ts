@@ -120,13 +120,15 @@ export const motivationalQuotes: QuoteData[] = [
 
 // Helper function to get a random quote
 export const getRandomQuote = (): QuoteData => {
-  return motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)] || motivationalQuotes[0];
+  const quote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
+  return quote ?? motivationalQuotes[0];
 };
 
 // Helper function to get a quote by category
 export const getQuoteByCategory = (category: QuoteData['category']): QuoteData => {
   const categoryQuotes = motivationalQuotes.filter(quote => quote.category === category);
-  return categoryQuotes[Math.floor(Math.random() * categoryQuotes.length)] || motivationalQuotes[0];
+  const quote = categoryQuotes[Math.floor(Math.random() * categoryQuotes.length)];
+  return quote ?? motivationalQuotes[0];
 };
 
 // Helper function to get a specific quote by author

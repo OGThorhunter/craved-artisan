@@ -3,7 +3,6 @@ import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import { X, History, Download, Filter } from 'lucide-react';
 import Button from '../ui/Button';
-import { Select } from '../ui/Select';
 import { Badge } from '../ui/Badge';
 
 interface MovementHistoryModalProps {
@@ -156,15 +155,16 @@ const MovementHistoryModal: React.FC<MovementHistoryModalProps> = ({
                   <Filter size={16} className="text-gray-500" />
                   <span className="text-sm font-medium text-gray-700">Time Range:</span>
                 </div>
-                <Select
+                <select
                   value={timeRange}
-                  onValueChange={setTimeRange}
+                  onChange={(e) => setTimeRange(e.target.value)}
+                  className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="7">Last 7 days</option>
                   <option value="30">Last 30 days</option>
                   <option value="90">Last 90 days</option>
                   <option value="365">Last year</option>
-                </Select>
+                </select>
               </div>
               
               <Button

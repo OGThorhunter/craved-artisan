@@ -68,7 +68,7 @@ export default function VendorHeader({
               <div className="flex items-center gap-2 mb-1">
                 <h1 className="text-3xl font-bold text-gray-900">{vendor.name}</h1>
                 {vendor.isVerified && (
-                  <CheckCircle className="h-6 w-6 text-blue-500" title="Verified Vendor" />
+                  <CheckCircle className="h-6 w-6 text-blue-500" />
                 )}
               </div>
               <p className="text-lg text-gray-600 mb-2">{vendor.tagline}</p>

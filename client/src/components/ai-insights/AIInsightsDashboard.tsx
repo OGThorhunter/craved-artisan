@@ -138,7 +138,7 @@ export default function AIInsightsDashboard({ isOpen, onClose }: AIInsightsDashb
     },
     onSuccess: (data) => {
       toast.success(`AI analysis completed! Confidence: ${(data.results.confidence * 100).toFixed(1)}%`);
-      queryClient.invalidateQueries(['ai-insights']);
+      queryClient.invalidateQueries({ queryKey: ['ai-insights'] });
     },
     onError: () => {
       toast.error('Failed to run AI analysis');

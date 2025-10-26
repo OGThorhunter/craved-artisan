@@ -209,10 +209,10 @@ export default function UserListTable({ filters, searchQuery, onUserSelect, onAc
                         <div className="text-sm text-gray-500">{user.email}</div>
                         <div className="flex items-center gap-1 mt-1">
                           {user.emailVerified && (
-                            <UserCheck className="w-3 h-3 text-green-600" title="Email verified" />
+                            <UserCheck className="w-3 h-3 text-green-600" />
                           )}
                           {user.mfaEnabled && (
-                            <Shield className="w-3 h-3 text-blue-600" title="MFA enabled" />
+                            <Shield className="w-3 h-3 text-blue-600" />
                           )}
                         </div>
                       </div>
@@ -238,7 +238,7 @@ export default function UserListTable({ filters, searchQuery, onUserSelect, onAc
                       {user.riskFlags.length > 0 && (
                         <div className="flex gap-1">
                           {user.riskFlags.slice(0, 2).map((flag) => (
-                            <AlertTriangle key={flag} className="w-4 h-4 text-orange-500" title={flag} />
+                            <AlertTriangle key={flag} className="w-4 h-4 text-orange-500" />
                           ))}
                           {user.riskFlags.length > 2 && (
                             <span className="text-xs text-gray-500">+{user.riskFlags.length - 2}</span>

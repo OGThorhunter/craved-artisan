@@ -66,8 +66,9 @@ export function ConversionFunnel() {
   const total = funnelData[0]?.count ?? 1;
 
   const dataWithDropoff = funnelData.map((step, index) => {
+    const prevStep = funnelData[index - 1];
     const dropoff =
-      index === 0 ? 0 : ((funnelData[index - 1].count - step.count) / funnelData[index - 1].count) * 100;
+      index === 0 || !prevStep ? 0 : ((prevStep.count - step.count) / prevStep.count) * 100;
     return {
       ...step,
       dropoff: index === 0 ? 0 : dropoff.toFixed(1),
@@ -212,9 +213,11 @@ export function ConversionFunnel() {
         <div className="space-y-1 text-sm text-gray-600">
           {dataWithDropoff.map((step, index) => {
             if (index === 0) return null;
+            const prevStep = funnelData[index - 1];
+            if (!prevStep) return null;
             return (
               <p key={step.stage}>
-                🔻 {step.dropoff}% dropped off from <strong>{funnelData[index - 1].stage}</strong> to{" "}
+                🔻 {step.dropoff}% dropped off from <strong>{prevStep.stage}</strong> to{" "}
                 <strong>{step.stage}</strong>
               </p>
             );

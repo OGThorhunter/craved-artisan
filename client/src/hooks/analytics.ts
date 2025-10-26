@@ -87,7 +87,7 @@ export function useMockVendorOverview(vendorId: string, options: AnalyticsOption
       let series;
       if (interval === 'day') {
         series = mockAnalyticsData.salesData.daily.map(item => ({
-          date: item.date || '',
+          date: item.date ?? '',
           revenue: item.revenue,
           orders: item.orders
         }));

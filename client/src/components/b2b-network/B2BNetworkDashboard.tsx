@@ -225,7 +225,7 @@ export default function B2BNetworkDashboard({ isOpen, onClose }: B2BNetworkDashb
     },
     onSuccess: (data) => {
       toast.success('Automatic sourcing initiated! Quotes will be generated shortly.');
-      queryClient.invalidateQueries(['b2b-sourcing-requests']);
+      queryClient.invalidateQueries({ queryKey: ['b2b-sourcing-requests'] });
     },
     onError: () => {
       toast.error('Failed to initiate automatic sourcing');
@@ -240,8 +240,8 @@ export default function B2BNetworkDashboard({ isOpen, onClose }: B2BNetworkDashb
     },
     onSuccess: () => {
       toast.success('Quote selected and order created!');
-      queryClient.invalidateQueries(['b2b-sourcing-requests']);
-      queryClient.invalidateQueries(['b2b-orders']);
+      queryClient.invalidateQueries({ queryKey: ['b2b-sourcing-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['b2b-orders'] });
     },
     onError: () => {
       toast.error('Failed to select quote');
@@ -530,7 +530,7 @@ export default function B2BNetworkDashboard({ isOpen, onClose }: B2BNetworkDashb
                         <div className="flex items-center gap-2">
                           <h3 className="text-lg font-semibold text-gray-900">{supplier.name}</h3>
                           {supplier.isVerified && (
-                            <CheckCircle className="w-5 h-5 text-green-600" title="Verified Supplier" />
+                            <CheckCircle className="w-5 h-5 text-green-600" />
                           )}
                         </div>
                         <p className="text-sm text-gray-600">

@@ -4,7 +4,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, Eye, EyeOff, TrendingUp } from 'lucide-react';
 import Button from '../ui/Button';
 import { Input } from '../ui/Input';
-import { Select } from '../ui/Select';
 import { toast } from 'react-hot-toast';
 
 interface PriceWatchModalProps {
@@ -231,14 +230,15 @@ const PriceWatchModal: React.FC<PriceWatchModalProps> = ({
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Watch Source
                   </label>
-                  <Select
+                  <select
                     value={formData.source}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, source: value as any }))}
+                    onChange={(e) => setFormData(prev => ({ ...prev, source: e.target.value as any }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="B2B">B2B Marketplace</option>
                     <option value="MARKET">Public Market</option>
                     <option value="CUSTOM_URL">Custom URL</option>
-                  </Select>
+                  </select>
                 </div>
                 
                 {formData.source === 'CUSTOM_URL' && (

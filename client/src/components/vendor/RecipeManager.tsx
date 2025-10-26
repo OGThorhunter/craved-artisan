@@ -40,6 +40,7 @@ const RecipeManager: React.FC<RecipeManagerProps> = ({ products, onRecipeUpdate 
       name: 'Classic Sourdough Bread',
       description: 'Traditional sourdough bread with long fermentation',
       instructions: 'Mix ingredients, let rise for 18 hours, shape, proof, bake at 450°F for 45 minutes',
+      version: '1.0.0',
       yield: 2,
       yieldUnit: 'loaves',
       prepTime: 30,
@@ -50,50 +51,66 @@ const RecipeManager: React.FC<RecipeManagerProps> = ({ products, onRecipeUpdate 
       productId: '1',
       createdAt: '2025-08-01T00:00:00Z',
       updatedAt: '2025-08-01T00:00:00Z',
+      lastUpdated: '2025-08-01T00:00:00Z',
+      laborSteps: [],
+      totalCost: 4.24,
+      costPerUnit: 2.12,
       ingredients: [
         {
           id: '1',
           recipeId: '1',
           ingredientId: '1',
           ingredientName: 'Organic Flour',
+          rawMaterialId: '1',
+          rawMaterialName: 'Organic Flour',
           quantity: 1000,
           unit: 'grams',
           notes: 'High protein bread flour',
           costPerUnit: 0.0035,
-          totalCost: 3.50
+          totalCost: 3.50,
+          cost: 3.50
         },
         {
           id: '2',
           recipeId: '1',
           ingredientId: '2',
           ingredientName: 'Water',
+          rawMaterialId: '2',
+          rawMaterialName: 'Water',
           quantity: 750,
           unit: 'grams',
           notes: 'Filtered water at room temperature',
           costPerUnit: 0.0001,
-          totalCost: 0.08
+          totalCost: 0.08,
+          cost: 0.08
         },
         {
           id: '3',
           recipeId: '1',
           ingredientId: '3',
           ingredientName: 'Sourdough Starter',
+          rawMaterialId: '3',
+          rawMaterialName: 'Sourdough Starter',
           quantity: 200,
           unit: 'grams',
           notes: 'Active 100% hydration starter',
           costPerUnit: 0.0025,
-          totalCost: 0.50
+          totalCost: 0.50,
+          cost: 0.50
         },
         {
           id: '4',
           recipeId: '1',
           ingredientId: '4',
           ingredientName: 'Sea Salt',
+          rawMaterialId: '4',
+          rawMaterialName: 'Sea Salt',
           quantity: 20,
           unit: 'grams',
           notes: 'Fine sea salt',
           costPerUnit: 0.008,
-          totalCost: 0.16
+          totalCost: 0.16,
+          cost: 0.16
         }
       ]
     },
@@ -102,6 +119,7 @@ const RecipeManager: React.FC<RecipeManagerProps> = ({ products, onRecipeUpdate 
       name: 'Artisan Coffee Mug',
       description: 'Hand-thrown ceramic coffee mug with custom glaze',
       instructions: 'Center clay, throw cylinder, shape, trim, glaze, fire to cone 6',
+      version: '1.0.0',
       yield: 1,
       yieldUnit: 'mug',
       prepTime: 45,
@@ -112,28 +130,38 @@ const RecipeManager: React.FC<RecipeManagerProps> = ({ products, onRecipeUpdate 
       productId: '2',
       createdAt: '2025-08-01T00:00:00Z',
       updatedAt: '2025-08-01T00:00:00Z',
+      lastUpdated: '2025-08-01T00:00:00Z',
+      laborSteps: [],
+      totalCost: 2.50,
+      costPerUnit: 2.50,
       ingredients: [
         {
           id: '5',
           recipeId: '2',
           ingredientId: '5',
           ingredientName: 'Stoneware Clay',
+          rawMaterialId: '5',
+          rawMaterialName: 'Stoneware Clay',
           quantity: 500,
           unit: 'grams',
           notes: 'Cone 6 stoneware clay body',
           costPerUnit: 0.002,
-          totalCost: 1.00
+          totalCost: 1.00,
+          cost: 1.00
         },
         {
           id: '6',
           recipeId: '2',
           ingredientId: '6',
           ingredientName: 'Glaze',
+          rawMaterialId: '6',
+          rawMaterialName: 'Glaze',
           quantity: 100,
           unit: 'grams',
           notes: 'Food-safe cone 6 glaze',
           costPerUnit: 0.015,
-          totalCost: 1.50
+          totalCost: 1.50,
+          cost: 1.50
         }
       ]
     }
@@ -356,9 +384,9 @@ const RecipeManager: React.FC<RecipeManagerProps> = ({ products, onRecipeUpdate 
                   <div className="flex-1">
                     <div className="flex items-center gap-4 mb-3">
                       <h4 className="text-lg font-semibold text-gray-900">{recipe.name}</h4>
-                      <span className={`px-3 py-1 text-sm font-medium rounded-full ${getDifficultyColor(recipe.difficulty)}`}>
-                        {recipe.difficulty}
-                      </span>
+                                              <span className={`px-3 py-1 text-sm font-medium rounded-full ${getDifficultyColor(recipe.difficulty ?? '')}`}>
+                          {recipe.difficulty}
+                        </span>
                       <span className={`px-3 py-1 text-sm font-medium rounded-full ${
                         recipe.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                       }`}>

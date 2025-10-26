@@ -194,7 +194,13 @@ export function BestSellersList() {
         {filteredProducts.map((product, i) => {
           const trend = getTrendAnalysis(product.trend);
           const trendData = getTrendData(product.trend, timeFilter);
-          const aiInsights = generateAIInsights(product);
+          const enrichedProduct: Product = {
+            ...product,
+            reviews: [],
+            topZips: [],
+            aiInsights: []
+          };
+          const aiInsights = generateAIInsights(enrichedProduct);
           
           return (
             <div
@@ -284,14 +290,14 @@ export function BestSellersList() {
               {/* Actions */}
               <div className="flex items-center justify-between">
                 <button 
-                  onClick={() => handleViewDetails(product)}
+                  onClick={() => handleViewDetails(enrichedProduct)}
                   className="text-xs flex items-center gap-1 text-[#7F232E] hover:underline"
                 >
                   <Eye size={12} />
                   Details
                 </button>
                 <button
-                  onClick={() => handleAddToPromo(product)}
+                  onClick={() => handleAddToPromo(enrichedProduct)}
                   className="flex items-center gap-1 px-3 py-1 text-xs bg-[#5B6E02] text-white rounded-lg hover:bg-[#4A5A01] transition-colors"
                 >
                   <Plus size={12} />

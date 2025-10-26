@@ -39,29 +39,43 @@ const ProductionManager: React.FC<ProductionManagerProps> = ({ products, onProdu
       id: '1',
       productId: '1',
       productName: 'Handcrafted Wooden Bowl',
+      recipeId: '',
+      batchNumber: '',
+      plannedQuantity: 12,
+      actualQuantity: 12,
       batchSize: 12,
       startDate: '2025-08-27T08:00:00Z',
       completionDate: '2025-08-27T16:00:00Z',
       status: 'completed',
+      rawMaterialsUsed: [],
+      laborUsed: [],
       ingredientsUsed: [
         { ingredientId: '1', ingredientName: 'Oak Wood', quantity: 24, unit: 'board feet', cost: 48.00 },
         { ingredientId: '2', ingredientName: 'Wood Finish', quantity: 2, unit: 'quarts', cost: 15.00 }
       ],
       totalCost: 63.00,
+      costPerUnit: 5.25,
       notes: 'High quality batch, excellent grain patterns'
     },
     {
       id: '2',
       productId: '2',
       productName: 'Ceramic Coffee Mug',
+      recipeId: '',
+      batchNumber: '',
+      plannedQuantity: 24,
+      actualQuantity: 24,
       batchSize: 24,
       startDate: '2025-08-28T09:00:00Z',
       status: 'in-progress',
+      rawMaterialsUsed: [],
+      laborUsed: [],
       ingredientsUsed: [
         { ingredientId: '3', ingredientName: 'Clay', quantity: 50, unit: 'pounds', cost: 25.00 },
         { ingredientId: '4', ingredientName: 'Glaze', quantity: 1, unit: 'gallons', cost: 18.00 }
       ],
       totalCost: 43.00,
+      costPerUnit: 1.79,
       notes: 'Standard production run'
     }
   ];

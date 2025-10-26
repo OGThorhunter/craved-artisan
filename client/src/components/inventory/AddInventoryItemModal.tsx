@@ -4,7 +4,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { X, Plus } from 'lucide-react';
 import Button from '../ui/Button';
 import { Input } from '../ui/Input';
-import { Select } from '../ui/Select';
 import { Textarea } from '../ui/Textarea';
 import { toast } from 'react-hot-toast';
 
@@ -172,25 +171,27 @@ const AddInventoryItemModal: React.FC<AddInventoryItemModalProps> = ({
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Category
                   </label>
-                  <Select
+                  <select
                     value={formData.category}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
+                    onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="FOOD_GRADE">Food Grade</option>
                     <option value="PACKAGING">Packaging</option>
                     <option value="EQUIPMENT">Equipment</option>
                     <option value="CLEANING">Cleaning</option>
                     <option value="OTHER">Other</option>
-                  </Select>
+                  </select>
                 </div>
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Unit
                   </label>
-                  <Select
+                  <select
                     value={formData.unit}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, unit: value }))}
+                    onChange={(e) => setFormData(prev => ({ ...prev, unit: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="kg">Kilogram (kg)</option>
                     <option value="g">Gram (g)</option>
@@ -204,7 +205,7 @@ const AddInventoryItemModal: React.FC<AddInventoryItemModalProps> = ({
                     <option value="bag">Bag</option>
                     <option value="bottle">Bottle</option>
                     <option value="can">Can</option>
-                  </Select>
+                  </select>
                 </div>
                 
                 <div>

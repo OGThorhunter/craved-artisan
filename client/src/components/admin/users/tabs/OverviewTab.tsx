@@ -34,7 +34,7 @@ export default function OverviewTab({ user, analytics }: OverviewTabProps) {
                 <div className="font-medium text-gray-900">{user.email}</div>
               </div>
               {user.emailVerified && (
-                <UserCheck className="w-4 h-4 text-green-600" title="Verified" />
+                <UserCheck className="w-4 h-4 text-green-600" />
               )}
             </div>
             
@@ -46,7 +46,7 @@ export default function OverviewTab({ user, analytics }: OverviewTabProps) {
                   <div className="font-medium text-gray-900">{user.phone}</div>
                 </div>
                 {user.phoneVerified && (
-                  <UserCheck className="w-4 h-4 text-green-600" title="Verified" />
+                  <UserCheck className="w-4 h-4 text-green-600" />
                 )}
               </div>
             )}

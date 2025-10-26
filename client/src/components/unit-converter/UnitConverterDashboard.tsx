@@ -365,8 +365,8 @@ export default function UnitConverterDashboard({ isOpen, onClose }: UnitConverte
     onSuccess: (data) => {
       setConversionResult(data.result);
       setRecentConversions(prev => [data.result, ...prev.slice(0, 9)]);
-      queryClient.invalidateQueries(['unit-converter-history']);
-      queryClient.invalidateQueries(['unit-converter-analytics']);
+      queryClient.invalidateQueries({ queryKey: ['unit-converter-history'] });
+      queryClient.invalidateQueries({ queryKey: ['unit-converter-analytics'] });
     },
     onError: (error) => {
       console.error('Conversion failed:', error);
@@ -382,8 +382,8 @@ export default function UnitConverterDashboard({ isOpen, onClose }: UnitConverte
     },
     onSuccess: (data) => {
       toast.success(`Batch conversion completed: ${data.results.filter((r: any) => r.success).length} successful`);
-      queryClient.invalidateQueries(['unit-converter-history']);
-      queryClient.invalidateQueries(['unit-converter-analytics']);
+      queryClient.invalidateQueries({ queryKey: ['unit-converter-history'] });
+      queryClient.invalidateQueries({ queryKey: ['unit-converter-analytics'] });
     },
     onError: () => {
       toast.error('Failed to perform batch conversion');
@@ -721,8 +721,10 @@ export default function UnitConverterDashboard({ isOpen, onClose }: UnitConverte
                             value={input.fromUnit}
                             onChange={(e) => {
                               const newInputs = [...batchInputs];
-                              newInputs[index].fromUnit = e.target.value;
-                              setBatchInputs(newInputs);
+                              if (newInputs[index]) {
+                                newInputs[index].fromUnit = e.target.value;
+                                setBatchInputs(newInputs);
+                              }
                             }}
                             className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             aria-label="Select from unit"
@@ -741,8 +743,10 @@ export default function UnitConverterDashboard({ isOpen, onClose }: UnitConverte
                             value={input.toUnit}
                             onChange={(e) => {
                               const newInputs = [...batchInputs];
-                              newInputs[index].toUnit = e.target.value;
-                              setBatchInputs(newInputs);
+                              if (newInputs[index]) {
+                                newInputs[index].toUnit = e.target.value;
+                                setBatchInputs(newInputs);
+                              }
                             }}
                             className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             aria-label="Select to unit"
@@ -865,7 +869,7 @@ export default function UnitConverterDashboard({ isOpen, onClose }: UnitConverte
                         onClick={() => {
                           setFromUnit(unit.id);
                           if (fromUnit === toUnit) {
-                            setToUnit(commonUnits.find(u => u.id !== unit.id)?.id || unit.id);
+                            setToUnit(commonUnits.find((u: Unit) => u.id !== unit.id)?.id || unit.id);
                           }
                         }}
                         className={`p-2 text-sm rounded-md transition-colors ${
