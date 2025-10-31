@@ -15,7 +15,12 @@ import { validateDatabaseConfig } from './utils/databaseConfig';
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { logger } from './logger';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 import { sessionMiddleware, attachUser } from './middleware/session-redis';
 import { requestContext } from './middleware/request-context';
 import { cronJobs } from './services/cron-jobs';
@@ -342,6 +347,18 @@ app.use('/api/admin', adminSettingsRouter);
 // Settings & Account Hub routes
 app.use('/api/settings', settingsRouter);
 app.use('/webhooks/stripe', stripeWebhooksRouter);
+
+// Production: serve client build
+if (process.env.NODE_ENV === 'production') {
+  const clientDistPath = path.join(__dirname, '../../client/dist');
+  
+  app.use(express.static(clientDistPath));
+  
+  // SPA fallback: send index.html for all non-api routes
+  app.get('*', (_req, res) => {
+    res.sendFile(path.join(clientDistPath, 'index.html'));
+  });
+}
 
 // Sentry error handler - must be LAST middleware (only if Sentry is initialized)
 if (process.env.SENTRY_DSN) {

@@ -1,5 +1,5 @@
 export async function http(path: string, init?: RequestInit): Promise<Response> {
-  const base = import.meta.env.VITE_API_BASE_URL || '';
+  const base = import.meta.env.VITE_API_BASE_URL || '/api';
   const url = `${base}${path}`;
   
   const config: RequestInit = {

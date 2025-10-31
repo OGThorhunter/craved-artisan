@@ -1,10 +1,15 @@
-import pino from 'pino';
+import winston from 'winston';
 
-const dev = process.env.NODE_ENV !== 'production';
+const level = process.env.LOG_LEVEL || 'info';
+const isDev = process.env.NODE_ENV !== 'production';
 
-// Pino log levels: trace (10), debug (20), info (30), warn (40), error (50), fatal (60)
-// Note: Pino uses 'fatal' not 'critical'
-export const logger = pino({
-  level: process.env.LOG_LEVEL || 'info',
-  transport: dev ? { target: 'pino-pretty', options: { colorize: true } } : undefined
+export const logger = winston.createLogger({
+  level,
+  format: isDev 
+    ? winston.format.combine(
+        winston.format.colorize(),
+        winston.format.simple()
+      )
+    : winston.format.json(),
+  transports: [new winston.transports.Console()],
 });
