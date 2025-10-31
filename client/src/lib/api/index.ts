@@ -14,6 +14,8 @@ export * from './events';
 export * from './inventory';
 export * from './layout';
 export * from './sales';
+export * from './public';
+export * from './vendors';
 
 
 

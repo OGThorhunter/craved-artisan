@@ -6,14 +6,10 @@ import { ZipProvider } from './contexts/ZipContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { Layout } from './components/Layout';
 import MaintenanceGate from './components/MaintenanceGate';
-import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
-import VendorPage from './pages/VendorPage';
-import ProductPage from './pages/ProductPage';
 import VendorStorefrontPage from './pages/VendorStorefrontPage';
-import ProductDetailPage from './pages/ProductDetailPage';
 import DashboardPage from './pages/DashboardPage';
 import CustomerDashboardPage from './pages/CustomerDashboardPage';
 import CartPage from './pages/CartPage';
@@ -44,7 +40,6 @@ import KnowledgeBasePage from './pages/KnowledgeBasePage';
 import RecipeToolPage from './pages/RecipeToolPage';
 import EventDetailPage from './pages/EventDetailPage';
 import CommunityPage from './pages/CommunityPage';
-import MarketplaceHomePage from './pages/MarketplaceHomePage';
 import MarketplaceSearchPage from './pages/MarketplaceSearchPage';
 import MarketplaceVendorPage from './pages/MarketplaceVendorPage';
 import ContactPage from './pages/ContactPage';
@@ -74,7 +69,13 @@ import VIPProgramPage from './pages/VIPProgramPage';
 import TestDataPage from './pages/TestDataPage';
 import { NotFound } from './components/NotFound';
 import ProtectedRoute from './components/ProtectedRoute';
-import { JoinRedirect } from './components/JoinRedirect';
+
+// Public pages
+import Home from './pages/public/Home';
+import JoinMovement from './pages/public/JoinMovement';
+import VendorStorefront from './pages/public/VendorStorefront';
+import ProductDetail from './pages/public/ProductDetail';
+import MarketplaceHome from './pages/public/MarketplaceHome';
 
 // SEO-optimized pages
 import ArtisanSourdoughGeorgiaPage from './pages/seo/ArtisanSourdoughGeorgiaPage';
@@ -94,7 +95,7 @@ function App() {
               <Router>
                 <Layout>
             <Switch>
-            <Route path="/" component={HomePage} />
+            <Route path="/" component={Home} />
             <Route path="/coming-soon" component={ComingSoonPage} />
             
             <Route path="/test">
@@ -109,26 +110,19 @@ function App() {
             <Route path="/login" component={LoginPage} />
             <Route path="/signup" component={SignupPage} />
             <Route path="/verify-email" component={VerifyEmailPage} />
-            {/* Redirect join routes to signup with role parameters */}
-            <Route path="/join" component={() => <JoinRedirect />} />
-            <Route path="/join/vendor" component={() => <JoinRedirect role="VENDOR" />} />
-            <Route path="/join/customer" component={() => <JoinRedirect role="CUSTOMER" />} />
-            <Route path="/join/b2b" component={() => <JoinRedirect role="B2B" />} />
-            <Route path="/join/coordinator" component={() => <JoinRedirect role="EVENT_COORDINATOR" />} />
-            <Route path="/join/dropoff" component={() => <JoinRedirect role="DROPOFF_MANAGER" />} />
-            {/* Catch-all for any other join routes */}
-            <Route path="/join/*" component={() => <JoinRedirect />} />
-            <Route path="/vendor/:id" component={VendorPage} />
-            <Route path="/product/:id" component={ProductPage} />
+            {/* Join Movement Page */}
+            <Route path="/join" component={JoinMovement} />
+            {/* Vendor and Product Public Pages */}
+            <Route path="/vendor/:id" component={VendorStorefront} />
+            <Route path="/product/:id" component={ProductDetail} />
             <Route path="/vendors/:vendorId" component={VendorStorefrontPage} />
             <Route path="/store/artisan-bakes-atlanta" component={DemoStorefrontPage} />
             <Route path="/test-data" component={TestDataPage} />
-            <Route path="/product/:productId" component={ProductDetailPage} />
             <Route path="/checkout" component={CheckoutPage} />
             <Route path="/checkout/success" component={CheckoutSuccessPage} />
             
             {/* Public Pages */}
-            <Route path="/marketplace" component={MarketplaceHomePage} />
+            <Route path="/marketplace" component={MarketplaceHome} />
             <Route path="/marketplace/search" component={MarketplaceSearchPage} />
             <Route path="/marketplace/vendor/:slug" component={MarketplaceVendorPage} />
             <Route path="/about" component={AboutPage} />
