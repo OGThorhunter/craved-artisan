@@ -1,6 +1,5 @@
 import { Clock, Truck, Package, Users, TrendingUp, Zap, Navigation } from 'lucide-react';
 import Button from '../ui/Button';
-import { ReactNode } from 'react';
 
 interface CategoryFilterProps {
   onFilterSelect: (filterId: string) => void;
@@ -11,16 +10,16 @@ interface CategoryFilterProps {
 interface FilterOption {
   id: string;
   label: string;
-  icon: ReactNode;
+  Icon: typeof Clock;
 }
 
 const filterOptions: FilterOption[] = [
-  { id: 'pickup', label: 'Pickup Now', icon: <Clock className="w-4 h-4" /> },
-  { id: 'delivery', label: 'Delivery', icon: <Truck className="w-4 h-4" /> },
-  { id: 'shipping', label: 'Shipping', icon: <Package className="w-4 h-4" /> },
-  { id: 'food', label: 'Food', icon: <Users className="w-4 h-4" /> },
-  { id: 'crafts', label: 'Crafts', icon: <TrendingUp className="w-4 h-4" /> },
-  { id: 'services', label: 'Services', icon: <Zap className="w-4 h-4" /> },
+  { id: 'pickup', label: 'Pickup Now', Icon: Clock },
+  { id: 'delivery', label: 'Delivery', Icon: Truck },
+  { id: 'shipping', label: 'Shipping', Icon: Package },
+  { id: 'food', label: 'Food', Icon: Users },
+  { id: 'crafts', label: 'Crafts', Icon: TrendingUp },
+  { id: 'services', label: 'Services', Icon: Zap },
 ];
 
 export function CategoryFilter({ 
@@ -32,17 +31,20 @@ export function CategoryFilter({
     <>
       {/* Quick Filter Chips */}
       <div className="flex flex-wrap justify-center gap-2 mb-6">
-        {filterOptions.map((filter) => (
-          <Button
-            key={filter.id}
-            variant="secondary"
-            onClick={() => onFilterSelect(filter.id)}
-            className="text-sm px-4 py-2"
-          >
-            {filter.icon}
-            <span className="ml-1">{filter.label}</span>
-          </Button>
-        ))}
+        {filterOptions.map((filter) => {
+          const Icon = filter.Icon;
+          return (
+            <Button
+              key={filter.id}
+              variant="secondary"
+              onClick={() => onFilterSelect(filter.id)}
+              className="text-sm px-4 py-2"
+            >
+              <Icon className="w-4 h-4 mr-1" />
+              {filter.label}
+            </Button>
+          );
+        })}
       </div>
 
       {/* Location Status */}
