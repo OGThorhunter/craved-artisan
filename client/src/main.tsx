@@ -26,12 +26,16 @@ createRoot(document.getElementById('root')!).render(
       <QueryProvider>
         <HelmetProvider>
           <PostHogProvider
-            apiKey={import.meta.env.VITE_PUBLIC_POSTHOG_KEY}
+            apiKey={import.meta.env.VITE_PUBLIC_POSTHOG_KEY || 'placeholder'}
             options={{
-              api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
+              api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST || 'https://app.posthog.com',
               defaults: '2025-05-24',
               capture_exceptions: true,
               debug: import.meta.env.MODE === 'development',
+              // Disable PostHog if no valid key is provided
+              disabled: !import.meta.env.VITE_PUBLIC_POSTHOG_KEY || 
+                       import.meta.env.VITE_PUBLIC_POSTHOG_KEY === 'phc_placeholder_key_for_development' ||
+                       import.meta.env.VITE_ENABLE_POSTHOG === 'false',
             }}
           >
             <App />

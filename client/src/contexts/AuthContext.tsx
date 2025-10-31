@@ -79,7 +79,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Handle session data changes
   useEffect(() => {
     if (sessionData) {
-      if (sessionData.success && sessionData.user?.isAuthenticated) {
+      if (sessionData.success && sessionData.user) {
         console.log('AuthContext: Session resolved', {
           userId: sessionData.user.userId,
           role: sessionData.user.role

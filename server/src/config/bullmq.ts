@@ -4,7 +4,13 @@ import { getRedisClient } from './redis';
 import { logger } from '../logger';
 
 // Get Redis connection for BullMQ
-const redisConnection = getRedisClient();
+// BullMQ requires maxRetriesPerRequest: null and enableReadyCheck: false
+// to prevent connection issues and ensure proper job processing
+const redisConnection = {
+  ...getRedisClient(),
+  maxRetriesPerRequest: null,
+  enableReadyCheck: false,
+};
 
 // Feature flag: Use BullMQ only in production or when explicitly enabled
 export const useBullMQ = process.env.USE_BULLMQ === 'true';

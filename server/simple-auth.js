@@ -10,6 +10,20 @@ const users = [
     password: 'password123',
     role: 'VENDOR',
     name: 'Demo Vendor'
+  },
+  {
+    id: '2',
+    email: 'customer@cravedartisan.com',
+    password: 'customer123',
+    role: 'CUSTOMER',
+    name: 'Demo Customer'
+  },
+  {
+    id: '3',
+    email: 'tttrcasey@gmail.com',
+    password: 'password123',
+    role: 'ADMIN',
+    name: 'Casey Admin'
   }
 ];
 
@@ -80,20 +94,20 @@ const server = http.createServer(async (req, res) => {
     sendResponse(res, 200, {
       message: 'Simple auth server is working!',
       endpoints: [
-        'POST /api/auth-test/login',
-        'GET /api/auth-test/session',
-        'POST /api/auth-test/logout'
+        'POST /api/auth/login',
+        'GET /api/auth/session',
+        'POST /api/auth/logout'
       ],
-      testCredentials: {
-        email: 'vendor@cravedartisan.com',
-        password: 'password123'
-      }
+      testCredentials: [
+        { email: 'vendor@cravedartisan.com', password: 'password123', role: 'VENDOR' },
+        { email: 'customer@cravedartisan.com', password: 'customer123', role: 'CUSTOMER' }
+      ]
     });
     return;
   }
 
   // Login endpoint
-  if (path === '/api/auth-test/login' && method === 'POST') {
+  if (path === '/api/auth/login' && method === 'POST') {
     const body = await parseBody(req);
     const { email, password } = body;
 
@@ -131,7 +145,11 @@ const server = http.createServer(async (req, res) => {
       });
       res.end(JSON.stringify({
         success: true,
-        user: sessions.get(sessionId).user,
+        user: {
+          ...sessions.get(sessionId).user,
+          isAuthenticated: true,
+          lastActivity: new Date()
+        },
         message: 'Login successful'
       }));
     } else {
@@ -145,7 +163,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   // Session check endpoint
-  if (path === '/api/auth-test/session' && method === 'GET') {
+  if (path === '/api/auth/session' && method === 'GET') {
     const cookies = req.headers.cookie || '';
     const sessionId = cookies.split(';')
       .find(c => c.trim().startsWith('sessionId='))
@@ -157,21 +175,23 @@ const server = http.createServer(async (req, res) => {
       const session = sessions.get(sessionId);
       sendResponse(res, 200, {
         success: true,
-        user: session.user,
-        authenticated: true
+        user: {
+          ...session.user,
+          isAuthenticated: true,
+          lastActivity: new Date()
+        }
       });
     } else {
       sendResponse(res, 401, {
         success: false,
-        authenticated: false,
-        message: 'Not authenticated'
+        message: 'No active session'
       });
     }
     return;
   }
 
   // Logout endpoint
-  if (path === '/api/auth-test/logout' && method === 'POST') {
+  if (path === '/api/auth/logout' && method === 'POST') {
     const cookies = req.headers.cookie || '';
     const sessionId = cookies.split(';')
       .find(c => c.trim().startsWith('sessionId='))
@@ -199,13 +219,13 @@ const server = http.createServer(async (req, res) => {
   sendResponse(res, 404, {
     error: 'Route not found',
     path: path,
-    availableEndpoints: [
-      '/health',
-      '/test',
-      '/api/auth-test/login',
-      '/api/auth-test/session',
-      '/api/auth-test/logout'
-    ]
+      availableEndpoints: [
+        '/health',
+        '/test',
+        '/api/auth/login',
+        '/api/auth/session',
+        '/api/auth/logout'
+      ]
   });
 });
 

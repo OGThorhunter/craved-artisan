@@ -100,7 +100,13 @@ export function initSlaCheckWorker() {
       return await checkSlaBreaches();
     },
     {
-      connection: getRedisClient() as any,
+      // BullMQ requires maxRetriesPerRequest: null and enableReadyCheck: false
+      // to prevent connection issues and ensure proper job processing
+      connection: {
+        ...getRedisClient(),
+        maxRetriesPerRequest: null,
+        enableReadyCheck: false,
+      } as any,
       concurrency: 1, // Only one SLA check at a time
     }
   );

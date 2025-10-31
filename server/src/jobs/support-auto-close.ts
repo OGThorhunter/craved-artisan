@@ -66,7 +66,13 @@ export function initAutoCloseWorker() {
       return await autoCloseResolvedTickets();
     },
     {
-      connection: getRedisClient() as any,
+      // BullMQ requires maxRetriesPerRequest: null and enableReadyCheck: false
+      // to prevent connection issues and ensure proper job processing
+      connection: {
+        ...getRedisClient(),
+        maxRetriesPerRequest: null,
+        enableReadyCheck: false,
+      } as any,
       concurrency: 1,
     }
   );

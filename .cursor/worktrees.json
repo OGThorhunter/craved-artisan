@@ -1,0 +1,16 @@
+{
+  "setup-worktree": [
+    "echo \"🚀 Setting up Craved Artisan worktree...\"",
+    "npm install",
+    "# Copy environment file if missing",
+    "if [ -f \"../craved-artisan/server/.env\" ] && [ ! -f \"server/.env\" ]; then",
+    "cp ../craved-artisan/server/.env server/.env",
+    "echo \"✅ Copied environment file from main worktree.\"",
+    "fi",
+    "# Generate Prisma client",
+    "cd server",
+    "npx prisma generate",
+    "cd ..",
+    "echo \"✅ Worktree ready! You can now run: npm run dev\""
+  ]
+}
