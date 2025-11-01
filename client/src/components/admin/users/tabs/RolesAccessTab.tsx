@@ -124,10 +124,8 @@ function getRolePermissions(role: string): string[] {
       return ['Place orders', 'View order history', 'Manage favorites'];
     case 'EVENT_COORDINATOR':
       return ['Create events', 'Manage vendors', 'View analytics', 'Handle payouts'];
-    case 'SUPER_ADMIN':
-      return ['Full system access', 'Manage users', 'View all data', 'Impersonate users'];
-    case 'B2B_VENDOR':
-      return ['Manage inventory', 'Wholesale orders', 'B2B analytics'];
+    case 'ADMIN':
+      return ['Full system access', 'Manage users', 'View all data', 'Manage B2B network'];
     default:
       return [];
   }

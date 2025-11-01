@@ -21,16 +21,10 @@ export default function CustomerDashboard() {
           <h1 className="text-2xl font-semibold">Welcome{profile?.name ? `, ${profile.name}` : ""}</h1>
           <p className="text-gray-500 text-sm">Manage your orders, favorites, and pickup windows.</p>
         </div>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2">
           <div className="bg-white rounded-lg border p-4">
             <p className="text-sm text-gray-500">Total Orders</p>
             <p className="text-2xl font-semibold">{orders ? orders.length : 0}</p>
-          </div>
-          <div className="bg-white rounded-lg border p-4">
-            <p className="text-sm text-gray-500">Lifetime Spend</p>
-            <p className="text-2xl font-semibold">
-              {profile?.lifetimeSpend ? formatCurrency(profile.lifetimeSpend) : "$0.00"}
-            </p>
           </div>
           <div className="bg-white rounded-lg border p-4">
             <p className="text-sm text-gray-500">Next Pickup</p>

@@ -241,14 +241,6 @@ export default function Home() {
       learnMore: '/signup?role=EVENT_COORDINATOR',
       joinHref: '/signup?role=EVENT_COORDINATOR'
     },
-    { 
-      img: '/images/DoL1_1750621743272.png', 
-      label: 'Drop-Off', 
-      tagline: 'Logistics',
-      description: 'Host pickup locations that serve as community hubs for local commerce.',
-      learnMore: '/signup?role=DROPOFF_MANAGER',
-      joinHref: '/signup?role=DROPOFF_MANAGER'
-    },
   ];
 
   return (

@@ -674,13 +674,6 @@ export default function Home() {
                learnMore: '/signup?role=EVENT_COORDINATOR',
                joinHref: '/signup?role=EVENT_COORDINATOR'
              },
-             { 
-               img: 'DoL1_1750621743272', 
-               label: 'Drop-Off', 
-               description: 'Host pickup locations that serve as community hubs for local commerce.',
-               learnMore: '/signup?role=DROPOFF_MANAGER',
-               joinHref: '/signup?role=DROPOFF_MANAGER'
-             },
            ].map(({ img, label, description, learnMore, joinHref }) => (
              <div
                key={label}

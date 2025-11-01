@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Filter, X, ChevronDown, Search } from 'lucide-react';
+import { ROLES, ROLE_LABELS } from '@/constants/roles';
 
 interface UserFiltersProps {
   filters: any;
@@ -131,12 +132,11 @@ export default function UserFilters({ filters, onFilterChange, searchQuery, onSe
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">All Roles</option>
-                <option value="CUSTOMER">Customer</option>
-                <option value="VENDOR">Vendor</option>
-                <option value="B2B_VENDOR">B2B Vendor</option>
-                <option value="EVENT_COORDINATOR">Event Coordinator</option>
-                <option value="DROPOFF_MANAGER">Drop-off Manager</option>
-                <option value="SUPER_ADMIN">Super Admin</option>
+                {ROLES.map((role) => (
+                  <option key={role} value={role}>
+                    {ROLE_LABELS[role]}
+                  </option>
+                ))}
               </select>
             </div>
             

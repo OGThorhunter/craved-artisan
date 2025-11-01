@@ -18,7 +18,6 @@ model User {
   phone          String?
   zip_code       String?
   loyalty_member Boolean   @default(false)
-  lifetimeSpend  Decimal   @default(0)
   avatarUrl      String?
   created_at     DateTime  @default(now())
   updated_at     DateTime  @updatedAt
@@ -979,21 +978,6 @@ model FulfillmentWindow {
 }
 
 // Dropoff locations for the dropoff manager dashboard
-model DropoffLocation {
-  id            String   @id @default(cuid())
-  name          String
-  address       String?
-  pendingOrders Int      @default(0)
-  pickupWindow  String?
-  notes         String?
-  active        Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  @@index([name])
-  @@index([active])
-}
-
 model OrderFulfillment {
   id                String               @id @default(cuid())
   orderId           String
@@ -1486,12 +1470,10 @@ enum OrderStatus {
 }
 
 enum Role {
-  VENDOR
   ADMIN
   CUSTOMER
+  VENDOR
   EVENT_COORDINATOR
-  B2B_VENDOR
-  DROPOFF_MANAGER
 }
 
 enum TaxAlertType {
@@ -3055,7 +3037,7 @@ model NewsletterSubscription {
 model UserRole {
   id        String   @id @default(cuid())
   userId    String
-  role      String // CUSTOMER, VENDOR, B2B_VENDOR, EVENT_COORDINATOR, DROPOFF_MANAGER, SUPER_ADMIN
+  role      String // ADMIN, CUSTOMER, VENDOR, EVENT_COORDINATOR
   scopes    String? // JSON array of granular permissions
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { logger } from '../logger';
+import { requireAdmin } from '../middleware/admin-auth';
 
 export const b2bNetworkRouter = Router();
 
@@ -394,7 +395,7 @@ const mockB2BOrders: B2BOrder[] = [
 ];
 
 // GET /api/b2b/suppliers - Get all suppliers
-b2bNetworkRouter.get('/b2b/suppliers', (req, res) => {
+b2bNetworkRouter.get('/b2b/suppliers', requireAdmin, (req, res) => {
   try {
     const { type, category, verified, search } = req.query;
     
@@ -440,7 +441,7 @@ b2bNetworkRouter.get('/b2b/suppliers', (req, res) => {
 });
 
 // GET /api/b2b/suppliers/:id - Get supplier details
-b2bNetworkRouter.get('/b2b/suppliers/:id', (req, res) => {
+b2bNetworkRouter.get('/b2b/suppliers/:id', requireAdmin, (req, res) => {
   try {
     const { id } = req.params;
     const supplier = mockSuppliers.find(s => s.id === id);
@@ -478,7 +479,7 @@ b2bNetworkRouter.get('/b2b/suppliers/:id', (req, res) => {
 });
 
 // GET /api/b2b/products - Get B2B products
-b2bNetworkRouter.get('/b2b/products', (req, res) => {
+b2bNetworkRouter.get('/b2b/products', requireAdmin, (req, res) => {
   try {
     const { category, supplier, inStock, search, minPrice, maxPrice } = req.query;
     
@@ -530,7 +531,7 @@ b2bNetworkRouter.get('/b2b/products', (req, res) => {
 });
 
 // GET /api/b2b/sourcing-requests - Get sourcing requests
-b2bNetworkRouter.get('/b2b/sourcing-requests', (req, res) => {
+b2bNetworkRouter.get('/b2b/sourcing-requests', requireAdmin, (req, res) => {
   try {
     const { status, urgency } = req.query;
     
@@ -563,7 +564,7 @@ b2bNetworkRouter.get('/b2b/sourcing-requests', (req, res) => {
 });
 
 // POST /api/b2b/sourcing-requests - Create sourcing request
-b2bNetworkRouter.post('/b2b/sourcing-requests', (req, res) => {
+b2bNetworkRouter.post('/b2b/sourcing-requests', requireAdmin, (req, res) => {
   try {
     const { itemId, itemName, requestedQuantity, maxPrice, urgency } = req.body;
     
@@ -628,7 +629,7 @@ b2bNetworkRouter.post('/b2b/sourcing-requests', (req, res) => {
 });
 
 // POST /api/b2b/sourcing-requests/:id/select-quote - Select a quote
-b2bNetworkRouter.post('/b2b/sourcing-requests/:id/select-quote', (req, res) => {
+b2bNetworkRouter.post('/b2b/sourcing-requests/:id/select-quote', requireAdmin, (req, res) => {
   try {
     const { id } = req.params;
     const { quoteIndex } = req.body;
@@ -697,7 +698,7 @@ b2bNetworkRouter.post('/b2b/sourcing-requests/:id/select-quote', (req, res) => {
 });
 
 // GET /api/b2b/orders - Get B2B orders
-b2bNetworkRouter.get('/b2b/orders', (req, res) => {
+b2bNetworkRouter.get('/b2b/orders', requireAdmin, (req, res) => {
   try {
     const { status, supplier } = req.query;
     
@@ -731,7 +732,7 @@ b2bNetworkRouter.get('/b2b/orders', (req, res) => {
 });
 
 // GET /api/b2b/analytics - Get B2B analytics
-b2bNetworkRouter.get('/b2b/analytics', (req, res) => {
+b2bNetworkRouter.get('/b2b/analytics', requireAdmin, (req, res) => {
   try {
     const totalOrders = mockB2BOrders.length;
     const totalValue = mockB2BOrders.reduce((sum, o) => sum + o.totalAmount, 0);
@@ -790,7 +791,7 @@ b2bNetworkRouter.get('/b2b/analytics', (req, res) => {
 });
 
 // POST /api/b2b/auto-source - Trigger automatic sourcing for low stock items
-b2bNetworkRouter.post('/b2b/auto-source', (req, res) => {
+b2bNetworkRouter.post('/b2b/auto-source', requireAdmin, (req, res) => {
   try {
     const { itemId, itemName, currentStock, reorderPoint, urgency } = req.body;
     

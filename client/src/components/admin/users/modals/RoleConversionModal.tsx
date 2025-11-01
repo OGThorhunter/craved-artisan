@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Users, ArrowRight, AlertCircle, CheckCircle } from 'lucide-react';
 import { Badge } from '../../../ui/Badge';
+import { ROLES, ROLE_LABELS, ROLE_DESCRIPTIONS } from '@/constants/roles';
 
 interface RoleConversionModalProps {
   isOpen: boolean;
@@ -18,14 +19,11 @@ export default function RoleConversionModal({ isOpen, onClose, user, currentRole
   const [toRole, setToRole] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const availableRoles = [
-    { value: 'CUSTOMER', label: 'Customer', description: 'Can place orders and manage favorites' },
-    { value: 'VENDOR', label: 'Vendor', description: 'Can sell products and manage storefront' },
-    { value: 'B2B_VENDOR', label: 'B2B Vendor', description: 'Supplier marketplace access' },
-    { value: 'EVENT_COORDINATOR', label: 'Event Coordinator', description: 'Can create and manage events' },
-    { value: 'DROPOFF_MANAGER', label: 'Drop-off Manager', description: 'Manage pickup locations' },
-    { value: 'SUPER_ADMIN', label: 'Super Admin', description: 'Full system access' }
-  ].filter(r => !currentRoles.includes(r.value));
+  const availableRoles = ROLES.filter(r => !currentRoles.includes(r)).map(role => ({
+    value: role,
+    label: ROLE_LABELS[role],
+    description: ROLE_DESCRIPTIONS[role]
+  }));
   
   const getChangesPreview = () => {
     if (!toRole) return null;

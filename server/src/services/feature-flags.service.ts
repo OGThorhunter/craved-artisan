@@ -166,7 +166,7 @@ class FeatureFlagsService {
         }
 
         const scopeRoleMap: Record<string, string[]> = {
-          'ADMIN': ['ADMIN', 'SUPER_ADMIN'],
+          'ADMIN': ['ADMIN'],
           'VENDOR': ['VENDOR'],
           'CUSTOMER': ['CUSTOMER']
         };

@@ -75,8 +75,7 @@ export default function UserListTable({ filters, searchQuery, onUserSelect, onAc
       case 'VENDOR': return 'bg-green-100 text-green-800';
       case 'CUSTOMER': return 'bg-blue-100 text-blue-800';
       case 'EVENT_COORDINATOR': return 'bg-purple-100 text-purple-800';
-      case 'SUPER_ADMIN': return 'bg-red-100 text-red-800';
-      case 'B2B_VENDOR': return 'bg-orange-100 text-orange-800';
+      case 'ADMIN': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };

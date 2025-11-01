@@ -45,12 +45,10 @@ function isSuperAdmin(req: Request, res: Response, next: any) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  // Check if user has SUPER_ADMIN role
-  // TODO: Implement proper role checking based on your auth system
-  // For now, we'll check a simple flag
+  // Check if user has ADMIN role
   const user = req.user as any;
-  if (user.role !== 'ADMIN' && !user.isSuperAdmin) {
-    return res.status(403).json({ error: 'Forbidden: Super admin access required' });
+  if (user.role !== 'ADMIN') {
+    return res.status(403).json({ error: 'Forbidden: Admin access required' });
   }
 
   next();

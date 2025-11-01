@@ -33,7 +33,6 @@ import PulsePage from './pages/dashboard/vendor/PulsePage';
 
 import DemoStorefrontPage from './pages/vendor/DemoStorefrontPage';
 import EventCoordinatorDashboardPage from './pages/EventCoordinatorDashboardPage';
-import DropoffDashboardPage from './pages/DropoffDashboardPage';
 import InventoryPage from './pages/inventory/InventoryPage';
 import AdvancedSearchPage from './pages/AdvancedSearchPage';
 import KnowledgeBasePage from './pages/KnowledgeBasePage';
@@ -63,9 +62,6 @@ import Settings from './pages/dashboard/admin/Settings';
 // Wave 4: New coordinator pages
 import CoordinatorDashboard from './pages/dashboard/coordinator/CoordinatorDashboard';
 import EventInventory from './pages/dashboard/coordinator/EventInventory';
-
-// Wave 4: New dropoff page
-import DropoffDashboard from './pages/dashboard/dropoff/DropoffDashboard';
 
 // Wave 4: System pages
 import NotFound from './pages/system/NotFound';
@@ -266,19 +262,6 @@ function App() {
             <Route path="/dashboard/event-coordinator/legacy">
               <ProtectedRoute role="EVENT_COORDINATOR">
                 <EventCoordinatorDashboardPage />
-              </ProtectedRoute>
-            </Route>
-            
-            {/* Wave 4: Dropoff route */}
-            <Route path="/dashboard/dropoff">
-              <ProtectedRoute role="DROPOFF_MANAGER">
-                <DropoffDashboard />
-              </ProtectedRoute>
-            </Route>
-            {/* Legacy dropoff route */}
-            <Route path="/dashboard/dropoff/legacy">
-              <ProtectedRoute role="DROPOFF_MANAGER">
-                <DropoffDashboardPage />
               </ProtectedRoute>
             </Route>
             

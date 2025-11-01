@@ -306,10 +306,6 @@ import customerRouter from './routes/customer.router';
 app.use('/api/customer', customerRouter);
 app.use('/api/orders', customerOrdersRouter);
 
-// Dropoff Routes
-import dropoffRouter from './routes/dropoff.router';
-app.use('/api/dropoff', dropoffRouter);
-
 // Label Management Routes
 app.use('/api/vendor/labels', labelsManagementRouter);
 app.use('/api/vendor/labels', labelsSmartQueueRouter);

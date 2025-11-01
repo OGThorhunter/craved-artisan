@@ -7,7 +7,7 @@ import { logger } from "../logger";
  */
 export async function getCustomerProfileByUserId(userId: string) {
   try {
-    // Get user with zip_code and lifetimeSpend
+    // Get user with zip_code
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -16,7 +16,6 @@ export async function getCustomerProfileByUserId(userId: string) {
         email: true,
         phone: true,
         zip_code: true,
-        lifetimeSpend: true,
         avatarUrl: true,
         created_at: true,
       },
