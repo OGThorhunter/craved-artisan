@@ -1,5 +1,5 @@
 interface DashboardLayoutProps {
-  role: 'customer' | 'vendor' | 'admin';
+  role: 'customer' | 'vendor' | 'admin' | 'EVENT_COORDINATOR' | 'DROPOFF_MANAGER';
   children: React.ReactNode;
 }
 

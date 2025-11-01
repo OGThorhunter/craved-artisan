@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import { requireAuth } from '../middleware/auth';
+import * as vendorService from '../services/vendor.service';
 
 export const vendorRouter = Router();
 
@@ -421,5 +423,76 @@ vendorRouter.post('/orders', async (req, res) => {
       error: 'ORDER_CREATION_FAILED', 
       message: error.message 
     });
+  }
+});
+
+// Wave 3: Vendor Dashboard endpoints
+
+// GET /api/vendor/me
+vendorRouter.get('/vendor/me', requireAuth, async (req, res, next) => {
+  try {
+    const vendor = await vendorService.findVendorByUserId(req.user.id);
+    if (!vendor) {
+      return res.status(404).json({ error: 'Vendor not found' });
+    }
+    return res.json(vendor);
+  } catch (error: any) {
+    return next(error);
+  }
+});
+
+// GET /api/vendor/products
+vendorRouter.get('/vendor/products', requireAuth, async (req, res, next) => {
+  try {
+    const vendor = await vendorService.findVendorByUserId(req.user.id);
+    if (!vendor) {
+      return res.status(404).json({ error: 'Vendor not found' });
+    }
+    const products = await vendorService.getVendorProducts(vendor.id);
+    return res.json(products);
+  } catch (error: any) {
+    return next(error);
+  }
+});
+
+// GET /api/vendor/inventory
+vendorRouter.get('/vendor/inventory', requireAuth, async (req, res, next) => {
+  try {
+    const vendor = await vendorService.findVendorByUserId(req.user.id);
+    if (!vendor) {
+      return res.status(404).json({ error: 'Vendor not found' });
+    }
+    const inventory = await vendorService.getVendorInventory(vendor.id);
+    return res.json(inventory);
+  } catch (error: any) {
+    return next(error);
+  }
+});
+
+// GET /api/vendor/orders
+vendorRouter.get('/vendor/orders', requireAuth, async (req, res, next) => {
+  try {
+    const vendor = await vendorService.findVendorByUserId(req.user.id);
+    if (!vendor) {
+      return res.status(404).json({ error: 'Vendor not found' });
+    }
+    const result = await vendorService.getVendorOrders(vendor.id);
+    return res.json(result);
+  } catch (error: any) {
+    return next(error);
+  }
+});
+
+// GET /api/vendor/recipes
+vendorRouter.get('/vendor/recipes', requireAuth, async (req, res, next) => {
+  try {
+    const vendor = await vendorService.findVendorByUserId(req.user.id);
+    if (!vendor) {
+      return res.status(404).json({ error: 'Vendor not found' });
+    }
+    const recipes = await vendorService.getVendorRecipes(vendor.id);
+    return res.json(recipes);
+  } catch (error: any) {
+    return next(error);
   }
 });

@@ -3,147 +3,16 @@ import { requireAdmin, auditAdminAction } from '../middleware/admin-auth';
 import { systemHealth } from '../services/system-health';
 import { z } from 'zod';
 import { prisma } from '../lib/prisma';
+import * as adminService from '../services/admin.service';
 
 const router = Router();
 // GET /api/admin/overview - Get all top KPIs and health checks
-router.get('/overview', requireAdmin, async (req, res) => {
+router.get('/overview', requireAdmin, async (req, res, next) => {
   try {
-    // Simple test response first
-    return res.json({
-      success: true,
-      data: {
-        health: { overall: 'OK', summary: { ok: 1, warn: 0, crit: 0 } },
-        metrics: {
-          vendors: { total: 0, active: 0 },
-          orders: { total: 0, pending: 0 },
-          revenue: { total: 0, today: 0 },
-          messages: { total: 0, unread: 0 }
-        },
-        topPerformers: { vendors: [] },
-        recentActivity: []
-      }
-    });
-    
-    // Get system health status
-    const healthStatus = await systemHealth.getSystemStatus();
-    
-    // Get key metrics
-    const [
-      totalVendors,
-      activeVendors,
-      totalOrders,
-      pendingOrders,
-      totalRevenue,
-      todayRevenue,
-      systemMessages,
-      unreadMessages
-    ] = await Promise.all([
-      prisma.vendorProfile.count(),
-      prisma.vendorProfile.count({ where: { isActive: true } }),
-      prisma.order.count(),
-      prisma.order.count({ where: { status: { in: ['PENDING', 'CONFIRMED', 'PREPARING'] } } }),
-      prisma.order.aggregate({
-        _sum: { totalAmount: true },
-        where: { status: 'COMPLETED' }
-      }),
-      prisma.order.aggregate({
-        _sum: { totalAmount: true },
-        where: { 
-          status: 'COMPLETED',
-          createdAt: {
-            gte: new Date(new Date().setHours(0, 0, 0, 0))
-          }
-        }
-      }),
-      prisma.systemMessage.count(),
-      prisma.systemMessage.count({ where: { readAt: null } })
-    ]);
-
-    // Get recent activity
-    const recentOrders = await prisma.order.findMany({
-      take: 5,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        vendor: {
-          select: { storeName: true }
-        },
-        items: {
-          take: 2,
-          include: {
-            product: {
-              select: { name: true }
-            }
-          }
-        }
-      }
-    });
-
-    const recentVendors = await prisma.vendorProfile.findMany({
-      take: 5,
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        storeName: true,
-        city: true,
-        state: true,
-        createdAt: true
-      }
-    });
-
-    // Get top performing vendors (by revenue)
-    const topVendors = await prisma.vendorProfile.findMany({
-      take: 5,
-      orderBy: { createdAt: 'desc' }, // Placeholder - would need revenue calculation
-      select: {
-        id: true,
-        storeName: true,
-        city: true,
-        state: true,
-        ratingAvg: true,
-        ratingCount: true
-      }
-    });
-
-    return res.json({
-      success: true,
-      data: {
-        health: healthStatus,
-        metrics: {
-          vendors: {
-            total: totalVendors,
-            active: activeVendors,
-            pending: totalVendors - activeVendors
-          },
-          orders: {
-            total: totalOrders,
-            pending: pendingOrders,
-            completed: totalOrders - pendingOrders
-          },
-          revenue: {
-            total: totalRevenue._sum.totalAmount || 0,
-            today: todayRevenue._sum.totalAmount || 0,
-            currency: 'USD'
-          },
-          messages: {
-            total: systemMessages,
-            unread: unreadMessages
-          }
-        },
-        recentActivity: {
-          orders: recentOrders,
-          vendors: recentVendors
-        },
-        topPerformers: {
-          vendors: topVendors
-        }
-      }
-    });
+    const overview = await adminService.getAdminOverview();
+    return res.json(overview);
   } catch (error) {
-    console.error('Admin overview error:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Failed to fetch admin overview'
-    });
+    return next(error);
   }
 });
 

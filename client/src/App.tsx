@@ -52,6 +52,25 @@ import UsersListPage from './pages/control/UsersListPage';
 import UserDetailPage from './pages/control/UserDetailPage';
 import SupportPage from './pages/control/SupportPage';
 import SettingsPage from './pages/admin/SettingsPage';
+
+// Wave 4: New admin pages
+import AdminDashboardNew from './pages/dashboard/admin/AdminDashboard';
+import UsersList from './pages/dashboard/admin/UsersList';
+import UserDetail from './pages/dashboard/admin/UserDetail';
+import Support from './pages/dashboard/admin/Support';
+import Settings from './pages/dashboard/admin/Settings';
+
+// Wave 4: New coordinator pages
+import CoordinatorDashboard from './pages/dashboard/coordinator/CoordinatorDashboard';
+import EventInventory from './pages/dashboard/coordinator/EventInventory';
+
+// Wave 4: New dropoff page
+import DropoffDashboard from './pages/dashboard/dropoff/DropoffDashboard';
+
+// Wave 4: System pages
+import NotFound from './pages/system/NotFound';
+import Maintenance from './pages/system/Maintenance';
+import ComingSoon from './pages/system/ComingSoon';
 import VendorWatchlistPage from './pages/VendorWatchlistPage';
 import VendorSalesWindowsPage from './pages/VendorSalesWindowsPage';
 import VendorDeliveryBatchingPage from './pages/VendorDeliveryBatchingPage';
@@ -61,6 +80,7 @@ import CheckoutSuccessPage from './pages/CheckoutSuccessPage';
 import NotFoundPage from './pages/NotFoundPage';
 import MaintenancePage from './pages/MaintenancePage';
 import ComingSoonPage from './pages/ComingSoonPage';
+// Wave 4: System pages (consolidated)
 import VendorAnalyticsPage from './pages/VendorAnalyticsPage';
 import VendorAnalyticsCRMPage from './pages/VendorAnalyticsCRMPage';
 import { VendorFinancialPage } from './pages/VendorFinancialPage';
@@ -76,6 +96,24 @@ import JoinMovement from './pages/public/JoinMovement';
 import VendorStorefront from './pages/public/VendorStorefront';
 import ProductDetail from './pages/public/ProductDetail';
 import MarketplaceHome from './pages/public/MarketplaceHome';
+
+// Wave 2: New auth pages
+import Login from './pages/auth/Login';
+import Signup from './pages/auth/Signup';
+import VerifyEmail from './pages/auth/VerifyEmail';
+
+// Wave 2: New customer pages
+import CustomerDashboard from './pages/dashboard/customer/CustomerDashboard';
+import Cart from './pages/customer/Cart';
+import Checkout from './pages/customer/Checkout';
+import CheckoutSuccess from './pages/customer/CheckoutSuccess';
+
+// Wave 3: New vendor pages
+import VendorDashboard from './pages/dashboard/vendor/VendorDashboard';
+import VendorProducts from './pages/dashboard/vendor/Products';
+import VendorInventory from './pages/dashboard/vendor/Inventory';
+import VendorOrders from './pages/dashboard/vendor/Orders';
+import VendorRecipes from './pages/dashboard/vendor/Recipes';
 
 // SEO-optimized pages
 import ArtisanSourdoughGeorgiaPage from './pages/seo/ArtisanSourdoughGeorgiaPage';
@@ -96,7 +134,7 @@ function App() {
                 <Layout>
             <Switch>
             <Route path="/" component={Home} />
-            <Route path="/coming-soon" component={ComingSoonPage} />
+            <Route path="/coming-soon" component={ComingSoon} />
             
             <Route path="/test">
               <div className="min-h-screen bg-blue-50 flex items-center justify-center">
@@ -107,9 +145,14 @@ function App() {
                 </div>
               </div>
             </Route>
-            <Route path="/login" component={LoginPage} />
-            <Route path="/signup" component={SignupPage} />
-            <Route path="/verify-email" component={VerifyEmailPage} />
+            {/* Wave 2: New auth routes */}
+            <Route path="/login" component={Login} />
+            <Route path="/signup" component={Signup} />
+            <Route path="/verify-email" component={VerifyEmail} />
+            {/* Legacy routes (for backward compatibility) */}
+            <Route path="/auth/login" component={LoginPage} />
+            <Route path="/auth/signup" component={SignupPage} />
+            <Route path="/auth/verify-email" component={VerifyEmailPage} />
             {/* Join Movement Page */}
             <Route path="/join" component={JoinMovement} />
             {/* Vendor and Product Public Pages */}
@@ -118,8 +161,9 @@ function App() {
             <Route path="/vendors/:vendorId" component={VendorStorefrontPage} />
             <Route path="/store/artisan-bakes-atlanta" component={DemoStorefrontPage} />
             <Route path="/test-data" component={TestDataPage} />
-            <Route path="/checkout" component={CheckoutPage} />
-            <Route path="/checkout/success" component={CheckoutSuccessPage} />
+            {/* Legacy checkout routes (for backward compatibility) */}
+            <Route path="/checkout/legacy" component={CheckoutPage} />
+            <Route path="/checkout/legacy/success" component={CheckoutSuccessPage} />
             
             {/* Public Pages */}
             <Route path="/marketplace" component={MarketplaceHome} />
@@ -140,11 +184,30 @@ function App() {
                 return null;
               }}
             </Route>
-            <Route path="/control/users" component={UsersListPage} />
-            <Route path="/control/users/:id" component={UserDetailPage} />
-            <Route path="/control/support" component={SupportPage} />
-            <Route path="/control/support/:id" component={SupportPage} />
-            <Route path="/control/settings" component={SettingsPage} />
+            {/* Wave 4: New admin routes */}
+            <Route path="/control/users">
+              <ProtectedRoute role="ADMIN">
+                <UsersList />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/control/users/:id">
+              <ProtectedRoute role="ADMIN">
+                <UserDetail />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/control/support" component={Support} />
+            <Route path="/control/support/:id" component={Support} />
+            <Route path="/control/settings">
+              <ProtectedRoute role="ADMIN">
+                <Settings />
+              </ProtectedRoute>
+            </Route>
+            {/* Legacy admin routes */}
+            <Route path="/control/users/legacy" component={UsersListPage} />
+            <Route path="/control/users/:id/legacy" component={UserDetailPage} />
+            <Route path="/control/support/legacy" component={SupportPage} />
+            <Route path="/control/support/:id/legacy" component={SupportPage} />
+            <Route path="/control/settings/legacy" component={SettingsPage} />
             <Route path="/search" component={AdvancedSearchPage} />
             <Route path="/help" component={KnowledgeBasePage} />
             <Route path="/recipes" component={RecipeToolPage} />
@@ -154,9 +217,9 @@ function App() {
             <Route path="/artisan-sourdough-in-georgia" component={ArtisanSourdoughGeorgiaPage} />
             <Route path="/top-handmade-soaps-in-atlanta" component={TopHandmadeSoapsAtlantaPage} />
             
-            {/* Error Pages */}
-            <Route path="/404" component={NotFoundPage} />
-            <Route path="/maintenance" component={MaintenancePage} />
+            {/* Wave 4: System pages */}
+            <Route path="/404" component={NotFound} />
+            <Route path="/maintenance" component={Maintenance} />
             
             {/* Protected Dashboard Routes */}
             <Route path="/dashboard">
@@ -164,57 +227,116 @@ function App() {
                 <DashboardPage />
               </ProtectedRoute>
             </Route>
+            {/* Wave 2: New customer routes */}
             <Route path="/dashboard/customer">
               <ProtectedRoute role="CUSTOMER">
-                <CustomerDashboardPage />
+                <CustomerDashboard />
               </ProtectedRoute>
             </Route>
             <Route path="/cart">
               <ProtectedRoute role="CUSTOMER">
+                <Cart />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/checkout" component={Checkout} />
+            <Route path="/checkout/success" component={CheckoutSuccess} />
+            {/* Legacy routes (for backward compatibility) */}
+            <Route path="/dashboard/customer/legacy">
+              <ProtectedRoute role="CUSTOMER">
+                <CustomerDashboardPage />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/cart/legacy">
+              <ProtectedRoute role="CUSTOMER">
                 <CartPage />
               </ProtectedRoute>
             </Route>
+            {/* Wave 4: Coordinator routes */}
             <Route path="/dashboard/event-coordinator">
               <ProtectedRoute role="EVENT_COORDINATOR">
-                <EventCoordinatorDashboardPage />
+                <CoordinatorDashboard />
               </ProtectedRoute>
             </Route>
             <Route path="/dashboard/event-coordinator/events/:eventId/inventory">
               <ProtectedRoute role="EVENT_COORDINATOR">
-                <InventoryPage eventId="evt_1" />
+                <EventInventory />
               </ProtectedRoute>
             </Route>
+            {/* Legacy coordinator route */}
+            <Route path="/dashboard/event-coordinator/legacy">
+              <ProtectedRoute role="EVENT_COORDINATOR">
+                <EventCoordinatorDashboardPage />
+              </ProtectedRoute>
+            </Route>
+            
+            {/* Wave 4: Dropoff route */}
             <Route path="/dashboard/dropoff">
+              <ProtectedRoute role="DROPOFF_MANAGER">
+                <DropoffDashboard />
+              </ProtectedRoute>
+            </Route>
+            {/* Legacy dropoff route */}
+            <Route path="/dashboard/dropoff/legacy">
               <ProtectedRoute role="DROPOFF_MANAGER">
                 <DropoffDashboardPage />
               </ProtectedRoute>
             </Route>
+            
+            {/* Wave 4: Admin routes */}
             <Route path="/dashboard/admin">
+              <ProtectedRoute role="ADMIN">
+                <AdminDashboardNew />
+              </ProtectedRoute>
+            </Route>
+            {/* Legacy admin route */}
+            <Route path="/dashboard/admin/legacy">
               <ProtectedRoute role="ADMIN">
                 <AdminDashboard />
               </ProtectedRoute>
             </Route>
+            {/* Wave 3: New vendor routes */}
+            <Route path="/dashboard/vendor">
+              <ProtectedRoute role="VENDOR">
+                <VendorDashboard />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/dashboard/vendor/products">
+              <ProtectedRoute role="VENDOR">
+                <VendorProducts />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/dashboard/vendor/inventory">
+              <ProtectedRoute role="VENDOR">
+                <VendorInventory />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/dashboard/vendor/orders">
+              <ProtectedRoute role="VENDOR">
+                <VendorOrders />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/dashboard/vendor/recipes">
+              <ProtectedRoute role="VENDOR">
+                <VendorRecipes />
+              </ProtectedRoute>
+            </Route>
+            {/* Legacy vendor routes (for backward compatibility) */}
             <Route path="/dashboard/vendor/site-settings">
               <ProtectedRoute role="VENDOR">
                 <VendorSettingsPage />
               </ProtectedRoute>
             </Route>
-            <Route path="/dashboard/vendor/products">
-              <ProtectedRoute role="VENDOR">
-                <EnhancedVendorProductsPage />
-              </ProtectedRoute>
-            </Route>
-            <Route path="/dashboard/vendor/recipes">
+            <Route path="/dashboard/vendor/recipes/legacy">
               <ProtectedRoute role="VENDOR">
                 <RecipeManagementPage />
               </ProtectedRoute>
             </Route>
-            <Route path="/dashboard/vendor/inventory">
+            <Route path="/dashboard/vendor/inventory/legacy">
               <ProtectedRoute role="VENDOR">
                 <VendorInventoryPage />
               </ProtectedRoute>
             </Route>
-            <Route path="/dashboard/vendor/orders">
+            <Route path="/dashboard/vendor/orders/legacy">
               <ProtectedRoute role="VENDOR">
                 <VendorOrdersPage />
               </ProtectedRoute>

@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import * as Sentry from '@sentry/node';
 // Type augmentations moved to server/src/types/express.d.ts to avoid conflicts
 
 // Middleware to require authentication
@@ -9,6 +10,16 @@ export const requireAuth = (req: Request, res: Response, next: NextFunction) => 
       message: 'Authentication required' 
     });
   }
+  
+  // Set Sentry user context for error tracking
+  if (req.user && req.user.userId) {
+    Sentry.setUser({
+      id: req.user.userId,
+      email: req.user.email || undefined,
+      role: req.user.role || undefined,
+    });
+  }
+  
   return next();
 };
 

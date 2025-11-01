@@ -5,7 +5,7 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  // directUrl = env("DIRECT_URL") // Optional: Neon works with just DATABASE_URL
 }
 
 model User {
@@ -18,6 +18,7 @@ model User {
   phone          String?
   zip_code       String?
   loyalty_member Boolean   @default(false)
+  lifetimeSpend  Decimal   @default(0)
   avatarUrl      String?
   created_at     DateTime  @default(now())
   updated_at     DateTime  @updatedAt
@@ -977,6 +978,22 @@ model FulfillmentWindow {
   @@index([vendorProfileId, kind, weekday])
 }
 
+// Dropoff locations for the dropoff manager dashboard
+model DropoffLocation {
+  id            String   @id @default(cuid())
+  name          String
+  address       String?
+  pendingOrders Int      @default(0)
+  pickupWindow  String?
+  notes         String?
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([name])
+  @@index([active])
+}
+
 model OrderFulfillment {
   id                String               @id @default(cuid())
   orderId           String
@@ -1473,6 +1490,8 @@ enum Role {
   ADMIN
   CUSTOMER
   EVENT_COORDINATOR
+  B2B_VENDOR
+  DROPOFF_MANAGER
 }
 
 enum TaxAlertType {

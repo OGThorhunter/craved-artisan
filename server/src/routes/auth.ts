@@ -1013,6 +1013,82 @@ router.post('/resend-verification', requireAuth, async (req, res) => {
 });
 
 /**
+ * GET /api/auth/me
+ * Get current user information with full context (roles and profiles)
+ */
+router.get('/me', requireAuth, async (req, res) => {
+  try {
+    const userId = (req.session as any)?.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required'
+      });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        avatarUrl: true,
+        roles: {
+          select: {
+            role: true,
+            scopes: true,
+          },
+        },
+        vendorProfile: {
+          select: {
+            id: true,
+            storeName: true,
+            slug: true,
+          },
+        },
+        coordinatorProfile: {
+          select: {
+            id: true,
+            organizationName: true,
+            slug: true,
+          },
+        },
+      }
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Extract primary role from UserRole records
+    const primaryRole = user.roles && user.roles.length > 0 
+      ? user.roles[0].role 
+      : 'CUSTOMER';
+
+    res.json({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      avatarUrl: user.avatarUrl,
+      role: primaryRole,
+      roles: user.roles?.map(r => r.role) || [],
+      vendorProfile: user.vendorProfile,
+      coordinatorProfile: user.coordinatorProfile,
+    });
+  } catch (error) {
+    logger.error({ error }, 'Get current user error');
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get user information'
+    });
+  }
+});
+
+/**
  * GET /api/auth/signup-status
  * Check signup completion status
  */

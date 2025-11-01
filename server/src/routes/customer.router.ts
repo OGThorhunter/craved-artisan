@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { logger } from '../logger';
 import { prisma } from '../lib/prisma';
+import * as customerService from '../services/customer.service';
 
 const router = Router();
 /**
@@ -342,6 +343,103 @@ router.get('/events', async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to fetch events'
+    });
+  }
+});
+
+/**
+ * GET /api/customer/orders
+ * Get customer orders
+ */
+router.get('/orders', async (req, res, next) => {
+  try {
+    const userId = (req.session as any)?.userId || (req.session as any)?.user?.userId;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Unauthorized'
+      });
+    }
+    logger.info({ userId }, 'Fetching customer orders');
+
+    const orders = await customerService.getCustomerOrdersByUserId(userId);
+    return res.json(orders);
+  } catch (error) {
+    return next(error);
+  }
+});
+
+/**
+ * GET /api/customer/cart
+ * Get customer cart
+ */
+router.get('/cart', async (req, res) => {
+  try {
+    const userId = (req.session as any)?.userId || (req.session as any)?.user?.userId;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Unauthorized'
+      });
+    }
+    logger.info({ userId }, 'Fetching customer cart');
+
+    if (process.env.ALLOW_MOCK_API !== 'true') {
+      // In production, load from DB
+      return res.json({
+        items: [],
+        total: 0,
+      });
+    }
+
+    // Mock data for development
+    res.json({
+      items: [],
+      total: 0,
+    });
+  } catch (error) {
+    logger.error({ error }, 'Error fetching customer cart');
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch cart'
+    });
+  }
+});
+
+/**
+ * POST /api/customer/cart
+ * Update customer cart
+ */
+router.post('/cart', async (req, res) => {
+  try {
+    const userId = (req.session as any)?.userId || (req.session as any)?.user?.userId;
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Unauthorized'
+      });
+    }
+    logger.info({ userId }, 'Updating customer cart');
+
+    if (process.env.ALLOW_MOCK_API !== 'true') {
+      // In production, update cart in DB
+      return res.status(501).json({
+        success: false,
+        error: 'Not implemented',
+        message: 'Cart update requires database integration'
+      });
+    }
+
+    // Mock response for development
+    res.json({
+      success: true,
+      message: 'Cart updated'
+    });
+  } catch (error) {
+    logger.error({ error }, 'Error updating customer cart');
+    res.status(500).json({
+      success: false,
+      error: 'Failed to update cart'
     });
   }
 });

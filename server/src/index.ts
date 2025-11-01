@@ -211,6 +211,9 @@ app.use('/api/database', databaseDiagnosticsRouter);
 // Legal & Coordinator routes
 app.use('/api/legal', legalRouter);
 app.use('/api/coordinator', coordinatorRouter);
+// Wave 4: Event coordinator dashboard endpoints
+import eventCoordinatorRouter from './routes/event-coordinator.router';
+app.use('/api/event-coordinator', eventCoordinatorRouter);
 
 // Newsletter routes
 app.use('/api/newsletter', newsletterRouter);
@@ -303,6 +306,10 @@ import customerRouter from './routes/customer.router';
 app.use('/api/customer', customerRouter);
 app.use('/api/orders', customerOrdersRouter);
 
+// Dropoff Routes
+import dropoffRouter from './routes/dropoff.router';
+app.use('/api/dropoff', dropoffRouter);
+
 // Label Management Routes
 app.use('/api/vendor/labels', labelsManagementRouter);
 app.use('/api/vendor/labels', labelsSmartQueueRouter);
@@ -347,6 +354,20 @@ app.use('/api/admin', adminSettingsRouter);
 // Settings & Account Hub routes
 app.use('/api/settings', settingsRouter);
 app.use('/webhooks/stripe', stripeWebhooksRouter);
+
+// API 404 handler - catch unknown API routes before SPA fallback
+app.use('/api', (req, res) => {
+  logger.warn({
+    method: req.method,
+    url: req.originalUrl,
+    path: req.path,
+  }, 'API route not found');
+  
+  res.status(404).json({ 
+    error: 'Not found',
+    message: `API route not found: ${req.method} ${req.originalUrl}`
+  });
+});
 
 // Production: serve client build
 if (process.env.NODE_ENV === 'production') {
