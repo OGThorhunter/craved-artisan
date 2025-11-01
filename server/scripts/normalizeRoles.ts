@@ -1,46 +1,29 @@
 import { PrismaClient } from '@prisma/client';
+import dotenv from 'dotenv';
+
+// Load environment variables from project root
+dotenv.config({ path: '../.env' });
 
 const prisma = new PrismaClient();
 
 async function main() {
   console.log('🔄 Starting role normalization...');
 
-  // 1) B2B_VENDOR -> VENDOR
-  const b2bVendorCount = await prisma.user.updateMany({
-    where: { role: 'B2B_VENDOR' as any },
-    data: { role: 'VENDOR' },
-  });
-  console.log(`✅ Converted ${b2bVendorCount.count} B2B_VENDOR → VENDOR`);
-
-  // 2) DROPOFF_MANAGER -> ADMIN
-  const dropoffManagerCount = await prisma.user.updateMany({
-    where: { role: 'DROPOFF_MANAGER' as any },
-    data: { role: 'ADMIN' },
-  });
-  console.log(`✅ Converted ${dropoffManagerCount.count} DROPOFF_MANAGER → ADMIN`);
-
-  // 3) SUPER_ADMIN -> ADMIN
-  const superAdminCount = await prisma.user.updateMany({
-    where: { role: 'SUPER_ADMIN' as any },
-    data: { role: 'ADMIN' },
-  });
-  console.log(`✅ Converted ${superAdminCount.count} SUPER_ADMIN → ADMIN`);
-
-  // Also update UserRole table if it exists
+  // Update UserRole table to convert old roles to new ones
   const userRoleB2B = await prisma.userRole.updateMany({
-    where: { role: 'B2B_VENDOR' as any },
+    where: { role: 'B2B_VENDOR' },
     data: { role: 'VENDOR' },
   });
   console.log(`✅ Updated ${userRoleB2B.count} UserRole records: B2B_VENDOR → VENDOR`);
 
   const userRoleDropoff = await prisma.userRole.updateMany({
-    where: { role: 'DROPOFF_MANAGER' as any },
+    where: { role: 'DROPOFF_MANAGER' },
     data: { role: 'ADMIN' },
   });
   console.log(`✅ Updated ${userRoleDropoff.count} UserRole records: DROPOFF_MANAGER → ADMIN`);
 
   const userRoleSuper = await prisma.userRole.updateMany({
-    where: { role: 'SUPER_ADMIN' as any },
+    where: { role: 'SUPER_ADMIN' },
     data: { role: 'ADMIN' },
   });
   console.log(`✅ Updated ${userRoleSuper.count} UserRole records: SUPER_ADMIN → ADMIN`);

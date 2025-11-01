@@ -83,7 +83,6 @@ import { VendorFinancialPage } from './pages/VendorFinancialPage';
 import VendorOnboardingPage from './pages/VendorOnboardingPage';
 import VIPProgramPage from './pages/VIPProgramPage';
 import TestDataPage from './pages/TestDataPage';
-import { NotFound } from './components/NotFound';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // Public pages

@@ -1,0 +1,109 @@
+name: CI – Craved Artisan
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-validate:
+    name: Install, Lint, Prisma Validate, TS Check, Build
+    runs-on: ubuntu-latest
+
+    env:
+      # for Prisma – use a temp local Postgres for schema validation
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/cravedartisan
+      # for Sentry (optional – will be skipped if not set)
+      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+      SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+      SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+      # we’ll derive the release from the commit
+      SENTRY_RELEASE: ${{ github.sha }}
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: cravedartisan
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres -d cravedartisan"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      # if you’re in a monorepo with client/ and server/, install at root
+      - name: Install deps
+        run: npm install
+
+      # ───────────────────────────────
+      # 1) Prisma checks
+      # ───────────────────────────────
+      - name: Prisma generate
+        run: npx prisma generate
+
+      - name: Prisma validate
+        run: npx prisma validate
+
+      # In CI we don’t want to CREATE new migrations, just make sure existing ones apply.
+      - name: Apply migrations to CI DB
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/cravedartisan
+
+      # ───────────────────────────────
+      # 2) TypeScript checks
+      # ───────────────────────────────
+      - name: Type check – server
+        run: |
+          if [ -d "server" ]; then
+            cd server
+            npm install --omit=optional --no-fund --no-audit || true
+            npm run build --if-present
+            cd ..
+          fi
+
+      - name: Type check – client
+        run: |
+          if [ -d "client" ]; then
+            cd client
+            npm install --omit=optional --no-fund --no-audit || true
+            npm run build --if-present
+            cd ..
+          fi
+
+      # ───────────────────────────────
+      # 3) Sentry release (optional)
+      # This will only run if secrets are set
+      # ───────────────────────────────
+      - name: Create Sentry release
+        if: ${{ env.SENTRY_AUTH_TOKEN != '' && env.SENTRY_ORG != '' && env.SENTRY_PROJECT != '' }}
+        uses: getsentry/action-release@v1
+        with:
+          environment: ci
+          version: ${{ github.sha }}
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+
+      # ───────────────────────────────
+      # 4) Lint (optional but recommended)
+      # ───────────────────────────────
+      - name: Lint
+        run: |
+          npm run lint --if-present

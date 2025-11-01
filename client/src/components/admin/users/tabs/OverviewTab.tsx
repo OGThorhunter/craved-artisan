@@ -19,6 +19,9 @@ export default function OverviewTab({ user, analytics }: OverviewTabProps) {
     return 'text-red-600 bg-red-100';
   };
   
+  // Extract roles from user object
+  const roles = user.roles || (user.role ? [user.role] : []);
+  
   return (
     <div className="space-y-6">
       {/* Identity Section */}
